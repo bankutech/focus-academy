@@ -10,15 +10,15 @@ export default function MobileQuickBar() {
   return (
     <aside 
       aria-label="Quick Mobile Contact Bar" 
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#181614]/95 backdrop-blur-md border-t border-[#2A2623] px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-editorial-lg"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0F172A]/95 backdrop-blur-md border-t border-[#1E293B] px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shadow-editorial-lg"
     >
       <div className="max-w-md mx-auto grid grid-cols-2 gap-2.5">
         <a
           href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
           aria-label={`Call Focus Academy Campus Desk at ${CAMPUS_CONFIG.contact.primaryPhone}`}
-          className="min-h-[48px] flex items-center justify-center space-x-2 px-3 bg-[#24201D] hover:bg-[#2F2B27] text-[#FAF7F2] border border-[#3E3834] rounded-xl text-xs font-bold transition-all shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
+          className="min-h-[48px] flex items-center justify-center space-x-2 px-3 bg-[#1E293B] hover:bg-[#334155] text-white border border-[#334155] rounded-xl text-xs font-bold transition-all shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
         >
-          <Phone className="w-4 h-4 text-[#FED7AA] shrink-0" />
+          <Phone className="w-4 h-4 text-orange-200 shrink-0" />
           <span className="truncate">Call Campus Desk</span>
         </a>
 

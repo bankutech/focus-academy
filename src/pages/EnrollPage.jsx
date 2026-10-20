@@ -1,140 +1,144 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   CheckCircle2, 
-  ShieldCheck, 
-  Send, 
-  MessageSquare, 
   Clock, 
   MapPin, 
-  Users 
+  Users, 
+  ShieldCheck, 
+  MessageSquare, 
+  Send 
 } from 'lucide-react';
+import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
-import { batchesData, getBatchById, resolveBoardForBatch } from '../data/batchesData';
-import { LeadService } from '../services/leadService';
-import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { useStudentFlow } from '../context/useAppContext';
 import { validateIndianMobile } from '../types/schemas';
+import { CAMPUS_CONFIG } from '../config/campusConfig';
+
+const getNowIsoString = () => new Date().toISOString();
 
 export default function EnrollPage() {
   const { batchId } = useParams();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { studentFlow, updateStudentFlow } = useStudentFlow();
+  const { studentFlow, setStudentFlow, registerStudent } = useStudentFlow();
 
-  const currentBatchId = batchId || searchParams.get('batchId') || studentFlow.selectedBatchId || batchesData[0].id;
-  const selectedBatch = useMemo(() => {
-    return getBatchById(currentBatchId) || batchesData[0];
-  }, [currentBatchId]);
+  const selectedBatch = BATCHES_DATA.find((b) => b.id === batchId) ||
+    BATCHES_DATA.find((b) => b.id === studentFlow.selectedBatchId) ||
+    BATCHES_DATA[0];
 
   const [studentName, setStudentName] = useState(studentFlow.studentName || '');
-  const [phone, setPhone] = useState(studentFlow.phone || '');
   const [parentName, setParentName] = useState(studentFlow.parentName || '');
+  const [phone, setPhone] = useState(studentFlow.phone || '');
   const [schoolName, setSchoolName] = useState('');
-  const [board, setBoard] = useState(studentFlow.board || resolveBoardForBatch(selectedBatch, studentFlow.board));
-  const [studentWeakness, setStudentWeakness] = useState('');
+  const [board, setBoard] = useState(studentFlow.board || selectedBatch.board);
   const [startDatePreference, setStartDatePreference] = useState('Immediate (This Week)');
+  const [studentWeakness, setStudentWeakness] = useState('');
 
   const [phoneError, setPhoneError] = useState('');
   const [nameError, setNameError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
 
-  useEffect(() => {
-    if (selectedBatch && selectedBatch.id !== studentFlow.selectedBatchId) {
-      updateStudentFlow({ selectedBatchId: selectedBatch.id });
-    }
-  }, [selectedBatch, studentFlow.selectedBatchId, updateStudentFlow]);
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setPhoneError('');
     setNameError('');
 
-    if (!studentName.trim() || studentName.trim().length < 2) {
-      setNameError('Please enter student full name.');
+    if (!studentName.trim()) {
+      setNameError('Student name is required');
       return;
     }
 
-    const val = validateIndianMobile(phone);
-    if (!val.valid) {
-      setPhoneError(val.error);
+    const validation = validateIndianMobile(phone);
+    if (!validation.valid) {
+      setPhoneError(validation.message);
       return;
     }
 
     setIsSubmitting(true);
 
-    const targetGrade = studentFlow.grade || selectedBatch.grade;
-
-    const leadPayload = {
+    const enrollmentRecord = {
       studentName: studentName.trim(),
       parentName: parentName.trim(),
-      phone: val.sanitized,
-      grade: targetGrade,
-      board: board,
-      subjects: selectedBatch.subjects.join(', '),
-      notes: `Batch: ${selectedBatch.name} | Timing: ${selectedBatch.timing} | School: ${schoolName || 'Local School'} | Start: ${startDatePreference} | Goal: ${studentFlow.examPrep || 'Board Excellence'} | Focus: ${studentWeakness || 'None specified'}`,
+      phone: validation.sanitized,
+      schoolName: schoolName.trim(),
+      board,
+      grade: studentFlow.grade || selectedBatch.grade,
+      selectedBatchId: selectedBatch.id,
+      selectedBatchName: selectedBatch.name,
+      timing: selectedBatch.timing,
+      monthlyFee: selectedBatch.monthlyFee,
+      startDatePreference,
+      studentWeakness: studentWeakness.trim(),
+      createdAt: getNowIsoString(),
     };
 
-    const result = await LeadService.submitLead(leadPayload);
-    setIsSubmitting(false);
+    const saved = registerStudent(enrollmentRecord);
 
-    if (!result.success) {
-      if (result.errors?.phone) setPhoneError(result.errors.phone);
-      if (result.errors?.studentName) setNameError(result.errors.studentName);
-      return;
-    }
+    setStudentFlow((prev) => ({
+      ...prev,
+      studentName: enrollmentRecord.studentName,
+      parentName: enrollmentRecord.parentName,
+      phone: enrollmentRecord.phone,
+      selectedBatchId: selectedBatch.id,
+      step: 5,
+    }));
 
-    const customWhatsAppText = encodeURIComponent(
-      `Hello Focus Academy Thoramangalam! 👋\n\nI want to confirm enrollment for my child:\n\n• Batch: ${selectedBatch.name}\n• Timing: ${selectedBatch.timing} (Mon-Sat)\n• Student Name: ${studentName.trim()}\n• Parent Name: ${parentName.trim() || 'Parent'}\n• Class & Board: ${targetGrade} (${board})\n• Contact: +91 ${val.sanitized}\n• Start Preference: ${startDatePreference}\n• Focus Area: ${studentWeakness || 'General'}\n\nPlease confirm seat reservation at Thiripura Complex.`
-    );
-    result.whatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${customWhatsAppText}`;
+    const prefilledText = `Hello Focus Academy! I have completed admission registration for student: ${enrollmentRecord.studentName} (${enrollmentRecord.grade}, ${enrollmentRecord.board}). Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Slip ID: ${saved.id}.`;
+    const whatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(prefilledText)}`;
 
-    setSubmissionResult(result);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setSubmissionResult({
+        success: true,
+        data: saved,
+        whatsappUrl,
+      });
+    }, 400);
   };
 
   return (
-    <div className="bg-[#FAF7F2] min-h-screen text-left">
+    <div className="bg-[#F8FAFC] min-h-screen text-left">
       <StepProgress currentStep={5} />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         {submissionResult ? (
-          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-[#E8E2D8] shadow-editorial-lg text-center max-w-2xl mx-auto animate-in fade-in">
-            <div className="w-16 h-16 rounded-full bg-[#181614] text-white flex items-center justify-center mx-auto mb-5 shadow-sm">
-              <CheckCircle2 className="w-9 h-9 text-[#C2410C]" />
+          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-[#E2E8F0] shadow-editorial-lg text-center max-w-2xl mx-auto animate-in fade-in">
+            <div className="w-16 h-16 rounded-full bg-[#0F172A] text-white flex items-center justify-center mx-auto mb-5 shadow-sm">
+              <CheckCircle2 className="w-9 h-9 text-[#EA580C]" />
             </div>
 
-            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
+            <span className="text-xs uppercase tracking-wider text-[#EA580C] font-bold block mb-1">
               Seat Reservation Confirmed
             </span>
 
-            <h1 className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
               Seat Reserved & Admission Slip Generated!
             </h1>
 
-            <p className="mt-2 text-sm text-[#57534E] max-w-md mx-auto">
+            <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">
               Thank you, <strong>{studentName}</strong>. Your seat reservation has been queued for <strong>{selectedBatch.name}</strong>.
             </p>
 
-            <div className="mt-6 p-5 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D8] text-xs font-code-mono text-left space-y-2 max-w-md mx-auto shadow-editorial-inset">
-              <div className="flex justify-between pb-2 border-b border-[#E8E2D8]">
-                <span className="text-[#78716C]">Admission Slip No:</span>
-                <span className="font-bold text-[#181614]">{submissionResult.data?.id || 'FA-2026-ENR'}</span>
+            <div className="mt-6 p-5 bg-slate-50 rounded-2xl border border-[#E2E8F0] text-xs text-left space-y-2 max-w-md mx-auto shadow-editorial-inset">
+              <div className="flex justify-between pb-2 border-b border-[#E2E8F0]">
+                <span className="text-slate-500">Admission Slip No:</span>
+                <span className="font-bold text-[#0F172A]">{submissionResult.data?.id || 'FA-2026-ENR'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#78716C]">Batch:</span>
-                <span className="font-bold text-[#C2410C] text-right truncate max-w-[200px]">{selectedBatch.shortTitle}</span>
+                <span className="text-slate-500">Batch:</span>
+                <span className="font-bold text-[#EA580C] text-right truncate max-w-[200px]">{selectedBatch.shortTitle}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#78716C]">Schedule:</span>
-                <span className="font-bold text-[#181614]">{selectedBatch.timing} (Mon-Sat)</span>
+                <span className="text-slate-500">Schedule:</span>
+                <span className="font-bold text-[#0F172A]">{selectedBatch.timing} (Mon-Sat)</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#78716C]">Classroom:</span>
-                <span className="font-bold text-[#181614]">Thiripura Complex, 1st Floor</span>
+                <span className="text-slate-500">Classroom:</span>
+                <span className="font-bold text-[#0F172A]">Thiripura Complex, 1st Floor</span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-[#E8E2D8]">
-                <span className="text-[#78716C]">Monthly Fee:</span>
+              <div className="flex justify-between pt-2 border-t border-[#E2E8F0]">
+                <span className="text-slate-500">Monthly Fee:</span>
                 <span className="font-bold text-emerald-700">₹{selectedBatch.monthlyFee.toLocaleString('en-IN')} / month</span>
               </div>
             </div>
@@ -162,7 +166,7 @@ export default function EnrollPage() {
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="w-full py-3 bg-[#181614] hover:bg-[#292524] text-white font-semibold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
+                className="w-full py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
               >
                 Return to Focus Academy Home
               </button>
@@ -172,17 +176,17 @@ export default function EnrollPage() {
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl sm:text-4xl font-black text-[#181614] tracking-tight">
+                <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
                   Confirm Enrollment & Reserve Seat
                 </h1>
-                <p className="text-sm text-[#57534E] mt-1">
+                <p className="text-sm text-slate-600 mt-1">
                   Review the selected batch details and submit to complete your registration.
                 </p>
               </div>
 
               <Link
                 to={`/batch/${selectedBatch.id}`}
-                className="text-xs font-code-mono text-[#78716C] hover:text-[#181614] hidden sm:block"
+                className="text-xs text-slate-500 hover:text-[#0F172A] hidden sm:block"
               >
                 ← Back to Batch Details
               </Link>
@@ -190,49 +194,49 @@ export default function EnrollPage() {
 
             <div className="grid lg:grid-cols-5 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-3xl p-6 border border-[#E8E2D8] shadow-editorial space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#FAF7F2]">
-                    <span className="text-[10px] font-code-mono uppercase font-bold text-[#78716C]">
+                <div className="bg-white rounded-3xl p-6 border border-[#E2E8F0] shadow-editorial space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <span className="text-xs uppercase font-bold text-slate-500">
                       Selected Evening Batch
                     </span>
                     <Link
                       to="/batches"
-                      className="text-[11px] font-code-mono text-[#C2410C] hover:underline"
+                      className="text-xs text-[#EA580C] hover:underline"
                     >
                       Change Batch
                     </Link>
                   </div>
 
-                  <h3 className="text-lg font-bold text-[#181614] leading-snug">
+                  <h3 className="text-lg font-bold text-[#0F172A] leading-snug">
                     {selectedBatch.name}
                   </h3>
 
-                  <div className="space-y-2.5 text-xs font-code-mono">
-                    <div className="flex items-center space-x-2 text-[#57534E]">
-                      <Clock className="w-3.5 h-3.5 text-[#C2410C] shrink-0" />
+                  <div className="space-y-2.5 text-xs text-slate-600">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
                       <span>{selectedBatch.timing} (Mon – Sat)</span>
                     </div>
 
-                    <div className="flex items-center space-x-2 text-[#57534E]">
-                      <Users className="w-3.5 h-3.5 text-[#C2410C] shrink-0" />
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
                       <span>Max 12 Students ({selectedBatch.seatsRemaining} Seats Left)</span>
                     </div>
 
-                    <div className="flex items-center space-x-2 text-[#57534E]">
-                      <MapPin className="w-3.5 h-3.5 text-[#C2410C] shrink-0" />
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
                       <span className="truncate">{selectedBatch.classroom}</span>
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-[#FAF7F2]">
-                    <span className="text-[10px] font-code-mono uppercase text-[#78716C] block mb-1">
+                  <div className="pt-3 border-t border-slate-100">
+                    <span className="text-xs uppercase text-slate-500 block mb-1">
                       Subjects Included:
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {selectedBatch.subjects.map((sub, i) => (
                         <span
                           key={i}
-                          className="px-2 py-0.5 bg-[#FAF7F2] border border-[#E8E2D8] rounded text-[11px] font-semibold text-[#181614]"
+                          className="px-2 py-0.5 bg-slate-100 border border-[#E2E8F0] rounded text-xs font-semibold text-[#0F172A]"
                         >
                           {sub}
                         </span>
@@ -240,45 +244,45 @@ export default function EnrollPage() {
                     </div>
                   </div>
 
-                  <div className="pt-2 text-xs font-code-mono text-[#78716C] flex items-center justify-between">
+                  <div className="pt-2 text-xs text-slate-500 flex items-center justify-between">
                     <span>Batch Setup:</span>
-                    <strong className="text-[#181614]">Small Batch (Max 12 Seats)</strong>
+                    <strong className="text-[#0F172A]">Small Batch (Max 12 Seats)</strong>
                   </div>
 
-                  <div className="pt-4 border-t border-[#E8E2D8] flex items-center justify-between">
+                  <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] font-code-mono uppercase text-[#78716C] block">
+                      <span className="text-xs uppercase text-slate-500 block">
                         Monthly Tuition Fee
                       </span>
-                      <span className="text-2xl font-black text-[#181614]">
+                      <span className="text-2xl font-extrabold text-[#0F172A]">
                         ₹{selectedBatch.monthlyFee.toLocaleString('en-IN')}
                       </span>
                     </div>
-                    <span className="text-xs font-code-mono text-emerald-700 font-bold">
+                    <span className="text-xs text-emerald-700 font-bold">
                       Zero Reg. Fee
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-white rounded-2xl border border-[#E8E2D8] text-xs font-code-mono text-[#57534E] space-y-1.5">
-                  <span className="font-bold text-[#181614] block">Focus Academy Campus Desk:</span>
+                <div className="p-4 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-slate-600 space-y-1.5">
+                  <span className="font-bold text-[#0F172A] block">Focus Academy Campus Desk:</span>
                   <p>{CAMPUS_CONFIG.location.fullAddress}</p>
-                  <p className="text-[#C2410C] font-semibold">Phone: {CAMPUS_CONFIG.contact.primaryPhone}</p>
+                  <p className="text-[#EA580C] font-semibold">Phone: {CAMPUS_CONFIG.contact.primaryPhone}</p>
                 </div>
               </div>
 
               <div className="lg:col-span-3">
                 <form
                   onSubmit={handleSubmit}
-                  className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E2D8] shadow-editorial space-y-5"
+                  className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E2E8F0] shadow-editorial space-y-5"
                 >
-                  <h2 className="text-base font-bold text-[#181614] pb-3 border-b border-[#FAF7F2]">
+                  <h2 className="text-base font-bold text-[#0F172A] pb-3 border-b border-slate-100">
                     Student & Admission Details
                   </h2>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="enroll-student-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                         Student Full Name *
                       </label>
                       <input
@@ -291,17 +295,17 @@ export default function EnrollPage() {
                         }}
                         placeholder="e.g. K. Vignesh"
                         className={`w-full px-3.5 py-2.5 bg-white border ${
-                          nameError ? 'border-rose-500' : 'border-[#E8E2D8]'
-                        } rounded-xl text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]`}
+                          nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
+                        } rounded-xl text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                         required
                       />
                       {nameError && (
-                        <p className="text-[11px] text-rose-600 mt-1">{nameError}</p>
+                        <p className="text-xs text-rose-600 mt-1">{nameError}</p>
                       )}
                     </div>
 
                     <div>
-                      <label htmlFor="enroll-phone" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                         Mobile Number *
                       </label>
                       <input
@@ -314,19 +318,19 @@ export default function EnrollPage() {
                         }}
                         placeholder="e.g. 98424 51220"
                         className={`w-full px-3.5 py-2.5 bg-white border ${
-                          phoneError ? 'border-rose-500' : 'border-[#E8E2D8]'
-                        } rounded-xl text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]`}
+                          phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
+                        } rounded-xl text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                         required
                       />
                       {phoneError && (
-                        <p className="text-[11px] text-rose-600 mt-1">{phoneError}</p>
+                        <p className="text-xs text-rose-600 mt-1">{phoneError}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="enroll-parent-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-parent-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                         Parent / Guardian Name
                       </label>
                       <input
@@ -335,12 +339,12 @@ export default function EnrollPage() {
                         value={parentName}
                         onChange={(e) => setParentName(e.target.value)}
                         placeholder="e.g. Mr. S. Kannan (Father)"
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E8E2D8] rounded-xl text-sm font-medium text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="enroll-school-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-school-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                         Current School (In Perambalur / Thoramangalam)
                       </label>
                       <input
@@ -349,21 +353,21 @@ export default function EnrollPage() {
                         value={schoolName}
                         onChange={(e) => setSchoolName(e.target.value)}
                         placeholder="e.g. Thanthai Hans Roever, DS..."
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E8E2D8] rounded-xl text-sm font-medium text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                       />
                     </div>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="enroll-board" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-board" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                         Education Board
                       </label>
                       <select
                         id="enroll-board"
                         value={board}
                         onChange={(e) => setBoard(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E8E2D8] rounded-xl text-xs sm:text-sm font-semibold text-[#181614]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs sm:text-sm font-semibold text-[#0F172A]"
                       >
                         <option value="TN State Board (Samacheer)">TN State Board (Samacheer)</option>
                         <option value="CBSE Board">CBSE Board (NCERT)</option>
@@ -372,14 +376,14 @@ export default function EnrollPage() {
                     </div>
 
                     <div>
-                      <label htmlFor="enroll-start-date" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-start-date" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                         Preferred Start Date
                       </label>
                       <select
                         id="enroll-start-date"
                         value={startDatePreference}
                         onChange={(e) => setStartDatePreference(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E8E2D8] rounded-xl text-xs sm:text-sm font-semibold text-[#181614]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs sm:text-sm font-semibold text-[#0F172A]"
                       >
                         <option value="Immediate (This Week)">Immediate (This Week)</option>
                         <option value="Next Monday">From Next Monday</option>
@@ -389,7 +393,7 @@ export default function EnrollPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="enroll-weakness" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                    <label htmlFor="enroll-weakness" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                       Specific Learning Challenge or Doubts (Optional)
                     </label>
                     <textarea
@@ -398,7 +402,7 @@ export default function EnrollPage() {
                       value={studentWeakness}
                       onChange={(e) => setStudentWeakness(e.target.value)}
                       placeholder="e.g. Hesitant to ask doubts in school, weak in geometry proofs, needs physics derivations practice..."
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#E8E2D8] rounded-xl text-xs sm:text-sm text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs sm:text-sm text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     />
                   </div>
 
@@ -409,11 +413,11 @@ export default function EnrollPage() {
                     </span>
                   </div>
 
-                  <div className="pt-3 border-t border-[#E8E2D8] flex items-center justify-between">
+                  <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between">
                     <button
                       type="button"
                       onClick={() => navigate(`/batch/${selectedBatch.id}`)}
-                      className="text-xs font-semibold text-[#78716C] hover:text-[#181614]"
+                      className="text-xs font-semibold text-slate-500 hover:text-[#0F172A]"
                     >
                       ← Back to Batch Details
                     </button>
@@ -421,10 +425,10 @@ export default function EnrollPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#C2410C] hover:bg-[#9A3412] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer disabled:opacity-50 active:scale-98"
+                      className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer disabled:opacity-50 active:scale-98"
                     >
                       <span>{isSubmitting ? 'Submitting...' : 'Complete Batch Enrollment'}</span>
-                      <Send className="w-4 h-4 text-[#FED7AA]" />
+                      <Send className="w-4 h-4 text-orange-200" />
                     </button>
                   </div>
                 </form>

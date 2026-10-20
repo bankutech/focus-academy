@@ -91,16 +91,16 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#181614]/80 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/80 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
       <div 
         role="dialog"
         aria-modal="true"
         aria-labelledby="demo-modal-headline"
-        className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-[#FAF7F2] rounded-3xl shadow-editorial-lg border border-[#E8E2D8] overflow-hidden my-auto text-left animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-[#F8FAFC] rounded-3xl shadow-editorial-lg border border-[#E2E8F0] overflow-hidden my-auto text-left animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         
-        <div className="bg-[#181614] p-5 sm:p-6 text-white relative border-b border-[#2A2623] shrink-0">
+        <div className="bg-[#0F172A] p-5 sm:p-6 text-white relative border-b border-[#1E293B] shrink-0">
           <button
             type="button"
             onClick={handleReset}
@@ -110,27 +110,27 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
             <X className="w-4 h-4" />
           </button>
 
-          <div className="flex items-center space-x-1.5 font-code-mono text-[10px] uppercase tracking-wider text-[#FED7AA] mb-1">
-            <ClipboardCheck className="w-3.5 h-3.5 text-[#C2410C]" />
+          <div className="flex items-center space-x-1.5 text-xs uppercase tracking-wider text-orange-200 mb-1">
+            <ClipboardCheck className="w-3.5 h-3.5 text-[#EA580C]" />
             <span>Focus Academy Pedagogical Protocol</span>
           </div>
 
           <h3 id="demo-modal-headline" className="text-xl sm:text-2xl font-bold tracking-tight text-white">
             {sessionType === 'alignment-call' ? 'Schedule 5-Min Parent Alignment Call' : 'Schedule 45-Min Diagnostic Trial'}
           </h3>
-          <p className="text-xs text-[#A8A29E] mt-1 font-normal">
+          <p className="text-xs text-slate-400 mt-1 font-normal">
             {sessionType === 'alignment-call' 
               ? 'Direct 5-minute phone conversation for parents to calibrate student temperament & anxiety. 100% free.'
               : 'Identify prior syllabus gaps with classroom diagnostic assessment. 100% complimentary.'
             }
           </p>
 
-          <div className="mt-3 inline-flex p-1 bg-[#2A2623] rounded-xl text-xs font-code-mono">
+          <div className="mt-3 inline-flex p-1 bg-slate-800 rounded-xl text-xs">
             <button
               type="button"
               onClick={() => setSessionType('diagnostic-trial')}
               className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                sessionType === 'diagnostic-trial' ? 'bg-[#C2410C] text-white font-bold' : 'text-[#A8A29E] hover:text-white'
+                sessionType === 'diagnostic-trial' ? 'bg-[#EA580C] text-white font-bold' : 'text-slate-300 hover:text-white'
               }`}
             >
               45-Min Trial Session
@@ -139,7 +139,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
               type="button"
               onClick={() => setSessionType('alignment-call')}
               className={`px-3 py-1 rounded-lg transition-colors cursor-pointer flex items-center space-x-1 ${
-                sessionType === 'alignment-call' ? 'bg-[#C2410C] text-white font-bold' : 'text-[#A8A29E] hover:text-white'
+                sessionType === 'alignment-call' ? 'bg-[#EA580C] text-white font-bold' : 'text-slate-300 hover:text-white'
               }`}
             >
               <PhoneCall className="w-3 h-3" />
@@ -148,16 +148,16 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
           </div>
 
           {!isSubmitted && (
-            <div className="mt-3 flex items-center space-x-2 text-[10px] font-code-mono">
-              <span className={`px-2 py-0.5 rounded ${step >= 1 ? 'bg-[#C2410C] text-white font-bold' : 'bg-[#2A2623] text-[#78716C]'}`}>
+            <div className="mt-3 flex items-center space-x-2 text-xs">
+              <span className={`px-2 py-0.5 rounded ${step >= 1 ? 'bg-[#EA580C] text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
                 1. Syllabus
               </span>
-              <span className="text-[#57534E]">→</span>
-              <span className={`px-2 py-0.5 rounded ${step >= 2 ? 'bg-[#C2410C] text-white font-bold' : 'bg-[#2A2623] text-[#78716C]'}`}>
+              <span className="text-slate-500">→</span>
+              <span className={`px-2 py-0.5 rounded ${step >= 2 ? 'bg-[#EA580C] text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
                 2. Format
               </span>
-              <span className="text-[#57534E]">→</span>
-              <span className={`px-2 py-0.5 rounded ${step >= 3 ? 'bg-[#C2410C] text-white font-bold' : 'bg-[#2A2623] text-[#78716C]'}`}>
+              <span className="text-slate-500">→</span>
+              <span className={`px-2 py-0.5 rounded ${step >= 3 ? 'bg-[#EA580C] text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
                 3. Registry
               </span>
             </div>
@@ -167,54 +167,54 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
         <div className="p-5 sm:p-7 overflow-y-auto">
           {isSubmitted ? (
             <div className="text-center py-4 space-y-4 animate-in fade-in">
-              <div className="w-14 h-14 rounded-full bg-[#181614] text-white flex items-center justify-center mx-auto shadow-sm">
-                <CheckCircle2 className="w-8 h-8 text-[#C2410C]" />
+              <div className="w-14 h-14 rounded-full bg-[#0F172A] text-white flex items-center justify-center mx-auto shadow-sm">
+                <CheckCircle2 className="w-8 h-8 text-[#EA580C]" />
               </div>
 
               <div>
-                <h4 className="text-xl font-bold text-[#181614]">
+                <h4 className="text-xl font-bold text-[#0F172A]">
                   {sessionType === 'alignment-call' ? 'Parent Alignment Call Scheduled' : 'Diagnostic Trial Confirmed'}
                 </h4>
-                <p className="text-xs text-[#57534E] mt-1 max-w-sm mx-auto">
+                <p className="text-xs text-slate-600 mt-1 max-w-sm mx-auto">
                   Our academic desk will confirm classroom trial batch allocation for <strong>{subject}</strong>.
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-[#E8E2D8] text-xs font-code-mono text-left space-y-2 max-w-sm mx-auto shadow-editorial-inset">
+              <div className="bg-white p-4 rounded-2xl border border-[#E2E8F0] text-xs text-left space-y-2 max-w-sm mx-auto shadow-editorial-inset">
                 <div className="flex justify-between">
-                  <span className="text-[#78716C]">Parent / Student:</span>
-                  <span className="font-bold text-[#181614]">{studentName}</span>
+                  <span className="text-slate-500">Parent / Student:</span>
+                  <span className="font-bold text-[#0F172A]">{studentName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#78716C]">Syllabus / Track:</span>
-                  <span className="font-bold text-[#C2410C]">{subject}</span>
+                  <span className="text-slate-500">Syllabus / Track:</span>
+                  <span className="font-bold text-[#EA580C]">{subject}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#78716C]">Format:</span>
-                  <span className="font-bold text-[#181614]">
+                  <span className="text-slate-500">Format:</span>
+                  <span className="font-bold text-[#0F172A]">
                     {sessionType === 'alignment-call' 
                       ? '5-Min Direct Phone Calibration' 
                       : (mode === 'online' ? '1-on-1 Live Whiteboard' : 'Classroom Center (Thiripura Complex)')}
                   </span>
                 </div>
                 {childChallenge && (
-                  <div className="flex justify-between pt-1 border-t border-[#FAF7F2]">
-                    <span className="text-[#78716C]">Focus Area:</span>
-                    <span className="font-bold text-[#181614] truncate">{childChallenge}</span>
+                  <div className="flex justify-between pt-1 border-t border-slate-100">
+                    <span className="text-slate-500">Focus Area:</span>
+                    <span className="font-bold text-[#0F172A] truncate">{childChallenge}</span>
                   </div>
                 )}
-                <div className="flex justify-between pt-2 border-t border-[#FAF7F2]">
-                  <span className="text-[#78716C]">Fee:</span>
+                <div className="flex justify-between pt-2 border-t border-slate-100">
+                  <span className="text-slate-500">Fee:</span>
                   <span className="font-bold text-emerald-700">₹0.00 (Zero Fee • 100% Free)</span>
                 </div>
               </div>
 
-              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-800 flex items-center space-x-2 max-w-sm mx-auto">
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-800 flex items-center space-x-2 max-w-sm mx-auto">
                 <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
                 <span>Protected by 100% No-Questions-Asked Rematch Guarantee.</span>
               </div>
 
-              <p className="text-[11px] font-code-mono text-[#78716C]">
+              <p className="text-xs text-slate-500">
                 SMS confirmation dispatched to {phone}.
               </p>
 
@@ -232,7 +232,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
               <button
                 type="button"
                 onClick={handleReset}
-                className="w-full py-3 bg-[#181614] hover:bg-[#292524] text-white font-semibold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
+                className="w-full py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
               >
                 Return to Batches
               </button>
@@ -241,7 +241,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
             <form onSubmit={handleNext} className="space-y-4">
               {step === 1 && (
                 <div className="space-y-3">
-                  <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C]">
+                  <label className="block text-xs uppercase font-bold tracking-wider text-slate-600">
                     Enter Target Subject or Academic Exam *
                   </label>
                   <input
@@ -249,12 +249,12 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="e.g. Class 10 State Board Maths, Physics Derivations, CBSE Science..."
-                    className="w-full bg-white border border-[#E8E2D8] rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                    className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     required
                   />
 
                   <div className="pt-2">
-                    <span className="text-[10px] font-code-mono uppercase text-[#78716C] block mb-1.5">Frequent Disciplines:</span>
+                    <span className="text-xs uppercase text-slate-500 block mb-1.5 font-bold">Frequent Disciplines:</span>
                     <div className="flex flex-wrap gap-1.5 text-xs">
                       {[
                         'Class 10 State Board (SSLC)',
@@ -268,10 +268,10 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                           key={i}
                           type="button"
                           onClick={() => setSubject(item)}
-                          className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                             subject === item
-                              ? 'bg-[#181614] text-white font-bold'
-                              : 'bg-white hover:bg-[#EBE5DC] text-[#57534E] border border-[#E8E2D8]'
+                              ? 'bg-[#0F172A] text-white font-bold'
+                              : 'bg-white hover:bg-slate-100 text-slate-600 border border-[#E2E8F0]'
                           }`}
                         >
                           {item}
@@ -284,7 +284,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
 
               {step === 2 && (
                 <div className="space-y-3">
-                  <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C]">
+                  <label className="block text-xs uppercase font-bold tracking-wider text-slate-600">
                     Session Format
                   </label>
                   <div className="grid grid-cols-2 gap-3">
@@ -293,13 +293,13 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       onClick={() => setMode('offline')}
                       className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                         mode === 'offline'
-                          ? 'bg-[#181614] text-white border-[#181614]'
-                          : 'bg-white border-[#E8E2D8] text-[#57534E]'
+                          ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                          : 'bg-white border-[#E2E8F0] text-slate-600'
                       }`}
                     >
-                      <Building2 className="w-4 h-4 text-[#C2410C] mb-1" />
+                      <Building2 className="w-4 h-4 text-[#EA580C] mb-1" />
                       <p className="text-xs font-bold">Classroom Center Batch</p>
-                      <p className="text-[10px] opacity-70">Thiripura Complex, Thoramangalam</p>
+                      <p className="text-xs opacity-70">Thiripura Complex, Thoramangalam</p>
                     </button>
 
                     <button
@@ -307,25 +307,25 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       onClick={() => setMode('online')}
                       className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                         mode === 'online'
-                          ? 'bg-[#181614] text-white border-[#181614]'
-                          : 'bg-white border-[#E8E2D8] text-[#57534E]'
+                          ? 'bg-[#0F172A] text-white border-[#0F172A]'
+                          : 'bg-white border-[#E2E8F0] text-slate-600'
                       }`}
                     >
-                      <Video className="w-4 h-4 text-[#C2410C] mb-1" />
+                      <Video className="w-4 h-4 text-[#EA580C] mb-1" />
                       <p className="text-xs font-bold">1-on-1 Online</p>
-                      <p className="text-[10px] opacity-70">HD Whiteboard Workspace</p>
+                      <p className="text-xs opacity-70">HD Whiteboard Workspace</p>
                     </button>
                   </div>
 
                   <div>
-                    <label htmlFor="demo-timing" className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                    <label htmlFor="demo-timing" className="block text-xs uppercase font-bold tracking-wider text-slate-600 mb-1">
                       Preferred Evening Batch Slot
                     </label>
                     <select
                       id="demo-timing"
                       value={timing}
                       onChange={(e) => setTiming(e.target.value)}
-                      className="w-full bg-white border border-[#E8E2D8] rounded-xl px-3 py-2 text-xs font-semibold text-[#181614]"
+                      className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A]"
                     >
                       <option value="Batch 1: 4:30 PM – 6:00 PM">Batch 1: 4:30 PM – 6:00 PM (Middle / Foundation)</option>
                       <option value="Batch 2: 6:00 PM – 7:30 PM">Batch 2: 6:00 PM – 7:30 PM (Secondary Board Slot)</option>
@@ -338,7 +338,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
               {step === 3 && (
                 <div className="space-y-3">
                   <div>
-                    <label htmlFor="demo-student-name" className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                    <label htmlFor="demo-student-name" className="block text-xs uppercase font-bold tracking-wider text-slate-600 mb-1">
                       Student / Parent Name *
                     </label>
                     <input
@@ -351,17 +351,17 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       }}
                       placeholder="e.g. S. Kannan (Parent)"
                       className={`w-full bg-white border ${
-                        nameError ? 'border-rose-500' : 'border-[#E8E2D8]'
-                      } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#181614]`}
+                        nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
+                      } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A]`}
                       required
                     />
                     {nameError && (
-                      <p className="text-[10px] text-rose-600 mt-1">{nameError}</p>
+                      <p className="text-xs text-rose-600 mt-1">{nameError}</p>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="demo-phone" className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                    <label htmlFor="demo-phone" className="block text-xs uppercase font-bold tracking-wider text-slate-600 mb-1">
                       Mobile Number (For Confirmation & Reminders) *
                     </label>
                     <input
@@ -374,17 +374,17 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       }}
                       placeholder="e.g. 98424 51220"
                       className={`w-full bg-white border ${
-                        phoneError ? 'border-rose-500' : 'border-[#E8E2D8]'
-                      } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#181614]`}
+                        phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
+                      } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A]`}
                       required
                     />
                     {phoneError && (
-                      <p className="text-[10px] text-rose-600 mt-1">{phoneError}</p>
+                      <p className="text-xs text-rose-600 mt-1">{phoneError}</p>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="demo-challenge" className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                    <label htmlFor="demo-challenge" className="block text-xs uppercase font-bold tracking-wider text-slate-600 mb-1">
                       Child's Specific Learning Challenge (Optional)
                     </label>
                     <input
@@ -393,14 +393,14 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       value={childChallenge}
                       onChange={(e) => setChildChallenge(e.target.value)}
                       placeholder="e.g. Pre-board exam anxiety, lacks algebra foundation, shy to ask doubts..."
-                      className="w-full bg-white border border-[#E8E2D8] rounded-xl px-3 py-2 text-xs font-medium text-[#181614]"
+                      className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-medium text-[#0F172A]"
                     />
                   </div>
 
-                  <div className="p-3 bg-white rounded-xl border border-emerald-200 text-[11px] text-[#57534E] flex items-center space-x-2 shadow-editorial-inset">
+                  <div className="p-3 bg-white rounded-xl border border-emerald-200 text-xs text-slate-600 flex items-center space-x-2 shadow-editorial-inset">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                     <div>
-                      <strong className="text-emerald-900 block font-code-mono text-[10px] uppercase">
+                      <strong className="text-emerald-900 block text-xs uppercase">
                         100% No-Questions-Asked Rematch Guarantee
                       </strong>
                       <span>If your child doesn't click after Session 1, rematch instantly with zero penalty.</span>
@@ -409,12 +409,12 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                 </div>
               )}
 
-              <div className="pt-3 border-t border-[#E8E2D8] flex items-center justify-between">
+              <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between">
                 {step > 1 ? (
                   <button
                     type="button"
                     onClick={() => setStep(step - 1)}
-                    className="text-xs font-semibold text-[#78716C] hover:text-[#181614] cursor-pointer"
+                    className="text-xs font-semibold text-slate-500 hover:text-[#0F172A] cursor-pointer"
                   >
                     ← Back
                   </button>
@@ -422,7 +422,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
 
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#C2410C] hover:bg-[#9A3412] text-white text-xs font-semibold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+                  className="px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-semibold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
                 >
                   <span>
                     {step === 3 

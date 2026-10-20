@@ -16,7 +16,7 @@ export default function StepProgress({ currentStep }) {
   ];
 
   return (
-    <div className="bg-white border-b border-[#E8E2D8] py-3.5 px-4 sticky top-16 z-30 shadow-xs">
+    <div className="bg-white border-b border-[#E2E8F0] py-3.5 px-4 sticky top-16 z-30 shadow-xs">
       <div className="max-w-5xl mx-auto flex items-center justify-between overflow-x-auto no-scrollbar gap-2">
         {steps.map((step, idx) => {
           const isCompleted = step.number < currentStep;
@@ -26,12 +26,12 @@ export default function StepProgress({ currentStep }) {
             <React.Fragment key={step.number}>
               <div className="flex items-center space-x-2 shrink-0">
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-code-mono font-bold transition-colors ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                     isCompleted
                       ? 'bg-emerald-600 text-white'
                       : isCurrent
-                      ? 'bg-[#C2410C] text-white'
-                      : 'bg-[#FAF7F2] text-[#78716C] border border-[#E8E2D8]'
+                      ? 'bg-[#EA580C] text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-500 border border-[#E2E8F0]'
                   }`}
                 >
                   {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : step.number}
@@ -40,14 +40,14 @@ export default function StepProgress({ currentStep }) {
                 {isCompleted ? (
                   <Link
                     to={step.path}
-                    className="text-xs font-semibold text-[#57534E] hover:text-[#C2410C] transition-colors"
+                    className="text-xs font-semibold text-slate-600 hover:text-[#EA580C] transition-colors"
                   >
                     {step.title}
                   </Link>
                 ) : (
                   <span
                     className={`text-xs font-semibold ${
-                      isCurrent ? 'text-[#181614] font-bold' : 'text-[#A8A29E]'
+                      isCurrent ? 'text-[#0F172A] font-bold' : 'text-slate-400'
                     }`}
                   >
                     {step.title}
@@ -56,7 +56,7 @@ export default function StepProgress({ currentStep }) {
               </div>
 
               {idx < steps.length - 1 && (
-                <ChevronRight className="w-3.5 h-3.5 text-[#D6D3D1] shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />
               )}
             </React.Fragment>
           );

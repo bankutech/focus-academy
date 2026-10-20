@@ -21,10 +21,10 @@ import AboutPage from './pages/AboutPage';
 
 function MainLayout() {
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#181614] font-sans-body flex flex-col selection:bg-[#C2410C] selection:text-white pb-24 md:pb-0 overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans-body flex flex-col selection:bg-[#EA580C] selection:text-white pb-24 md:pb-0 overflow-x-hidden">
       <a 
         href="#main-content" 
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#181614] focus:text-white focus:rounded-xl focus:shadow-editorial text-xs font-bold"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#0F172A] focus:text-white focus:rounded-xl focus:shadow-editorial text-xs font-bold"
       >
         Skip to main content
       </a>

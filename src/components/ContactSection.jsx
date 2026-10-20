@@ -7,9 +7,9 @@ import {
   Send, 
   CheckCircle2, 
   ShieldCheck, 
-  ExternalLink,
-  MessageSquare,
-  AlertCircle
+  ExternalLink, 
+  MessageSquare, 
+  AlertCircle 
 } from 'lucide-react';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
@@ -63,22 +63,22 @@ export default function ContactSection() {
   };
 
   return (
-    <section id="contact" aria-labelledby="contact-heading" className="py-16 sm:py-20 bg-white border-b border-[#E8E2D8] text-left relative">
+    <section id="contact" aria-labelledby="contact-heading" className="py-16 sm:py-20 bg-white border-b border-[#E2E8F0] text-left relative">
       <span id="enroll" className="absolute -top-24 left-0 pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mb-12">
-          <h2 id="contact-heading" className="text-2xl sm:text-3xl md:text-4xl font-black text-[#181614] tracking-tight">
+          <h2 id="contact-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">
             Visit Focus Academy in Thoramangalam, Perambalur
           </h2>
-          <p className="mt-3 text-sm sm:text-base text-[#57534E] leading-relaxed">
+          <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
             Parents and students are welcome to visit our campus, inspect our classrooms, and discuss batch timings and admissions.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-[#FAF7F2] p-6 rounded-3xl border border-[#E8E2D8] shadow-editorial text-left">
-              <h3 className="text-lg font-bold text-[#181614]">
+            <div className="bg-[#F8FAFC] p-6 rounded-3xl border border-[#E2E8F0] shadow-editorial text-left">
+              <h3 className="text-lg font-bold text-[#0F172A]">
                 {CAMPUS_CONFIG.brand.name}, {CAMPUS_CONFIG.location.area}
               </h3>
               
@@ -86,29 +86,29 @@ export default function ContactSection() {
                 href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 text-xs sm:text-sm text-[#57534E] hover:text-[#C2410C] leading-relaxed block transition-colors"
+                className="mt-2 text-xs sm:text-sm text-slate-600 hover:text-[#EA580C] leading-relaxed block transition-colors"
               >
                 {CAMPUS_CONFIG.location.fullAddress}
               </a>
 
-              <div className="mt-4 pt-4 border-t border-[#E8E2D8] space-y-2.5 text-xs">
-                <div className="flex items-center space-x-2.5 text-[#181614]">
-                  <Phone className="w-4 h-4 text-[#C2410C] shrink-0" />
+              <div className="mt-4 pt-4 border-t border-[#E2E8F0] space-y-2.5 text-xs">
+                <div className="flex items-center space-x-2.5 text-[#0F172A]">
+                  <Phone className="w-4 h-4 text-[#EA580C] shrink-0" />
                   <a href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`} className="font-semibold hover:underline">
                     {CAMPUS_CONFIG.contact.primaryPhone}
                   </a>
                 </div>
 
-                <div className="flex items-center space-x-2.5 text-[#57534E]">
-                  <Mail className="w-4 h-4 text-[#C2410C] shrink-0" />
-                  <a href={`mailto:${CAMPUS_CONFIG.contact.email}`} className="font-code-mono text-[11px] truncate hover:underline">
+                <div className="flex items-center space-x-2.5 text-slate-600">
+                  <Mail className="w-4 h-4 text-[#EA580C] shrink-0" />
+                  <a href={`mailto:${CAMPUS_CONFIG.contact.email}`} className="text-xs truncate hover:underline">
                     {CAMPUS_CONFIG.contact.email}
                   </a>
                 </div>
 
-                <div className="flex items-center space-x-2.5 text-[#57534E]">
+                <div className="flex items-center space-x-2.5 text-slate-600">
                   <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-code-mono text-[11px]">
+                  <span className="text-xs">
                     {CAMPUS_CONFIG.timings.workingDays}: {CAMPUS_CONFIG.timings.dailyHours}
                   </span>
                 </div>
@@ -129,24 +129,24 @@ export default function ContactSection() {
               </div>
             </div>
 
-            <div className="bg-[#FAF7F2] rounded-3xl border border-[#E8E2D8] overflow-hidden shadow-editorial">
-              <div className="p-4 bg-[#181614] text-white flex items-center justify-between">
+            <div className="bg-[#F8FAFC] rounded-3xl border border-[#E2E8F0] overflow-hidden shadow-editorial">
+              <div className="p-4 bg-[#0F172A] text-white flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs font-bold">
-                  <MapPin className="w-4 h-4 text-[#C2410C]" />
+                  <MapPin className="w-4 h-4 text-[#EA580C]" />
                   <span>Map Target: Thiripura Complex, Thoramangalam, Perambalur</span>
                 </div>
                 <a
                   href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[10px] font-code-mono text-[#FED7AA] hover:underline flex items-center space-x-1"
+                  className="text-xs text-orange-200 hover:underline flex items-center space-x-1"
                 >
                   <span>Open in Maps</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
 
-              <div className="relative h-60 w-full bg-[#E5E0D8]">
+              <div className="relative h-60 w-full bg-slate-100">
                 <iframe
                   title="Focus Academy Thiripura Complex Perambalur Map"
                   src={CAMPUS_CONFIG.location.googleMapsEmbedUrl}
@@ -156,19 +156,19 @@ export default function ContactSection() {
                 />
               </div>
 
-              <div className="p-3.5 bg-white text-[11px] text-[#78716C] flex items-center justify-between border-t border-[#E8E2D8]">
+              <div className="p-3.5 bg-white text-xs text-slate-500 flex items-center justify-between border-t border-[#E2E8F0]">
                 <span>Landmark: {CAMPUS_CONFIG.location.landmark}</span>
-                <span className="text-[#C2410C] font-semibold">Easy Parking Available</span>
+                <span className="text-[#EA580C] font-semibold">Easy Parking Available</span>
               </div>
             </div>
           </div>
 
-          <div className="lg:col-span-7 bg-[#FAF7F2] p-6 sm:p-8 rounded-3xl border border-[#E8E2D8] shadow-editorial-lg text-left">
-            <div className="mb-6 pb-4 border-b border-[#E8E2D8]">
-              <h3 className="text-xl sm:text-2xl font-bold text-[#181614]">
+          <div className="lg:col-span-7 bg-[#F8FAFC] p-6 sm:p-8 rounded-3xl border border-[#E2E8F0] shadow-editorial-lg text-left">
+            <div className="mb-6 pb-4 border-b border-[#E2E8F0]">
+              <h3 className="text-xl sm:text-2xl font-bold text-[#0F172A]">
                 Enroll Your Child in Focus Academy Evening Batches
               </h3>
-              <p className="text-xs text-[#57534E] mt-1">
+              <p className="text-xs text-slate-600 mt-1">
                 Fill this inquiry form to reserve a seat or schedule a complimentary 45-minute diagnostic session.
               </p>
             </div>
@@ -179,14 +179,14 @@ export default function ContactSection() {
                   <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                 </div>
                 
-                <h4 className="text-xl font-bold text-[#181614]">Enrollment Inquiry Received</h4>
+                <h4 className="text-xl font-bold text-[#0F172A]">Enrollment Inquiry Received</h4>
                 
-                <p className="text-xs text-[#57534E] max-w-md mx-auto leading-relaxed">
+                <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
                   Thank you, <strong>{submissionResult.data.parentName || submissionResult.data.studentName}</strong>. Our academic counselor at the Thoramangalam campus will contact you within 2 business hours regarding evening batch availability for <strong>{submissionResult.data.studentName} ({submissionResult.data.grade})</strong>.
                 </p>
 
                 {submissionResult.offlineQueued && (
-                  <div className="p-3 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-xs font-code-mono max-w-sm mx-auto flex items-center space-x-2">
+                  <div className="p-3 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-xs max-w-sm mx-auto flex items-center space-x-2">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>Inquiry saved in offline queue. Auto-syncing upon reconnection.</span>
                   </div>
@@ -202,7 +202,7 @@ export default function ContactSection() {
                     <MessageSquare className="w-4 h-4" />
                     <span>Fast-Track Admission on WhatsApp →</span>
                   </a>
-                  <p className="text-[10px] text-[#78716C] mt-1.5 font-code-mono">
+                  <p className="text-xs text-slate-500 mt-1.5">
                     Direct chat with Focus Academy Thoramangalam Coordinator
                   </p>
                 </div>
@@ -211,7 +211,7 @@ export default function ContactSection() {
                   <button
                     type="button"
                     onClick={handleResetForm}
-                    className="text-xs text-[#181614] hover:underline font-code-mono cursor-pointer"
+                    className="text-xs text-[#0F172A] hover:underline cursor-pointer"
                   >
                     Submit Another Inquiry ↺
                   </button>
@@ -221,7 +221,7 @@ export default function ContactSection() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="student-name" className="block font-code-mono text-[10px] uppercase font-bold text-[#78716C] mb-1">
+                    <label htmlFor="student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                       Student Full Name *
                     </label>
                     <input
@@ -231,17 +231,17 @@ export default function ContactSection() {
                       onChange={(e) => setStudentName(e.target.value)}
                       placeholder="e.g. K. Vignesh"
                       className={`w-full min-h-[48px] bg-white border ${
-                        validationErrors.studentName ? 'border-rose-500' : 'border-[#E8E2D8]'
-                      } rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]`}
+                        validationErrors.studentName ? 'border-rose-500' : 'border-[#E2E8F0]'
+                      } rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                       required
                     />
                     {validationErrors.studentName && (
-                      <p role="alert" className="text-[10px] text-rose-600 mt-1">{validationErrors.studentName}</p>
+                      <p role="alert" className="text-xs text-rose-600 mt-1">{validationErrors.studentName}</p>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="parent-name" className="block font-code-mono text-[10px] uppercase font-bold text-[#78716C] mb-1">
+                    <label htmlFor="parent-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                       Parent / Guardian Name
                     </label>
                     <input
@@ -250,14 +250,14 @@ export default function ContactSection() {
                       value={parentName}
                       onChange={(e) => setParentName(e.target.value)}
                       placeholder="e.g. Mr. S. Kannan"
-                      className="w-full min-h-[48px] bg-white border border-[#E8E2D8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="contact-phone" className="block font-code-mono text-[10px] uppercase font-bold text-[#78716C] mb-1">
+                    <label htmlFor="contact-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                       Contact Mobile Number (10 Digits) *
                     </label>
                     <input
@@ -267,24 +267,24 @@ export default function ContactSection() {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="e.g. 98424 51220"
                       className={`w-full min-h-[48px] bg-white border ${
-                        validationErrors.phone ? 'border-rose-500' : 'border-[#E8E2D8]'
-                      } rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]`}
+                        validationErrors.phone ? 'border-rose-500' : 'border-[#E2E8F0]'
+                      } rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                       required
                     />
                     {validationErrors.phone && (
-                      <p role="alert" className="text-[10px] text-rose-600 mt-1">{validationErrors.phone}</p>
+                      <p role="alert" className="text-xs text-rose-600 mt-1">{validationErrors.phone}</p>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="target-grade" className="block font-code-mono text-[10px] uppercase font-bold text-[#78716C] mb-1">
+                    <label htmlFor="target-grade" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                       Target Grade / Class *
                     </label>
                     <select
                       id="target-grade"
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
-                      className="w-full min-h-[48px] bg-white border border-[#E8E2D8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     >
                       <option value="Class 10">Class 10 (Secondary Board Preparation)</option>
                       <option value="Class 12">Class 12 (Higher Secondary STEM / Commerce)</option>
@@ -299,14 +299,14 @@ export default function ContactSection() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="curriculum-board" className="block font-code-mono text-[10px] uppercase font-bold text-[#78716C] mb-1">
+                    <label htmlFor="curriculum-board" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                       Curriculum Board *
                     </label>
                     <select
                       id="curriculum-board"
                       value={board}
                       onChange={(e) => setBoard(e.target.value)}
-                      className="w-full min-h-[48px] bg-white border border-[#E8E2D8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     >
                       <option value="TN State Board (Samacheer)">TN State Board (Samacheer Kalvi)</option>
                       <option value="CBSE Board">CBSE Board (NCERT)</option>
@@ -316,7 +316,7 @@ export default function ContactSection() {
                   </div>
 
                   <div>
-                    <label htmlFor="support-subjects" className="block font-code-mono text-[10px] uppercase font-bold text-[#78716C] mb-1">
+                    <label htmlFor="support-subjects" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                       Subjects Needing Support
                     </label>
                     <input
@@ -325,13 +325,13 @@ export default function ContactSection() {
                       value={subjects}
                       onChange={(e) => setSubjects(e.target.value)}
                       placeholder="e.g. Maths, Physics, Chemistry, Biology"
-                      className="w-full min-h-[48px] bg-white border border-[#E8E2D8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="specific-notes" className="block font-code-mono text-[10px] uppercase font-bold text-[#78716C] mb-1">
+                  <label htmlFor="specific-notes" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
                     Student Specific Challenges or Goals (Optional)
                   </label>
                   <textarea
@@ -340,11 +340,11 @@ export default function ContactSection() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="e.g. Struggles with algebra factoring, pre-board test panic, wants to target 95%+ in 10th boards..."
-                    className="w-full bg-white border border-[#E8E2D8] rounded-xl p-3 text-xs sm:text-sm font-medium text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                    className="w-full bg-white border border-[#E2E8F0] rounded-xl p-3 text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                   />
                 </div>
 
-                <div className="p-3 bg-white rounded-xl border border-[#E8E2D8] text-[11px] text-[#57534E] flex items-center space-x-2">
+                <div className="p-3 bg-white rounded-xl border border-[#E2E8F0] text-xs text-slate-600 flex items-center space-x-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>Small batches guaranteed (Strictly Max 12 Students) • Mon–Sat Evening Schedule (4 PM – 9 PM)</span>
                 </div>
@@ -352,9 +352,9 @@ export default function ContactSection() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[48px] py-3.5 bg-[#C2410C] hover:bg-[#9A3412] disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-xl shadow-editorial hover:shadow-editorial-lg transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
+                  className="w-full min-h-[48px] py-3.5 bg-[#EA580C] hover:bg-[#C2410C] disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-xl shadow-editorial hover:shadow-editorial-lg transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                 >
-                  <Send className="w-4 h-4 text-[#FED7AA]" />
+                  <Send className="w-4 h-4 text-orange-200" />
                   <span>{isSubmitting ? 'Validating & Submitting...' : 'Submit Enrollment Inquiry (Evening Batches)'}</span>
                 </button>
               </form>

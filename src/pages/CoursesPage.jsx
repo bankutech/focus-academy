@@ -58,51 +58,60 @@ export default function CoursesPage() {
   const filteredCourses = useMemo(() => {
     return allCourses.filter(course => {
       if (selectedBoard === 'state') {
-        const matches = course.description.toLowerCase().includes('tamil nadu') ||
-                        course.description.toLowerCase().includes('samacheer') ||
-                        course.title.toLowerCase().includes('board');
-        if (!matches) return false;
-      } else if (selectedBoard === 'cbse') {
-        const matches = course.description.toLowerCase().includes('cbse') ||
-                        course.popularSubjects.some(s => s.toLowerCase().includes('cbse'));
-        if (!matches && !course.title.toLowerCase().includes('board')) return false;
-      } else if (selectedBoard === 'foundation') {
-        const matches = course.categoryId === 'skill-test-prep' ||
-                        course.title.toLowerCase().includes('foundation') ||
-                        course.tag.toLowerCase().includes('competitive');
-        if (!matches) return false;
-      }
-
-      if (selectedGrade === 'class-6-8') {
-        if (!course.id.includes('class-6') && !course.id.includes('class-7') && !course.id.includes('class-8') && course.categoryId !== 'middle-school') {
+        if (!course.category.toLowerCase().includes('state board') && !course.title.toLowerCase().includes('state')) {
           return false;
         }
-      } else if (selectedGrade === 'class-9') {
-        if (!course.id.includes('class-9') && !course.title.includes('Class 9')) return false;
-      } else if (selectedGrade === 'class-10') {
-        if (!course.id.includes('class-10') && !course.title.includes('Class 10')) return false;
-      } else if (selectedGrade === 'class-11') {
-        if (!course.id.includes('class-11') && !course.title.includes('Class 11')) return false;
-      } else if (selectedGrade === 'class-12') {
-        if (!course.id.includes('class-12') && !course.title.includes('Class 12')) return false;
+      } else if (selectedBoard === 'cbse') {
+        if (!course.category.toLowerCase().includes('cbse') && !course.title.toLowerCase().includes('cbse')) {
+          return false;
+        }
+      } else if (selectedBoard === 'foundation') {
+        if (!course.category.toLowerCase().includes('foundation') && !course.title.toLowerCase().includes('foundation') && !course.title.toLowerCase().includes('competitive')) {
+          return false;
+        }
       }
 
-      if (selectedGoal === 'board-exam') {
-        if (!course.tag.toLowerCase().includes('board') && !course.title.toLowerCase().includes('board')) return false;
-      } else if (selectedGoal === 'concept-clarity') {
-        if (!course.description.toLowerCase().includes('clarity') && !course.description.toLowerCase().includes('understanding') && !course.tag.toLowerCase().includes('foundation')) return false;
-      } else if (selectedGoal === 'competitive') {
-        if (!course.tag.toLowerCase().includes('competitive') && !course.title.toLowerCase().includes('neet')) return false;
-      } else if (selectedGoal === 'doubt-clearing') {
-        if (!course.id.includes('doubt') && !course.description.toLowerCase().includes('doubt')) return false;
+      if (selectedGrade !== 'all') {
+        if (selectedGrade === 'class-6-8' && !(course.id.includes('6') || course.id.includes('7') || course.id.includes('8') || course.title.includes('6') || course.title.includes('7') || course.title.includes('8'))) {
+          return false;
+        }
+        if (selectedGrade === 'class-9' && !course.title.includes('9') && !course.id.includes('9')) {
+          return false;
+        }
+        if (selectedGrade === 'class-10' && !course.title.includes('10') && !course.id.includes('10')) {
+          return false;
+        }
+        if (selectedGrade === 'class-11' && !course.title.includes('11') && !course.id.includes('11')) {
+          return false;
+        }
+        if (selectedGrade === 'class-12' && !course.title.includes('12') && !course.id.includes('12')) {
+          return false;
+        }
       }
 
-      if (initialSearch) {
-        const term = initialSearch.toLowerCase();
-        const matches = course.title.toLowerCase().includes(term) ||
-                        course.description.toLowerCase().includes(term) ||
-                        course.popularSubjects.some(s => s.toLowerCase().includes(term));
-        if (!matches) return false;
+      if (selectedGoal !== 'all') {
+        if (selectedGoal === 'board-exam' && !course.title.toLowerCase().includes('board') && !course.description.toLowerCase().includes('board')) {
+          return false;
+        }
+        if (selectedGoal === 'concept-clarity' && !course.description.toLowerCase().includes('concept') && !course.description.toLowerCase().includes('fundamental') && !course.description.toLowerCase().includes('coverage')) {
+          return false;
+        }
+        if (selectedGoal === 'competitive' && !course.category.toLowerCase().includes('foundation') && !course.title.toLowerCase().includes('foundation') && !course.description.toLowerCase().includes('foundation')) {
+          return false;
+        }
+        if (selectedGoal === 'doubt-clearing' && !course.description.toLowerCase().includes('test') && !course.description.toLowerCase().includes('support') && !course.description.toLowerCase().includes('comprehensive')) {
+          return false;
+        }
+      }
+
+      if (initialSearch.trim()) {
+        const query = initialSearch.toLowerCase();
+        const matchesTitle = course.title.toLowerCase().includes(query);
+        const matchesCat = course.category.toLowerCase().includes(query);
+        const matchesSubj = course.popularSubjects.some(s => s.toLowerCase().includes(query));
+        if (!matchesTitle && !matchesCat && !matchesSubj) {
+          return false;
+        }
       }
 
       return true;
@@ -116,28 +125,28 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="py-12 sm:py-16 bg-[#FAF7F2] min-h-screen text-left">
+    <div className="py-12 sm:py-16 bg-[#F8FAFC] min-h-screen text-left">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-10">
-          <div className="flex items-center space-x-2 text-xs font-code-mono text-[#78716C] mb-2">
-            <Link to="/" className="hover:text-[#C2410C]">Home</Link>
+          <div className="flex items-center space-x-2 text-xs text-slate-500 mb-2">
+            <Link to="/" className="hover:text-[#EA580C]">Home</Link>
             <span>/</span>
-            <span className="text-[#181614] font-bold">Class & Board Selection</span>
+            <span className="text-[#0F172A] font-bold">Class & Board Selection</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#181614] tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0F172A] tracking-tight">
             Academic Programs & Preparation Tracks
           </h1>
-          <p className="mt-3 text-base text-[#57534E] max-w-3xl leading-relaxed">
+          <p className="mt-3 text-base text-slate-600 max-w-3xl leading-relaxed">
             Select your Board, Grade, and what you are preparing for to view our tailored coaching curriculum and evening batch options at Thiripura Complex, Thoramangalam.
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E8E2D8] shadow-editorial-lg mb-12 space-y-6">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] shadow-editorial-lg mb-12 space-y-6">
           <div>
             <div className="flex items-center space-x-2 mb-3">
-              <span className="w-5 h-5 rounded-full bg-[#181614] text-white text-[11px] font-bold flex items-center justify-center">1</span>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-[#181614] font-code-mono">
+              <span className="w-5 h-5 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center">1</span>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
                 Select Your Curriculum Board:
               </h2>
             </div>
@@ -149,8 +158,8 @@ export default function CoursesPage() {
                   onClick={() => setSelectedBoard(b.id)}
                   className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                     selectedBoard === b.id
-                      ? 'bg-[#C2410C] text-white shadow-editorial'
-                      : 'bg-[#FAF7F2] text-[#57534E] hover:bg-[#F4EFEA] border border-[#E8E2D8]'
+                      ? 'bg-[#EA580C] text-white shadow-xs'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                   }`}
                 >
                   {b.label}
@@ -159,12 +168,12 @@ export default function CoursesPage() {
             </div>
           </div>
 
-          <div className="border-t border-[#FAF7F2]" />
+          <div className="border-t border-slate-100" />
 
           <div>
             <div className="flex items-center space-x-2 mb-3">
-              <span className="w-5 h-5 rounded-full bg-[#181614] text-white text-[11px] font-bold flex items-center justify-center">2</span>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-[#181614] font-code-mono">
+              <span className="w-5 h-5 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center">2</span>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
                 Select Student's Grade / Class:
               </h2>
             </div>
@@ -176,8 +185,8 @@ export default function CoursesPage() {
                   onClick={() => setSelectedGrade(g.id)}
                   className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                     selectedGrade === g.id
-                      ? 'bg-[#181614] text-white shadow-editorial'
-                      : 'bg-[#FAF7F2] text-[#57534E] hover:bg-[#F4EFEA] border border-[#E8E2D8]'
+                      ? 'bg-[#0F172A] text-white shadow-xs'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                   }`}
                 >
                   {g.label}
@@ -186,12 +195,12 @@ export default function CoursesPage() {
             </div>
           </div>
 
-          <div className="border-t border-[#FAF7F2]" />
+          <div className="border-t border-slate-100" />
 
           <div>
             <div className="flex items-center space-x-2 mb-3">
-              <span className="w-5 h-5 rounded-full bg-[#181614] text-white text-[11px] font-bold flex items-center justify-center">3</span>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-[#181614] font-code-mono">
+              <span className="w-5 h-5 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center">3</span>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
                 What are you preparing for? (Preparation Goal):
               </h2>
             </div>
@@ -203,8 +212,8 @@ export default function CoursesPage() {
                   onClick={() => setSelectedGoal(goal.id)}
                   className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                     selectedGoal === goal.id
-                      ? 'bg-[#292524] text-[#FED7AA] shadow-editorial border border-[#C2410C]'
-                      : 'bg-[#FAF7F2] text-[#57534E] hover:bg-[#F4EFEA] border border-[#E8E2D8]'
+                      ? 'bg-[#0F172A] text-orange-200 shadow-xs border border-[#EA580C]'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                   }`}
                 >
                   {goal.label}
@@ -214,14 +223,14 @@ export default function CoursesPage() {
           </div>
 
           {(selectedBoard !== 'all' || selectedGrade !== 'all' || selectedGoal !== 'all') && (
-            <div className="pt-3 border-t border-[#E8E2D8] flex items-center justify-between text-xs font-code-mono">
-              <span className="text-[#78716C]">
+            <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between text-xs">
+              <span className="text-slate-500">
                 Showing {filteredCourses.length} matching curriculum track{filteredCourses.length !== 1 ? 's' : ''}
               </span>
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="text-[#C2410C] hover:underline font-bold cursor-pointer"
+                className="text-[#EA580C] hover:underline font-bold cursor-pointer"
               >
                 Reset All Filters ↺
               </button>
@@ -230,23 +239,23 @@ export default function CoursesPage() {
         </div>
 
         {filteredCourses.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center border border-[#E8E2D8] shadow-editorial max-w-xl mx-auto">
-            <BookOpen className="w-12 h-12 text-[#A8A29E] mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-[#181614]">No Direct Courses Matching Selection</h3>
-            <p className="text-xs text-[#57534E] mt-2 leading-relaxed">
+          <div className="bg-white rounded-3xl p-12 text-center border border-[#E2E8F0] shadow-editorial max-w-xl mx-auto">
+            <BookOpen className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-[#0F172A]">No Direct Courses Matching Selection</h3>
+            <p className="text-xs text-slate-600 mt-2 leading-relaxed">
               We offer personalized evening tuition for all students from Classes 6 to 12. Speak with our campus coordinator to arrange custom subject coaching.
             </p>
             <div className="mt-6 flex justify-center gap-3">
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-4 py-2 bg-[#181614] text-white text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 bg-[#0F172A] text-white text-xs font-bold rounded-xl cursor-pointer"
               >
                 Reset Filters
               </button>
               <a
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
-                className="px-4 py-2 bg-[#C2410C] text-white text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 bg-[#EA580C] text-white text-xs font-bold rounded-xl cursor-pointer"
               >
                 Call Counselor: {CAMPUS_CONFIG.contact.primaryPhone}
               </a>
@@ -257,52 +266,52 @@ export default function CoursesPage() {
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
-                className="bg-white rounded-3xl border border-[#E8E2D8] shadow-editorial hover:shadow-editorial-lg transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                className="bg-white rounded-3xl border border-[#E2E8F0] shadow-editorial hover:shadow-editorial-lg transition-all duration-300 overflow-hidden flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative h-44 w-full bg-[#181614] overflow-hidden">
+                  <div className="relative h-44 w-full bg-[#0F172A] overflow-hidden">
                     <img
                       src={course.image}
                       alt={course.title}
                       className="w-full h-full object-cover filter contrast-[102%] hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#181614]/80 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/80 via-transparent to-transparent" />
                     
                     <div className="absolute top-3 left-3">
-                      <span className="font-code-mono text-[10px] uppercase font-bold px-2.5 py-1 rounded-lg bg-[#FAF7F2]/90 backdrop-blur-md text-[#181614] shadow-sm">
+                      <span className="text-xs uppercase font-bold px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur-md text-[#0F172A] shadow-xs">
                         {course.tag}
                       </span>
                     </div>
 
-                    <div className="absolute bottom-3 left-3 right-3 text-white flex items-center justify-between text-xs font-code-mono">
+                    <div className="absolute bottom-3 left-3 right-3 text-white flex items-center justify-between text-xs">
                       <span>Focus Academy Thoramangalam</span>
                       <span className="text-emerald-300 font-bold">1:12 Small Batch</span>
                     </div>
                   </div>
 
                   <div className="p-6">
-                    <div className="font-code-mono text-[11px] text-[#C2410C] font-bold uppercase mb-1">
+                    <div className="text-xs text-[#EA580C] font-bold uppercase mb-1">
                       {course.category}
                     </div>
                     
-                    <h3 className="text-lg font-bold text-[#181614] leading-snug">
+                    <h3 className="text-lg font-bold text-[#0F172A] leading-snug">
                       {course.title}
                     </h3>
 
-                    <p className="mt-2 text-xs text-[#57534E] leading-relaxed line-clamp-3">
+                    <p className="mt-2 text-xs text-slate-600 leading-relaxed line-clamp-3">
                       {course.description}
                     </p>
 
-                    <div className="mt-4 pt-4 border-t border-[#FAF7F2]">
-                      <span className="font-code-mono text-[10px] text-[#78716C] uppercase font-bold block mb-2">
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                      <span className="text-xs text-slate-500 uppercase font-bold block mb-2">
                         Key Subjects Included:
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {course.popularSubjects.map((subj, idx) => (
                           <span
                             key={idx}
-                            className="text-[11px] font-medium bg-[#FAF7F2] text-[#44403C] px-2 py-0.5 rounded-md border border-[#E8E2D8]"
+                            className="text-xs font-medium bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md border border-[#E2E8F0]"
                           >
                             {subj}
                           </span>
@@ -313,14 +322,14 @@ export default function CoursesPage() {
                 </div>
 
                 <div className="p-6 pt-0">
-                  <div className="p-3.5 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D8] flex items-center justify-between mb-4">
+                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-[#E2E8F0] flex items-center justify-between mb-4">
                     <div>
-                      <span className="block text-[10px] font-code-mono text-[#78716C]">Tuition Model</span>
-                      <span className="text-xs font-bold text-[#181614]">Monthly Flexible</span>
+                      <span className="block text-xs text-slate-500">Tuition Model</span>
+                      <span className="text-xs font-bold text-[#0F172A]">Monthly Flexible</span>
                     </div>
                     <div className="text-right">
-                      <span className="block text-[10px] font-code-mono text-[#78716C]">Timings</span>
-                      <span className="text-xs font-bold text-[#C2410C]">4:00 PM – 9:00 PM</span>
+                      <span className="block text-xs text-slate-500">Timings</span>
+                      <span className="text-xs font-bold text-[#EA580C]">4:00 PM – 9:00 PM</span>
                     </div>
                   </div>
 
@@ -328,31 +337,31 @@ export default function CoursesPage() {
                     <button
                       type="button"
                       onClick={() => toggleSyllabus(course.id)}
-                      className="flex-1 py-2 px-3 text-xs font-semibold rounded-xl border border-[#E8E2D8] bg-[#FAF7F2] hover:bg-[#F4EFEA] text-[#181614] transition-colors cursor-pointer flex items-center justify-center space-x-1"
+                      className="flex-1 py-2 px-3 text-xs font-semibold rounded-xl border border-[#E2E8F0] bg-slate-50 hover:bg-slate-100 text-[#0F172A] transition-colors cursor-pointer flex items-center justify-center space-x-1"
                     >
                       <span>{expandedSyllabusId === course.id ? 'Hide Syllabus' : 'Syllabus Details'}</span>
-                      <span className="text-[10px] text-[#C2410C] font-bold">{expandedSyllabusId === course.id ? '▲' : '▼'}</span>
+                      <span className="text-xs text-[#EA580C] font-bold">{expandedSyllabusId === course.id ? '▲' : '▼'}</span>
                     </button>
 
                     <Link
                       to="/contact"
-                      className="py-2 px-3 text-xs font-semibold rounded-xl border border-[#E8E2D8] bg-white hover:bg-[#FAF7F2] text-[#C2410C] transition-colors cursor-pointer"
+                      className="py-2 px-3 text-xs font-semibold rounded-xl border border-[#E2E8F0] bg-white hover:bg-slate-50 text-[#EA580C] transition-colors cursor-pointer"
                     >
                       Inquire
                     </Link>
                   </div>
 
                   {expandedSyllabusId === course.id && (
-                    <div className="p-3 bg-white rounded-xl border border-[#E8E2D8] mb-3 text-xs space-y-1.5 animate-in fade-in">
-                      <span className="font-code-mono text-[10px] uppercase font-bold text-[#C2410C] block">
+                    <div className="p-3 bg-white rounded-xl border border-[#E2E8F0] mb-3 text-xs space-y-1.5 animate-in fade-in">
+                      <span className="text-xs uppercase font-bold text-[#EA580C] block">
                         Curriculum Highlights:
                       </span>
-                      <p className="text-[#57534E] leading-relaxed text-[11px]">
+                      <p className="text-slate-600 leading-relaxed text-xs">
                         Structured NCERT & Samacheer blueprint coverage with step-by-step numerical drills, chapter formula sheets, and Saturday timed mock exams.
                       </p>
-                      <div className="pt-1.5 border-t border-[#FAF7F2] flex items-center justify-between text-[11px] font-code-mono text-[#78716C]">
+                      <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                         <span>Small Batch: Max 12 Seats</span>
-                        <Link to="/contact" className="text-[#C2410C] font-bold hover:underline">
+                        <Link to="/contact" className="text-[#EA580C] font-bold hover:underline">
                           Enroll in Batch →
                         </Link>
                       </div>
@@ -367,10 +376,10 @@ export default function CoursesPage() {
                       course.id.includes('9') ? 'Class 9' :
                       'Class 6'
                     )}`}
-                    className="w-full inline-flex items-center justify-center space-x-2 py-3 bg-[#181614] hover:bg-[#C2410C] text-white text-xs font-bold rounded-xl shadow-editorial transition-all cursor-pointer group"
+                    className="w-full inline-flex items-center justify-center space-x-2 py-3 bg-[#0F172A] hover:bg-[#EA580C] text-white text-xs font-bold rounded-xl shadow-editorial transition-all cursor-pointer group"
                   >
                     <span>View Evening Batches & Timings</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#FED7AA] group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 text-orange-200 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </div>
               </div>
@@ -378,14 +387,14 @@ export default function CoursesPage() {
           </div>
         )}
 
-        <div className="mt-16 bg-white rounded-3xl p-6 sm:p-8 border border-[#E8E2D8] shadow-editorial flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="mt-16 bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] shadow-editorial flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#C2410C]/10 text-[#C2410C] flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-orange-50 text-[#EA580C] flex items-center justify-center shrink-0">
               <PhoneCall className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-base font-bold text-[#181614]">Need guidance choosing between State Board & CBSE batches?</h4>
-              <p className="text-xs text-[#57534E] mt-0.5">
+              <h4 className="text-base font-bold text-[#0F172A]">Need guidance choosing between State Board & CBSE batches?</h4>
+              <p className="text-xs text-slate-600 mt-0.5">
                 Our academic counseling desk at Thiripura Complex provides complimentary syllabus guidance for parents.
               </p>
             </div>
@@ -393,7 +402,7 @@ export default function CoursesPage() {
 
           <a
             href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
-            className="px-5 py-2.5 bg-[#181614] hover:bg-[#292524] text-white text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer shrink-0"
+            className="px-5 py-2.5 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-xl whitespace-nowrap cursor-pointer shrink-0"
           >
             Call Campus Desk: {CAMPUS_CONFIG.contact.primaryPhone}
           </a>
