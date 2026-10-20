@@ -165,9 +165,6 @@ export default function StudentDetailsPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="mb-6">
-          <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-            Step 1 of 5 • Student Onboarding
-          </span>
           <h1 className="text-3xl sm:text-4xl font-black text-[#181614] tracking-tight">
             {authMode === 'login' ? 'Student Account Log In' : 'Student Registration & Board Selection'}
           </h1>

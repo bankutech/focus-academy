@@ -8,14 +8,11 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   ExternalLink,
-  Building2,
   MessageSquare,
   AlertCircle
 } from 'lucide-react';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
-
-const CURRENT_YEAR = new Date().getFullYear();
 
 export default function ContactSection() {
   const [studentName, setStudentName] = useState('');
@@ -81,11 +78,6 @@ export default function ContactSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-[#FAF7F2] p-6 rounded-3xl border border-[#E8E2D8] shadow-editorial text-left">
-              <div className="flex items-center space-x-2 text-[10px] font-code-mono uppercase font-bold text-[#C2410C] mb-2">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Campus Address</span>
-              </div>
-              
               <h3 className="text-lg font-bold text-[#181614]">
                 {CAMPUS_CONFIG.brand.name}, {CAMPUS_CONFIG.location.area}
               </h3>
@@ -173,9 +165,6 @@ export default function ContactSection() {
 
           <div className="lg:col-span-7 bg-[#FAF7F2] p-6 sm:p-8 rounded-3xl border border-[#E8E2D8] shadow-editorial-lg text-left">
             <div className="mb-6 pb-4 border-b border-[#E8E2D8]">
-              <span className="font-code-mono text-[10px] uppercase font-bold text-[#C2410C] block mb-1">
-                Admissions Open for {CURRENT_YEAR} Academic Year
-              </span>
               <h3 className="text-xl sm:text-2xl font-bold text-[#181614]">
                 Enroll Your Child in Focus Academy Evening Batches
               </h3>

@@ -192,9 +192,6 @@ export default function ExamPrepPage() {
         </div>
 
         <div className="mb-8">
-          <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-            Step 2 of 5 • Select Student's Learning Goal
-          </span>
           <h1 className="text-3xl sm:text-4xl font-black text-[#181614] tracking-tight">
             What Are You Preparing For?
           </h1>

@@ -211,9 +211,6 @@ export default function BatchDetailPage() {
 
         <div className="bg-[#181614] text-white rounded-3xl p-6 sm:p-8 border border-[#2A2623] flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <span className="text-[10px] font-code-mono uppercase tracking-wider text-[#FED7AA] font-bold block mb-1">
-              Step 4 of 5 • Batch Selection & Confirmation
-            </span>
             <h3 className="text-xl sm:text-2xl font-bold text-white">
               Ready to Reserve Your Seat in This Batch?
             </h3>
