@@ -165,6 +165,14 @@ export default function EnrollPage() {
 
               <button
                 type="button"
+                onClick={() => window.print()}
+                className="w-full py-3 bg-white hover:bg-slate-50 text-[#0F172A] font-bold text-xs rounded-xl border border-[#E2E8F0] shadow-xs transition-colors cursor-pointer flex items-center justify-center space-x-2"
+              >
+                <span>Save / Print Admission Slip (PDF)</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => navigate('/')}
                 className="w-full py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
               >

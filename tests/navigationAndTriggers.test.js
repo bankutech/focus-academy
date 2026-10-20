@@ -222,6 +222,11 @@ describe('Navigation, Triggers and Form Validation Audit', () => {
       path.resolve(__dirname, '../src/pages/CoursesPage.jsx'),
       path.resolve(__dirname, '../src/pages/BatchesPage.jsx'),
       path.resolve(__dirname, '../src/pages/HomePage.jsx'),
+      path.resolve(__dirname, '../src/components/common/Button.jsx'),
+      path.resolve(__dirname, '../src/components/common/Badge.jsx'),
+      path.resolve(__dirname, '../src/context/AppContext.jsx'),
+      path.resolve(__dirname, '../src/services/leadService.js'),
+      path.resolve(__dirname, '../src/types/schemas.js'),
       path.resolve(__dirname, './navigationAndTriggers.test.js')
     ];
     const slash = String.fromCharCode(47);

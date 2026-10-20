@@ -1,4 +1,4 @@
-import React, { useState, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
 import { 
   ModalContext, 
   FilterContext, 
@@ -32,6 +32,20 @@ export function AppProvider({ children }) {
       };
     }
   });
+
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'focus_academy_student_flow' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setStudentFlow(parsed);
+        } catch {
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const updateStudentFlow = useCallback((updates) => {
     setStudentFlow((prev) => {

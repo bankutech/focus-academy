@@ -1,3 +1,8 @@
+export const sanitizeText = (str) => {
+  if (typeof str !== 'string') return '';
+  return str.replace(/[<>'"`;]/g, '').trim();
+};
+
 export const validateIndianMobile = (phone) => {
   if (!phone) return { valid: false, error: 'Phone number is required.' };
   const cleanPhone = phone.replace(/[\s\-()]/g, '');
@@ -14,7 +19,8 @@ export const validateIndianMobile = (phone) => {
 export const validateLeadInquiry = (lead) => {
   const errors = {};
 
-  if (!lead.studentName || lead.studentName.trim().length < 2) {
+  const cleanName = sanitizeText(lead.studentName);
+  if (!cleanName || cleanName.length < 2) {
     errors.studentName = 'Student name must be at least 2 characters.';
   }
 
@@ -37,8 +43,8 @@ export const validateLeadInquiry = (lead) => {
     errors,
     sanitized: isValid ? {
       ...lead,
-      studentName: lead.studentName.trim(),
-      parentName: lead.parentName ? lead.parentName.trim() : '',
+      studentName: cleanName,
+      parentName: sanitizeText(lead.parentName),
       phone: phoneValidation.sanitized,
       timestamp: new Date().toISOString(),
       locality: 'Thoramangalam / Perambalur',

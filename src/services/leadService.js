@@ -22,6 +22,20 @@ export const LeadService = {
     }
 
     const payload = validation.sanitized;
+    const existing = this.getAllSubmissions();
+    const recentDuplicate = existing.find(
+      (sub) => sub.phone === payload.phone && sub.studentName === payload.studentName && Date.now() - new Date(sub.submittedAt).getTime() < 30000
+    );
+    if (recentDuplicate) {
+      return {
+        success: true,
+        data: recentDuplicate,
+        duplicateSuppressed: true,
+        message: 'Your inquiry was recently received. Redirecting to confirmation.',
+        whatsappUrl: this.generateWhatsAppUrl(recentDuplicate),
+      };
+    }
+
     payload.id = `lead-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     payload.submittedAt = new Date().toISOString();
 
