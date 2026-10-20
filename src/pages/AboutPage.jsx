@@ -4,7 +4,6 @@ import {
   CheckCircle2, 
   Clock, 
   Bus, 
-  Sparkles, 
   ShieldCheck, 
   MapPin, 
   Phone, 
@@ -66,7 +65,7 @@ export default function AboutPage() {
       description: 'Every Saturday, students write timed exam papers replicating exact board exam conditions. Detailed feedback is given before the next class.'
     },
     {
-      icon: Sparkles,
+      icon: CheckCircle2,
       title: 'Direct Parent Transparency',
       description: 'Parents receive honest diagnostic feedback, attendance records, and test performance analysis directly from teaching faculty.'
     }
@@ -98,16 +97,16 @@ export default function AboutPage() {
               </p>
 
               <div className="mt-6 grid sm:grid-cols-2 gap-3.5">
-                <div className="p-4 bg-orange-50/70 rounded-2xl border border-orange-200 text-xs text-[#0F172A] flex items-start space-x-3">
-                  <Sparkles className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+                <div className="p-4 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
+                  <ShieldCheck className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold block text-sm">1-Day Free Trial Guarantee</span>
-                    <span className="text-slate-600 mt-0.5 block">Attend one complete evening session with zero fee commitment. Join only when fully confident.</span>
+                    <span className="text-slate-600 mt-0.5 block">Sit in on an evening class before paying fees. Enroll only after you and your child are satisfied.</span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-xs text-[#0F172A] flex items-start space-x-3">
-                  <Bus className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                <div className="p-4 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
+                  <Bus className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold block text-sm">Bus-Synchronized Timings</span>
                     <span className="text-slate-600 mt-0.5 block">Slots aligned with Perambalur town buses via Four Roads & Trichy Main Road for student safety.</span>

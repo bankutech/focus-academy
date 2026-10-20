@@ -6,7 +6,7 @@ import {
   MapPin, 
   BookOpen, 
   CheckCircle2, 
-  Sparkles, 
+  ShieldCheck, 
   Users, 
   Calendar, 
   MessageCircle, 
@@ -53,12 +53,12 @@ export default function HomePage() {
               </p>
 
               <div className="mt-4 grid sm:grid-cols-2 gap-3">
-                <div className="p-3.5 bg-orange-50/80 rounded-2xl border border-orange-200 text-xs text-orange-950 flex items-start space-x-2.5">
-                  <Sparkles className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
-                  <span><strong>1-Day Free Trial:</strong> Attend one evening session with zero fee commitment. Join only after complete satisfaction.</span>
+                <div className="p-3.5 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-slate-700 flex items-start space-x-2.5 shadow-xs">
+                  <ShieldCheck className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+                  <span><strong>1-Day Free Trial:</strong> Sit in on an evening class before paying any fees. Enroll only if you and your child are 100% satisfied.</span>
                 </div>
 
-                <div className="p-3.5 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-slate-600 flex items-start space-x-2.5 shadow-xs">
+                <div className="p-3.5 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-slate-700 flex items-start space-x-2.5 shadow-xs">
                   <Bus className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                   <span><strong>Bus Synchronized:</strong> Batch timings match town & school buses via Four Roads & Trichy Main Road for safe return.</span>
                 </div>
