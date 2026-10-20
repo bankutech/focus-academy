@@ -4,6 +4,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import FeeCalculator from '../src/components/FeeCalculator';
 import StepProgress from '../src/components/common/StepProgress';
+import Navbar from '../src/components/Navbar';
+import Footer from '../src/components/Footer';
+import MobileQuickBar from '../src/components/common/MobileQuickBar';
 import { AppProvider } from '../src/context/AppContext';
 
 describe('React Component DOM Integration Tests', () => {
@@ -50,5 +53,76 @@ describe('React Component DOM Integration Tests', () => {
 
     const step3Text = screen.getByText(/3\. Batches/i);
     expect(step3Text.tagName.toLowerCase()).toBe('span');
+  });
+
+  it('renders Navbar and validates all navigation links, direct call trigger and demo modal button', () => {
+    render(
+      <BrowserRouter>
+        <AppProvider>
+          <Navbar />
+        </AppProvider>
+      </BrowserRouter>
+    );
+
+    const allLinks = screen.getAllByRole('link');
+    const brandLink = allLinks.find((l) => l.getAttribute('href') === '/');
+    expect(brandLink).toBeDefined();
+
+    expect(screen.getByRole('link', { name: /^About$/i }).getAttribute('href')).toBe('/about');
+    expect(screen.getByRole('link', { name: /^Courses$/i }).getAttribute('href')).toBe('/courses');
+    expect(screen.getByRole('link', { name: /^Timings$/i }).getAttribute('href')).toBe('/timings');
+    expect(screen.getAllByRole('link', { name: /^Fees$/i }).every((l) => l.getAttribute('href') === '/fees')).toBe(true);
+    expect(screen.getByRole('link', { name: /^Contact$/i }).getAttribute('href')).toBe('/contact');
+
+    const phoneLink = screen.getByRole('link', { name: /\+91 98424 51220/i });
+    expect(phoneLink.getAttribute('href')).toBe('tel:+919842451220');
+
+    const checkSeatsLink = screen.getByRole('link', { name: /Check Batch Seats/i });
+    expect(checkSeatsLink.getAttribute('href')).toBe('/student-details');
+
+    const menuBtn = screen.getByRole('button', { name: /Open navigation menu/i });
+    expect(menuBtn).toBeDefined();
+    fireEvent.click(menuBtn);
+
+    const closeBtn = screen.getByRole('button', { name: /Close navigation menu/i });
+    expect(closeBtn).toBeDefined();
+
+    const mobileCheckSeats = screen.getByRole('link', { name: /Check Batch Seats & Timings/i });
+    expect(mobileCheckSeats.getAttribute('href')).toBe('/student-details');
+
+    fireEvent.click(closeBtn);
+  });
+
+  it('renders MobileQuickBar and verifies Call and WhatsApp actions', () => {
+    render(<MobileQuickBar />);
+
+    const callLink = screen.getByRole('link', { name: /Call/i });
+    expect(callLink.getAttribute('href')).toBe('tel:+919842451220');
+
+    const whatsappLink = screen.getByRole('link', { name: /WhatsApp/i });
+    expect(whatsappLink.getAttribute('href')).toContain('https://wa.me/919842451220');
+    expect(whatsappLink.getAttribute('target')).toBe('_blank');
+    expect(whatsappLink.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('renders Footer and verifies all quick links and contact actions', () => {
+    render(
+      <BrowserRouter>
+        <Footer />
+      </BrowserRouter>
+    );
+
+    expect(screen.getByRole('link', { name: /^Home$/i }).getAttribute('href')).toBe('/');
+    expect(screen.getByRole('link', { name: /^About$/i }).getAttribute('href')).toBe('/about');
+    expect(screen.getByRole('link', { name: /^Courses$/i }).getAttribute('href')).toBe('/courses');
+    expect(screen.getByRole('link', { name: /^Timings$/i }).getAttribute('href')).toBe('/timings');
+    expect(screen.getByRole('link', { name: /^Fees$/i }).getAttribute('href')).toBe('/fees');
+    expect(screen.getByRole('link', { name: /^Contact$/i }).getAttribute('href')).toBe('/contact');
+
+    const phoneLink = screen.getByRole('link', { name: /\+91 98424 51220/i });
+    expect(phoneLink.getAttribute('href')).toBe('tel:+919842451220');
+
+    const whatsappLink = screen.getByRole('link', { name: /Direct WhatsApp Helpdesk/i });
+    expect(whatsappLink.getAttribute('href')).toContain('https://wa.me/919842451220');
   });
 });
