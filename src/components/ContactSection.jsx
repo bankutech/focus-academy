@@ -14,7 +14,7 @@ import {
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
 
-export default function ContactSection() {
+export default function ContactSection({ isPage = false }) {
   const [studentName, setStudentName] = useState('');
   const [parentName, setParentName] = useState('');
   const [phone, setPhone] = useState('');
@@ -63,17 +63,19 @@ export default function ContactSection() {
   };
 
   return (
-    <section id="contact" aria-labelledby="contact-heading" className="py-16 sm:py-20 bg-white border-b border-[#E2E8F0] text-left relative">
+    <section id="contact" aria-labelledby="contact-heading" className={`text-left relative ${isPage ? 'pt-2 pb-8' : 'py-16 sm:py-20 bg-white border-b border-[#E2E8F0]'}`}>
       <span id="enroll" className="absolute -top-24 left-0 pointer-events-none" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mb-12">
-          <h2 id="contact-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">
-            Visit Focus Academy in Thoramangalam, Perambalur
-          </h2>
-          <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
-            Parents and students are welcome to visit our campus, inspect our classrooms, and discuss batch timings and admissions.
-          </p>
-        </div>
+      <div className={isPage ? '' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}>
+        {!isPage && (
+          <div className="max-w-2xl mb-12">
+            <h2 id="contact-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">
+              Visit Focus Academy in Thoramangalam, Perambalur
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
+              Parents and students are welcome to visit our campus, inspect our classrooms, and discuss batch timings and admissions.
+            </p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-5 space-y-6">

@@ -1,6 +1,6 @@
-export const sanitizeText = (str) => {
+export const sanitizeText = (str, maxLength = 100) => {
   if (typeof str !== 'string') return '';
-  return str.replace(/[<>'"`;]/g, '').trim();
+  return str.replace(/[<>'"`;]/g, '').trim().slice(0, maxLength);
 };
 
 export const validateIndianMobile = (phone) => {

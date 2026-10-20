@@ -38,7 +38,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <ContactSection />
+        <ContactSection isPage={true} />
       </div>
     </div>
   );
