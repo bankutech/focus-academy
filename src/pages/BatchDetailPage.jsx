@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { 
   Users, 
   Clock, 
@@ -17,7 +17,6 @@ import { CAMPUS_CONFIG } from '../config/campusConfig';
 
 export default function BatchDetailPage() {
   const { batchId } = useParams();
-  const navigate = useNavigate();
   const { studentFlow, setStudentFlow } = useStudentFlow();
 
   const batch = BATCHES_DATA.find((b) => b.id === batchId) || BATCHES_DATA[0];
@@ -31,7 +30,6 @@ export default function BatchDetailPage() {
       timing: batch.timing,
       step: 5,
     }));
-    navigate(`/enroll/${batch.id}`);
   };
 
   const facilities = [
@@ -218,14 +216,14 @@ export default function BatchDetailPage() {
               Choose Other Batch
             </Link>
 
-            <button
-              type="button"
+            <Link
+              to={`/enroll/${batch.id}`}
               onClick={handleProceedToEnroll}
               className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
             >
               <span>Confirm Batch & Proceed to Enrollment (Step 5)</span>
               <ArrowRight className="w-4 h-4 text-orange-200" />
-            </button>
+            </Link>
           </div>
         </div>
       </div>

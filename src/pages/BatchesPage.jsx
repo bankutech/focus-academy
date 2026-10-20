@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { 
   Users, 
   Clock, 
@@ -13,7 +13,6 @@ import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow } from '../context/useAppContext';
 
 export default function BatchesPage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const urlSlot = searchParams.get('slot') || 'all';
 
@@ -63,10 +62,9 @@ export default function BatchesPage() {
       selectedBatchName: batch.name,
       timing: batch.timing,
       monthlyFee: batch.monthlyFee,
-      subjects: batch.subjects.join(', '),
+      subjects: Array.isArray(batch.subjects) ? batch.subjects.join(', ') : (batch.subjects || ''),
       step: 4,
     }));
-    navigate(`/batch/${batch.id}`);
   };
 
   const gradeOptions = [
@@ -286,14 +284,14 @@ export default function BatchesPage() {
                   </div>
 
                   <div className="flex items-center space-x-2 w-full sm:w-auto">
-                    <button
-                      type="button"
+                    <Link
+                      to={`/batch/${batch.id}`}
                       onClick={() => handleSelectBatch(batch)}
                       className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                     >
                       <span>Select Batch & Details (Step 4)</span>
                       <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
