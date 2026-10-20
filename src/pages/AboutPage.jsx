@@ -1,0 +1,439 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  CheckCircle2, 
+  Clock, 
+  Bus, 
+  Sparkles, 
+  ShieldCheck, 
+  BookOpen, 
+  MapPin, 
+  Phone, 
+  ArrowRight, 
+  Building2, 
+  Target, 
+  Award, 
+  Calendar, 
+  MessageSquare, 
+  ExternalLink 
+} from 'lucide-react';
+import { CAMPUS_CONFIG } from '../config/campusConfig';
+import { HOME_BATCH_SLOTS } from '../data/homeData';
+
+export default function AboutPage() {
+  const whatsappInquiryUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(
+    'Hello Focus Academy Perambalur! I would like to learn more about your 12-student batch philosophy, campus facilities, and 1-day free trial.'
+  )}`;
+
+  const facilities = [
+    {
+      title: 'Ergonomic Individual Student Desks',
+      description: 'Spacious single-student seating designed for comfortable posture during 90-minute evening problem-solving sessions.'
+    },
+    {
+      title: 'High-Contrast Whiteboards & Clear Sightlines',
+      description: 'Unobstructed visual access from every seat. Every step of mathematical derivations and scientific diagrams is clearly visible.'
+    },
+    {
+      title: 'Well-Ventilated & Acoustic-Insulated Rooms',
+      description: 'Quiet, air-circulated classrooms situated on the first floor away from main road vehicle horns and distractions.'
+    },
+    {
+      title: 'Curated Board Exam Reference Library',
+      description: 'Complete collection of past 10-year Tamil Nadu State Board question banks, NCERT exemplars, and step-marked solutions.'
+    },
+    {
+      title: 'Dedicated Two-Wheeler & Bicycle Parking',
+      description: 'Secure ground-floor parking space inside Thiripura Complex for students arriving from Thoramangalam and nearby areas.'
+    },
+    {
+      title: 'Pure Filtered RO Drinking Water & Amenities',
+      description: 'Clean RO drinking water dispenser and hygienic washroom facilities maintained daily for student comfort.'
+    }
+  ];
+
+  const methodologyPillars = [
+    {
+      icon: Target,
+      title: 'Conceptual Clarity Over Rote Learning',
+      description: 'Students understand the fundamental "why" behind mathematical formulas and scientific principles before attempting exam questions. No blind memorization.'
+    },
+    {
+      icon: BookOpen,
+      title: 'Dual-Board Rigor (Samacheer & CBSE)',
+      description: 'Curriculum customized specifically for Tamil Nadu State Board (Samacheer Kalvi) and CBSE (NCERT) textbooks across Classes 6 to 12.'
+    },
+    {
+      icon: Calendar,
+      title: 'Weekly Saturday Timed Mock Tests',
+      description: 'Strict 2-hour exam hall simulation every Saturday morning or evening. Evaluated answer sheets with red-ink step corrections returned by Monday.'
+    },
+    {
+      icon: Award,
+      title: 'Daily 15-Minute Doubt Elimination',
+      description: 'Classes end with an open doubt clearance window. Students never carry unclarified questions back home to linger before exams.'
+    }
+  ];
+
+  return (
+    <div className="py-10 sm:py-14 bg-[#FAF7F2] min-h-screen text-left">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center space-x-2 text-xs font-code-mono text-[#78716C] mb-4">
+          <Link to="/" className="hover:text-[#C2410C]">Home</Link>
+          <span>/</span>
+          <span className="text-[#181614] font-bold">About Focus Academy</span>
+        </div>
+
+        <section aria-labelledby="about-hero-heading" className="bg-white rounded-3xl p-6 sm:p-10 lg:p-12 border border-[#E8E2D8] shadow-editorial mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#C2410C]/10 text-[#C2410C] rounded-lg text-xs font-code-mono font-bold mb-4">
+                <Building2 className="w-3.5 h-3.5" />
+                <span>Thiripura Complex • Thoramangalam, Perambalur</span>
+              </div>
+
+              <h1 id="about-hero-heading" className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#181614] tracking-tight leading-tight">
+                Academic Coaching Built on Direct Attention
+              </h1>
+
+              <p className="mt-4 text-base sm:text-lg text-[#57534E] leading-relaxed">
+                Founded in 2018 at Thiripura Complex, Focus Academy was established on a single non-negotiable principle: students excel when coaching is intimate, disciplined, and strictly capped at 12 students per batch.
+              </p>
+
+              <div className="mt-6 grid sm:grid-cols-2 gap-3.5">
+                <div className="p-4 bg-orange-50/60 rounded-2xl border border-orange-200/80 text-xs text-[#181614] flex items-start space-x-3">
+                  <Sparkles className="w-4 h-4 text-[#C2410C] shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block text-sm">1-Day Free Trial Guarantee</span>
+                    <span className="text-[#57534E] mt-0.5 block">Attend one complete evening session with zero fee commitment. Join only when fully confident.</span>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200/80 text-xs text-[#181614] flex items-start space-x-3">
+                  <Bus className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block text-sm">Bus-Synchronized Timings</span>
+                    <span className="text-[#57534E] mt-0.5 block">Slots aligned with Perambalur town buses via Four Roads & Trichy Main Road for student safety.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/timings"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-[#C2410C] hover:bg-[#9A3412] text-white text-xs sm:text-sm font-bold rounded-xl shadow-editorial transition-all active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
+                >
+                  <span>View Batch Timings & Seats</span>
+                  <ArrowRight className="w-4 h-4 text-[#FED7AA]" />
+                </Link>
+
+                <Link
+                  to="/contact"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-white hover:bg-[#F4EFEA] text-[#181614] text-xs sm:text-sm font-bold rounded-xl border border-[#E8E2D8] shadow-editorial-inset transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
+                >
+                  <MapPin className="w-4 h-4 text-[#C2410C]" />
+                  <span>Visit Campus</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5">
+              <div className="bg-[#FAF7F2] rounded-3xl p-5 border border-[#E8E2D8] shadow-editorial-inset">
+                <div className="relative rounded-2xl overflow-hidden border border-[#E8E2D8] mb-4">
+                  <img
+                    src="/focus-academy-perambalur.jpg"
+                    alt="Focus Academy premises at Thiripura Complex, Thoramangalam, Perambalur"
+                    width={1200}
+                    height={700}
+                    className="w-full h-56 sm:h-64 object-cover object-center"
+                    loading="eager"
+                  />
+                  <div className="absolute top-3 left-3 bg-[#181614]/85 text-white text-[11px] font-code-mono font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Campus Premises</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 text-xs text-[#57534E]">
+                  <div className="flex items-start space-x-2">
+                    <MapPin className="w-4 h-4 text-[#C2410C] shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold text-[#181614] block">Address:</span>
+                      <span>{CAMPUS_CONFIG.location.fullAddress}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 text-[#C2410C] shrink-0" />
+                    <span>{CAMPUS_CONFIG.timings.workingDays}: {CAMPUS_CONFIG.timings.dailyHours}</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Phone className="w-4 h-4 text-[#C2410C] shrink-0" />
+                    <span>Campus Helpdesk: {CAMPUS_CONFIG.contact.primaryPhone}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-[#E8E2D8] flex items-center justify-between">
+                  <a
+                    href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 text-xs font-code-mono font-bold text-[#C2410C] hover:underline"
+                  >
+                    <span>Directions on Google Maps</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+
+                  <a
+                    href={whatsappInquiryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 text-xs font-code-mono font-bold text-emerald-700 hover:underline"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+                    <span>WhatsApp Desk</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="philosophy-heading" className="mb-12">
+          <div className="max-w-3xl mb-8">
+            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
+              Core Philosophy
+            </span>
+            <h2 id="philosophy-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
+              Why We Strictly Cap Batches at 12 Students
+            </h2>
+            <p className="mt-2 text-sm text-[#57534E] leading-relaxed">
+              In commercial coaching centers with 40 to 60 students per hall, teaching turns into a one-way lecture. Hesitant students hold back their doubts, while teachers cannot inspect student notebooks or check step-by-step working.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#E8E2D8] shadow-editorial">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-red-50 text-red-700 rounded-lg text-xs font-code-mono font-bold mb-4">
+                <span>The Conventional 50-Student Problem</span>
+              </div>
+              <ul className="space-y-3.5 text-xs sm:text-sm text-[#57534E]">
+                <li className="flex items-start space-x-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0" />
+                  <span>Slow-learning students feel intimidated and stay silent rather than asking questions.</span>
+                </li>
+                <li className="flex items-start space-x-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0" />
+                  <span>Teachers cannot verify whether every student has written step-by-step derivations correctly.</span>
+                </li>
+                <li className="flex items-start space-x-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0" />
+                  <span>Homework checking is rushed or delegated, hiding conceptual gaps until board results arrive.</span>
+                </li>
+                <li className="flex items-start space-x-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 shrink-0" />
+                  <span>Parents only receive generic marks reports with no personalized diagnostic feedback.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-[#C2410C]/40 shadow-editorial">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-code-mono font-bold mb-4">
+                <span>The Focus Academy 12-Student Guarantee</span>
+              </div>
+              <ul className="space-y-3.5 text-xs sm:text-sm text-[#181614]">
+                <li className="flex items-start space-x-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                  <span>Every student solves problems on the whiteboard under direct teacher observation.</span>
+                </li>
+                <li className="flex items-start space-x-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                  <span>Daily notebook inspection identifies calculation errors and algebraic slips immediately.</span>
+                </li>
+                <li className="flex items-start space-x-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                  <span>Dedicated 15 minutes reserved after every class for individual, one-on-one doubt resolution.</span>
+                </li>
+                <li className="flex items-start space-x-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                  <span>Direct phone updates and monthly parent meetings with actual test papers reviewed together.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="methodology-heading" className="mb-12">
+          <div className="max-w-3xl mb-8">
+            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
+              Academic Approach
+            </span>
+            <h2 id="methodology-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
+              Curriculum & Coaching Methodology
+            </h2>
+            <p className="mt-2 text-sm text-[#57534E] leading-relaxed">
+              We prepare students for high scores through structured daily practice, board question drills, and consistent weekly testing.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {methodologyPillars.map((pillar, idx) => {
+              const Icon = pillar.icon;
+              return (
+                <div key={idx} className="bg-white p-5 rounded-2xl border border-[#E8E2D8] shadow-editorial flex flex-col justify-between">
+                  <div>
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#C2410C] flex items-center justify-center mb-3.5">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-base font-bold text-[#181614] mb-2 leading-snug">
+                      {pillar.title}
+                    </h3>
+                    <p className="text-xs text-[#57534E] leading-relaxed">
+                      {pillar.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section aria-labelledby="timings-sync-heading" className="mb-12 bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-[#E8E2D8] shadow-editorial">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-5">
+              <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
+                Bus Synchronization
+              </span>
+              <h2 id="timings-sync-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
+                Coordinated with Perambalur Bus Routes
+              </h2>
+              <p className="mt-3 text-xs sm:text-sm text-[#57534E] leading-relaxed">
+                Focus Academy is situated at Thiripura Complex, Rajanagar, Thoramangalam, just 2 minutes from the Four Roads junction and Trichy Main Road.
+              </p>
+              <p className="mt-2 text-xs sm:text-sm text-[#57534E] leading-relaxed">
+                Our batch timings are intentionally scheduled so school students coming from Perambalur town schools or nearby areas can arrive via town and school buses and safely depart before evening transit finishes.
+              </p>
+
+              <div className="mt-6 p-4 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D8] text-xs space-y-2">
+                <div className="flex items-center space-x-2 text-[#181614] font-bold">
+                  <MapPin className="w-4 h-4 text-[#C2410C]" />
+                  <span>Strategic Campus Landmark</span>
+                </div>
+                <p className="text-[#57534E]">
+                  Near Malar Hospital / Opp. EB Office on Main Road via Four Roads. Safe walking route with well-lit streets and active commercial surroundings.
+                </p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7">
+              <div className="space-y-3.5">
+                {HOME_BATCH_SLOTS.map((slot) => (
+                  <div key={slot.id} className="p-4 bg-[#FAF7F2] rounded-2xl border border-[#E8E2D8] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-[11px] font-code-mono font-bold text-[#C2410C] uppercase">
+                          {slot.slotNum}
+                        </span>
+                        <span className="text-[10px] font-code-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
+                          {slot.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-base font-black text-[#181614] mt-1">
+                        <Clock className="w-4 h-4 text-[#C2410C]" />
+                        <span>{slot.time}</span>
+                      </div>
+                      <p className="text-xs font-semibold text-[#181614] mt-0.5">
+                        {slot.grades}
+                      </p>
+                    </div>
+
+                    <Link
+                      to={`/batches?slot=${slot.id}`}
+                      className="min-h-[38px] px-4 py-2 bg-white hover:bg-[#181614] hover:text-white text-[#181614] text-xs font-bold rounded-xl border border-[#E8E2D8] transition-colors shrink-0 inline-flex items-center justify-center space-x-1"
+                    >
+                      <span>Check Seats</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="facilities-heading" className="mb-12">
+          <div className="max-w-3xl mb-8">
+            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
+              Learning Environment
+            </span>
+            <h2 id="facilities-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
+              Campus Facilities at Thiripura Complex
+            </h2>
+            <p className="mt-2 text-sm text-[#57534E] leading-relaxed">
+              Every facility has been designed to provide an orderly, distraction-free environment for concentrated evening learning.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {facilities.map((fac, idx) => (
+              <div key={idx} className="bg-white p-5 rounded-2xl border border-[#E8E2D8] shadow-editorial">
+                <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] border border-[#E8E2D8] flex items-center justify-center text-[#C2410C] mb-3">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-[#181614] mb-1.5 leading-snug">
+                  {fac.title}
+                </h3>
+                <p className="text-xs text-[#57534E] leading-relaxed">
+                  {fac.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="trial-cta-heading" className="bg-[#181614] text-white rounded-3xl p-6 sm:p-10 border border-[#2A2623] shadow-editorial-lg text-center">
+          <div className="max-w-2xl mx-auto">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-[#C2410C]/30 text-[#FED7AA] rounded-full text-xs font-code-mono font-bold mb-4 border border-[#C2410C]/40">
+              <Sparkles className="w-3.5 h-3.5 text-[#FED7AA]" />
+              <span>Zero-Commitment Trial</span>
+            </div>
+
+            <h2 id="trial-cta-heading" className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+              Experience the 12-Student Classroom
+            </h2>
+
+            <p className="mt-3 text-xs sm:text-sm text-[#A8A29E] leading-relaxed">
+              Attend one complete evening session for free. Meet the subject teachers, inspect our classroom setup at Thiripura Complex, and experience our teaching methods before paying any admission fee.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
+              <Link
+                to="/student-details"
+                className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-[#C2410C] hover:bg-[#9A3412] text-white text-xs sm:text-sm font-bold rounded-xl shadow-editorial transition-all active:scale-98"
+              >
+                <span>Register for 1-Day Free Trial →</span>
+              </Link>
+
+              <Link
+                to="/contact"
+                className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-[#24201D] hover:bg-[#2F2B27] text-white text-xs sm:text-sm font-bold rounded-xl border border-[#3E3834] transition-all"
+              >
+                <MapPin className="w-4 h-4 text-[#FED7AA]" />
+                <span>Visit Campus at Thoramangalam</span>
+              </Link>
+
+              <a
+                href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
+                className="min-h-[46px] inline-flex items-center space-x-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-[#FAF7F2] text-xs sm:text-sm font-bold rounded-xl border border-white/15 transition-all"
+              >
+                <Phone className="w-4 h-4 text-[#FED7AA]" />
+                <span>Call {CAMPUS_CONFIG.contact.primaryPhone}</span>
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

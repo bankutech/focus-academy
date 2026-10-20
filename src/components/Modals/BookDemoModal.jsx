@@ -1,0 +1,421 @@
+import React, { useState } from 'react';
+import { 
+  X, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Video, 
+  ClipboardCheck, 
+  PhoneCall,
+  Building2 
+} from 'lucide-react';
+
+import { LeadService } from '../../services/leadService';
+import { validateIndianMobile } from '../../types/schemas';
+import { CAMPUS_CONFIG } from '../../config/campusConfig';
+
+export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
+  const [step, setStep] = useState(1);
+  const [sessionType, setSessionType] = useState(
+    preselectedSubject && preselectedSubject.includes('Parent') ? 'alignment-call' : 'diagnostic-trial'
+  );
+  const [subject, setSubject] = useState(preselectedSubject || 'Class 10 State Board (SSLC)');
+  const [mode, setMode] = useState('offline');
+  const [timing, setTiming] = useState('Batch 2: 6:00 PM – 7:30 PM');
+  const [studentName, setStudentName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [childChallenge, setChildChallenge] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleNext = async (e) => {
+    e.preventDefault();
+    if (step === 1 && !subject) return;
+    if (step === 2) {
+      setStep(3);
+      return;
+    }
+    if (step === 3) {
+      setPhoneError('');
+      setNameError('');
+      if (!studentName.trim()) {
+        setNameError('Please provide student or parent name.');
+        return;
+      }
+      const val = validateIndianMobile(phone);
+      if (!val.valid) {
+        setPhoneError(val.error);
+        return;
+      }
+
+      await LeadService.submitLead({
+        studentName: studentName.trim(),
+        phone: val.sanitized,
+        grade: subject.slice(0, 15),
+        board: 'Focus Academy Track',
+        subjects: subject,
+        notes: `${sessionType === 'alignment-call' ? '5-Min Alignment Call' : '1-Day Free Trial'} | Timing: ${timing} | Challenge: ${childChallenge || 'None specified'}`
+      });
+
+      const customWhatsAppText = encodeURIComponent(
+        `Hello Focus Academy Thoramangalam! 👋\n\nI want to confirm a ${sessionType === 'alignment-call' ? '5-Min Parent Alignment Call' : '1-Day Free Trial'}:\n\n• Student: ${studentName.trim()}\n• Contact: +91 ${val.sanitized}\n• Subject: ${subject}\n• Format: ${mode === 'online' ? 'Online Interactive' : 'Classroom Batch (Thiripura Complex)'}\n• Preferred Slot: ${timing}\n• Challenge/Goal: ${childChallenge || 'General'}\n\nPlease confirm availability.`
+      );
+      setWhatsappUrl(`https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${customWhatsAppText}`);
+      setIsSubmitted(true);
+      return;
+    }
+    setStep(step + 1);
+  };
+
+  const handleReset = () => {
+    setStep(1);
+    setIsSubmitted(false);
+    setPhoneError('');
+    setNameError('');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#181614]/80 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
+      <div 
+        className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-[#FAF7F2] rounded-3xl shadow-editorial-lg border border-[#E8E2D8] overflow-hidden my-auto text-left animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        
+        <div className="bg-[#181614] p-5 sm:p-6 text-white relative border-b border-[#2A2623] shrink-0">
+          <button
+            onClick={handleReset}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center space-x-1.5 font-code-mono text-[10px] uppercase tracking-wider text-[#FED7AA] mb-1">
+            <ClipboardCheck className="w-3.5 h-3.5 text-[#C2410C]" />
+            <span>Focus Academy Pedagogical Protocol</span>
+          </div>
+
+          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            {sessionType === 'alignment-call' ? 'Schedule 5-Min Parent Alignment Call' : 'Schedule 45-Min Diagnostic Trial'}
+          </h3>
+          <p className="text-xs text-[#A8A29E] mt-1 font-normal">
+            {sessionType === 'alignment-call' 
+              ? 'Direct 5-minute phone conversation for parents to calibrate student temperament & anxiety. 100% free.'
+              : 'Identify prior syllabus gaps with classroom diagnostic assessment. 100% complimentary.'
+            }
+          </p>
+
+          <div className="mt-3 inline-flex p-1 bg-[#2A2623] rounded-xl text-xs font-code-mono">
+            <button
+              type="button"
+              onClick={() => setSessionType('diagnostic-trial')}
+              className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
+                sessionType === 'diagnostic-trial' ? 'bg-[#C2410C] text-white font-bold' : 'text-[#A8A29E] hover:text-white'
+              }`}
+            >
+              45-Min Trial Session
+            </button>
+            <button
+              type="button"
+              onClick={() => setSessionType('alignment-call')}
+              className={`px-3 py-1 rounded-lg transition-colors cursor-pointer flex items-center space-x-1 ${
+                sessionType === 'alignment-call' ? 'bg-[#C2410C] text-white font-bold' : 'text-[#A8A29E] hover:text-white'
+              }`}
+            >
+              <PhoneCall className="w-3 h-3" />
+              <span>5-Min Parent Call</span>
+            </button>
+          </div>
+
+          {!isSubmitted && (
+            <div className="mt-3 flex items-center space-x-2 text-[10px] font-code-mono">
+              <span className={`px-2 py-0.5 rounded ${step >= 1 ? 'bg-[#C2410C] text-white font-bold' : 'bg-[#2A2623] text-[#78716C]'}`}>
+                1. Syllabus
+              </span>
+              <span className="text-[#57534E]">→</span>
+              <span className={`px-2 py-0.5 rounded ${step >= 2 ? 'bg-[#C2410C] text-white font-bold' : 'bg-[#2A2623] text-[#78716C]'}`}>
+                2. Format
+              </span>
+              <span className="text-[#57534E]">→</span>
+              <span className={`px-2 py-0.5 rounded ${step >= 3 ? 'bg-[#C2410C] text-white font-bold' : 'bg-[#2A2623] text-[#78716C]'}`}>
+                3. Registry
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="p-5 sm:p-7 overflow-y-auto">
+          {isSubmitted ? (
+            <div className="text-center py-4 space-y-4 animate-in fade-in">
+              <div className="w-14 h-14 rounded-full bg-[#181614] text-white flex items-center justify-center mx-auto shadow-sm">
+                <CheckCircle2 className="w-8 h-8 text-[#C2410C]" />
+              </div>
+
+              <div>
+                <h4 className="text-xl font-bold text-[#181614]">
+                  {sessionType === 'alignment-call' ? 'Parent Alignment Call Scheduled' : 'Diagnostic Trial Confirmed'}
+                </h4>
+                <p className="text-xs text-[#57534E] mt-1 max-w-sm mx-auto">
+                  Our academic desk will confirm classroom trial batch allocation for <strong>{subject}</strong>.
+                </p>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-[#E8E2D8] text-xs font-code-mono text-left space-y-2 max-w-sm mx-auto shadow-editorial-inset">
+                <div className="flex justify-between">
+                  <span className="text-[#78716C]">Parent / Student:</span>
+                  <span className="font-bold text-[#181614]">{studentName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#78716C]">Syllabus / Track:</span>
+                  <span className="font-bold text-[#C2410C]">{subject}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#78716C]">Format:</span>
+                  <span className="font-bold text-[#181614]">
+                    {sessionType === 'alignment-call' 
+                      ? '5-Min Direct Phone Calibration' 
+                      : (mode === 'online' ? '1-on-1 Live Whiteboard' : 'Classroom Center (Thiripura Complex)')}
+                  </span>
+                </div>
+                {childChallenge && (
+                  <div className="flex justify-between pt-1 border-t border-[#FAF7F2]">
+                    <span className="text-[#78716C]">Focus Area:</span>
+                    <span className="font-bold text-[#181614] truncate">{childChallenge}</span>
+                  </div>
+                )}
+                <div className="flex justify-between pt-2 border-t border-[#FAF7F2]">
+                  <span className="text-[#78716C]">Fee:</span>
+                  <span className="font-bold text-emerald-700">₹0.00 (Zero Fee • 100% Free)</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-[11px] text-emerald-800 flex items-center space-x-2 max-w-sm mx-auto">
+                <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span>Protected by 100% No-Questions-Asked Rematch Guarantee.</span>
+              </div>
+
+              <p className="text-[11px] font-code-mono text-[#78716C]">
+                SMS confirmation dispatched to {phone}.
+              </p>
+
+              {whatsappUrl && (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs rounded-xl shadow-editorial transition-all cursor-pointer flex items-center justify-center space-x-2"
+                >
+                  <span>Chat on WhatsApp Directly →</span>
+                </a>
+              )}
+
+              <button
+                type="button"
+                onClick={handleReset}
+                className="w-full py-3 bg-[#181614] hover:bg-[#292524] text-white font-semibold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
+              >
+                Return to Batches
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleNext} className="space-y-4">
+              {step === 1 && (
+                <div className="space-y-3">
+                  <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C]">
+                    Enter Target Subject or Academic Exam *
+                  </label>
+                  <input
+                    type="text"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="e.g. Class 10 State Board Maths, Physics Derivations, CBSE Science..."
+                    className="w-full bg-white border border-[#E8E2D8] rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#181614] focus:outline-hidden focus:border-[#C2410C]"
+                    required
+                  />
+
+                  <div className="pt-2">
+                    <span className="text-[10px] font-code-mono uppercase text-[#78716C] block mb-1.5">Frequent Disciplines:</span>
+                    <div className="flex flex-wrap gap-1.5 text-xs">
+                      {[
+                        'Class 10 State Board (SSLC)',
+                        'Class 10 CBSE Maths & Science',
+                        'Class 12 Physics & Chemistry',
+                        'Class 12 Higher Mathematics',
+                        'Classes 6–8 Foundation',
+                        'NEET / JEE Numerical Clarity'
+                      ].map((item, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setSubject(item)}
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
+                            subject === item
+                              ? 'bg-[#181614] text-white font-bold'
+                              : 'bg-white hover:bg-[#EBE5DC] text-[#57534E] border border-[#E8E2D8]'
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="space-y-3">
+                  <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C]">
+                    Session Format
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setMode('offline')}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        mode === 'offline'
+                          ? 'bg-[#181614] text-white border-[#181614]'
+                          : 'bg-white border-[#E8E2D8] text-[#57534E]'
+                      }`}
+                    >
+                      <Building2 className="w-4 h-4 text-[#C2410C] mb-1" />
+                      <p className="text-xs font-bold">Classroom Center Batch</p>
+                      <p className="text-[10px] opacity-70">Thiripura Complex, Thoramangalam</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setMode('online')}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                        mode === 'online'
+                          ? 'bg-[#181614] text-white border-[#181614]'
+                          : 'bg-white border-[#E8E2D8] text-[#57534E]'
+                      }`}
+                    >
+                      <Video className="w-4 h-4 text-[#C2410C] mb-1" />
+                      <p className="text-xs font-bold">1-on-1 Online</p>
+                      <p className="text-[10px] opacity-70">HD Whiteboard Workspace</p>
+                    </button>
+                  </div>
+
+                  <div>
+                    <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                      Preferred Evening Batch Slot
+                    </label>
+                    <select
+                      value={timing}
+                      onChange={(e) => setTiming(e.target.value)}
+                      className="w-full bg-white border border-[#E8E2D8] rounded-xl px-3 py-2 text-xs font-semibold text-[#181614]"
+                    >
+                      <option value="Batch 1: 4:30 PM – 6:00 PM">Batch 1: 4:30 PM – 6:00 PM (Middle / Foundation)</option>
+                      <option value="Batch 2: 6:00 PM – 7:30 PM">Batch 2: 6:00 PM – 7:30 PM (Secondary Board Slot)</option>
+                      <option value="Batch 3: 7:30 PM – 9:00 PM">Batch 3: 7:30 PM – 9:00 PM (Senior 11 & 12 Slot)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                      Student / Parent Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={studentName}
+                      onChange={(e) => {
+                        setStudentName(e.target.value);
+                        if (nameError) setNameError('');
+                      }}
+                      placeholder="e.g. Sanya Sharma (Parent)"
+                      className={`w-full bg-white border ${
+                        nameError ? 'border-rose-500' : 'border-[#E8E2D8]'
+                      } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#181614]`}
+                      required
+                    />
+                    {nameError && (
+                      <p className="text-[10px] text-rose-600 mt-1">{nameError}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                      Mobile Number (For Confirmation & Reminders) *
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        if (phoneError) setPhoneError('');
+                      }}
+                      placeholder="e.g. 98424 51220"
+                      className={`w-full bg-white border ${
+                        phoneError ? 'border-rose-500' : 'border-[#E8E2D8]'
+                      } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#181614]`}
+                      required
+                    />
+                    {phoneError && (
+                      <p className="text-[10px] text-rose-600 mt-1">{phoneError}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                      Child's Specific Learning Challenge (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={childChallenge}
+                      onChange={(e) => setChildChallenge(e.target.value)}
+                      placeholder="e.g. Pre-board exam anxiety, lacks algebra foundation, shy to ask doubts..."
+                      className="w-full bg-white border border-[#E8E2D8] rounded-xl px-3 py-2 text-xs font-medium text-[#181614]"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-white rounded-xl border border-emerald-200 text-[11px] text-[#57534E] flex items-center space-x-2 shadow-editorial-inset">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div>
+                      <strong className="text-emerald-900 block font-code-mono text-[10px] uppercase">
+                        100% No-Questions-Asked Rematch Guarantee
+                      </strong>
+                      <span>If your child doesn't click after Session 1, rematch instantly with zero penalty.</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-[#E8E2D8] flex items-center justify-between">
+                {step > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setStep(step - 1)}
+                    className="text-xs font-semibold text-[#78716C] hover:text-[#181614] cursor-pointer"
+                  >
+                    ← Back
+                  </button>
+                ) : <div />}
+
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#C2410C] hover:bg-[#9A3412] text-white text-xs font-semibold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+                >
+                  <span>
+                    {step === 3 
+                      ? (sessionType === 'alignment-call' ? 'Confirm 5-Min Alignment Call' : 'Confirm 45-Min Diagnostic') 
+                      : 'Next Step →'}
+                  </span>
+                </button>
+              </div>
+
+            </form>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
