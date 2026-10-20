@@ -20,7 +20,6 @@ import {
   HOME_ADMISSION_STEPS, 
   HOME_FEATURES 
 } from '../data/homeData';
-import ContactSection from '../components/ContactSection';
 
 export default function HomePage() {
   const scrollToSection = (e, sectionId) => {
@@ -66,15 +65,14 @@ export default function HomePage() {
               </div>
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
-                <a
-                  href="#contact"
-                  onClick={(e) => scrollToSection(e, 'contact')}
-                  aria-label="Enroll now and jump to admission inquiry form"
+                <Link
+                  to="/student-details"
+                  aria-label="Enroll now and start student onboarding"
                   className="min-h-[48px] inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-[#C2410C] hover:bg-[#9A3412] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
                 >
                   <span>Enroll Now (Join Today)</span>
                   <ArrowRight className="w-4 h-4 text-[#FED7AA]" />
-                </a>
+                </Link>
 
                 <a
                   href="#courses"
@@ -489,8 +487,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      <ContactSection />
     </div>
   );
 }
