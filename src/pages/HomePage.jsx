@@ -6,12 +6,10 @@ import {
   MapPin, 
   BookOpen, 
   CheckCircle2, 
-  ShieldCheck, 
   Users, 
   Calendar, 
   MessageCircle, 
-  ExternalLink, 
-  Bus 
+  ExternalLink 
 } from 'lucide-react';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { 
@@ -52,19 +50,7 @@ export default function HomePage() {
                 No 50-student crowded classrooms. No blind rote memorization. Just 12 students per batch, daily doubt clearance, and weekly Saturday board mock tests at Thiripura Complex.
               </p>
 
-              <div className="mt-4 grid sm:grid-cols-2 gap-3">
-                <div className="p-3.5 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-slate-700 flex items-start space-x-2.5 shadow-xs">
-                  <ShieldCheck className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
-                  <span><strong>1-Day Free Trial:</strong> Sit in on an evening class before paying any fees. Enroll only if you and your child are 100% satisfied.</span>
-                </div>
-
-                <div className="p-3.5 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-slate-700 flex items-start space-x-2.5 shadow-xs">
-                  <Bus className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
-                  <span><strong>Bus Synchronized:</strong> Batch timings match town & school buses via Four Roads & Trichy Main Road for safe return.</span>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
                   to="/student-details"
                   aria-label="Enroll now and start student onboarding"
