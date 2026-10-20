@@ -9,7 +9,10 @@ export const LeadService = {
     if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_LEAD_WEBHOOK_URL) {
       return import.meta.env.VITE_LEAD_WEBHOOK_URL;
     }
-    return CAMPUS_CONFIG.leadWebhookUrl || null;
+    if (typeof window !== 'undefined' && window.location && window.location.origin) {
+      return `${window.location.origin}/api/leads`;
+    }
+    return CAMPUS_CONFIG.leadWebhookUrl || '/api/leads';
   },
 
   async submitLead(rawLeadData) {
@@ -45,6 +48,7 @@ export const LeadService = {
 
     if (!isOnline) {
       this._enqueueOffline(payload);
+      this._recordSubmission(payload);
       return {
         success: true,
         offlineQueued: true,
@@ -75,6 +79,7 @@ export const LeadService = {
         }
       } catch {
         this._enqueueOffline(payload);
+        this._recordSubmission(payload);
         return {
           success: true,
           offlineQueued: true,
