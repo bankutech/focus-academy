@@ -172,9 +172,6 @@ export default function EnrollPage() {
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-                  Step 5 of 5 • Batch Enrollment & Seat Reservation
-                </span>
                 <h1 className="text-3xl sm:text-4xl font-black text-[#181614] tracking-tight">
                   Confirm Enrollment & Reserve Seat
                 </h1>

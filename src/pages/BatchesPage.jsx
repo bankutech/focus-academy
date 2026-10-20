@@ -140,9 +140,6 @@ export default function BatchesPage() {
         </div>
 
         <div className="mb-8">
-          <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-            Step 3 of 5 • Batch Information & Schedule
-          </span>
           <h1 className="text-3xl sm:text-4xl font-black text-[#181614] tracking-tight">
             Available Evening Batches
           </h1>

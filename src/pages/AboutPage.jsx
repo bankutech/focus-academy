@@ -202,9 +202,6 @@ export default function AboutPage() {
 
         <section aria-labelledby="philosophy-heading" className="mb-12">
           <div className="max-w-3xl mb-8">
-            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-              Core Philosophy
-            </span>
             <h2 id="philosophy-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
               Why We Strictly Cap Batches at 12 Students
             </h2>
@@ -266,9 +263,6 @@ export default function AboutPage() {
 
         <section aria-labelledby="methodology-heading" className="mb-12">
           <div className="max-w-3xl mb-8">
-            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-              Academic Approach
-            </span>
             <h2 id="methodology-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
               Curriculum & Coaching Methodology
             </h2>
@@ -302,9 +296,6 @@ export default function AboutPage() {
         <section aria-labelledby="timings-sync-heading" className="mb-12 bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-[#E8E2D8] shadow-editorial">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-5">
-              <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-                Bus Synchronization
-              </span>
               <h2 id="timings-sync-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
                 Coordinated with Perambalur Bus Routes
               </h2>
@@ -364,9 +355,6 @@ export default function AboutPage() {
 
         <section aria-labelledby="facilities-heading" className="mb-12">
           <div className="max-w-3xl mb-8">
-            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-              Learning Environment
-            </span>
             <h2 id="facilities-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
               Campus Facilities at Thiripura Complex
             </h2>
@@ -394,11 +382,6 @@ export default function AboutPage() {
 
         <section aria-labelledby="trial-cta-heading" className="bg-[#181614] text-white rounded-3xl p-6 sm:p-10 border border-[#2A2623] shadow-editorial-lg text-center">
           <div className="max-w-2xl mx-auto">
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 bg-[#C2410C]/30 text-[#FED7AA] rounded-full text-xs font-code-mono font-bold mb-4 border border-[#C2410C]/40">
-              <Sparkles className="w-3.5 h-3.5 text-[#FED7AA]" />
-              <span>Zero-Commitment Trial</span>
-            </div>
-
             <h2 id="trial-cta-heading" className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
               Experience the 12-Student Classroom
             </h2>

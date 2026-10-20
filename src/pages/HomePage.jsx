@@ -211,9 +211,6 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-                Curriculum & Coaching Tracks
-              </span>
               <h2 id="courses-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
                 Programs Offered at Focus Academy
               </h2>
@@ -311,9 +308,6 @@ export default function HomePage() {
       <section id="timings" aria-labelledby="timings-heading" className="py-12 sm:py-16 bg-[#FAF7F2] border-b border-[#E8E2D8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-10">
-            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-              Disciplined Evening Batches
-            </span>
             <h2 id="timings-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
               Class Timetable & Daily Schedule
             </h2>
@@ -405,9 +399,6 @@ export default function HomePage() {
       <section id="steps" aria-labelledby="steps-heading" className="py-12 sm:py-16 bg-[#181614] text-white border-b border-[#2A2623]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#FED7AA] font-bold block mb-1">
-              Structured Student Flow
-            </span>
             <h2 id="steps-heading" className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               How Admission Works in 5 Simple Steps
             </h2>
@@ -462,9 +453,6 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <span className="text-[11px] font-code-mono uppercase tracking-wider text-[#C2410C] font-bold block mb-1">
-                Why Focus Academy
-              </span>
               <h2 id="about-heading" className="text-2xl sm:text-3xl font-black text-[#181614] tracking-tight">
                 Classroom Standards & Features
               </h2>
