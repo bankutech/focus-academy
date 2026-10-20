@@ -217,13 +217,14 @@ export default function StudentDetailsPage() {
             {authMode === 'login' ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                  <label htmlFor="login-phone" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                     Registered Mobile Number
                   </label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Phone className="w-4 h-4 text-[#A8A29E] absolute left-3 top-3" />
                       <input
+                        id="login-phone"
                         type="tel"
                         value={phone}
                         onChange={(e) => {
@@ -256,12 +257,13 @@ export default function StudentDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                  <label htmlFor="login-student-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                     Student Full Name
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-[#A8A29E] absolute left-3 top-3" />
                     <input
+                      id="login-student-name"
                       type="text"
                       value={studentName}
                       onChange={(e) => setStudentName(e.target.value)}
@@ -275,12 +277,13 @@ export default function StudentDetailsPage() {
               <div className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                    <label htmlFor="signup-student-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                       Student Full Name (Optional)
                     </label>
                     <div className="relative">
                       <User className="w-4 h-4 text-[#A8A29E] absolute left-3 top-3" />
                       <input
+                        id="signup-student-name"
                         type="text"
                         value={studentName}
                         onChange={(e) => {
@@ -299,12 +302,13 @@ export default function StudentDetailsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                    <label htmlFor="signup-phone" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                       Mobile Number (Optional at this step)
                     </label>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-[#A8A29E] absolute left-3 top-3" />
                       <input
+                        id="signup-phone"
                         type="tel"
                         value={phone}
                         onChange={(e) => {
@@ -324,10 +328,11 @@ export default function StudentDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                  <label htmlFor="signup-parent-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                     Parent / Guardian Name (Optional)
                   </label>
                   <input
+                    id="signup-parent-name"
                     type="text"
                     value={parentName}
                     onChange={(e) => setParentName(e.target.value)}

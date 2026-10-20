@@ -25,13 +25,22 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    };
+
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
     } else {
       document.body.style.overflow = '';
     }
+
     return () => {
       document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [mobileMenuOpen]);
 
@@ -70,7 +79,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full relative transition-all duration-300">
       <div className="bg-[#181614] text-[#FAF7F2] text-[11px] font-code-mono py-2 px-4 border-b border-[#2A2623] tracking-wide">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3 overflow-hidden text-ellipsis whitespace-nowrap">
@@ -168,10 +177,10 @@ export default function Navbar() {
               })}
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3">
               <Link
                 to="/student-details"
-                className="inline-flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-[#C2410C] hover:bg-[#9A3412] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-editorial hover:shadow-editorial-lg transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
+                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-[#C2410C] hover:bg-[#9A3412] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-editorial hover:shadow-editorial-lg transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
               >
                 <span>Check Batch Seats</span>
                 <ArrowRight className="w-3.5 h-3.5 text-[#FED7AA]" />
@@ -182,7 +191,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-expanded={mobileMenuOpen}
                 aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-                className="lg:hidden p-2.5 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-xl text-[#181614] hover:bg-[#F4EFEA] border border-[#E8E2D8] transition-colors cursor-pointer bg-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
+                className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-[#181614] hover:bg-[#F4EFEA] border border-[#E8E2D8] transition-colors cursor-pointer bg-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#C2410C]"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -202,7 +211,7 @@ export default function Navbar() {
           <div 
             role="dialog"
             aria-label="Mobile Navigation Menu"
-            className="fixed top-[102px] left-0 right-0 max-h-[calc(100vh-102px)] overflow-y-auto z-50 lg:hidden bg-[#FAF7F2] border-b border-[#E8E2D8] shadow-editorial-lg px-4 pt-3 pb-8 animate-in slide-in-from-top duration-200 space-y-4 text-left"
+            className="absolute top-full left-0 right-0 max-h-[calc(100vh-100%)] overflow-y-auto z-50 lg:hidden bg-[#FAF7F2] border-b border-[#E8E2D8] shadow-editorial-lg px-4 pt-3 pb-8 animate-in slide-in-from-top duration-200 space-y-4 text-left"
           >
             <div className="p-3.5 bg-white rounded-2xl border border-[#E8E2D8] shadow-editorial-inset">
               <div className="flex items-center space-x-2 text-[10px] font-code-mono uppercase text-[#C2410C] font-bold">
