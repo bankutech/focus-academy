@@ -11,26 +11,27 @@ export function AppProvider({ children }) {
   const [studentFlow, setStudentFlow] = useState(() => {
     try {
       const saved = localStorage.getItem('focus_academy_student_flow');
-      return saved ? JSON.parse(saved) : {
-        studentName: '',
-        phone: '',
-        parentName: '',
-        board: 'TN State Board (Samacheer)',
-        grade: 'Class 10',
-        examPrep: '10th Board Exam Mastery (Target 95%+)',
-        selectedBatchId: 'batch-10-state-board'
-      };
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed === 'object' && parsed !== null) {
+          if (!parsed.step) {
+            parsed.step = (parsed.studentName?.trim() && parsed.phone?.trim()) ? 2 : 1;
+          }
+          return parsed;
+        }
+      }
     } catch {
-      return {
-        studentName: '',
-        phone: '',
-        parentName: '',
-        board: 'TN State Board (Samacheer)',
-        grade: 'Class 10',
-        examPrep: '10th Board Exam Mastery (Target 95%+)',
-        selectedBatchId: 'batch-10-state-board'
-      };
     }
+    return {
+      studentName: '',
+      phone: '',
+      parentName: '',
+      board: 'TN State Board (Samacheer)',
+      grade: 'Class 10',
+      examPrep: '',
+      selectedBatchId: '',
+      step: 1
+    };
   });
 
   useEffect(() => {
@@ -47,15 +48,46 @@ export function AppProvider({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const updateStudentFlow = useCallback((updates) => {
+  const setStudentFlowWithStorage = useCallback((updaterOrValue) => {
     setStudentFlow((prev) => {
-      const next = { ...prev, ...updates };
+      const nextRaw = typeof updaterOrValue === 'function' ? updaterOrValue(prev) : updaterOrValue;
+      const nextStep = Math.max(Number(prev?.step) || 1, Number(nextRaw?.step) || 1);
+      const next = { ...nextRaw, step: nextStep };
       try {
         localStorage.setItem('focus_academy_student_flow', JSON.stringify(next));
       } catch {
       }
       return next;
     });
+  }, []);
+
+  const updateStudentFlow = useCallback((updates) => {
+    setStudentFlowWithStorage((prev) => {
+      const next = typeof updates === 'function' ? updates(prev) : { ...prev, ...updates };
+      return next;
+    });
+  }, [setStudentFlowWithStorage]);
+
+  const lookupSavedStudent = useCallback((phone) => {
+    try {
+      const list = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+      return list.find((s) => s.phone === phone) || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const registerStudent = useCallback((record) => {
+    const id = `FA-${Date.now().toString().slice(-6)}`;
+    const savedRecord = { ...record, id };
+    try {
+      const list = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+      const filtered = list.filter((s) => s.phone !== record.phone);
+      filtered.unshift(savedRecord);
+      localStorage.setItem('focus_academy_students', JSON.stringify(filtered));
+    } catch {
+    }
+    return savedRecord;
   }, []);
 
   const [demoModalOpen, setDemoModalOpen] = useState(false);
@@ -117,7 +149,10 @@ export function AppProvider({ children }) {
 
   const studentFlowValue = {
     studentFlow,
+    setStudentFlow: setStudentFlowWithStorage,
     updateStudentFlow,
+    lookupSavedStudent,
+    registerStudent,
   };
 
   return (
