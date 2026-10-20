@@ -254,3 +254,5 @@ export function resolveBoardForBatch(batch, currentBoard) {
   if (bLower.includes('icse') && !bLower.includes('state')) return 'ICSE Board';
   return 'TN State Board (Samacheer)';
 }
+
+export const BATCHES_DATA = batchesData;

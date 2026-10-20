@@ -24,30 +24,30 @@ export default function Footer() {
   )}`;
 
   return (
-    <footer className="bg-[#181614] text-[#A8A29E] text-left pt-10 pb-8 border-t border-[#2A2623]">
+    <footer className="bg-[#0F172A] text-slate-400 text-left pt-10 pb-8 border-t border-[#1E293B]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-[#2A2623]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-[#1E293B]">
           <div className="md:col-span-5">
             <Link to="/" onClick={handleBackToTop} className="flex items-center space-x-3 group">
-              <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] text-[#181614] flex items-center justify-center font-editorial font-bold text-base group-hover:bg-[#C2410C] group-hover:text-white transition-colors">
+              <div className="w-8 h-8 rounded-lg bg-white text-[#0F172A] flex items-center justify-center font-editorial font-bold text-base group-hover:bg-[#EA580C] group-hover:text-white transition-colors">
                 F
               </div>
               <div>
-                <span className="text-lg font-black text-white tracking-tight block">
+                <span className="text-lg font-extrabold text-white tracking-tight block">
                   Focus Academy
                 </span>
-                <span className="font-code-mono text-[9px] uppercase tracking-wider text-[#FED7AA]">
+                <span className="text-xs uppercase tracking-wider text-orange-200 font-semibold block">
                   Thoramangalam • Perambalur
                 </span>
               </div>
             </Link>
-            <p className="mt-3 text-xs text-[#78716C] max-w-sm leading-relaxed">
+            <p className="mt-3 text-xs text-slate-400 max-w-sm leading-relaxed">
               Evening coaching for Classes 6–12 (State Board, CBSE, ICSE) at Thiripura Complex. Small 12-student batches.
             </p>
           </div>
 
           <div className="md:col-span-3">
-            <h4 className="text-white font-code-mono font-bold uppercase tracking-wider text-[11px] mb-3">
+            <h4 className="text-white font-bold uppercase tracking-wider text-xs mb-3">
               Navigation
             </h4>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -64,11 +64,11 @@ export default function Footer() {
           </div>
 
           <div className="md:col-span-4 space-y-2.5 text-xs">
-            <h4 className="text-white font-code-mono font-bold uppercase tracking-wider text-[11px] mb-3">
+            <h4 className="text-white font-bold uppercase tracking-wider text-xs mb-3">
               Contact
             </h4>
             <div className="flex items-start space-x-2">
-              <MapPin className="w-3.5 h-3.5 text-[#C2410C] shrink-0 mt-0.5" />
+              <MapPin className="w-3.5 h-3.5 text-[#EA580C] shrink-0 mt-0.5" />
               <a
                 href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                 target="_blank"
@@ -79,7 +79,7 @@ export default function Footer() {
               </a>
             </div>
             <div className="flex items-center space-x-2">
-              <Phone className="w-3.5 h-3.5 text-[#C2410C] shrink-0" />
+              <Phone className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
               <a href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`} className="hover:text-white transition-colors">
                 {CAMPUS_CONFIG.contact.primaryPhone}
               </a>
@@ -98,12 +98,12 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] font-code-mono text-[#78716C] gap-3">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
           <p>© {CURRENT_YEAR} Focus Academy. All rights reserved.</p>
           <button
             type="button"
             onClick={handleBackToTop}
-            className="text-[#FED7AA] hover:underline cursor-pointer"
+            className="text-orange-200 hover:underline cursor-pointer"
           >
             Back to Top ↑
           </button>

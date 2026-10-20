@@ -132,3 +132,7 @@ export const HOME_FEATURES = [
     icon: Clock,
   },
 ];
+
+export function calculateFee(hourlyRate, hoursPerWeek) {
+  return Math.round(Number(hourlyRate || 0) * Number(hoursPerWeek || 0) * 4);
+}

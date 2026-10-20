@@ -1,87 +1,77 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
+  Users, 
   Clock, 
   MapPin, 
+  BookOpen, 
   ArrowRight, 
-  Users, 
-  Edit2,
-  BookOpen
+  Edit2 
 } from 'lucide-react';
+import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
-import { batchesData, getBatchesFiltered, resolveBoardForBatch } from '../data/batchesData';
 import { useStudentFlow } from '../context/useAppContext';
 
 export default function BatchesPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { studentFlow, updateStudentFlow } = useStudentFlow();
+  const urlSlot = searchParams.get('slot') || 'all';
 
-  const courseParam = searchParams.get('course') || '';
-  const slotParam = searchParams.get('slot') || 'all';
+  const { studentFlow, setStudentFlow } = useStudentFlow();
 
-  let initialGrade = searchParams.get('grade') || studentFlow.grade || 'all';
-  if (courseParam) {
-    if (courseParam.includes('12')) initialGrade = 'Class 12';
-    else if (courseParam.includes('11')) initialGrade = 'Class 11';
-    else if (courseParam.includes('10')) initialGrade = 'Class 10';
-    else if (courseParam.includes('9')) initialGrade = 'Class 9';
-    else if (courseParam.includes('6') || courseParam.includes('7') || courseParam.includes('8') || courseParam.includes('foundation')) initialGrade = 'Class 6';
-  }
-  if (initialGrade === 'Class 7' || initialGrade === 'Class 8' || initialGrade.includes('6 to 8')) {
-    initialGrade = 'Class 6';
-  }
-
-  const [activeGradeFilter, setActiveGradeFilter] = useState(initialGrade);
+  const [activeGradeFilter, setActiveGradeFilter] = useState(
+    searchParams.get('grade') || studentFlow.grade || 'all'
+  );
   const [activeBoardFilter, setActiveBoardFilter] = useState(
-    searchParams.get('board') || studentFlow.board || 'all'
+    studentFlow.board || 'TN State Board (Samacheer)'
   );
-  const [selectedSlot, setSelectedSlot] = useState(
-    ['slot-1', 'slot-2', 'slot-3'].includes(slotParam) ? slotParam : 'all'
-  );
+  const [selectedSlot, setSelectedSlot] = useState(urlSlot);
 
-  const filteredBatches = useMemo(() => {
-    let list = getBatchesFiltered({
-      grade: activeGradeFilter,
-      board: activeBoardFilter === 'all' ? null : activeBoardFilter,
-    });
-
-    if (list.length === 0) {
-      list = batchesData.filter(b => {
-        if (activeGradeFilter === 'all') return true;
-        return b.grade.toLowerCase().includes(activeGradeFilter.toLowerCase().replace('class ', ''));
-      });
+  const filteredBatches = BATCHES_DATA.filter((batch) => {
+    let matchGrade = true;
+    if (activeGradeFilter !== 'all') {
+      if (activeGradeFilter.includes('6') || activeGradeFilter.includes('7') || activeGradeFilter.includes('8')) {
+        matchGrade = batch.grade.includes('6') || batch.grade.includes('7') || batch.grade.includes('8') || batch.grade.includes('6 to 8');
+      } else {
+        matchGrade = batch.grade.toLowerCase().includes(activeGradeFilter.toLowerCase());
+      }
     }
 
+    let matchBoard = true;
+    if (activeBoardFilter !== 'all') {
+      if (activeBoardFilter.includes('State')) {
+        matchBoard = batch.board.includes('State') || batch.board.includes('Samacheer');
+      } else if (activeBoardFilter.includes('CBSE')) {
+        matchBoard = batch.board.includes('CBSE');
+      }
+    }
+
+    let matchSlot = true;
     if (selectedSlot !== 'all') {
-      list = list.filter(b => b.slotId === selectedSlot);
+      if (selectedSlot === 'slot-1') matchSlot = batch.timing.includes('4:30');
+      if (selectedSlot === 'slot-2') matchSlot = batch.timing.includes('6:00');
+      if (selectedSlot === 'slot-3') matchSlot = batch.timing.includes('7:30');
     }
 
-    if (list.length === 0) {
-      list = batchesData;
-    }
-
-    return list;
-  }, [activeGradeFilter, activeBoardFilter, selectedSlot]);
+    return matchGrade && matchBoard && matchSlot;
+  });
 
   const handleSelectBatch = (batch) => {
-    const resolvedBoard = resolveBoardForBatch(batch, studentFlow.board);
-    const resolvedGrade = studentFlow.grade && (
-      batch.grade.includes(studentFlow.grade.replace('Class ', '')) ||
-      (batch.grade.includes('6 to 8') && ['Class 6', 'Class 7', 'Class 8'].includes(studentFlow.grade))
-    ) ? studentFlow.grade : batch.grade;
-
-    updateStudentFlow({
+    setStudentFlow((prev) => ({
+      ...prev,
       selectedBatchId: batch.id,
-      grade: resolvedGrade,
-      board: resolvedBoard,
-    });
+      selectedBatchName: batch.name,
+      timing: batch.timing,
+      monthlyFee: batch.monthlyFee,
+      subjects: batch.subjects.join(', '),
+      step: 4,
+    }));
     navigate(`/batch/${batch.id}`);
   };
 
   const gradeOptions = [
     { id: 'all', label: 'All Classes' },
-    { id: 'Class 6', label: 'Classes 6–8' },
+    { id: 'Class 6', label: 'Classes 6 – 8 (Middle)' },
     { id: 'Class 9', label: 'Class 9' },
     { id: 'Class 10', label: 'Class 10' },
     { id: 'Class 11', label: 'Class 11' },
@@ -92,38 +82,37 @@ export default function BatchesPage() {
     { id: 'all', label: 'All Boards' },
     { id: 'TN State Board (Samacheer)', label: 'State Board' },
     { id: 'CBSE Board', label: 'CBSE' },
-    { id: 'ICSE Board', label: 'ICSE' },
   ];
 
   const slots = [
-    { id: 'all', label: 'All Slots (4 PM – 9 PM)' },
+    { id: 'all', label: 'All Evening Slots (4–9 PM)' },
     { id: 'slot-1', label: '4:30 PM – 6:00 PM' },
     { id: 'slot-2', label: '6:00 PM – 7:30 PM' },
     { id: 'slot-3', label: '7:30 PM – 9:00 PM' },
   ];
 
   return (
-    <div className="bg-[#FAF7F2] min-h-screen text-left">
+    <div className="bg-[#F8FAFC] min-h-screen text-left">
       <StepProgress currentStep={3} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <div className="mb-6 bg-white p-4 sm:p-5 rounded-2xl border border-[#E8E2D8] shadow-editorial flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="mb-6 bg-white p-4 sm:p-5 rounded-2xl border border-[#E2E8F0] shadow-editorial flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2 text-xs font-code-mono text-[#57534E]">
+            <div className="flex items-center space-x-2 text-xs text-slate-600">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>Student: <strong className="text-[#181614]">{studentFlow.studentName || 'Student'}</strong></span>
+              <span>Student: <strong className="text-[#0F172A]">{studentFlow.studentName || 'Student'}</strong></span>
               <span>•</span>
-              <span>Target: <strong className="text-[#C2410C]">{studentFlow.examPrep || 'Academic Excellence'}</strong></span>
+              <span>Target: <strong className="text-[#EA580C]">{studentFlow.examPrep || 'Academic Excellence'}</strong></span>
             </div>
-            <p className="text-xs text-[#78716C]">
+            <p className="text-xs text-slate-500">
               Showing matching small-batches at Thiripura Complex, Thoramangalam.
             </p>
           </div>
 
-          <div className="flex items-center space-x-3 text-xs font-code-mono">
+          <div className="flex items-center space-x-3 text-xs">
             <Link
               to="/student-details"
-              className="inline-flex items-center space-x-1 text-[#57534E] hover:text-[#C2410C] px-3 py-1.5 rounded-lg border border-[#E8E2D8] bg-[#FAF7F2]"
+              className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-lg border border-[#E2E8F0] bg-slate-50"
             >
               <Edit2 className="w-3 h-3" />
               <span>Change Class/Board</span>
@@ -131,7 +120,7 @@ export default function BatchesPage() {
 
             <Link
               to="/exam-prep"
-              className="inline-flex items-center space-x-1 text-[#57534E] hover:text-[#C2410C] px-3 py-1.5 rounded-lg border border-[#E8E2D8] bg-[#FAF7F2]"
+              className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-lg border border-[#E2E8F0] bg-slate-50"
             >
               <Edit2 className="w-3 h-3" />
               <span>Change Goal</span>
@@ -140,21 +129,21 @@ export default function BatchesPage() {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-black text-[#181614] tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
             Available Evening Batches
           </h1>
-          <p className="text-sm text-[#57534E] mt-1 max-w-2xl leading-relaxed">
+          <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
             All batches run Monday to Saturday between 4:00 PM and 9:00 PM with a strict 12-student cap. Timings are synchronized with local school buses arriving via Four Roads and Trichy Main Road so students arrive refreshed.
           </p>
-          <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 inline-flex items-center space-x-2">
-            <span className="font-bold text-[#C2410C]">1-Day Free Trial:</span>
+          <div className="mt-3 p-3 bg-orange-50/80 rounded-xl border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
+            <span className="font-bold text-[#EA580C]">1-Day Free Trial:</span>
             <span>Attend one complete evening session before paying any fees. Zero registration fee.</span>
           </div>
         </div>
 
-        <div className="mb-8 bg-white p-4 rounded-2xl border border-[#E8E2D8] flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-8 bg-white p-4 rounded-2xl border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar">
-            <span className="text-xs font-code-mono uppercase font-bold text-[#78716C] mr-1 shrink-0">
+            <span className="text-xs uppercase font-bold text-slate-500 mr-1 shrink-0">
               Class:
             </span>
             {gradeOptions.map((g) => {
@@ -167,8 +156,8 @@ export default function BatchesPage() {
                   onClick={() => setActiveGradeFilter(g.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 ${
                     isGradeActive
-                      ? 'bg-[#181614] text-white'
-                      : 'bg-[#FAF7F2] text-[#57534E] hover:bg-[#E8E2D8]'
+                      ? 'bg-[#0F172A] text-white'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                   }`}
                 >
                   {g.label}
@@ -178,7 +167,7 @@ export default function BatchesPage() {
           </div>
 
           <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar">
-            <span className="text-xs font-code-mono uppercase font-bold text-[#78716C] mr-1 shrink-0">
+            <span className="text-xs uppercase font-bold text-slate-500 mr-1 shrink-0">
               Board:
             </span>
             {boardOptions.map((b) => (
@@ -188,8 +177,8 @@ export default function BatchesPage() {
                 onClick={() => setActiveBoardFilter(b.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 ${
                   activeBoardFilter === b.id
-                    ? 'bg-[#C2410C] text-white'
-                    : 'bg-[#FAF7F2] text-[#57534E] hover:bg-[#E8E2D8]'
+                    ? 'bg-[#EA580C] text-white'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                 }`}
               >
                 {b.label}
@@ -198,13 +187,13 @@ export default function BatchesPage() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-code-mono uppercase font-bold text-[#78716C]">
+            <span className="text-xs uppercase font-bold text-slate-500">
               Slot:
             </span>
             <select
               value={selectedSlot}
               onChange={(e) => setSelectedSlot(e.target.value)}
-              className="bg-[#FAF7F2] border border-[#E8E2D8] text-xs font-bold rounded-xl px-3 py-1.5 text-[#181614] focus:outline-hidden"
+              className="bg-slate-50 border border-[#E2E8F0] text-xs font-bold rounded-xl px-3 py-1.5 text-[#0F172A] focus:outline-hidden"
             >
               {slots.map((s) => (
                 <option key={s.id} value={s.id}>{s.label}</option>
@@ -218,50 +207,50 @@ export default function BatchesPage() {
             return (
               <div
                 key={batch.id}
-                className="bg-white rounded-3xl p-6 sm:p-7 border border-[#E8E2D8] shadow-editorial flex flex-col justify-between hover:border-[#C2410C]/40 transition-all"
+                className="bg-white rounded-3xl p-6 sm:p-7 border border-[#E2E8F0] shadow-editorial flex flex-col justify-between hover:border-[#EA580C]/40 transition-all"
               >
                 <div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#FAF7F2] mb-4">
-                    <span className="px-2.5 py-1 bg-[#181614] text-white rounded-lg text-[10px] font-code-mono uppercase font-bold">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 mb-4">
+                    <span className="px-2.5 py-1 bg-[#0F172A] text-white rounded-lg text-xs uppercase font-bold">
                       {batch.grade} • {batch.board}
                     </span>
 
-                    <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-lg text-[10px] font-code-mono font-bold">
+                    <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-lg text-xs font-bold">
                       {batch.status}
                     </span>
                   </div>
 
-                  <h3 className="text-xl font-bold text-[#181614] leading-snug">
+                  <h3 className="text-xl font-bold text-[#0F172A] leading-snug">
                     {batch.name}
                   </h3>
 
-                  <div className="mt-4 grid sm:grid-cols-2 gap-3 text-xs font-code-mono bg-[#FAF7F2] p-3.5 rounded-2xl border border-[#E8E2D8]">
+                  <div className="mt-4 grid sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-2xl border border-[#E2E8F0]">
                     <div className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4 text-[#C2410C] shrink-0" />
+                      <Clock className="w-4 h-4 text-[#EA580C] shrink-0" />
                       <div>
-                        <span className="font-bold text-[#181614] block">{batch.timing}</span>
-                        <span className="text-[#78716C] text-[10px]">{batch.days}</span>
+                        <span className="font-bold text-[#0F172A] block">{batch.timing}</span>
+                        <span className="text-slate-500 text-xs">{batch.days}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <Users className="w-4 h-4 text-[#C2410C] shrink-0" />
+                      <Users className="w-4 h-4 text-[#EA580C] shrink-0" />
                       <div>
-                        <span className="font-bold text-[#181614] block">Max 12 Students</span>
-                        <span className="text-emerald-700 font-bold text-[10px]">{batch.seatsRemaining} Seats Left</span>
+                        <span className="font-bold text-[#0F172A] block">Max 12 Students</span>
+                        <span className="text-emerald-700 font-bold text-xs">{batch.seatsRemaining} Seats Left</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-4">
-                    <span className="text-[10px] font-code-mono uppercase text-[#78716C] block mb-1.5">
+                    <span className="text-xs uppercase font-bold text-slate-500 block mb-1.5">
                       Subjects Covered:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {batch.subjects.map((sub, i) => (
                         <span
                           key={i}
-                          className="px-2.5 py-1 bg-white border border-[#E8E2D8] text-xs font-semibold text-[#181614] rounded-lg shadow-xs"
+                          className="px-2.5 py-1 bg-white border border-[#E2E8F0] text-xs font-semibold text-[#0F172A] rounded-lg shadow-xs"
                         >
                           {sub}
                         </span>
@@ -269,29 +258,29 @@ export default function BatchesPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-[#FAF7F2] text-xs font-code-mono text-[#57534E] flex items-center space-x-2">
-                    <MapPin className="w-3.5 h-3.5 text-[#C2410C] shrink-0" />
+                  <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 flex items-center space-x-2">
+                    <MapPin className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
                     <span className="truncate">{batch.classroom}</span>
                   </div>
 
-                  <div className="mt-3 pt-3 border-t border-[#FAF7F2] text-xs font-code-mono text-[#78716C] flex items-center justify-between">
+                  <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
                     <span className="flex items-center space-x-1.5">
-                      <BookOpen className="w-3.5 h-3.5 text-[#C2410C]" />
+                      <BookOpen className="w-3.5 h-3.5 text-[#EA580C]" />
                       <span>Curriculum:</span>
                     </span>
-                    <strong className="text-[#181614]">Samacheer Kalvi & NCERT Aligned</strong>
+                    <strong className="text-[#0F172A]">Samacheer Kalvi & NCERT Aligned</strong>
                   </div>
                 </div>
 
-                <div className="mt-6 pt-5 border-t border-[#E8E2D8] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="mt-6 pt-5 border-t border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <span className="text-[10px] font-code-mono uppercase text-[#78716C] block">
+                    <span className="text-xs uppercase font-bold text-slate-500 block">
                       Monthly Tuition Fee
                     </span>
-                    <span className="text-xl sm:text-2xl font-black text-[#181614]">
+                    <span className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">
                       ₹{batch.monthlyFee.toLocaleString('en-IN')}
                     </span>
-                    <span className="text-[10px] font-code-mono text-emerald-700 block">
+                    <span className="text-xs text-emerald-700 block">
                       All study materials included
                     </span>
                   </div>
@@ -300,10 +289,10 @@ export default function BatchesPage() {
                     <button
                       type="button"
                       onClick={() => handleSelectBatch(batch)}
-                      className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#C2410C] hover:bg-[#9A3412] text-white text-xs font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+                      className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
                     >
                       <span>Select Batch & Details (Step 4)</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#FED7AA]" />
+                      <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
                     </button>
                   </div>
                 </div>
@@ -312,15 +301,15 @@ export default function BatchesPage() {
           })}
         </div>
 
-        <div className="mt-12 bg-white rounded-3xl p-6 border border-[#E8E2D8] flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs font-code-mono text-[#57534E]">
-            <span className="font-bold text-[#181614] block">Focus Academy Thoramangalam Guarantee:</span>
+        <div className="mt-12 bg-white rounded-3xl p-6 border border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-xs text-slate-600">
+            <span className="font-bold text-[#0F172A] block">Focus Academy Thoramangalam Guarantee:</span>
             <span>100% No-Questions-Asked Rematch or Refund Guarantee after Session 1.</span>
           </div>
 
           <Link
             to="/exam-prep"
-            className="text-xs font-semibold text-[#78716C] hover:text-[#181614] shrink-0"
+            className="text-xs font-semibold text-slate-500 hover:text-[#0F172A] shrink-0"
           >
             ← Back to Exam Preparation Goals
           </Link>
