@@ -19,19 +19,19 @@ export default function Button({
   const baseClasses = 'inline-flex items-center justify-center font-bold transition-all cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] disabled:opacity-50 disabled:pointer-events-none';
 
   const sizeClasses = {
-    sm: 'px-3 py-1.5 rounded-lg text-xs min-h-[36px]',
-    md: 'px-5 py-3 rounded-xl text-xs sm:text-sm min-h-[44px]',
-    lg: 'px-8 py-3.5 rounded-xl text-sm sm:text-base min-h-[48px]',
-  }[size] || 'px-5 py-3 rounded-xl text-xs sm:text-sm min-h-[44px]';
+    sm: 'px-3 py-1.5 rounded-md text-xs min-h-[36px]',
+    md: 'px-5 py-2.5 rounded-md text-xs sm:text-sm min-h-[44px]',
+    lg: 'px-7 py-3 rounded-md text-sm sm:text-base min-h-[48px]',
+  }[size] || 'px-5 py-2.5 rounded-md text-xs sm:text-sm min-h-[44px]';
 
   const variantClasses = {
-    primary: 'bg-[#EA580C] hover:bg-[#C2410C] text-white shadow-editorial',
+    primary: 'bg-[#EA580C] hover:bg-[#C2410C] text-white shadow-xs',
     secondary: 'bg-white hover:bg-slate-50 text-[#0F172A] border border-[#E2E8F0] shadow-xs',
     dark: 'bg-[#0F172A] hover:bg-slate-800 text-white shadow-xs',
-    whatsapp: 'bg-[#25D366] hover:bg-[#20BA5A] text-white shadow-editorial focus-visible:ring-white',
+    whatsapp: 'bg-[#25D366] hover:bg-[#20BA5A] text-white shadow-xs focus-visible:ring-white',
     outline: 'bg-transparent hover:bg-slate-100 text-[#0F172A] border border-[#E2E8F0]',
     ghost: 'bg-transparent hover:bg-slate-100 text-slate-600 hover:text-[#0F172A]',
-  }[variant] || 'bg-[#EA580C] hover:bg-[#C2410C] text-white shadow-editorial';
+  }[variant] || 'bg-[#EA580C] hover:bg-[#C2410C] text-white shadow-xs';
 
   const combinedClasses = `${baseClasses} ${sizeClasses} ${variantClasses} ${className}`;
 

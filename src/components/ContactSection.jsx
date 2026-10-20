@@ -79,7 +79,7 @@ export default function ContactSection({ isPage = false }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-5 space-y-6">
-            <div className="bg-[#F8FAFC] p-6 rounded-3xl border border-[#E2E8F0] shadow-editorial text-left">
+            <div className="bg-[#F8FAFC] p-6 rounded-lg border border-[#E2E8F0] shadow-xs text-left">
               <h3 className="text-lg font-bold text-[#0F172A]">
                 {CAMPUS_CONFIG.brand.name}, {CAMPUS_CONFIG.location.area}
               </h3>
@@ -131,7 +131,7 @@ export default function ContactSection({ isPage = false }) {
               </div>
             </div>
 
-            <div className="bg-[#F8FAFC] rounded-3xl border border-[#E2E8F0] overflow-hidden shadow-editorial">
+            <div className="bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] overflow-hidden shadow-xs">
               <div className="p-4 bg-[#0F172A] text-white flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs font-bold">
                   <MapPin className="w-4 h-4 text-[#EA580C]" />
@@ -165,7 +165,7 @@ export default function ContactSection({ isPage = false }) {
             </div>
           </div>
 
-          <div className="lg:col-span-7 bg-[#F8FAFC] p-6 sm:p-8 rounded-3xl border border-[#E2E8F0] shadow-editorial-lg text-left">
+          <div className="lg:col-span-7 bg-[#F8FAFC] p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs text-left">
             <div className="mb-6 pb-4 border-b border-[#E2E8F0]">
               <h3 className="text-xl sm:text-2xl font-bold text-[#0F172A]">
                 Enroll Your Child in Focus Academy Evening Batches
@@ -188,7 +188,7 @@ export default function ContactSection({ isPage = false }) {
                 </p>
 
                 {submissionResult.offlineQueued && (
-                  <div className="p-3 bg-amber-50 text-amber-800 rounded-xl border border-amber-200 text-xs max-w-sm mx-auto flex items-center space-x-2">
+                  <div className="p-3 bg-amber-50 text-amber-800 rounded-md border border-amber-200 text-xs max-w-sm mx-auto flex items-center space-x-2">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>Inquiry saved in offline queue. Auto-syncing upon reconnection.</span>
                   </div>
@@ -199,7 +199,7 @@ export default function ContactSection({ isPage = false }) {
                     href={submissionResult.whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 px-5 py-3 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+                    className="inline-flex items-center space-x-2 px-5 py-3 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                   >
                     <MessageSquare className="w-4 h-4" />
                     <span>Fast-Track Admission on WhatsApp →</span>
@@ -234,7 +234,7 @@ export default function ContactSection({ isPage = false }) {
                       placeholder="e.g. K. Vignesh"
                       className={`w-full min-h-[48px] bg-white border ${
                         validationErrors.studentName ? 'border-rose-500' : 'border-[#E2E8F0]'
-                      } rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                      } rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                       required
                     />
                     {validationErrors.studentName && (
@@ -252,7 +252,7 @@ export default function ContactSection({ isPage = false }) {
                       value={parentName}
                       onChange={(e) => setParentName(e.target.value)}
                       placeholder="e.g. Mr. S. Kannan"
-                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     />
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export default function ContactSection({ isPage = false }) {
                       placeholder="e.g. 98424 51220"
                       className={`w-full min-h-[48px] bg-white border ${
                         validationErrors.phone ? 'border-rose-500' : 'border-[#E2E8F0]'
-                      } rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                      } rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                       required
                     />
                     {validationErrors.phone && (
@@ -286,7 +286,7 @@ export default function ContactSection({ isPage = false }) {
                       id="target-grade"
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
-                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     >
                       <option value="Class 10">Class 10 (Secondary Board Preparation)</option>
                       <option value="Class 12">Class 12 (Higher Secondary STEM / Commerce)</option>
@@ -308,7 +308,7 @@ export default function ContactSection({ isPage = false }) {
                       id="curriculum-board"
                       value={board}
                       onChange={(e) => setBoard(e.target.value)}
-                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     >
                       <option value="TN State Board (Samacheer)">TN State Board (Samacheer Kalvi)</option>
                       <option value="CBSE Board">CBSE Board (NCERT)</option>
@@ -327,7 +327,7 @@ export default function ContactSection({ isPage = false }) {
                       value={subjects}
                       onChange={(e) => setSubjects(e.target.value)}
                       placeholder="e.g. Maths, Physics, Chemistry, Biology"
-                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     />
                   </div>
                 </div>
@@ -342,11 +342,11 @@ export default function ContactSection({ isPage = false }) {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="e.g. Struggles with algebra factoring, pre-board test panic, wants to target 95%+ in 10th boards..."
-                    className="w-full bg-white border border-[#E2E8F0] rounded-xl p-3 text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                    className="w-full bg-white border border-[#E2E8F0] rounded-md p-3 text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                   />
                 </div>
 
-                <div className="p-3 bg-white rounded-xl border border-[#E2E8F0] text-xs text-slate-600 flex items-center space-x-2">
+                <div className="p-3 bg-white rounded-md border border-[#E2E8F0] text-xs text-slate-600 flex items-center space-x-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>Small batches guaranteed (Strictly Max 12 Students) • Mon–Sat Evening Schedule (4 PM – 9 PM)</span>
                 </div>
@@ -354,7 +354,7 @@ export default function ContactSection({ isPage = false }) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[48px] py-3.5 bg-[#EA580C] hover:bg-[#C2410C] disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-xl shadow-editorial hover:shadow-editorial-lg transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="w-full min-h-[48px] py-3.5 bg-[#EA580C] hover:bg-[#C2410C] disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                 >
                   <Send className="w-4 h-4 text-orange-200" />
                   <span>{isSubmitting ? 'Validating & Submitting...' : 'Submit Enrollment Inquiry (Evening Batches)'}</span>

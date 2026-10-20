@@ -80,10 +80,10 @@ export default function AboutPage() {
           <span className="text-[#0F172A] font-bold">About Focus Academy</span>
         </div>
 
-        <section aria-labelledby="about-hero-heading" className="bg-white rounded-3xl p-6 sm:p-10 lg:p-12 border border-[#E2E8F0] shadow-editorial mb-12">
+        <section aria-labelledby="about-hero-heading" className="bg-white rounded-lg p-6 sm:p-10 lg:p-12 border border-[#E2E8F0] shadow-xs mb-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             <div className="lg:col-span-7">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-orange-50 text-[#EA580C] rounded-lg text-xs font-bold mb-4">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-orange-50 text-[#EA580C] rounded-md text-xs font-bold mb-4">
                 <Building2 className="w-3.5 h-3.5" />
                 <span>Thiripura Complex • Thoramangalam, Perambalur</span>
               </div>
@@ -97,7 +97,7 @@ export default function AboutPage() {
               </p>
 
               <div className="mt-6 grid sm:grid-cols-2 gap-3.5">
-                <div className="p-4 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
+                <div className="p-4 bg-white rounded-md border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
                   <ShieldCheck className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold block text-sm">1-Day Free Trial Guarantee</span>
@@ -105,7 +105,7 @@ export default function AboutPage() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
+                <div className="p-4 bg-white rounded-md border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
                   <Bus className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold block text-sm">Bus-Synchronized Timings</span>
@@ -117,7 +117,7 @@ export default function AboutPage() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
                   to="/timings"
-                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-xl shadow-editorial transition-all active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                 >
                   <span>View Batch Timings & Seats</span>
                   <ArrowRight className="w-4 h-4 text-orange-200" />
@@ -125,7 +125,7 @@ export default function AboutPage() {
 
                 <Link
                   to="/contact"
-                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-white hover:bg-slate-50 text-[#0F172A] text-xs sm:text-sm font-bold rounded-xl border border-[#E2E8F0] shadow-editorial-inset transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-white hover:bg-slate-50 text-[#0F172A] text-xs sm:text-sm font-bold rounded-md border border-[#E2E8F0] shadow-xs transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                 >
                   <MapPin className="w-4 h-4 text-[#EA580C]" />
                   <span>Visit Campus</span>
@@ -134,8 +134,8 @@ export default function AboutPage() {
             </div>
 
             <div className="lg:col-span-5">
-              <div className="bg-[#F8FAFC] rounded-3xl p-5 border border-[#E2E8F0] shadow-editorial-inset">
-                <div className="relative rounded-2xl overflow-hidden border border-[#E2E8F0] mb-4 bg-slate-100">
+              <div className="bg-[#F8FAFC] rounded-lg p-5 border border-[#E2E8F0]">
+                <div className="relative rounded-md overflow-hidden border border-[#E2E8F0] mb-4 bg-slate-100">
                   <img
                     src="/focus-academy-perambalur.jpg"
                     alt="Focus Academy premises at Thiripura Complex, Thoramangalam, Perambalur"
@@ -144,7 +144,7 @@ export default function AboutPage() {
                     className="w-full h-56 sm:h-64 object-cover object-center"
                     loading="eager"
                   />
-                  <div className="absolute top-3 left-3 bg-[#0F172A]/85 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-xs">
+                  <div className="absolute top-3 left-3 bg-[#0F172A]/85 text-white text-xs font-semibold px-2.5 py-1 rounded-md flex items-center space-x-1.5 shadow-xs">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span>Campus Premises</span>
                   </div>
@@ -207,8 +207,8 @@ export default function AboutPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#E2E8F0] shadow-editorial">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-rose-50 text-rose-700 rounded-lg text-xs font-bold mb-4">
+            <div className="bg-white rounded-lg p-6 sm:p-7 border border-[#E2E8F0] shadow-xs">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-rose-50 text-rose-700 rounded-md text-xs font-bold mb-4">
                 <span>The Conventional 50-Student Problem</span>
               </div>
               <ul className="space-y-3.5 text-xs sm:text-sm text-slate-600">
@@ -231,8 +231,8 @@ export default function AboutPage() {
               </ul>
             </div>
 
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-orange-500/40 shadow-editorial">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-bold mb-4">
+            <div className="bg-white rounded-lg p-6 sm:p-7 border-2 border-orange-500/40 shadow-xs">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-emerald-50 text-emerald-800 rounded-md text-xs font-bold mb-4">
                 <span>The Focus Academy 12-Student Guarantee</span>
               </div>
               <ul className="space-y-3.5 text-xs sm:text-sm text-[#0F172A]">
@@ -271,9 +271,9 @@ export default function AboutPage() {
             {methodologyPillars.map((pillar, idx) => {
               const Icon = pillar.icon;
               return (
-                <div key={idx} className="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-editorial flex flex-col justify-between">
+                <div key={idx} className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
                   <div>
-                    <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#EA580C] flex items-center justify-center mb-3.5">
+                    <div className="w-10 h-10 rounded-md bg-orange-50 text-[#EA580C] flex items-center justify-center mb-3.5">
                       <Icon className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-bold text-[#0F172A] mb-2 leading-snug">
@@ -289,7 +289,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section aria-labelledby="timings-sync-heading" className="mb-12 bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-[#E2E8F0] shadow-editorial">
+        <section aria-labelledby="timings-sync-heading" className="mb-12 bg-white rounded-lg p-6 sm:p-8 lg:p-10 border border-[#E2E8F0] shadow-xs">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-5">
               <h2 id="timings-sync-heading" className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
@@ -302,7 +302,7 @@ export default function AboutPage() {
                 Our batch timings are intentionally scheduled so school students coming from Perambalur town schools or nearby areas can arrive via town and school buses and safely depart before evening transit finishes.
               </p>
 
-              <div className="mt-6 p-4 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] text-xs space-y-2">
+              <div className="mt-6 p-4 bg-[#F8FAFC] rounded-md border border-[#E2E8F0] text-xs space-y-2">
                 <div className="flex items-center space-x-2 text-[#0F172A] font-bold">
                   <MapPin className="w-4 h-4 text-[#EA580C]" />
                   <span>Strategic Campus Landmark</span>
@@ -316,7 +316,7 @@ export default function AboutPage() {
             <div className="lg:col-span-7">
               <div className="space-y-3.5">
                 {HOME_BATCH_SLOTS.map((slot) => (
-                  <div key={slot.id} className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div key={slot.id} className="p-4 bg-[#F8FAFC] rounded-md border border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <div className="flex items-center space-x-2">
                         <span className="text-xs font-bold text-[#EA580C] uppercase">
@@ -337,7 +337,7 @@ export default function AboutPage() {
 
                     <Link
                       to={`/batches?slot=${slot.id}`}
-                      className="min-h-[38px] px-4 py-2 bg-white hover:bg-[#0F172A] hover:text-white text-[#0F172A] text-xs font-bold rounded-xl border border-[#E2E8F0] transition-colors shrink-0 inline-flex items-center justify-center space-x-1"
+                      className="min-h-[38px] px-4 py-2 bg-white hover:bg-[#0F172A] hover:text-white text-[#0F172A] text-xs font-bold rounded-md border border-[#E2E8F0] transition-colors shrink-0 inline-flex items-center justify-center space-x-1"
                     >
                       <span>Check Seats</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -361,8 +361,8 @@ export default function AboutPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {facilities.map((fac, idx) => (
-              <div key={idx} className="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-editorial">
-                <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-[#EA580C] mb-3">
+              <div key={idx} className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs">
+                <div className="w-8 h-8 rounded-md bg-orange-50 border border-orange-200 flex items-center justify-center text-[#EA580C] mb-3">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <h3 className="text-sm font-bold text-[#0F172A] mb-1.5 leading-snug">
@@ -376,7 +376,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section aria-labelledby="trial-cta-heading" className="bg-[#0F172A] text-white rounded-3xl p-6 sm:p-10 border border-[#1E293B] shadow-editorial-lg text-center">
+        <section aria-labelledby="trial-cta-heading" className="bg-[#0F172A] text-white rounded-lg p-6 sm:p-10 border border-[#1E293B] shadow-sm text-center">
           <div className="max-w-2xl mx-auto">
             <h2 id="trial-cta-heading" className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
               Experience the 12-Student Classroom
@@ -389,14 +389,14 @@ export default function AboutPage() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
               <Link
                 to="/student-details"
-                className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-xl shadow-editorial transition-all active:scale-98"
+                className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all active:scale-98"
               >
                 <span>Register for 1-Day Free Trial →</span>
               </Link>
 
               <Link
                 to="/contact"
-                className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-[#1E293B] hover:bg-slate-700 text-white text-xs sm:text-sm font-bold rounded-xl border border-slate-700 transition-all"
+                className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-[#1E293B] hover:bg-slate-700 text-white text-xs sm:text-sm font-bold rounded-md border border-slate-700 transition-all"
               >
                 <MapPin className="w-4 h-4 text-orange-200" />
                 <span>Visit Campus at Thoramangalam</span>
@@ -404,7 +404,7 @@ export default function AboutPage() {
 
               <a
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
-                className="min-h-[46px] inline-flex items-center space-x-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-bold rounded-xl border border-white/15 transition-all"
+                className="min-h-[46px] inline-flex items-center space-x-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-bold rounded-md border border-white/15 transition-all"
               >
                 <Phone className="w-4 h-4 text-orange-200" />
                 <span>Call {CAMPUS_CONFIG.contact.primaryPhone}</span>

@@ -62,7 +62,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
   };
 
   return (
-    <div id="fee-calculator" className="bg-white rounded-3xl border border-[#E2E8F0] shadow-editorial-lg overflow-hidden grid grid-cols-1 lg:grid-cols-12 my-4">
+    <div id="fee-calculator" className="bg-white rounded-lg border border-[#E2E8F0] shadow-xs overflow-hidden grid grid-cols-1 lg:grid-cols-12 my-4">
       <div className="p-6 sm:p-7 lg:col-span-7 space-y-4 border-b lg:border-b-0 lg:border-r border-[#E2E8F0]">
         <div>
           <label htmlFor="calculator-grade" className="block text-xs uppercase tracking-wider text-slate-600 mb-1.5 font-bold">
@@ -72,7 +72,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             id="calculator-grade"
             value={grade}
             onChange={(e) => setGrade(e.target.value)}
-            className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+            className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
           >
             <option value="class-6-8">Class 6 to 8 (Middle School Foundation)</option>
             <option value="class-9-10">Class 9 & 10 (SSLC / Board Exam Focus)</option>
@@ -90,7 +90,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
               id="calculator-board"
               value={board}
               onChange={(e) => setBoard(e.target.value)}
-              className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+              className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
             >
               <option value="State Board">TN State Board (Samacheer)</option>
               <option value="CBSE">CBSE Board (NCERT)</option>
@@ -107,7 +107,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
               id="calculator-center"
               value={center}
               onChange={(e) => setCenter(e.target.value)}
-              className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+              className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
             >
               <option value="Thoramangalam">Thiripura Complex, Thoramangalam (Main Center)</option>
               <option value="Four Roads Access">Four Roads / Rajanagar Campus Desk</option>
@@ -123,7 +123,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             <button
               type="button"
               onClick={() => setMode('classroom')}
-              className={`min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+              className={`min-h-[44px] py-2.5 px-3 rounded-md text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
                 mode === 'classroom'
                   ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
                   : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
@@ -136,7 +136,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             <button
               type="button"
               onClick={() => setMode('online')}
-              className={`min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+              className={`min-h-[44px] py-2.5 px-3 rounded-md text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
                 mode === 'online'
                   ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
                   : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
@@ -156,7 +156,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             <button
               type="button"
               onClick={() => setHasSiblingDiscount(false)}
-              className={`min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+              className={`min-h-[44px] py-2.5 px-3 rounded-md text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
                 !hasSiblingDiscount
                   ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
                   : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
@@ -168,7 +168,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             <button
               type="button"
               onClick={() => setHasSiblingDiscount(true)}
-              className={`min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+              className={`min-h-[44px] py-2.5 px-3 rounded-md text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
                 hasSiblingDiscount
                   ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
                   : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
@@ -185,7 +185,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             <label htmlFor="calculator-frequency" className="text-xs uppercase tracking-wider text-slate-600 font-bold">
               6. Weekly Class Hours
             </label>
-            <span className="text-xs font-bold text-[#EA580C] bg-orange-50 px-2.5 py-0.5 rounded-lg border border-orange-200">
+            <span className="text-xs font-bold text-[#EA580C] bg-orange-50 px-2.5 py-0.5 rounded border border-orange-200">
               {hoursPerWeek} Hours / Week ({monthlyHours} hrs/mo)
             </span>
           </div>
@@ -250,7 +250,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             </div>
           </div>
 
-          <div className="mt-4 p-3 rounded-2xl bg-white border border-[#E2E8F0] text-xs text-slate-600 space-y-1 shadow-editorial-inset">
+          <div className="mt-4 p-3.5 rounded-md bg-white border border-[#E2E8F0] text-xs text-slate-600 space-y-1">
             <p className="font-bold text-[#0F172A] text-xs uppercase">
               ✓ What Is Included in This Fee:
             </p>
@@ -279,7 +279,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
           <button
             type="button"
             onClick={handleBookTrial}
-            className="w-full min-h-[46px] py-3 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs rounded-xl shadow-editorial transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98"
+            className="w-full min-h-[46px] py-3 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98"
           >
             <span>Book 1-Day Free Trial at this Rate</span>
             <ArrowRight className="w-3.5 h-3.5 text-orange-200" />

@@ -112,7 +112,7 @@ export default function EnrollPage() {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         {submissionResult ? (
-          <div className="bg-white rounded-3xl p-8 sm:p-12 border border-[#E2E8F0] shadow-editorial-lg text-center max-w-2xl mx-auto animate-in fade-in">
+          <div className="bg-white rounded-lg p-8 sm:p-12 border border-[#E2E8F0] shadow-sm text-center max-w-2xl mx-auto animate-in fade-in">
             <div className="w-16 h-16 rounded-full bg-[#0F172A] text-white flex items-center justify-center mx-auto mb-5 shadow-sm">
               <CheckCircle2 className="w-9 h-9 text-[#EA580C]" />
             </div>
@@ -129,7 +129,7 @@ export default function EnrollPage() {
               Thank you, <strong>{studentName}</strong>. Your seat reservation has been queued for <strong>{selectedBatch.name}</strong>.
             </p>
 
-            <div className="mt-6 p-5 bg-slate-50 rounded-2xl border border-[#E2E8F0] text-xs text-left space-y-2 max-w-md mx-auto shadow-editorial-inset">
+            <div className="mt-6 p-5 bg-slate-50 rounded-md border border-[#E2E8F0] text-xs text-left space-y-2 max-w-md mx-auto">
               <div className="flex justify-between pb-2 border-b border-[#E2E8F0]">
                 <span className="text-slate-500">Admission Slip No:</span>
                 <span className="font-bold text-[#0F172A]">{submissionResult.data?.id || 'FA-2026-ENR'}</span>
@@ -152,7 +152,7 @@ export default function EnrollPage() {
               </div>
             </div>
 
-            <div className="mt-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2.5 max-w-md mx-auto">
+            <div className="mt-6 p-4 bg-emerald-50 rounded-md border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2.5 max-w-md mx-auto">
               <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" />
               <span>
                 Protected by 100% No-Questions-Asked Rematch Guarantee after Session 1.
@@ -165,7 +165,7 @@ export default function EnrollPage() {
                   href={submissionResult.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-sm rounded-xl shadow-editorial transition-all cursor-pointer flex items-center justify-center space-x-2"
+                  className="w-full py-3.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-sm rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2"
                 >
                   <MessageSquare className="w-4 h-4 fill-white" />
                   <span>Send Confirmation via WhatsApp →</span>
@@ -175,14 +175,14 @@ export default function EnrollPage() {
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="w-full py-3 bg-white hover:bg-slate-50 text-[#0F172A] font-bold text-xs rounded-xl border border-[#E2E8F0] shadow-xs transition-colors cursor-pointer flex items-center justify-center space-x-2"
+                className="w-full py-3 bg-white hover:bg-slate-50 text-[#0F172A] font-bold text-xs rounded-md border border-[#E2E8F0] shadow-xs transition-colors cursor-pointer flex items-center justify-center space-x-2"
               >
                 <span>Save / Print Admission Slip (PDF)</span>
               </button>
 
               <a
                 href={`upi://pay?pa=9842451220@upi&pn=Focus%20Academy&am=${selectedBatch.monthlyFee}&cu=INR&tn=Focus%20Academy%20Admission`}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-[#0F172A] font-bold text-xs rounded-xl border border-[#CBD5E1] transition-all cursor-pointer flex items-center justify-center space-x-2"
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-[#0F172A] font-bold text-xs rounded-md border border-[#CBD5E1] transition-all cursor-pointer flex items-center justify-center space-x-2"
               >
                 <span>Pay ₹{selectedBatch.monthlyFee.toLocaleString('en-IN')} via UPI (GPay / PhonePe)</span>
               </a>
@@ -190,7 +190,7 @@ export default function EnrollPage() {
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="w-full py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
+                className="w-full py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-semibold text-xs rounded-md shadow-xs transition-colors cursor-pointer"
               >
                 Return to Focus Academy Home
               </button>
@@ -199,7 +199,7 @@ export default function EnrollPage() {
         ) : (
           <div className="space-y-8">
             {!studentFlow.studentName && (
-              <div className="p-4 bg-orange-50 border border-orange-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700">
+              <div className="p-4 bg-orange-50 border border-orange-200 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700">
                 <span>Navigated directly? You can enter details here, or start from Step 1 for personalized board recommendations.</span>
                 <Link to="/student-details" className="text-[#EA580C] font-bold hover:underline shrink-0">
                   Start at Step 1 →
@@ -227,7 +227,7 @@ export default function EnrollPage() {
 
             <div className="grid lg:grid-cols-5 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-3xl p-6 border border-[#E2E8F0] shadow-editorial space-y-4">
+                <div className="bg-white rounded-lg p-6 border border-[#E2E8F0] shadow-xs space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                     <span className="text-xs uppercase font-bold text-slate-500">
                       Selected Evening Batch
@@ -297,7 +297,7 @@ export default function EnrollPage() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-white rounded-2xl border border-[#E2E8F0] text-xs text-slate-600 space-y-1.5">
+                <div className="p-4 bg-white rounded-md border border-[#E2E8F0] text-xs text-slate-600 space-y-1.5">
                   <span className="font-bold text-[#0F172A] block">Focus Academy Campus Desk:</span>
                   <p>{CAMPUS_CONFIG.location.fullAddress}</p>
                   <p className="text-[#EA580C] font-semibold">Phone: {CAMPUS_CONFIG.contact.primaryPhone}</p>
@@ -307,7 +307,7 @@ export default function EnrollPage() {
               <div className="lg:col-span-3">
                 <form
                   onSubmit={handleSubmit}
-                  className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E2E8F0] shadow-editorial space-y-5"
+                  className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-5"
                 >
                   <h2 className="text-base font-bold text-[#0F172A] pb-3 border-b border-slate-100">
                     Student & Admission Details
@@ -329,7 +329,7 @@ export default function EnrollPage() {
                         placeholder="e.g. K. Vignesh"
                         className={`w-full px-3.5 py-2.5 bg-white border ${
                           nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-xl text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                         required
                       />
                       {nameError && (
@@ -352,7 +352,7 @@ export default function EnrollPage() {
                         placeholder="e.g. 98424 51220"
                         className={`w-full px-3.5 py-2.5 bg-white border ${
                           phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-xl text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                         required
                       />
                       {phoneError && (
@@ -372,7 +372,7 @@ export default function EnrollPage() {
                         value={parentName}
                         onChange={(e) => setParentName(e.target.value)}
                         placeholder="e.g. Mr. S. Kannan (Father)"
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                       />
                     </div>
 
@@ -386,7 +386,7 @@ export default function EnrollPage() {
                         value={schoolName}
                         onChange={(e) => setSchoolName(e.target.value)}
                         placeholder="e.g. Thanthai Hans Roever, DS..."
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                       />
                     </div>
                   </div>
@@ -400,7 +400,7 @@ export default function EnrollPage() {
                         id="enroll-board"
                         value={board}
                         onChange={(e) => setBoard(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs sm:text-sm font-semibold text-[#0F172A]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A]"
                       >
                         <option value="TN State Board (Samacheer)">TN State Board (Samacheer)</option>
                         <option value="CBSE Board">CBSE Board (NCERT)</option>
@@ -416,7 +416,7 @@ export default function EnrollPage() {
                         id="enroll-start-date"
                         value={startDatePreference}
                         onChange={(e) => setStartDatePreference(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs sm:text-sm font-semibold text-[#0F172A]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A]"
                       >
                         <option value="Immediate (This Week)">Immediate (This Week)</option>
                         <option value="Next Monday">From Next Monday</option>
@@ -435,11 +435,11 @@ export default function EnrollPage() {
                       value={studentWeakness}
                       onChange={(e) => setStudentWeakness(e.target.value)}
                       placeholder="e.g. Hesitant to ask doubts in school, weak in geometry proofs, needs physics derivations practice..."
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs sm:text-sm text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     />
                   </div>
 
-                  <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2">
+                  <div className="p-3.5 bg-emerald-50 rounded-md border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
                     <span>
                       Zero prepayment required online. Tuition fee payable at campus desk after first session.
@@ -458,7 +458,7 @@ export default function EnrollPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer disabled:opacity-50 active:scale-98"
+                      className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-98"
                     >
                       <span>{isSubmitting ? 'Submitting...' : 'Complete Batch Enrollment'}</span>
                       <Send className="w-4 h-4 text-orange-200" />

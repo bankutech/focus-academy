@@ -96,7 +96,7 @@ export default function BatchesPage() {
       <StepProgress currentStep={3} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <div className="mb-6 bg-white p-4 sm:p-5 rounded-2xl border border-[#E2E8F0] shadow-editorial flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="mb-6 bg-white p-4 sm:p-5 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-2 text-xs text-slate-600">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -112,7 +112,7 @@ export default function BatchesPage() {
           <div className="flex items-center space-x-3 text-xs">
             <Link
               to="/student-details"
-              className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-lg border border-[#E2E8F0] bg-slate-50"
+              className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
             >
               <Edit2 className="w-3 h-3" />
               <span>Change Class/Board</span>
@@ -120,7 +120,7 @@ export default function BatchesPage() {
 
             <Link
               to="/exam-prep"
-              className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-lg border border-[#E2E8F0] bg-slate-50"
+              className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
             >
               <Edit2 className="w-3 h-3" />
               <span>Change Goal</span>
@@ -135,13 +135,13 @@ export default function BatchesPage() {
           <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
             All batches run Monday to Saturday between 4:00 PM and 9:00 PM with a strict 12-student cap. Timings are synchronized with local school buses arriving via Four Roads and Trichy Main Road so students arrive refreshed.
           </p>
-          <div className="mt-3 p-3 bg-orange-50/80 rounded-xl border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
+          <div className="mt-3 p-3 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
             <span className="font-bold text-[#EA580C]">1-Day Free Trial:</span>
             <span>Attend one complete evening session before paying any fees. Zero registration fee.</span>
           </div>
         </div>
 
-        <div className="mb-8 bg-white p-4 rounded-2xl border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-4">
+        <div className="mb-8 bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar">
             <span className="text-xs uppercase font-bold text-slate-500 mr-1 shrink-0">
               Class:
@@ -154,7 +154,7 @@ export default function BatchesPage() {
                   key={g.id}
                   type="button"
                   onClick={() => setActiveGradeFilter(g.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer shrink-0 ${
                     isGradeActive
                       ? 'bg-[#0F172A] text-white'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
@@ -175,7 +175,7 @@ export default function BatchesPage() {
                 key={b.id}
                 type="button"
                 onClick={() => setActiveBoardFilter(b.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0 ${
+                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer shrink-0 ${
                   activeBoardFilter === b.id
                     ? 'bg-[#EA580C] text-white'
                     : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
@@ -193,7 +193,7 @@ export default function BatchesPage() {
             <select
               value={selectedSlot}
               onChange={(e) => setSelectedSlot(e.target.value)}
-              className="bg-slate-50 border border-[#E2E8F0] text-xs font-bold rounded-xl px-3 py-1.5 text-[#0F172A] focus:outline-hidden"
+              className="bg-slate-50 border border-[#E2E8F0] text-xs font-bold rounded-md px-3 py-1.5 text-[#0F172A] focus:outline-hidden"
             >
               {slots.map((s) => (
                 <option key={s.id} value={s.id}>{s.label}</option>
@@ -207,15 +207,15 @@ export default function BatchesPage() {
             return (
               <div
                 key={batch.id}
-                className="bg-white rounded-3xl p-6 sm:p-7 border border-[#E2E8F0] shadow-editorial flex flex-col justify-between hover:border-[#EA580C]/40 transition-all"
+                className="bg-white rounded-lg p-6 sm:p-7 border border-[#E2E8F0] shadow-xs flex flex-col justify-between hover:border-[#EA580C]/40 transition-all"
               >
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 mb-4">
-                    <span className="px-2.5 py-1 bg-[#0F172A] text-white rounded-lg text-xs uppercase font-bold">
+                    <span className="px-2.5 py-1 bg-[#0F172A] text-white rounded-md text-xs uppercase font-bold">
                       {batch.grade} • {batch.board}
                     </span>
 
-                    <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-lg text-xs font-bold">
+                    <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-md text-xs font-bold">
                       {batch.status}
                     </span>
                   </div>
@@ -224,7 +224,7 @@ export default function BatchesPage() {
                     {batch.name}
                   </h3>
 
-                  <div className="mt-4 grid sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-2xl border border-[#E2E8F0]">
+                  <div className="mt-4 grid sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-md border border-[#E2E8F0]">
                     <div className="flex items-center space-x-2">
                       <Clock className="w-4 h-4 text-[#EA580C] shrink-0" />
                       <div>
@@ -250,7 +250,7 @@ export default function BatchesPage() {
                       {batch.subjects.map((sub, i) => (
                         <span
                           key={i}
-                          className="px-2.5 py-1 bg-white border border-[#E2E8F0] text-xs font-semibold text-[#0F172A] rounded-lg shadow-xs"
+                          className="px-2.5 py-1 bg-white border border-[#E2E8F0] text-xs font-semibold text-[#0F172A] rounded-md shadow-xs"
                         >
                           {sub}
                         </span>
@@ -289,7 +289,7 @@ export default function BatchesPage() {
                     <button
                       type="button"
                       onClick={() => handleSelectBatch(batch)}
-                      className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+                      className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                     >
                       <span>Select Batch & Details (Step 4)</span>
                       <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
@@ -301,7 +301,7 @@ export default function BatchesPage() {
           })}
         </div>
 
-        <div className="mt-12 bg-white rounded-3xl p-6 border border-[#E2E8F0] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-12 bg-white rounded-lg p-6 border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-xs text-slate-600">
             <span className="font-bold text-[#0F172A] block">Focus Academy Thoramangalam Guarantee:</span>
             <span>100% No-Questions-Asked Rematch or Refund Guarantee after Session 1.</span>

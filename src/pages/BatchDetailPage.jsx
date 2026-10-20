@@ -71,15 +71,15 @@ export default function BatchDetailPage() {
           </span>
         </div>
 
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-[#E2E8F0] shadow-editorial mb-8">
+        <div className="bg-white rounded-lg p-6 sm:p-10 border border-[#E2E8F0] shadow-xs mb-8">
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="px-3 py-1 bg-[#0F172A] text-white rounded-lg text-xs font-bold">
+            <span className="px-3 py-1 bg-[#0F172A] text-white rounded-md text-xs font-bold">
               {batch.grade} • {batch.board}
             </span>
-            <span className="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-lg text-xs font-bold">
+            <span className="px-3 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-md text-xs font-bold">
               {batch.status}
             </span>
-            <span className="px-3 py-1 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-lg text-xs font-bold">
+            <span className="px-3 py-1 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-md text-xs font-bold">
               {batch.seatsRemaining} Seats Remaining
             </span>
           </div>
@@ -93,7 +93,7 @@ export default function BatchDetailPage() {
           </p>
 
           <div className="mt-6 pt-6 border-t border-slate-100 grid sm:grid-cols-3 gap-4 text-xs">
-            <div className="p-4 bg-slate-50 rounded-2xl border border-[#E2E8F0]">
+            <div className="p-4 bg-slate-50 rounded-md border border-[#E2E8F0]">
               <div className="flex items-center space-x-2 text-[#EA580C] font-bold mb-1">
                 <Clock className="w-4 h-4" />
                 <span>Evening Timetable</span>
@@ -102,7 +102,7 @@ export default function BatchDetailPage() {
               <p className="text-slate-500 text-xs mt-0.5">{batch.days}</p>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-2xl border border-[#E2E8F0]">
+            <div className="p-4 bg-slate-50 rounded-md border border-[#E2E8F0]">
               <div className="flex items-center space-x-2 text-[#EA580C] font-bold mb-1">
                 <Users className="w-4 h-4" />
                 <span>Small Batch Limit</span>
@@ -111,7 +111,7 @@ export default function BatchDetailPage() {
               <p className="text-slate-500 text-xs mt-0.5">Personalized Attention</p>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-2xl border border-[#E2E8F0]">
+            <div className="p-4 bg-slate-50 rounded-md border border-[#E2E8F0]">
               <div className="flex items-center space-x-2 text-[#EA580C] font-bold mb-1">
                 <Award className="w-4 h-4" />
                 <span>Monthly Fee</span>
@@ -123,14 +123,14 @@ export default function BatchDetailPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] shadow-editorial space-y-5">
+          <div className="bg-white rounded-lg p-6 sm:p-8 border border-[#E2E8F0] shadow-xs space-y-5">
             <h2 className="text-base font-bold text-[#0F172A] pb-3 border-b border-slate-100 flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-[#EA580C]" />
               <span>Weekly Academic Routine & Schedule</span>
             </h2>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl border border-[#E2E8F0]">
+              <div className="p-3 bg-slate-50 rounded-md border border-[#E2E8F0]">
                 <strong className="text-[#0F172A] block mb-1">
                   Monday – Friday (Daily 90-Minute Class):
                 </strong>
@@ -139,7 +139,7 @@ export default function BatchDetailPage() {
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-[#E2E8F0]">
+              <div className="p-3 bg-slate-50 rounded-md border border-[#E2E8F0]">
                 <strong className="text-[#0F172A] block mb-1">
                   Daily 15-Minute Doubt Clinic:
                 </strong>
@@ -148,7 +148,7 @@ export default function BatchDetailPage() {
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-[#E2E8F0]">
+              <div className="p-3 bg-slate-50 rounded-md border border-[#E2E8F0]">
                 <strong className="text-[#0F172A] block mb-1">
                   Saturday 2-Hour Timed Mock Test:
                 </strong>
@@ -157,7 +157,7 @@ export default function BatchDetailPage() {
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-[#E2E8F0]">
+              <div className="p-3 bg-slate-50 rounded-md border border-[#E2E8F0]">
                 <strong className="text-[#0F172A] block mb-1">
                   Sunday Doubt & Review Sessions:
                 </strong>
@@ -168,7 +168,7 @@ export default function BatchDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E2E8F0] shadow-editorial space-y-5">
+          <div className="bg-white rounded-lg p-6 sm:p-8 border border-[#E2E8F0] shadow-xs space-y-5">
             <h2 className="text-base font-bold text-[#0F172A] pb-3 border-b border-slate-100 flex items-center space-x-2">
               <BookOpen className="w-4 h-4 text-[#EA580C]" />
               <span>Classroom Facilities & Study Materials</span>
@@ -178,7 +178,7 @@ export default function BatchDetailPage() {
               {facilities.map((fac, idx) => (
                 <div
                   key={idx}
-                  className="p-3.5 bg-slate-50 rounded-2xl border border-[#E2E8F0] flex items-start space-x-3"
+                  className="p-3.5 bg-slate-50 rounded-md border border-[#E2E8F0] flex items-start space-x-3"
                 >
                   <CheckCircle2 className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                   <div>
@@ -188,7 +188,7 @@ export default function BatchDetailPage() {
                 </div>
               ))}
 
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-[#E2E8F0] text-xs text-slate-600">
+              <div className="p-3.5 bg-slate-50 rounded-md border border-[#E2E8F0] text-xs text-slate-600">
                 <div className="flex items-center space-x-2 text-[#0F172A] font-bold mb-1">
                   <MapPin className="w-3.5 h-3.5 text-[#EA580C]" />
                   <span>Classroom Venue:</span>
@@ -200,7 +200,7 @@ export default function BatchDetailPage() {
           </div>
         </div>
 
-        <div className="bg-[#0F172A] text-white rounded-3xl p-6 sm:p-8 border border-[#1E293B] flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="bg-[#0F172A] text-white rounded-lg p-6 sm:p-8 border border-[#1E293B] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-xl sm:text-2xl font-bold text-white">
               Ready to Reserve Your Seat in This Batch?
@@ -213,7 +213,7 @@ export default function BatchDetailPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
             <Link
               to="/batches"
-              className="w-full sm:w-auto px-5 py-3.5 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-xl border border-white/20 transition-all text-center"
+              className="w-full sm:w-auto px-5 py-3.5 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-md border border-white/20 transition-all text-center"
             >
               Choose Other Batch
             </Link>
@@ -221,7 +221,7 @@ export default function BatchDetailPage() {
             <button
               type="button"
               onClick={handleProceedToEnroll}
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
             >
               <span>Confirm Batch & Proceed to Enrollment (Step 5)</span>
               <ArrowRight className="w-4 h-4 text-orange-200" />
