@@ -35,7 +35,7 @@ export default function FeesPage() {
           </div>
         </div>
 
-        <FeeCalculator onOpenDemoModal={openDemoModal} />
+        <FeeCalculator onOpenDemoModal={openDemoModal} onSelectPackage={(pkg) => openDemoModal(pkg.grade)} />
 
         <div className="mt-6 mb-10 bg-white rounded-3xl p-5 sm:p-6 border border-[#E2E8F0] shadow-editorial flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="max-w-2xl">

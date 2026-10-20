@@ -37,48 +37,6 @@
   letter-spacing: 0.025em;
 }
 
-.text-\[9px\], .text-\[10px\], .text-\[11px\] {
-  font-size: 0.75rem !important;
-  line-height: 1.125rem !important;
-}
-
-.bg-\[\#FAF7F2\] {
-  background-color: #F8FAFC !important;
-}
-.bg-\[\#F5EFEB\], .bg-\[\#F4EFEA\] {
-  background-color: #F1F5F9 !important;
-}
-.border-\[\#E8E2D8\] {
-  border-color: #E2E8F0 !important;
-}
-.text-\[\#181614\] {
-  color: #0F172A !important;
-}
-.bg-\[\#181614\] {
-  background-color: #0F172A !important;
-}
-.text-\[\#78716C\] {
-  color: #64748B !important;
-}
-.text-\[\#57534E\] {
-  color: #475569 !important;
-}
-.border-\[\#2A2623\] {
-  border-color: #1E293B !important;
-}
-.hover\:bg-\[\#2A2623\]:hover {
-  background-color: #1E293B !important;
-}
-.bg-\[\#C2410C\] {
-  background-color: #EA580C !important;
-}
-.hover\:bg-\[\#9A3412\]:hover {
-  background-color: #C2410C !important;
-}
-.text-\[\#C2410C\] {
-  color: #EA580C !important;
-}
-
 .border-subtle {
   border-color: #E2E8F0;
 }
