@@ -23,7 +23,7 @@ export default function BatchesPage() {
     searchParams.get('grade') || studentFlow.grade || 'all'
   );
   const [activeBoardFilter, setActiveBoardFilter] = useState(
-    studentFlow.board || 'TN State Board (Samacheer)'
+    searchParams.get('board') || studentFlow.board || 'all'
   );
   const [selectedSlot, setSelectedSlot] = useState(urlSlot);
 
