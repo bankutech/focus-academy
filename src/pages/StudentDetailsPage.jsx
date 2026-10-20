@@ -143,14 +143,14 @@ export default function StudentDetailsPage() {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 bg-white p-1.5 rounded-2xl border border-[#E2E8F0] shadow-xs mb-8 max-w-md">
+        <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-md border border-[#E2E8F0] mb-8 max-w-md">
           <button
             type="button"
             onClick={() => handleSwitchTab('signup')}
-            className={`flex-1 py-2.5 px-4 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`flex-1 py-2 px-3 text-xs font-bold rounded transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               authMode === 'signup'
-                ? 'bg-[#0F172A] text-white shadow-xs'
-                : 'text-slate-500 hover:text-[#0F172A]'
+                ? 'bg-white text-[#0F172A] shadow-xs border border-[#CBD5E1]'
+                : 'text-slate-600 hover:text-[#0F172A]'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
@@ -160,10 +160,10 @@ export default function StudentDetailsPage() {
           <button
             type="button"
             onClick={() => handleSwitchTab('login')}
-            className={`flex-1 py-2.5 px-4 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+            className={`flex-1 py-2 px-3 text-xs font-bold rounded transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
               authMode === 'login'
-                ? 'bg-[#0F172A] text-white shadow-xs'
-                : 'text-slate-500 hover:text-[#0F172A]'
+                ? 'bg-white text-[#0F172A] shadow-xs border border-[#CBD5E1]'
+                : 'text-slate-600 hover:text-[#0F172A]'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
@@ -172,7 +172,7 @@ export default function StudentDetailsPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E2E8F0] shadow-editorial space-y-5">
+          <div className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-[#0F172A]">
                 1. {authMode === 'login' ? 'Log In with Mobile Number' : 'Student Contact Details'}
@@ -202,13 +202,13 @@ export default function StudentDetailsPage() {
                         placeholder="e.g. 98424 51220"
                         className={`w-full pl-9 pr-3.5 py-2.5 bg-white border ${
                           phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-xl text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                       />
                     </div>
                     <button
                       type="button"
                       onClick={handleLookupProfile}
-                      className="px-5 py-2.5 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all shrink-0 cursor-pointer"
+                      className="px-5 py-2.5 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-md shadow-xs transition-all shrink-0 cursor-pointer"
                     >
                       Find Profile
                     </button>
@@ -217,7 +217,7 @@ export default function StudentDetailsPage() {
                     <p className="text-xs text-rose-600 mt-1 font-medium">{phoneError}</p>
                   )}
                   {loginFeedback && (
-                    <div className="mt-2.5 p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center space-x-2">
+                    <div className="mt-2.5 p-3 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-md text-xs font-semibold flex items-center space-x-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span>{loginFeedback}</span>
                     </div>
@@ -236,7 +236,7 @@ export default function StudentDetailsPage() {
                       value={studentName}
                       onChange={(e) => setStudentName(e.target.value)}
                       placeholder="e.g. K. Vignesh"
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     />
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export default function StudentDetailsPage() {
                         placeholder="e.g. K. Vignesh"
                         className={`w-full pl-9 pr-3.5 py-2.5 bg-white border ${
                           nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-xl text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                       />
                     </div>
                     {nameError && (
@@ -286,7 +286,7 @@ export default function StudentDetailsPage() {
                         placeholder="e.g. 98424 51220"
                         className={`w-full pl-9 pr-3.5 py-2.5 bg-white border ${
                           phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-xl text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                       />
                     </div>
                     {phoneError && (
@@ -305,14 +305,14 @@ export default function StudentDetailsPage() {
                     value={parentName}
                     onChange={(e) => setParentName(e.target.value)}
                     placeholder="e.g. Mr. S. Kannan (Father)"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                    className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E2E8F0] shadow-editorial space-y-4">
+          <div className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-[#0F172A]">
                 2. Select Education Board
@@ -330,9 +330,9 @@ export default function StudentDetailsPage() {
                     key={b.id}
                     type="button"
                     onClick={() => setBoard(b.id)}
-                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                    className={`p-4 rounded-md border text-left transition-all cursor-pointer flex flex-col justify-between ${
                       isSelected
-                        ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-editorial'
+                        ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
                         : 'bg-slate-50 hover:bg-white text-[#0F172A] border-[#E2E8F0]'
                     }`}
                   >
@@ -362,7 +362,7 @@ export default function StudentDetailsPage() {
             </div>
           </div>
 
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E2E8F0] shadow-editorial space-y-4">
+          <div className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-[#0F172A]">
                 3. Select Student Class / Grade
@@ -380,9 +380,9 @@ export default function StudentDetailsPage() {
                     key={opt.id}
                     type="button"
                     onClick={() => setGrade(opt.id)}
-                    className={`p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                    className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                       isSelected
-                        ? 'bg-[#EA580C] text-white border-[#EA580C] shadow-editorial font-bold'
+                        ? 'bg-[#EA580C] text-white border-[#EA580C] shadow-xs font-bold'
                         : 'bg-slate-50 hover:bg-white text-[#0F172A] border-[#E2E8F0]'
                     }`}
                   >
@@ -400,7 +400,7 @@ export default function StudentDetailsPage() {
             </div>
           </div>
 
-          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2.5">
+          <div className="p-4 bg-emerald-50 rounded-md border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2.5">
             <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
             <span>
               Your information is strictly private and used only for academic batch allocation at Focus Academy Thoramangalam.
@@ -422,7 +422,7 @@ export default function StudentDetailsPage() {
               )}
               <button
                 type="submit"
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
               >
                 <span>Continue to Exam Preparation (Step 2)</span>
                 <ArrowRight className="w-4 h-4 text-orange-200" />

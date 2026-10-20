@@ -129,7 +129,7 @@ export default function Navbar() {
 
       <nav aria-label="Main Navigation" className={`w-full bg-white/95 backdrop-blur-md transition-all duration-300 border-b ${
         isScrolled 
-          ? 'border-[#E2E8F0] shadow-editorial py-3' 
+          ? 'border-[#E2E8F0] shadow-xs py-3' 
           : 'border-[#E2E8F0]/80 py-3.5 sm:py-4'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -138,9 +138,9 @@ export default function Navbar() {
               <Link 
                 to="/" 
                 onClick={handleBrandClick}
-                className="flex items-center space-x-3 group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded-2xl"
+                className="flex items-center space-x-3 group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded-md"
               >
-                <div className="w-10 h-10 rounded-2xl bg-[#0F172A] flex items-center justify-center text-white shadow-sm group-hover:bg-[#EA580C] transition-colors duration-200">
+                <div className="w-10 h-10 rounded-md bg-[#0F172A] flex items-center justify-center text-white shadow-xs group-hover:bg-[#EA580C] transition-colors duration-200">
                   <span className="font-editorial text-xl italic font-bold">F</span>
                 </div>
                 <div className="flex flex-col text-left">
@@ -165,7 +165,7 @@ export default function Navbar() {
                     end={link.path === '/'}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`px-3.5 py-2 rounded-xl transition-all cursor-pointer font-semibold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] ${
+                    className={`px-3 py-1.5 rounded-md transition-all cursor-pointer font-semibold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] ${
                       active
                         ? 'bg-[#0F172A] text-white shadow-xs'
                         : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
@@ -180,7 +180,7 @@ export default function Navbar() {
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Link
                 to="/student-details"
-                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-editorial hover:shadow-editorial-lg transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-semibold rounded-md shadow-xs hover:bg-[#C2410C] transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
               >
                 <span>Check Batch Seats</span>
                 <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
@@ -191,7 +191,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-expanded={mobileMenuOpen}
                 aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-                className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-[#0F172A] hover:bg-slate-100 border border-[#E2E8F0] transition-colors cursor-pointer bg-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-[#0F172A] hover:bg-slate-100 border border-[#E2E8F0] transition-colors cursor-pointer bg-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -211,9 +211,9 @@ export default function Navbar() {
           <div 
             role="dialog"
             aria-label="Mobile Navigation Menu"
-            className="absolute top-full left-0 right-0 max-h-[calc(100vh-100%)] max-h-[calc(100dvh-100%)] overflow-y-auto overscroll-contain z-50 lg:hidden bg-[#F8FAFC] border-b border-[#E2E8F0] shadow-editorial-lg px-4 pt-3 pb-28 sm:pb-12 animate-in slide-in-from-top duration-200 space-y-4 text-left"
+            className="absolute top-full left-0 right-0 max-h-[calc(100vh-100%)] max-h-[calc(100dvh-100%)] overflow-y-auto overscroll-contain z-50 lg:hidden bg-[#F8FAFC] border-b border-[#E2E8F0] shadow-md px-4 pt-3 pb-28 sm:pb-12 animate-in slide-in-from-top duration-200 space-y-4 text-left"
           >
-            <div className="p-3.5 bg-white rounded-2xl border border-[#E2E8F0] shadow-editorial-inset">
+            <div className="p-3.5 bg-white rounded-md border border-[#E2E8F0] shadow-xs">
               <div className="flex items-center space-x-2 text-xs uppercase text-[#EA580C] font-bold">
                 <Clock className="w-3.5 h-3.5" />
                 <span>Evening Batches: 4:00 PM – 9:00 PM</span>
@@ -233,7 +233,7 @@ export default function Navbar() {
                     end={link.path === '/'}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`w-full min-h-[48px] flex items-center justify-between px-3.5 py-3 rounded-xl border transition-colors cursor-pointer ${
+                    className={`w-full min-h-[48px] flex items-center justify-between px-3.5 py-3 rounded-md border transition-colors cursor-pointer ${
                       active
                         ? 'bg-[#0F172A] text-white border-[#0F172A]'
                         : 'bg-white hover:bg-slate-50 text-[#0F172A] border-[#E2E8F0]'
@@ -250,7 +250,7 @@ export default function Navbar() {
               <a
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
                 aria-label={`Call Campus Desk at ${CAMPUS_CONFIG.contact.primaryPhone}`}
-                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-white text-[#0F172A] font-semibold rounded-xl text-xs border border-[#E2E8F0] shadow-editorial-inset active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-white text-[#0F172A] font-semibold rounded-md text-xs border border-[#E2E8F0] shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
               >
                 <Phone className="w-4 h-4 text-[#EA580C]" />
                 <span>Call Campus Desk: {CAMPUS_CONFIG.contact.primaryPhone}</span>
@@ -261,7 +261,7 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Direct chat on WhatsApp with Focus Academy coordinator"
-                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold rounded-xl text-xs shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
+                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold rounded-md text-xs shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Chat on WhatsApp Directly</span>
@@ -270,7 +270,7 @@ export default function Navbar() {
               <Link
                 to="/student-details"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-4 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-xl text-xs sm:text-sm shadow-editorial active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] text-center mb-2"
+                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-4 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-md text-xs sm:text-sm shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] text-center mb-2"
               >
                 <span>Check Batch Seats & Timings →</span>
               </Link>

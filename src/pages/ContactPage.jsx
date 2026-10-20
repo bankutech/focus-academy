@@ -28,7 +28,7 @@ export default function ContactPage() {
               </p>
             </div>
 
-            <div className="bg-white p-4 rounded-2xl border border-[#E2E8F0] shadow-editorial flex items-center space-x-3 shrink-0">
+            <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs flex items-center space-x-3 shrink-0">
               <Clock className="w-6 h-6 text-emerald-600" />
               <div className="text-xs">
                 <span className="font-bold text-[#0F172A] block">Mon – Sat: 4:00 PM – 9:00 PM</span>

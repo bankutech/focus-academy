@@ -96,7 +96,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="demo-modal-headline"
-        className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-[#F8FAFC] rounded-3xl shadow-editorial-lg border border-[#E2E8F0] overflow-hidden my-auto text-left animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-[#F8FAFC] rounded-lg shadow-2xl border border-[#E2E8F0] overflow-hidden my-auto text-left animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         
@@ -125,11 +125,11 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
             }
           </p>
 
-          <div className="mt-3 inline-flex p-1 bg-slate-800 rounded-xl text-xs">
+          <div className="mt-3 inline-flex p-1 bg-slate-800 rounded-md text-xs">
             <button
               type="button"
               onClick={() => setSessionType('diagnostic-trial')}
-              className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
+              className={`px-3 py-1 rounded transition-colors cursor-pointer ${
                 sessionType === 'diagnostic-trial' ? 'bg-[#EA580C] text-white font-bold' : 'text-slate-300 hover:text-white'
               }`}
             >
@@ -138,7 +138,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
             <button
               type="button"
               onClick={() => setSessionType('alignment-call')}
-              className={`px-3 py-1 rounded-lg transition-colors cursor-pointer flex items-center space-x-1 ${
+              className={`px-3 py-1 rounded transition-colors cursor-pointer flex items-center space-x-1 ${
                 sessionType === 'alignment-call' ? 'bg-[#EA580C] text-white font-bold' : 'text-slate-300 hover:text-white'
               }`}
             >
@@ -180,7 +180,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-2xl border border-[#E2E8F0] text-xs text-left space-y-2 max-w-sm mx-auto shadow-editorial-inset">
+              <div className="bg-white p-4 rounded-md border border-[#E2E8F0] text-xs text-left space-y-2 max-w-sm mx-auto">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Parent / Student:</span>
                   <span className="font-bold text-[#0F172A]">{studentName}</span>
@@ -209,7 +209,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                 </div>
               </div>
 
-              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-800 flex items-center space-x-2 max-w-sm mx-auto">
+              <div className="p-3 bg-emerald-50 rounded-md border border-emerald-200 text-xs text-emerald-800 flex items-center space-x-2 max-w-sm mx-auto">
                 <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
                 <span>Protected by 100% No-Questions-Asked Rematch Guarantee.</span>
               </div>
@@ -223,7 +223,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-2.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs rounded-xl shadow-editorial transition-all cursor-pointer flex items-center justify-center space-x-2"
+                  className="w-full py-2.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2"
                 >
                   <span>Chat on WhatsApp Directly →</span>
                 </a>
@@ -232,7 +232,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
               <button
                 type="button"
                 onClick={handleReset}
-                className="w-full py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors cursor-pointer"
+                className="w-full py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-semibold text-xs rounded-md shadow-xs transition-colors cursor-pointer"
               >
                 Return to Batches
               </button>
@@ -249,7 +249,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="e.g. Class 10 State Board Maths, Physics Derivations, CBSE Science..."
-                    className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                    className="w-full bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                     required
                   />
 
@@ -291,7 +291,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                     <button
                       type="button"
                       onClick={() => setMode('offline')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-3 rounded-md border text-left transition-all cursor-pointer ${
                         mode === 'offline'
                           ? 'bg-[#0F172A] text-white border-[#0F172A]'
                           : 'bg-white border-[#E2E8F0] text-slate-600'
@@ -305,7 +305,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                     <button
                       type="button"
                       onClick={() => setMode('online')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                      className={`p-3 rounded-md border text-left transition-all cursor-pointer ${
                         mode === 'online'
                           ? 'bg-[#0F172A] text-white border-[#0F172A]'
                           : 'bg-white border-[#E2E8F0] text-slate-600'
@@ -325,7 +325,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       id="demo-timing"
                       value={timing}
                       onChange={(e) => setTiming(e.target.value)}
-                      className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-semibold text-[#0F172A]"
+                      className="w-full bg-white border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-semibold text-[#0F172A]"
                     >
                       <option value="Batch 1: 4:30 PM – 6:00 PM">Batch 1: 4:30 PM – 6:00 PM (Middle / Foundation)</option>
                       <option value="Batch 2: 6:00 PM – 7:30 PM">Batch 2: 6:00 PM – 7:30 PM (Secondary Board Slot)</option>
@@ -352,7 +352,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       placeholder="e.g. S. Kannan (Parent)"
                       className={`w-full bg-white border ${
                         nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                      } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A]`}
+                      } rounded-md px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A]`}
                       required
                     />
                     {nameError && (
@@ -375,7 +375,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       placeholder="e.g. 98424 51220"
                       className={`w-full bg-white border ${
                         phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                      } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A]`}
+                      } rounded-md px-3 py-2 text-xs sm:text-sm font-semibold text-[#0F172A]`}
                       required
                     />
                     {phoneError && (
@@ -393,11 +393,11 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                       value={childChallenge}
                       onChange={(e) => setChildChallenge(e.target.value)}
                       placeholder="e.g. Pre-board exam anxiety, lacks algebra foundation, shy to ask doubts..."
-                      className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3 py-2 text-xs font-medium text-[#0F172A]"
+                      className="w-full bg-white border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-medium text-[#0F172A]"
                     />
                   </div>
 
-                  <div className="p-3 bg-white rounded-xl border border-emerald-200 text-xs text-slate-600 flex items-center space-x-2 shadow-editorial-inset">
+                  <div className="p-3 bg-white rounded-md border border-emerald-200 text-xs text-slate-600 flex items-center space-x-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                     <div>
                       <strong className="text-emerald-900 block text-xs uppercase">
@@ -422,7 +422,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
 
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-semibold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+                  className="px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-semibold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                 >
                   <span>
                     {step === 3 

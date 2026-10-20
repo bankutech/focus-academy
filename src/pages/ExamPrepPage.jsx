@@ -161,7 +161,7 @@ export default function ExamPrepPage() {
       <StepProgress currentStep={2} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
-        <div className="mb-6 bg-white p-4 rounded-2xl border border-[#E2E8F0] shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-6 bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-2 text-xs text-slate-600">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>Student: <strong className="text-[#0F172A]">{studentFlow.studentName || 'New Student'}</strong></span>
@@ -200,10 +200,10 @@ export default function ExamPrepPage() {
                     setSelectedGoal(track.id);
                     setCustomGoal('');
                   }}
-                  className={`p-6 rounded-3xl border transition-all cursor-pointer ${
+                  className={`p-5 sm:p-6 rounded-lg border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-white border-[#EA580C] shadow-editorial-lg ring-2 ring-[#EA580C]/10'
-                      : 'bg-white/70 hover:bg-white border-[#E2E8F0] shadow-editorial'
+                      ? 'bg-white border-[#EA580C] shadow-sm ring-1 ring-[#EA580C]'
+                      : 'bg-white hover:border-slate-300 border-[#E2E8F0] shadow-xs'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -252,7 +252,7 @@ export default function ExamPrepPage() {
             })}
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-[#E2E8F0]">
+          <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs">
             <label className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
               Or Specify Your Custom Learning Goal (Optional)
             </label>
@@ -261,7 +261,7 @@ export default function ExamPrepPage() {
               value={customGoal}
               onChange={(e) => setCustomGoal(e.target.value)}
               placeholder="e.g. Need extra help in Class 10 Trigonometry & Physics electricity derivations..."
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-[#E2E8F0] rounded-xl text-xs sm:text-sm text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-[#E2E8F0] rounded-md text-xs sm:text-sm text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
             />
           </div>
 
@@ -275,7 +275,7 @@ export default function ExamPrepPage() {
 
             <button
               type="submit"
-              className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98"
+              className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
             >
               <span>View Available Batches (Step 3)</span>
               <ArrowRight className="w-4 h-4 text-orange-200" />
