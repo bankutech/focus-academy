@@ -24,38 +24,38 @@ export default function Footer() {
   )}`;
 
   return (
-    <footer className="bg-[#0F172A] text-slate-400 text-left pt-10 pb-24 md:pb-8 border-t border-[#1E293B]">
+    <footer className="bg-[#0F172A] text-slate-300 text-left pt-12 pb-24 md:pb-10 border-t border-[#1E293B]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-[#1E293B]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 pb-10 border-b border-[#1E293B]">
           <div className="md:col-span-5">
             <Link to="/" onClick={handleBackToTop} className="flex items-center space-x-3 group">
-              <div className="w-8 h-8 rounded-lg bg-white text-[#0F172A] flex items-center justify-center font-editorial font-bold text-base group-hover:bg-[#EA580C] group-hover:text-white transition-colors">
+              <div className="w-9 h-9 rounded-md bg-white text-[#0F172A] flex items-center justify-center font-bold text-lg group-hover:bg-[#EA580C] group-hover:text-white transition-colors">
                 F
               </div>
               <div>
-                <span className="text-lg font-extrabold text-white tracking-tight block">
+                <span className="text-xl font-extrabold text-white tracking-tight block">
                   Focus Academy
                 </span>
-                <span className="text-xs uppercase tracking-wider text-orange-200 font-semibold block">
+                <span className="text-xs uppercase tracking-wider text-orange-300 font-semibold block">
                   Thoramangalam • Perambalur
                 </span>
               </div>
             </Link>
-            <p className="mt-3 text-xs text-slate-400 max-w-sm leading-relaxed">
-              Evening coaching for Classes 6–12 (State Board, CBSE, ICSE) at Thiripura Complex. Small 12-student batches.
+            <p className="mt-3.5 text-sm text-slate-400 max-w-sm leading-relaxed">
+              Evening coaching for Classes 6–12 (State Board, CBSE, ICSE) at Thiripura Complex. Strictly capped 12-student batches with personalized teacher attention.
             </p>
           </div>
 
           <div className="md:col-span-3">
-            <h4 className="text-white font-bold uppercase tracking-wider text-xs mb-3">
+            <h4 className="text-white font-bold uppercase tracking-wider text-xs sm:text-sm mb-4">
               Navigation
             </h4>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-2 gap-2.5 text-sm">
               {quickLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.path}
-                  className="hover:text-white transition-colors"
+                  className="text-slate-300 hover:text-white transition-colors py-0.5"
                 >
                   {link.name}
                 </Link>
@@ -63,47 +63,47 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="md:col-span-4 space-y-2.5 text-xs">
-            <h4 className="text-white font-bold uppercase tracking-wider text-xs mb-3">
-              Contact
+          <div className="md:col-span-4 space-y-3 text-sm">
+            <h4 className="text-white font-bold uppercase tracking-wider text-xs sm:text-sm mb-4">
+              Campus & Contact
             </h4>
-            <div className="flex items-start space-x-2">
-              <MapPin className="w-3.5 h-3.5 text-[#EA580C] shrink-0 mt-0.5" />
+            <div className="flex items-start space-x-2.5">
+              <MapPin className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
               <a
                 href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-white transition-colors"
+                className="text-slate-300 hover:text-white transition-colors leading-relaxed"
               >
-                {CAMPUS_CONFIG.location.complex}, {CAMPUS_CONFIG.location.doorNo}, {CAMPUS_CONFIG.location.area}, Perambalur
+                {CAMPUS_CONFIG.location.complex}, {CAMPUS_CONFIG.location.doorNo}, {CAMPUS_CONFIG.location.area}, Perambalur – 621220
               </a>
             </div>
-            <div className="flex items-center space-x-2">
-              <Phone className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
-              <a href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`} className="hover:text-white transition-colors">
+            <div className="flex items-center space-x-2.5">
+              <Phone className="w-4 h-4 text-[#EA580C] shrink-0" />
+              <a href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`} className="text-slate-300 hover:text-white font-semibold transition-colors">
                 {CAMPUS_CONFIG.contact.primaryPhone}
               </a>
             </div>
-            <div className="flex items-center space-x-2">
-              <MessageCircle className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
+            <div className="flex items-center space-x-2.5">
+              <MessageCircle className="w-4 h-4 text-[#25D366] shrink-0" />
               <a
                 href={whatsappInquiryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-400 hover:text-white transition-colors"
+                className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
               >
-                WhatsApp Desk
+                Direct WhatsApp Helpdesk
               </a>
             </div>
           </div>
         </div>
 
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-3">
-          <p>© {CURRENT_YEAR} Focus Academy. All rights reserved.</p>
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm text-slate-400 gap-3">
+          <p>© {CURRENT_YEAR} Focus Academy, Thoramangalam, Perambalur. All rights reserved.</p>
           <button
             type="button"
             onClick={handleBackToTop}
-            className="text-orange-200 hover:underline cursor-pointer"
+            className="text-orange-300 hover:underline cursor-pointer"
           >
             Back to Top ↑
           </button>

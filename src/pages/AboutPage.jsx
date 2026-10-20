@@ -141,7 +141,7 @@ export default function AboutPage() {
                     alt="Focus Academy premises at Thiripura Complex, Thoramangalam, Perambalur"
                     width={1200}
                     height={700}
-                    className="w-full h-56 sm:h-64 object-cover object-center"
+                    className="w-full aspect-[16/9] object-cover object-center"
                     loading="eager"
                   />
                   <div className="absolute top-3 left-3 bg-[#0F172A]/85 text-white text-xs font-semibold px-2.5 py-1 rounded-md flex items-center space-x-1.5 shadow-xs">
@@ -150,32 +150,32 @@ export default function AboutPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2.5 text-xs text-slate-600">
-                  <div className="flex items-start space-x-2">
+                <div className="space-y-3 text-sm text-slate-600">
+                  <div className="flex items-start space-x-2.5">
                     <MapPin className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold text-[#0F172A] block">Address:</span>
-                      <span>{CAMPUS_CONFIG.location.fullAddress}</span>
+                      <span className="leading-relaxed">{CAMPUS_CONFIG.location.fullAddress}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2.5">
                     <Clock className="w-4 h-4 text-[#EA580C] shrink-0" />
                     <span>{CAMPUS_CONFIG.timings.workingDays}: {CAMPUS_CONFIG.timings.dailyHours}</span>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2.5">
                     <Phone className="w-4 h-4 text-[#EA580C] shrink-0" />
                     <span>Campus Helpdesk: {CAMPUS_CONFIG.contact.primaryPhone}</span>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#E2E8F0] flex items-center justify-between">
+                <div className="mt-5 pt-3.5 border-t border-[#E2E8F0] flex items-center justify-between">
                   <a
                     href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1 text-xs font-bold text-[#EA580C] hover:underline"
+                    className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-[#EA580C] hover:underline"
                   >
                     <span>Directions on Google Maps</span>
                     <ExternalLink className="w-3.5 h-3.5" />

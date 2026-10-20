@@ -127,7 +127,7 @@ export default function HomePage() {
                     alt="Focus Academy campus signboard and tuition center at Thiripura Complex, Perambalur"
                     width={2000}
                     height={900}
-                    className="w-full h-64 sm:h-72 lg:h-80 xl:h-92 object-cover object-[center_32%]"
+                    className="w-full aspect-[16/9] object-cover object-center"
                     loading="eager"
                   />
                   <div className="absolute bottom-3 right-3 bg-[#0F172A]/90 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1 rounded">
