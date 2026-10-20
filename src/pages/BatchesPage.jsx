@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation, Navigate } from 'react-router-dom';
 import { 
   Users, 
   Clock, 
@@ -10,10 +10,11 @@ import {
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
-import { useStudentFlow } from '../context/useAppContext';
+import { useStudentFlow, getStepRedirect, isStep1Complete, isStep2Complete } from '../context/useAppContext';
 
 export default function BatchesPage() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const urlSlot = searchParams.get('slot') || 'all';
 
   const { studentFlow, setStudentFlow } = useStudentFlow();
@@ -25,6 +26,11 @@ export default function BatchesPage() {
     searchParams.get('board') || studentFlow.board || 'all'
   );
   const [selectedSlot, setSelectedSlot] = useState(urlSlot);
+
+  const redirectPath = getStepRedirect(3, studentFlow, location.pathname);
+  if (redirectPath) {
+    return <Navigate to={redirectPath} replace />;
+  }
 
   const filteredBatches = BATCHES_DATA.filter((batch) => {
     let matchGrade = true;
@@ -56,6 +62,7 @@ export default function BatchesPage() {
   });
 
   const handleSelectBatch = (batch) => {
+    const isStep2Done = isStep2Complete(studentFlow);
     setStudentFlow((prev) => ({
       ...prev,
       selectedBatchId: batch.id,
@@ -63,8 +70,18 @@ export default function BatchesPage() {
       timing: batch.timing,
       monthlyFee: batch.monthlyFee,
       subjects: Array.isArray(batch.subjects) ? batch.subjects.join(', ') : (batch.subjects || ''),
-      step: 4,
+      step: isStep2Done ? Math.max(Number(prev?.step) || 1, 4) : (prev?.step || 1),
     }));
+  };
+
+  const getBatchLink = (batchId) => {
+    if (!isStep1Complete(studentFlow)) {
+      return '/student-details';
+    }
+    if (!isStep2Complete(studentFlow)) {
+      return '/exam-prep';
+    }
+    return `/batch/${batchId}`;
   };
 
   const gradeOptions = [
@@ -285,7 +302,7 @@ export default function BatchesPage() {
 
                   <div className="flex items-center space-x-2 w-full sm:w-auto">
                     <Link
-                      to={`/batch/${batch.id}`}
+                      to={getBatchLink(batch.id)}
                       onClick={() => handleSelectBatch(batch)}
                       className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                     >

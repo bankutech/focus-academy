@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { 
   CheckCircle2, 
   ArrowRight, 
   Edit2 
 } from 'lucide-react';
 import StepProgress from '../components/common/StepProgress';
-import { useStudentFlow } from '../context/useAppContext';
+import { useStudentFlow, getStepRedirect } from '../context/useAppContext';
 
 export default function ExamPrepPage() {
   const navigate = useNavigate();
@@ -140,6 +140,11 @@ export default function ExamPrepPage() {
       ? studentFlow.examPrep 
       : ''
   );
+
+  const redirectPath = getStepRedirect(2, studentFlow);
+  if (redirectPath) {
+    return <Navigate to={redirectPath} replace />;
+  }
 
   const handleContinue = (e) => {
     e.preventDefault();

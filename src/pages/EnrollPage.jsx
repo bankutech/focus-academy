@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { 
   CheckCircle2, 
   Clock, 
@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
-import { useStudentFlow } from '../context/useAppContext';
+import { useStudentFlow, getStepRedirect } from '../context/useAppContext';
 import { validateIndianMobile } from '../types/schemas';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
@@ -39,6 +39,11 @@ export default function EnrollPage() {
   const [nameError, setNameError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
+
+  const redirectPath = getStepRedirect(5, studentFlow);
+  if (redirectPath) {
+    return <Navigate to={redirectPath} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

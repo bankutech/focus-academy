@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { 
   Users, 
   Clock, 
@@ -12,23 +12,29 @@ import {
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
-import { useStudentFlow } from '../context/useAppContext';
+import { useStudentFlow, getStepRedirect, isStep3Complete } from '../context/useAppContext';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 
 export default function BatchDetailPage() {
   const { batchId } = useParams();
   const { studentFlow, setStudentFlow } = useStudentFlow();
 
+  const redirectPath = getStepRedirect(4, studentFlow);
+  if (redirectPath) {
+    return <Navigate to={redirectPath} replace />;
+  }
+
   const batch = BATCHES_DATA.find((b) => b.id === batchId) || BATCHES_DATA[0];
 
   const handleProceedToEnroll = () => {
+    const isStep3Done = isStep3Complete(studentFlow);
     setStudentFlow((prev) => ({
       ...prev,
       selectedBatchId: batch.id,
       selectedBatchName: batch.name,
       monthlyFee: batch.monthlyFee,
       timing: batch.timing,
-      step: 5,
+      step: isStep3Done ? Math.max(Number(prev?.step) || 1, 5) : (prev?.step || 1),
     }));
   };
 
