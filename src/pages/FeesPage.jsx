@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import FeeCalculator from '../components/FeeCalculator';
 import { useModals } from '../context/useAppContext';
-import { Calculator, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
+import { ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function FeesPage() {
   const { openDemoModal } = useModals();
@@ -18,11 +18,6 @@ export default function FeesPage() {
           </div>
 
           <div className="max-w-3xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#C2410C]/10 text-[#C2410C] rounded-lg text-xs font-code-mono font-bold mb-2">
-              <Calculator className="w-3.5 h-3.5" />
-              <span>Transparent Tuition Fees</span>
-            </div>
-
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#181614] tracking-tight leading-tight">
               Calculate Your Monthly Tuition
             </h1>
@@ -44,10 +39,6 @@ export default function FeesPage() {
 
         <div className="mt-6 mb-10 bg-white rounded-3xl p-5 sm:p-6 border border-[#E8E2D8] shadow-editorial flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="max-w-2xl">
-            <div className="flex items-center space-x-2 text-[10px] font-code-mono uppercase text-[#C2410C] font-bold mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Sibling & Multi-Subject Concession</span>
-            </div>
             <h3 className="text-base sm:text-lg font-bold text-[#181614]">
               Have multiple children or need special subject combinations?
             </h3>
