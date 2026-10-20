@@ -211,7 +211,7 @@ export default function Navbar() {
           <div 
             role="dialog"
             aria-label="Mobile Navigation Menu"
-            className="absolute top-full left-0 right-0 max-h-[calc(100vh-100%)] overflow-y-auto z-50 lg:hidden bg-[#F8FAFC] border-b border-[#E2E8F0] shadow-editorial-lg px-4 pt-3 pb-8 animate-in slide-in-from-top duration-200 space-y-4 text-left"
+            className="absolute top-full left-0 right-0 max-h-[calc(100vh-100%)] max-h-[calc(100dvh-100%)] overflow-y-auto overscroll-contain z-50 lg:hidden bg-[#F8FAFC] border-b border-[#E2E8F0] shadow-editorial-lg px-4 pt-3 pb-28 sm:pb-12 animate-in slide-in-from-top duration-200 space-y-4 text-left"
           >
             <div className="p-3.5 bg-white rounded-2xl border border-[#E2E8F0] shadow-editorial-inset">
               <div className="flex items-center space-x-2 text-xs uppercase text-[#EA580C] font-bold">
@@ -270,7 +270,7 @@ export default function Navbar() {
               <Link
                 to="/student-details"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-xl text-xs shadow-editorial active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-4 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-xl text-xs sm:text-sm shadow-editorial active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] text-center mb-2"
               >
                 <span>Check Batch Seats & Timings →</span>
               </Link>
