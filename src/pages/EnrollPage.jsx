@@ -14,6 +14,7 @@ import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow } from '../context/useAppContext';
 import { validateIndianMobile } from '../types/schemas';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
+import { LeadService } from '../services/leadService';
 
 const getNowIsoString = () => new Date().toISOString();
 
@@ -39,7 +40,7 @@ export default function EnrollPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setPhoneError('');
     setNameError('');
@@ -75,6 +76,16 @@ export default function EnrollPage() {
 
     const saved = registerStudent(enrollmentRecord);
 
+    await LeadService.submitLead({
+      studentName: enrollmentRecord.studentName,
+      parentName: enrollmentRecord.parentName,
+      phone: enrollmentRecord.phone,
+      grade: enrollmentRecord.grade,
+      board: enrollmentRecord.board,
+      subjects: selectedBatch.name,
+      notes: `Admission Slip ID: ${saved.id} | Batch: ${selectedBatch.name} (${selectedBatch.timing}) | School: ${enrollmentRecord.schoolName || 'N/A'} | Start: ${startDatePreference} | Challenges: ${enrollmentRecord.studentWeakness || 'None'}`,
+    });
+
     setStudentFlow((prev) => ({
       ...prev,
       studentName: enrollmentRecord.studentName,
@@ -87,14 +98,12 @@ export default function EnrollPage() {
     const prefilledText = `Hello Focus Academy! I have completed admission registration for student: ${enrollmentRecord.studentName} (${enrollmentRecord.grade}, ${enrollmentRecord.board}). Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Slip ID: ${saved.id}.`;
     const whatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(prefilledText)}`;
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmissionResult({
-        success: true,
-        data: saved,
-        whatsappUrl,
-      });
-    }, 400);
+    setIsSubmitting(false);
+    setSubmissionResult({
+      success: true,
+      data: saved,
+      whatsappUrl,
+    });
   };
 
   return (

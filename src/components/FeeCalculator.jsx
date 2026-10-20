@@ -4,16 +4,18 @@ import {
   Laptop, 
   TrendingDown, 
   ArrowRight, 
-  CheckCircle2 
+  CheckCircle2,
+  Users
 } from 'lucide-react';
 import { calculateFee } from '../data/homeData';
 
-export default function FeeCalculator({ onSelectPackage }) {
+export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
   const [grade, setGrade] = useState('class-9-10');
   const [board, setBoard] = useState('State Board');
   const [mode, setMode] = useState('classroom');
   const [hoursPerWeek, setHoursPerWeek] = useState(4);
   const [center, setCenter] = useState('Thoramangalam');
+  const [hasSiblingDiscount, setHasSiblingDiscount] = useState(false);
 
   const hourlyRates = {
     'class-6-8': 180,
@@ -27,8 +29,9 @@ export default function FeeCalculator({ onSelectPackage }) {
 
   const modeMultiplier = mode === 'classroom' ? 1.0 : 0.9;
   const centerAdjustment = center === 'Thoramangalam' ? 1.0 : 1.05;
+  const siblingMultiplier = hasSiblingDiscount ? 0.9 : 1.0;
 
-  const estimatedMonthlyFee = Math.round(baseCalculatedFee * modeMultiplier * centerAdjustment);
+  const estimatedMonthlyFee = Math.round(baseCalculatedFee * modeMultiplier * centerAdjustment * siblingMultiplier);
   const discountedPackageFee = Math.round(estimatedMonthlyFee * 0.88);
   const monthlyHours = hoursPerWeek * 4;
 
@@ -40,11 +43,21 @@ export default function FeeCalculator({ onSelectPackage }) {
       center,
       hoursPerWeek,
       monthlyHours,
+      hasSiblingDiscount,
       estimatedMonthlyFee,
       discountedPackageFee,
     };
     if (onSelectPackage) {
       onSelectPackage(pkg);
+    }
+    if (onOpenDemoModal) {
+      const gradeMap = {
+        'class-6-8': 'Classes 6–8 Foundation',
+        'class-9-10': 'Class 10 State Board (SSLC)',
+        'class-11-12': 'Class 12 Higher Mathematics',
+        'iit-jee-neet': 'NEET / JEE Numerical Clarity',
+      };
+      onOpenDemoModal(gradeMap[grade] || 'Class 10 State Board (SSLC)');
     }
   };
 
@@ -136,9 +149,41 @@ export default function FeeCalculator({ onSelectPackage }) {
         </div>
 
         <div>
+          <label className="block text-xs uppercase tracking-wider text-slate-600 mb-1.5 font-bold">
+            5. Sibling Concession
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setHasSiblingDiscount(false)}
+              className={`min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+                !hasSiblingDiscount
+                  ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
+                  : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
+              }`}
+            >
+              <span>Single Student</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setHasSiblingDiscount(true)}
+              className={`min-h-[44px] py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-2 ${
+                hasSiblingDiscount
+                  ? 'bg-[#0F172A] text-white border-[#0F172A] shadow-xs'
+                  : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5 text-[#EA580C]" />
+              <span>2+ Children (10% Off)</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
           <div className="flex justify-between items-center mb-1">
             <label htmlFor="calculator-frequency" className="text-xs uppercase tracking-wider text-slate-600 font-bold">
-              5. Weekly Class Hours
+              6. Weekly Class Hours
             </label>
             <span className="text-xs font-bold text-[#EA580C] bg-orange-50 px-2.5 py-0.5 rounded-lg border border-orange-200">
               {hoursPerWeek} Hours / Week ({monthlyHours} hrs/mo)
@@ -183,6 +228,11 @@ export default function FeeCalculator({ onSelectPackage }) {
               </span>
               <span className="text-xs text-slate-500">/ month</span>
             </div>
+            {hasSiblingDiscount && (
+              <span className="inline-block mt-1 text-xs text-emerald-700 font-bold">
+                ✓ 10% Sibling concession applied
+              </span>
+            )}
           </div>
 
           <div className="mt-4 pt-3 border-t border-[#E2E8F0] space-y-1.5 text-xs">

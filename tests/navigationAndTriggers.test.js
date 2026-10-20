@@ -169,7 +169,7 @@ describe('Navigation, Triggers and Form Validation Audit', () => {
     expect(coursesContent).not.toContain('to="/#');
     expect(coursesContent).toContain('to="/contact"');
 
-    expect(appContent).toContain("import AboutPage from './pages/AboutPage'");
+    expect(appContent).toContain("import('./pages/AboutPage')");
     expect(appContent).toContain('<Route path="/about" element={<AboutPage />} />');
     expect(appContent).toContain('<Route path="/timings" element={<BatchesPage />} />');
     expect(appContent).toContain('<Route path="/courses" element={<CoursesPage />} />');
