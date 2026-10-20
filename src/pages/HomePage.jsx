@@ -34,27 +34,27 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#F8FAFC] text-[#0F172A] text-left">
-      <section id="hero" aria-labelledby="hero-heading" className="pt-8 pb-14 sm:pt-14 sm:pb-20 border-b border-[#E2E8F0]">
+      <section id="hero" aria-labelledby="hero-heading" className="pt-6 pb-6 sm:pt-10 sm:pb-8 border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
             <div className="lg:col-span-7">
-              <p className="text-xs sm:text-sm font-semibold text-[#EA580C] mb-3">
+              <p className="text-xs sm:text-sm font-semibold text-[#EA580C] mb-2.5">
                 ஃபோகஸ் அகாடமி • தொரமங்கலம், பெரம்பலூர் (மாலை நேர சிறப்பு வகுப்புகள் - 6 முதல் 12 ஆம் வகுப்பு வரை)
               </p>
 
-              <h1 id="hero-heading" className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
+              <h1 id="hero-heading" className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
                 {CAMPUS_CONFIG.brand.heroHeadline}
               </h1>
 
-              <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
+              <p className="mt-3.5 text-base sm:text-lg text-slate-600 leading-relaxed">
                 No 50-student crowded classrooms. No blind rote memorization. Just 12 students per batch, daily doubt clearance, and weekly Saturday board mock tests at Thiripura Complex.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center gap-3">
+              <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Link
                   to="/student-details"
                   aria-label="Enroll now and start student onboarding"
-                  className="min-h-[48px] inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-xl shadow-editorial transition-all cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                 >
                   <span>Enroll Now (Join Today)</span>
                   <ArrowRight className="w-4 h-4 text-orange-200" />
@@ -64,7 +64,7 @@ export default function HomePage() {
                   href="#courses"
                   onClick={(e) => scrollToSection(e, 'courses')}
                   aria-label="Explore coaching courses and subjects"
-                  className="min-h-[48px] inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-white hover:bg-slate-50 text-[#0F172A] text-sm font-bold rounded-xl border border-[#E2E8F0] shadow-editorial-inset transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-5 py-3 bg-white hover:bg-slate-50 text-[#0F172A] text-sm font-bold rounded-xl border border-[#E2E8F0] shadow-editorial-inset transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                 >
                   <BookOpen className="w-4 h-4 text-[#EA580C]" />
                   <span>Explore Courses & Batches</span>
@@ -74,43 +74,43 @@ export default function HomePage() {
                   href="#timings"
                   onClick={(e) => scrollToSection(e, 'timings')}
                   aria-label="View evening batch timetable and schedule"
-                  className="min-h-[48px] inline-flex items-center justify-center space-x-2 px-5 py-3.5 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-5 py-3 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                 >
                   <Clock className="w-4 h-4 text-orange-200" />
                   <span>Batch Timings (4–9 PM) →</span>
                 </a>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-[#E2E8F0] grid sm:grid-cols-2 gap-4 text-xs text-slate-600">
+              <div className="mt-6 p-4 sm:p-4.5 bg-slate-50/90 rounded-2xl border border-slate-200/90 grid sm:grid-cols-2 gap-4 text-xs text-slate-600 shadow-xs">
                 <div className="flex items-start space-x-2.5">
                   <Clock className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-[#0F172A] block">Operating Hours:</span>
-                    <span>{CAMPUS_CONFIG.timings.workingDays}: {CAMPUS_CONFIG.timings.dailyHours}</span>
-                    <span className="block text-slate-500 text-xs mt-0.5">{CAMPUS_CONFIG.timings.sundayPolicy}</span>
+                    <span className="font-bold text-[#0F172A] block text-xs">Operating Hours:</span>
+                    <span className="text-slate-700">{CAMPUS_CONFIG.timings.workingDays}: {CAMPUS_CONFIG.timings.dailyHours}</span>
+                    <span className="block text-slate-500 text-[11px] mt-0.5">{CAMPUS_CONFIG.timings.sundayPolicy}</span>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-2.5">
                   <MapPin className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-[#0F172A] block">Campus Venue (Thoramangalam):</span>
+                    <span className="font-bold text-[#0F172A] block text-xs">Campus Venue (Thoramangalam):</span>
                     <a
                       href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-slate-600 hover:text-[#EA580C] hover:underline block"
+                      className="text-slate-700 hover:text-[#EA580C] hover:underline block font-medium"
                     >
                       {CAMPUS_CONFIG.location.complex}, {CAMPUS_CONFIG.location.doorNo}
                     </a>
-                    <span className="block text-[#EA580C] font-semibold text-xs mt-0.5">Near Malar Hospital / Opp. EB Office (via Four Roads)</span>
-                    <span className="block text-slate-500 text-xs mt-0.5">2 mins from Four Roads • Dedicated two-wheeler & cycle parking</span>
+                    <span className="block text-[#EA580C] font-semibold text-[11px] mt-0.5">Near Malar Hospital / Opp. EB Office (via Four Roads)</span>
+                    <span className="block text-slate-500 text-[11px] mt-0.5">2 mins from Four Roads • Dedicated parking</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="lg:col-span-5 mt-8 lg:mt-0">
+            <div className="lg:col-span-5 mt-6 lg:mt-0">
               <div id="campus-landmark" className="bg-white rounded-3xl p-3.5 sm:p-4 border border-[#E2E8F0] shadow-editorial-lg relative">
                 <span id="campus" className="absolute -top-24 left-0 pointer-events-none" />
                 <div className="relative rounded-2xl overflow-hidden bg-slate-100 border border-[#E2E8F0]">
@@ -119,7 +119,7 @@ export default function HomePage() {
                     alt="Focus Academy campus signboard and tuition center at Thiripura Complex, Perambalur"
                     width={2000}
                     height={900}
-                    className="w-full h-56 sm:h-64 lg:h-72 object-cover object-center transform hover:scale-[1.02] transition-transform duration-500"
+                    className="w-full h-52 sm:h-60 lg:h-64 object-cover object-center transform hover:scale-[1.02] transition-transform duration-500"
                     loading="eager"
                   />
                   <div className="absolute top-3 left-3 bg-[#0F172A]/85 backdrop-blur-xs text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-xs">
@@ -131,7 +131,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="p-3 sm:p-4 text-left">
+                <div className="p-3 sm:p-3.5 text-left">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h2 className="text-sm sm:text-base font-bold text-[#0F172A] leading-snug">
@@ -170,7 +170,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="mt-3.5 pt-3 border-t border-[#E2E8F0] flex items-center justify-between">
+                  <div className="mt-3 pt-3 border-t border-[#E2E8F0] flex items-center justify-between">
                     <span className="text-xs text-slate-500">
                       Photo via Google Listing
                     </span>
@@ -188,24 +188,66 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+
+          <div className="mt-8 pt-6 border-t border-slate-200 grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-4">
+            <div className="flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-orange-50 text-[#EA580C] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[#0F172A] block">Max 12 Students</span>
+                <span className="text-[11px] text-slate-500 block">Personal attention</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[#0F172A] block">1-Day Free Trial</span>
+                <span className="text-[11px] text-slate-500 block">Try before enrolling</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[#0F172A] block">Bus Synchronized</span>
+                <span className="text-[11px] text-slate-500 block">Via Four Roads</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[#0F172A] block">Weekly Board Mocks</span>
+                <span className="text-[11px] text-slate-500 block">Individual feedback</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section id="courses" aria-labelledby="courses-heading" className="py-12 sm:py-16 border-b border-[#E2E8F0]">
+      <section id="courses" aria-labelledby="courses-heading" className="py-8 sm:py-10 border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
+              <span className="inline-block text-xs font-bold text-[#EA580C] uppercase tracking-wider mb-1">
+                Tuition & Foundation Programs
+              </span>
               <h2 id="courses-heading" className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
                 Programs Offered at Focus Academy
               </h2>
-              <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+              <p className="text-sm sm:text-base text-slate-600 mt-1.5 max-w-2xl leading-relaxed">
                 Targeted evening coaching designed around regular school hours for school students seeking academic excellence and foundation building.
               </p>
             </div>
 
             <Link
               to="/courses"
-              className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#EA580C] hover:underline shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded"
+              className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-[#EA580C] hover:underline shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded"
             >
               <span>View All Subject Tracks →</span>
             </Link>
@@ -217,44 +259,49 @@ export default function HomePage() {
               return (
                 <div
                   key={program.id}
-                  className="bg-white rounded-3xl p-6 border border-[#E2E8F0] shadow-editorial hover:shadow-editorial-lg transition-all flex flex-col justify-between"
+                  className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E2E8F0] shadow-editorial hover:shadow-editorial-lg transition-all flex flex-col justify-between"
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3.5">
                       <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[#EA580C]">
                         <Icon className="w-5 h-5" />
                       </div>
-                      <span className="text-xs font-bold uppercase px-2.5 py-1 bg-[#0F172A] text-white rounded-md">
-                        {program.batchSize}
-                      </span>
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-xs font-semibold px-2 py-0.5 bg-orange-50 text-[#EA580C] border border-orange-200 rounded">
+                          {program.timing}
+                        </span>
+                        <span className="text-xs font-bold uppercase px-2 py-0.5 bg-[#0F172A] text-white rounded">
+                          {program.batchSize}
+                        </span>
+                      </div>
                     </div>
 
-                    <h3 className="text-lg font-bold text-[#0F172A] leading-snug">
+                    <h3 className="text-xl font-bold text-[#0F172A] leading-snug">
                       {program.title}
                     </h3>
 
                     <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
-                      <span className="px-2 py-0.5 bg-slate-100 border border-[#E2E8F0] rounded text-slate-700">
+                      <span className="px-2 py-0.5 bg-slate-100 border border-[#E2E8F0] rounded text-slate-700 font-medium">
                         {program.grade}
                       </span>
-                      <span className="px-2 py-0.5 bg-slate-100 border border-[#E2E8F0] rounded text-slate-700">
+                      <span className="px-2 py-0.5 bg-slate-100 border border-[#E2E8F0] rounded text-slate-700 font-medium">
                         {program.board}
                       </span>
                     </div>
 
-                    <p className="mt-3 text-xs text-slate-600 leading-relaxed">
+                    <p className="mt-2.5 text-sm text-slate-600 leading-relaxed">
                       {program.description}
                     </p>
 
-                    <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="mt-4 pt-3.5 border-t border-slate-100">
                       <span className="text-xs uppercase font-bold text-slate-500 block mb-1.5">
                         Core Subjects:
                       </span>
-                      <div className="flex flex-wrap gap-1 text-xs">
+                      <div className="flex flex-wrap gap-1.5 text-xs">
                         {program.subjects.map((sub, i) => (
                           <span
                             key={i}
-                            className="px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded font-medium"
+                            className="px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded-md font-medium"
                           >
                             {sub}
                           </span>
@@ -270,14 +317,14 @@ export default function HomePage() {
                         program.id === 'middle-school' ? 'Class 6' :
                         'Class 10'
                       )}`}
-                      className="w-full min-h-[44px] inline-flex items-center justify-center space-x-1.5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-xl transition-colors shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                      className="w-full min-h-[44px] inline-flex items-center justify-center space-x-1.5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-xl transition-colors shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                     >
                       <span>Enroll in {program.grade.split(',')[0]} →</span>
                     </Link>
 
                     <Link
                       to="/timings"
-                      className="w-full min-h-[44px] inline-flex items-center justify-center space-x-1.5 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl border border-[#E2E8F0] transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                      className="w-full min-h-[44px] inline-flex items-center justify-center space-x-1.5 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs sm:text-sm font-semibold rounded-xl border border-[#E2E8F0] transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
                     >
                       <span>View Batch Timings</span>
                     </Link>
@@ -289,13 +336,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="timings" aria-labelledby="timings-heading" className="py-12 sm:py-16 bg-[#F8FAFC] border-b border-[#E2E8F0]">
+      <section id="timings" aria-labelledby="timings-heading" className="py-8 sm:py-12 bg-[#F8FAFC] border-b border-[#E2E8F0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl mb-10">
+          <div className="max-w-2xl mb-6">
+            <span className="inline-block text-xs font-bold text-[#EA580C] uppercase tracking-wider mb-1">
+              Evening Class Timetable
+            </span>
             <h2 id="timings-heading" className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
               Class Timetable & Daily Schedule
             </h2>
-            <p className="text-sm text-slate-600 mt-1 leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-600 mt-1.5 leading-relaxed">
               Operating Monday to Saturday from 4:00 PM to 9:00 PM at Thiripura Complex. Structured in three 90-minute evening slots synchronized with school and town bus schedules via Four Roads and Trichy Main Road so students arrive refreshed and return home safely.
             </p>
           </div>
@@ -304,7 +354,7 @@ export default function HomePage() {
             {HOME_BATCH_SLOTS.map((slot) => (
               <div
                 key={slot.id}
-                className="bg-white p-6 rounded-3xl border border-[#E2E8F0] shadow-editorial flex flex-col justify-between"
+                className="bg-white p-5 sm:p-6 rounded-3xl border border-[#E2E8F0] shadow-editorial flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
@@ -325,7 +375,7 @@ export default function HomePage() {
                     {slot.grades}
                   </p>
 
-                  <p className="mt-2 text-xs text-slate-600 leading-relaxed">
+                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">
                     {slot.focus}
                   </p>
 
@@ -357,8 +407,8 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="mt-8 bg-white p-5 rounded-2xl border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center space-x-3 text-xs">
+          <div className="mt-6 bg-white p-4.5 sm:p-5 rounded-2xl border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center space-x-3 text-xs sm:text-sm">
               <Calendar className="w-5 h-5 text-[#EA580C] shrink-0" />
               <div>
                 <span className="font-bold text-[#0F172A] block">Saturday Timed Mock Exams (Every Week):</span>
@@ -380,13 +430,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="steps" aria-labelledby="steps-heading" className="py-12 sm:py-16 bg-[#0F172A] text-white border-b border-[#1E293B]">
+      <section id="steps" aria-labelledby="steps-heading" className="py-8 sm:py-12 bg-[#0F172A] text-white border-b border-[#1E293B]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="text-center max-w-2xl mx-auto mb-6">
+            <span className="inline-block text-xs font-bold text-orange-400 uppercase tracking-wider mb-1">
+              Admission Process
+            </span>
             <h2 id="steps-heading" className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               How Admission Works in 5 Simple Steps
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            <p className="text-xs sm:text-sm text-slate-300 mt-1">
               Navigate step-by-step from student registration to batch confirmation.
             </p>
           </div>
@@ -395,7 +448,7 @@ export default function HomePage() {
             {HOME_ADMISSION_STEPS.map((st) => (
               <div
                 key={st.num}
-                className="bg-[#1E293B] p-4.5 rounded-2xl border border-slate-700 flex flex-col justify-between"
+                className="bg-[#1E293B] p-4 sm:p-4.5 rounded-2xl border border-slate-700 flex flex-col justify-between"
               >
                 <div>
                   <div className="w-8 h-8 rounded-lg bg-[#EA580C] text-white flex items-center justify-center text-sm font-bold mb-3">
@@ -404,7 +457,7 @@ export default function HomePage() {
                   <h3 className="text-sm font-bold text-white mb-1.5">
                     {st.title}
                   </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
                     {st.desc}
                   </p>
                 </div>
@@ -421,7 +474,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="mt-8 text-center">
+          <div className="mt-6 text-center">
             <Link
               to="/student-details"
               className="min-h-[48px] inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-xl shadow-editorial transition-all active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
@@ -432,11 +485,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="about" aria-labelledby="about-heading" className="py-12 sm:py-16 border-b border-[#E2E8F0] relative">
+      <section id="about" aria-labelledby="about-heading" className="py-8 sm:py-12 border-b border-[#E2E8F0] relative">
         <span id="features" className="absolute -top-24 left-0 pointer-events-none" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
+              <span className="inline-block text-xs font-bold text-[#EA580C] uppercase tracking-wider mb-1">
+                Learning Environment
+              </span>
               <h2 id="about-heading" className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
                 Classroom Standards & Features
               </h2>
@@ -444,27 +500,27 @@ export default function HomePage() {
 
             <Link
               to="/about"
-              className="inline-flex items-center space-x-1.5 text-xs font-bold text-[#EA580C] hover:underline shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded"
+              className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-[#EA580C] hover:underline shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded"
             >
               <span>Learn More About Focus Academy →</span>
             </Link>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {HOME_FEATURES.map((feat, idx) => {
               const Icon = feat.icon;
               return (
                 <div
                   key={idx}
-                  className="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-editorial"
+                  className="bg-white p-4.5 sm:p-5 rounded-2xl border border-[#E2E8F0] shadow-editorial"
                 >
                   <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#EA580C] flex items-center justify-center mb-3">
                     <Icon className="w-4 h-4" />
                   </div>
-                  <h3 className="text-sm font-bold text-[#0F172A] mb-1.5 leading-snug">
+                  <h3 className="text-base font-bold text-[#0F172A] mb-1.5 leading-snug">
                     {feat.title}
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
+                  <p className="text-sm text-slate-600 leading-relaxed">
                     {feat.desc}
                   </p>
                 </div>
