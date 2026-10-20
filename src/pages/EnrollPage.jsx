@@ -180,6 +180,13 @@ export default function EnrollPage() {
                 <span>Save / Print Admission Slip (PDF)</span>
               </button>
 
+              <a
+                href={`upi://pay?pa=9842451220@upi&pn=Focus%20Academy&am=${selectedBatch.monthlyFee}&cu=INR&tn=Focus%20Academy%20Admission`}
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-[#0F172A] font-bold text-xs rounded-xl border border-[#CBD5E1] transition-all cursor-pointer flex items-center justify-center space-x-2"
+              >
+                <span>Pay ₹{selectedBatch.monthlyFee.toLocaleString('en-IN')} via UPI (GPay / PhonePe)</span>
+              </a>
+
               <button
                 type="button"
                 onClick={() => navigate('/')}
@@ -191,6 +198,15 @@ export default function EnrollPage() {
           </div>
         ) : (
           <div className="space-y-8">
+            {!studentFlow.studentName && (
+              <div className="p-4 bg-orange-50 border border-orange-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700">
+                <span>Navigated directly? You can enter details here, or start from Step 1 for personalized board recommendations.</span>
+                <Link to="/student-details" className="text-[#EA580C] font-bold hover:underline shrink-0">
+                  Start at Step 1 →
+                </Link>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
