@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   CheckCircle2, 
@@ -28,6 +28,18 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
   const [nameError, setNameError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -81,13 +93,18 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#181614]/80 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
       <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="demo-modal-headline"
         className="relative w-full max-w-lg max-h-[92vh] flex flex-col bg-[#FAF7F2] rounded-3xl shadow-editorial-lg border border-[#E8E2D8] overflow-hidden my-auto text-left animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         
         <div className="bg-[#181614] p-5 sm:p-6 text-white relative border-b border-[#2A2623] shrink-0">
           <button
+            type="button"
             onClick={handleReset}
+            aria-label="Close diagnostic trial booking modal"
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
@@ -98,7 +115,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
             <span>Focus Academy Pedagogical Protocol</span>
           </div>
 
-          <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+          <h3 id="demo-modal-headline" className="text-xl sm:text-2xl font-bold tracking-tight text-white">
             {sessionType === 'alignment-call' ? 'Schedule 5-Min Parent Alignment Call' : 'Schedule 45-Min Diagnostic Trial'}
           </h3>
           <p className="text-xs text-[#A8A29E] mt-1 font-normal">
@@ -301,10 +318,11 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                   </div>
 
                   <div>
-                    <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                    <label htmlFor="demo-timing" className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
                       Preferred Evening Batch Slot
                     </label>
                     <select
+                      id="demo-timing"
                       value={timing}
                       onChange={(e) => setTiming(e.target.value)}
                       className="w-full bg-white border border-[#E8E2D8] rounded-xl px-3 py-2 text-xs font-semibold text-[#181614]"
@@ -320,17 +338,18 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
               {step === 3 && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                    <label htmlFor="demo-student-name" className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
                       Student / Parent Name *
                     </label>
                     <input
+                      id="demo-student-name"
                       type="text"
                       value={studentName}
                       onChange={(e) => {
                         setStudentName(e.target.value);
                         if (nameError) setNameError('');
                       }}
-                      placeholder="e.g. Sanya Sharma (Parent)"
+                      placeholder="e.g. S. Kannan (Parent)"
                       className={`w-full bg-white border ${
                         nameError ? 'border-rose-500' : 'border-[#E8E2D8]'
                       } rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-[#181614]`}
@@ -342,10 +361,11 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                   </div>
 
                   <div>
-                    <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                    <label htmlFor="demo-phone" className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
                       Mobile Number (For Confirmation & Reminders) *
                     </label>
                     <input
+                      id="demo-phone"
                       type="tel"
                       value={phone}
                       onChange={(e) => {
@@ -364,10 +384,11 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                   </div>
 
                   <div>
-                    <label className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
+                    <label htmlFor="demo-challenge" className="block font-code-mono text-[10px] uppercase font-bold tracking-wider text-[#78716C] mb-1">
                       Child's Specific Learning Challenge (Optional)
                     </label>
                     <input
+                      id="demo-challenge"
                       type="text"
                       value={childChallenge}
                       onChange={(e) => setChildChallenge(e.target.value)}

@@ -278,10 +278,11 @@ export default function EnrollPage() {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-student-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                         Student Full Name *
                       </label>
                       <input
+                        id="enroll-student-name"
                         type="text"
                         value={studentName}
                         onChange={(e) => {
@@ -300,10 +301,11 @@ export default function EnrollPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-phone" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                         Mobile Number *
                       </label>
                       <input
+                        id="enroll-phone"
                         type="tel"
                         value={phone}
                         onChange={(e) => {
@@ -324,10 +326,11 @@ export default function EnrollPage() {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-parent-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                         Parent / Guardian Name
                       </label>
                       <input
+                        id="enroll-parent-name"
                         type="text"
                         value={parentName}
                         onChange={(e) => setParentName(e.target.value)}
@@ -337,10 +340,11 @@ export default function EnrollPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-school-name" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                         Current School (In Perambalur / Thoramangalam)
                       </label>
                       <input
+                        id="enroll-school-name"
                         type="text"
                         value={schoolName}
                         onChange={(e) => setSchoolName(e.target.value)}
@@ -352,10 +356,11 @@ export default function EnrollPage() {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-board" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                         Education Board
                       </label>
                       <select
+                        id="enroll-board"
                         value={board}
                         onChange={(e) => setBoard(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-white border border-[#E8E2D8] rounded-xl text-xs sm:text-sm font-semibold text-[#181614]"
@@ -367,10 +372,11 @@ export default function EnrollPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                      <label htmlFor="enroll-start-date" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                         Preferred Start Date
                       </label>
                       <select
+                        id="enroll-start-date"
                         value={startDatePreference}
                         onChange={(e) => setStartDatePreference(e.target.value)}
                         className="w-full px-3.5 py-2.5 bg-white border border-[#E8E2D8] rounded-xl text-xs sm:text-sm font-semibold text-[#181614]"
@@ -383,10 +389,11 @@ export default function EnrollPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
+                    <label htmlFor="enroll-weakness" className="block text-xs font-code-mono font-bold uppercase text-[#78716C] mb-1.5">
                       Specific Learning Challenge or Doubts (Optional)
                     </label>
                     <textarea
+                      id="enroll-weakness"
                       rows="2"
                       value={studentWeakness}
                       onChange={(e) => setStudentWeakness(e.target.value)}
