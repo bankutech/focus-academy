@@ -658,7 +658,7 @@ window.addEventListener('storage', (event) => {
         When a parent enrolls two or more children simultaneously, the platform automatically applies a 15% concession to the second child's monthly tuition:
       </p>
       <div class="formula-box">
-        Fee_{Total} = Fee_{Primary} + \Big( Fee_{Sibling} \times (1 - 0.15) \Big)
+        Fee_Total = Fee_Primary + ( Fee_Sibling &times; 0.85 )
       </div>
       <p>
         The calculation engine is implemented as a pure function in <code>src/utils/feeCalculation.js</code>:
