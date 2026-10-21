@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { 
   isStep1Complete, 
@@ -209,5 +209,47 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
 
     expect(screen.getByText(/5\. Enrollment/i)).toBeDefined();
     expect(screen.getByDisplayValue('S. Kaviya')).toBeDefined();
+  });
+
+  it('displays and dismisses sequential step requirement notice on StudentDetailsPage', () => {
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/student-details', state: { redirectedFrom: 5 } }]}>
+        <AppProvider>
+          <StudentDetailsPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Step 1 Required \(Sequential Admission\)/i)).toBeDefined();
+    expect(screen.getByText(/proceeding to Step 5/i)).toBeDefined();
+
+    const dismissBtn = screen.getByRole('button', { name: /Dismiss notice/i });
+    fireEvent.click(dismissBtn);
+
+    expect(screen.queryByText(/Step 1 Required \(Sequential Admission\)/i)).toBeNull();
+  });
+
+  it('displays sequential step requirement notice on ExamPrepPage when redirected from step 4', () => {
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        step: 2
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/exam-prep', state: { redirectedFrom: 4 } }]}>
+        <AppProvider>
+          <ExamPrepPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Step 2 Required \(Sequential Admission\)/i)).toBeDefined();
+    expect(screen.getByText(/proceeding to Step 4/i)).toBeDefined();
   });
 });
