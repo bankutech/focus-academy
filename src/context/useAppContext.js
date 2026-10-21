@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
+import { SessionAuthService } from '../services/sessionAuthService';
 
 export const ModalContext = createContext(null);
 export const FilterContext = createContext(null);
@@ -60,21 +61,33 @@ export function useStudentFlow() {
 
 export function isStep1Complete(studentFlow) {
   if (!studentFlow) return false;
+  if (studentFlow.stepToken) {
+    return SessionAuthService.verifyClientStepToken(studentFlow.stepToken, 2, studentFlow.studentName, studentFlow.phone);
+  }
   return Number(studentFlow.step) >= 2;
 }
 
 export function isStep2Complete(studentFlow) {
   if (!isStep1Complete(studentFlow)) return false;
+  if (studentFlow.stepToken) {
+    return SessionAuthService.verifyClientStepToken(studentFlow.stepToken, 3, studentFlow.studentName, studentFlow.phone);
+  }
   return Number(studentFlow.step) >= 3;
 }
 
 export function isStep3Complete(studentFlow) {
   if (!isStep2Complete(studentFlow)) return false;
+  if (studentFlow.stepToken) {
+    return SessionAuthService.verifyClientStepToken(studentFlow.stepToken, 4, studentFlow.studentName, studentFlow.phone);
+  }
   return Number(studentFlow.step) >= 4;
 }
 
 export function isStep4Complete(studentFlow) {
   if (!isStep3Complete(studentFlow)) return false;
+  if (studentFlow.stepToken) {
+    return SessionAuthService.verifyClientStepToken(studentFlow.stepToken, 5, studentFlow.studentName, studentFlow.phone);
+  }
   return Number(studentFlow.step) >= 5;
 }
 

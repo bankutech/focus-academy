@@ -210,10 +210,12 @@ export default function BatchesPage() {
 
           <div className="flex items-center justify-between sm:justify-end space-x-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
             <div className="flex items-center space-x-2">
-              <span className="text-xs uppercase font-bold text-slate-500">
+              <label htmlFor="batch-slot-select" className="text-xs uppercase font-bold text-slate-500">
                 Slot:
-              </span>
+              </label>
               <select
+                id="batch-slot-select"
+                aria-label="Filter batches by timing slot"
                 value={selectedSlot}
                 onChange={(e) => setSelectedSlot(e.target.value)}
                 className="bg-slate-50 border border-[#E2E8F0] text-xs font-bold rounded-md px-3 py-1.5 text-[#0F172A] focus:outline-hidden min-h-[34px]"
