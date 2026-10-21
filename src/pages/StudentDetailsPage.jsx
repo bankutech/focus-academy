@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { 
   User, 
@@ -38,6 +38,15 @@ export default function StudentDetailsPage() {
   const [dismissNotice, setDismissNotice] = useState(false);
 
   const redirectedFrom = location.state?.redirectedFrom || searchParams.get('from');
+
+  useEffect(() => {
+    if (redirectedFrom) {
+      const timer = setTimeout(() => {
+        setDismissNotice(true);
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [redirectedFrom]);
 
   const boards = [
     { 
@@ -137,6 +146,33 @@ export default function StudentDetailsPage() {
     <div className="bg-[#F8FAFC] min-h-screen text-left">
       <StepProgress currentStep={1} />
 
+      {redirectedFrom && !dismissNotice && (
+        <div 
+          role="status" 
+          aria-live="polite"
+          className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-50 w-[92%] sm:w-auto max-w-lg shadow-2xl rounded-full bg-[#0F172A] text-white py-2.5 px-4 sm:px-5 border border-slate-700 flex items-center justify-between gap-3 animate-in slide-in-from-top-4 fade-in duration-300"
+        >
+          <div className="flex items-center space-x-2.5 text-xs sm:text-sm font-medium">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EA580C] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#EA580C]"></span>
+            </span>
+            <span className="text-slate-100">
+              <strong className="text-white font-bold mr-1">Step 1 Required:</strong>
+              Please provide basic student details first to unlock batches
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDismissNotice(true)}
+            aria-label="Dismiss notification"
+            className="text-slate-400 hover:text-white p-1 rounded-full transition-colors cursor-pointer shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         {redirectedFrom && !dismissNotice && (
           <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start justify-between gap-3 text-xs text-orange-950 animate-in fade-in">
@@ -147,7 +183,7 @@ export default function StudentDetailsPage() {
                   Step 1 Required (Sequential Admission)
                 </strong>
                 <span className="text-slate-600 mt-0.5 block leading-relaxed">
-                  Please complete student details first before proceeding to Step {redirectedFrom}. Admission steps must be entered in ascending order: 1 &rarr; 2 &rarr; 3 &rarr; 4 &rarr; 5.
+                  Please provide basic student details first to unlock batches. Admission steps must be entered in ascending order: 1 &rarr; 2 &rarr; 3 &rarr; 4 &rarr; 5.
                 </span>
               </div>
             </div>

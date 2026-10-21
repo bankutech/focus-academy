@@ -220,13 +220,49 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
       </MemoryRouter>
     );
 
+    const matches = screen.getAllByText(/Please provide basic student details first to unlock batches/i);
+    expect(matches.length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Step 1 Required \(Sequential Admission\)/i)).toBeDefined();
-    expect(screen.getByText(/proceeding to Step 5/i)).toBeDefined();
 
-    const dismissBtn = screen.getByRole('button', { name: /Dismiss notice/i });
-    fireEvent.click(dismissBtn);
+    const dismissButtons = screen.getAllByRole('button', { name: /Dismiss/i });
+    expect(dismissButtons.length).toBeGreaterThanOrEqual(1);
+    for (const btn of dismissButtons) {
+      fireEvent.click(btn);
+    }
 
-    expect(screen.queryByText(/Step 1 Required \(Sequential Admission\)/i)).toBeNull();
+    expect(screen.queryAllByText(/Please provide basic student details first to unlock batches/i).length).toBe(0);
+  });
+
+  it('renders sticky mobile filter chips on BatchesPage and filters batches by class chip', () => {
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        examPrep: '10th Board Exam Mastery',
+        step: 3
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/batches']}>
+        <AppProvider>
+          <BatchesPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    const filterBar = screen.getByTestId('batches-filter-bar');
+    expect(filterBar).toBeDefined();
+    expect(filterBar.className).toContain('sticky');
+
+    const class12Btn = screen.getByRole('button', { name: /^Class 12$/i });
+    fireEvent.click(class12Btn);
+
+    expect(screen.getByText(/Class 12 Higher Secondary/i)).toBeDefined();
+    expect(screen.queryByText(/Class 10 Board Distinction/i)).toBeNull();
   });
 
   it('displays sequential step requirement notice on ExamPrepPage when redirected from step 4', () => {
