@@ -6,7 +6,8 @@ import {
   MapPin, 
   BookOpen, 
   ArrowRight, 
-  Edit2 
+  Edit2,
+  Filter 
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
@@ -156,64 +157,76 @@ export default function BatchesPage() {
           </div>
         </div>
 
-        <div className="mb-8 bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar">
-            <span className="text-xs uppercase font-bold text-slate-500 mr-1 shrink-0">
-              Class:
-            </span>
-            {gradeOptions.map((g) => {
-              const isGradeActive = activeGradeFilter === g.id ||
-                (g.id === 'Class 6' && (activeGradeFilter === 'Class 7' || activeGradeFilter === 'Class 8' || activeGradeFilter.includes('6 to 8')));
-              return (
+        <div 
+          data-testid="batches-filter-bar"
+          className="sticky top-[108px] sm:top-28 z-20 bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-lg border border-[#E2E8F0] shadow-sm mb-8 flex flex-col md:flex-row md:items-center justify-between gap-3"
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4 overflow-hidden w-full md:w-auto">
+            <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar touch-pan-x scroll-smooth w-full sm:w-auto py-0.5">
+              <span className="text-xs uppercase font-bold text-slate-500 mr-1 shrink-0 flex items-center space-x-1">
+                <Filter className="w-3 h-3 text-[#EA580C]" />
+                <span>Class:</span>
+              </span>
+              {gradeOptions.map((g) => {
+                const isGradeActive = activeGradeFilter === g.id ||
+                  (g.id === 'Class 6' && (activeGradeFilter === 'Class 7' || activeGradeFilter === 'Class 8' || activeGradeFilter.includes('6 to 8')));
+                return (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setActiveGradeFilter(g.id)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer shrink-0 min-h-[34px] flex items-center ${
+                      isGradeActive
+                        ? 'bg-[#0F172A] text-white shadow-xs'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar touch-pan-x scroll-smooth w-full sm:w-auto py-0.5">
+              <span className="text-xs uppercase font-bold text-slate-500 mr-1 shrink-0">
+                Board:
+              </span>
+              {boardOptions.map((b) => (
                 <button
-                  key={g.id}
+                  key={b.id}
                   type="button"
-                  onClick={() => setActiveGradeFilter(g.id)}
-                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer shrink-0 ${
-                    isGradeActive
-                      ? 'bg-[#0F172A] text-white'
+                  onClick={() => setActiveBoardFilter(b.id)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer shrink-0 min-h-[34px] flex items-center ${
+                    activeBoardFilter === b.id
+                      ? 'bg-[#EA580C] text-white shadow-xs'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                   }`}
                 >
-                  {g.label}
+                  {b.label}
                 </button>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar">
-            <span className="text-xs uppercase font-bold text-slate-500 mr-1 shrink-0">
-              Board:
-            </span>
-            {boardOptions.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setActiveBoardFilter(b.id)}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer shrink-0 ${
-                  activeBoardFilter === b.id
-                    ? 'bg-[#EA580C] text-white'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
-                }`}
-              >
-                {b.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <span className="text-xs uppercase font-bold text-slate-500">
-              Slot:
-            </span>
-            <select
-              value={selectedSlot}
-              onChange={(e) => setSelectedSlot(e.target.value)}
-              className="bg-slate-50 border border-[#E2E8F0] text-xs font-bold rounded-md px-3 py-1.5 text-[#0F172A] focus:outline-hidden"
-            >
-              {slots.map((s) => (
-                <option key={s.id} value={s.id}>{s.label}</option>
               ))}
-            </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end space-x-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs uppercase font-bold text-slate-500">
+                Slot:
+              </span>
+              <select
+                value={selectedSlot}
+                onChange={(e) => setSelectedSlot(e.target.value)}
+                className="bg-slate-50 border border-[#E2E8F0] text-xs font-bold rounded-md px-3 py-1.5 text-[#0F172A] focus:outline-hidden min-h-[34px]"
+              >
+                {slots.map((s) => (
+                  <option key={s.id} value={s.id}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-md border border-slate-200 shrink-0">
+              {filteredBatches.length} {filteredBatches.length === 1 ? 'Batch' : 'Batches'}
+            </span>
           </div>
         </div>
 
