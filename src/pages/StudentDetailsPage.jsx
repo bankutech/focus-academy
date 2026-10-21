@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { 
   User, 
   Phone, 
@@ -7,7 +7,9 @@ import {
   ArrowRight, 
   ShieldCheck, 
   LogIn, 
-  UserPlus 
+  UserPlus,
+  Info,
+  X
 } from 'lucide-react';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow } from '../context/useAppContext';
@@ -15,6 +17,7 @@ import { validateIndianMobile } from '../types/schemas';
 
 export default function StudentDetailsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const initialGrade = searchParams.get('grade');
   const initialBoard = searchParams.get('board');
@@ -32,6 +35,9 @@ export default function StudentDetailsPage() {
   const [phoneError, setPhoneError] = useState('');
   const [nameError, setNameError] = useState('');
   const [loginFeedback, setLoginFeedback] = useState('');
+  const [dismissNotice, setDismissNotice] = useState(false);
+
+  const redirectedFrom = location.state?.redirectedFrom || searchParams.get('from');
 
   const boards = [
     { 
@@ -132,6 +138,30 @@ export default function StudentDetailsPage() {
       <StepProgress currentStep={1} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        {redirectedFrom && !dismissNotice && (
+          <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start justify-between gap-3 text-xs text-orange-950 animate-in fade-in">
+            <div className="flex items-start space-x-2.5">
+              <Info className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+              <div>
+                <strong className="block font-bold text-[#0F172A]">
+                  Step 1 Required (Sequential Admission)
+                </strong>
+                <span className="text-slate-600 mt-0.5 block leading-relaxed">
+                  Please complete student details first before proceeding to Step {redirectedFrom}. Admission steps must be entered in ascending order: 1 &rarr; 2 &rarr; 3 &rarr; 4 &rarr; 5.
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDismissNotice(true)}
+              aria-label="Dismiss notice"
+              className="text-slate-400 hover:text-[#0F172A] p-1 rounded transition-colors cursor-pointer shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         <div className="mb-6">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
             {authMode === 'login' ? 'Student Account Log In' : 'Student Registration & Board Selection'}

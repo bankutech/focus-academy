@@ -21,7 +21,7 @@ export default function BatchDetailPage() {
 
   const redirectPath = getStepRedirect(4, studentFlow);
   if (redirectPath) {
-    return <Navigate to={redirectPath} replace />;
+    return <Navigate to={redirectPath} state={{ redirectedFrom: 4 }} replace />;
   }
 
   const batch = BATCHES_DATA.find((b) => b.id === batchId) || BATCHES_DATA[0];

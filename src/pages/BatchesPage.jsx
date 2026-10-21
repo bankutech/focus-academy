@@ -29,7 +29,7 @@ export default function BatchesPage() {
 
   const redirectPath = getStepRedirect(3, studentFlow, location.pathname);
   if (redirectPath) {
-    return <Navigate to={redirectPath} replace />;
+    return <Navigate to={redirectPath} state={{ redirectedFrom: 3 }} replace />;
   }
 
   const filteredBatches = BATCHES_DATA.filter((batch) => {

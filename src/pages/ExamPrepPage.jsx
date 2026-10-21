@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
+import { useNavigate, Link, Navigate, useLocation } from 'react-router-dom';
 import { 
   CheckCircle2, 
   ArrowRight, 
-  Edit2 
+  Edit2,
+  Info,
+  X
 } from 'lucide-react';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow, getStepRedirect } from '../context/useAppContext';
 
 export default function ExamPrepPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { studentFlow, setStudentFlow } = useStudentFlow();
 
   const grade = studentFlow.grade || 'Class 10';
@@ -140,10 +143,13 @@ export default function ExamPrepPage() {
       ? studentFlow.examPrep 
       : ''
   );
+  const [dismissNotice, setDismissNotice] = useState(false);
+
+  const redirectedFrom = location.state?.redirectedFrom;
 
   const redirectPath = getStepRedirect(2, studentFlow);
   if (redirectPath) {
-    return <Navigate to={redirectPath} replace />;
+    return <Navigate to={redirectPath} state={{ redirectedFrom: 2 }} replace />;
   }
 
   const handleContinue = (e) => {
@@ -166,6 +172,30 @@ export default function ExamPrepPage() {
       <StepProgress currentStep={2} />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        {redirectedFrom && !dismissNotice && (
+          <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start justify-between gap-3 text-xs text-orange-950 animate-in fade-in">
+            <div className="flex items-start space-x-2.5">
+              <Info className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+              <div>
+                <strong className="block font-bold text-[#0F172A]">
+                  Step 2 Required (Sequential Admission)
+                </strong>
+                <span className="text-slate-600 mt-0.5 block leading-relaxed">
+                  Please select your exam preparation goal track before proceeding to Step {redirectedFrom}.
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDismissNotice(true)}
+              aria-label="Dismiss notice"
+              className="text-slate-400 hover:text-[#0F172A] p-1 rounded transition-colors cursor-pointer shrink-0"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         <div className="mb-6 bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-2 text-xs text-slate-600">
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>

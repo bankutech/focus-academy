@@ -42,7 +42,7 @@ export default function EnrollPage() {
 
   const redirectPath = getStepRedirect(5, studentFlow);
   if (redirectPath) {
-    return <Navigate to={redirectPath} replace />;
+    return <Navigate to={redirectPath} state={{ redirectedFrom: 5 }} replace />;
   }
 
   const handleSubmit = async (e) => {
