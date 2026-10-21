@@ -4,6 +4,7 @@ import {
   FilterContext, 
   StudentFlowContext 
 } from './useAppContext';
+import { SessionAuthService } from '../services/sessionAuthService';
 
 const BookDemoModal = lazy(() => import('../components/Modals/BookDemoModal'));
 
@@ -52,7 +53,12 @@ export function AppProvider({ children }) {
     setStudentFlow((prev) => {
       const nextRaw = typeof updaterOrValue === 'function' ? updaterOrValue(prev) : updaterOrValue;
       const nextStep = Math.max(Number(prev?.step) || 1, Number(nextRaw?.step) || 1);
-      const next = { ...nextRaw, step: nextStep };
+      const studentName = nextRaw?.studentName || prev?.studentName || '';
+      const phone = nextRaw?.phone || prev?.phone || '';
+      const stepToken = nextStep > 1 
+        ? SessionAuthService.createClientStepToken(nextStep, studentName, phone)
+        : undefined;
+      const next = { ...nextRaw, step: nextStep, ...(stepToken ? { stepToken } : {}) };
       try {
         localStorage.setItem('focus_academy_student_flow', JSON.stringify(next));
       } catch {
