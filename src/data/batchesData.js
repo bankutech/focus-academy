@@ -174,6 +174,31 @@ export const batchesData = [
       'Daily 15-minute doubt clearance after class',
       'Saturday written mock tests with evaluated answer rubrics'
     ]
+  },
+  {
+    id: 'batch-remedial-maths',
+    name: 'Special Secondary Math Intensive & Doubt Clinic Batch',
+    shortTitle: 'Secondary Math Intensive Clinic',
+    grade: 'Classes 9 & 10',
+    board: 'Samacheer, CBSE & ICSE',
+    slotId: 'slot-1',
+    timing: '4:30 PM – 6:00 PM',
+    days: 'Monday – Saturday',
+    capacity: 12,
+    enrolledCount: 8,
+    seatsRemaining: 4,
+    status: 'Admissions Open (4 Seats Left)',
+    classroom: 'Problem Solving Clinic 105, First Floor, Thiripura Complex',
+    subjects: ['Algebra Factoring', 'Geometry Theorems', 'Trigonometry Basics', 'Arithmetic Speed'],
+    focusGoal: 'Eliminate Math Anxiety & Build Problem-Solving Confidence',
+    monthlyFee: 1800,
+    description: 'Designed specifically for students who feel hesitant or left behind in school math classes. Patient whiteboard problem-solving with 1-on-1 teacher guidance and zero embarrassment.',
+    features: [
+      'Strictly small 12-student batch',
+      'Daily 1-on-1 step-by-step problem coaching',
+      'Formula memorization maps & daily short quizzes',
+      'Zero embarrassment encouraging learning environment'
+    ]
   }
 ];
 

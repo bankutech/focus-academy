@@ -136,7 +136,9 @@ export default function ExamPrepPage() {
 
   const availableTracks = getPrepTracks();
   const [selectedGoal, setSelectedGoal] = useState(
-    studentFlow.examPrepId || availableTracks[0].id
+    availableTracks.some(t => t.id === studentFlow.examPrepId)
+      ? studentFlow.examPrepId
+      : (availableTracks[0]?.id || '')
   );
   const [customGoal, setCustomGoal] = useState(
     studentFlow.examPrep && !availableTracks.some(t => t.title === studentFlow.examPrep) 

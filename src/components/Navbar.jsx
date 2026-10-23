@@ -79,7 +79,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full relative transition-all duration-300">
+    <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'shadow-md' : ''}`}>
       <div className="bg-[#0F172A] text-slate-200 text-xs py-2 px-4 border-b border-[#1E293B] tracking-wide">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3 overflow-hidden text-ellipsis whitespace-nowrap">

@@ -74,13 +74,20 @@ export function AppProvider({ children }) {
     });
   }, [setStudentFlowWithStorage]);
 
-  const lookupSavedStudent = useCallback((phone) => {
+  const lookupSavedStudent = useCallback((phone, studentName) => {
     try {
       const list = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
-      const matched = list.find((s) => s.phone === phone);
+      let matched = null;
+      if (studentName) {
+        matched = list.find((s) => s.phone === phone && s.studentName?.toLowerCase().trim() === studentName.toLowerCase().trim());
+      }
+      if (!matched) {
+        matched = list.find((s) => s.phone === phone);
+      }
       if (!matched) return null;
       return {
         phone: matched.phone,
+        studentName: matched.studentName,
         grade: matched.grade || 'Class 10',
         board: matched.board || 'TN State Board (Samacheer)',
       };
@@ -94,12 +101,35 @@ export function AppProvider({ children }) {
     const savedRecord = { ...record, id };
     try {
       const list = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
-      const filtered = list.filter((s) => s.phone !== record.phone);
+      const filtered = list.filter((s) => !(s.phone === record.phone && s.studentName?.toLowerCase().trim() === record.studentName?.toLowerCase().trim()));
       filtered.unshift(savedRecord);
       localStorage.setItem('focus_academy_students', JSON.stringify(filtered));
     } catch {
     }
     return savedRecord;
+  }, []);
+
+  const resetStudentFlow = useCallback(() => {
+    try {
+      localStorage.removeItem('focus_academy_student_flow');
+    } catch {
+    }
+    setStudentFlow({
+      step: 1,
+      studentName: '',
+      parentName: '',
+      phone: '',
+      grade: 'Class 10',
+      board: 'TN State Board (Samacheer)',
+      examPrep: '',
+      examPrepId: '',
+      selectedBatchId: '',
+      selectedBatchName: '',
+      batchTiming: '',
+      subjects: '',
+      monthlyFee: 0,
+      stepToken: undefined,
+    });
   }, []);
 
   const [demoModalOpen, setDemoModalOpen] = useState(false);
@@ -165,6 +195,7 @@ export function AppProvider({ children }) {
     updateStudentFlow,
     lookupSavedStudent,
     registerStudent,
+    resetStudentFlow,
   };
 
   return (

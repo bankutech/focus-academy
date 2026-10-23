@@ -12,7 +12,7 @@ import {
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow, getStepRedirect } from '../context/useAppContext';
-import { validateIndianMobile } from '../types/schemas';
+import { validateIndianMobile, isBatchCompatible } from '../types/schemas';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
 import { BatchService } from '../services/batchService';
@@ -24,9 +24,14 @@ export default function EnrollPage() {
   const navigate = useNavigate();
   const { studentFlow, setStudentFlow, registerStudent } = useStudentFlow();
 
-  const selectedBatch = BATCHES_DATA.find((b) => b.id === batchId) ||
-    BATCHES_DATA.find((b) => b.id === studentFlow.selectedBatchId) ||
-    BATCHES_DATA[0];
+  const candidateBatch = BATCHES_DATA.find((b) => b.id === batchId) ||
+    BATCHES_DATA.find((b) => b.id === studentFlow.selectedBatchId);
+
+  const isCandidateCompatible = candidateBatch && isBatchCompatible(candidateBatch, studentFlow.grade, studentFlow.board);
+
+  const selectedBatch = isCandidateCompatible
+    ? candidateBatch
+    : BATCHES_DATA.find((b) => isBatchCompatible(b, studentFlow.grade, studentFlow.board)) || candidateBatch || BATCHES_DATA[0];
 
   const [studentName, setStudentName] = useState(studentFlow.studentName || '');
   const [parentName, setParentName] = useState(studentFlow.parentName || '');
@@ -62,9 +67,22 @@ export default function EnrollPage() {
       return;
     }
 
+    if (!isBatchCompatible(selectedBatch, studentFlow.grade || selectedBatch.grade, board)) {
+      setSubmissionResult({
+        success: false,
+        error: `Incompatible batch selection: ${selectedBatch.name} (${selectedBatch.grade}, ${selectedBatch.board}) does not match student profile (${studentFlow.grade || 'N/A'}, ${board || 'N/A'}). Please select an eligible batch.`,
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
-    const reservation = await BatchService.reserveSeatWithDetails(selectedBatch.id);
+    const reservation = await BatchService.reserveSeatWithDetails(selectedBatch.id, {
+      studentName: studentName.trim(),
+      phone: validation.sanitized,
+      grade: studentFlow.grade || selectedBatch.grade,
+      board
+    });
     if (!reservation.success) {
       setIsSubmitting(false);
       setSubmissionResult({
@@ -99,6 +117,9 @@ export default function EnrollPage() {
       phone: enrollmentRecord.phone,
       grade: enrollmentRecord.grade,
       board: enrollmentRecord.board,
+      batchId: selectedBatch.id,
+      reservationId: enrollmentRecord.reservationId,
+      timing: selectedBatch.timing,
       subjects: selectedBatch.name,
       notes: `Admission Slip ID: ${saved.id} | Batch: ${selectedBatch.name} (${selectedBatch.timing}) | School: ${enrollmentRecord.schoolName || 'N/A'} | Start: ${startDatePreference} | Challenges: ${enrollmentRecord.studentWeakness || 'None'}`,
     });
