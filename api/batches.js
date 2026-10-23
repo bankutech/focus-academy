@@ -120,6 +120,8 @@ const BATCHES = [
   }
 ];
 
+const reservations = new Map();
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -132,25 +134,64 @@ export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   if (req.method === 'GET') {
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    const enrichedBatches = BATCHES.map((b) => {
+      const reservedCount = reservations.get(b.id) || 0;
+      const actualRemaining = Math.max(0, b.seatsRemaining - reservedCount);
+      const actualEnrolled = b.enrolledCount + reservedCount;
+      let status = b.status;
+      if (actualRemaining === 0) {
+        status = 'Batch Full • Waitlist Open';
+      } else if (actualRemaining <= 2) {
+        status = `Limited Seats • ${actualRemaining} Left`;
+      }
+      return {
+        ...b,
+        enrolledCount: actualEnrolled,
+        seatsRemaining: actualRemaining,
+        status
+      };
+    });
+
     return res.status(200).json({
       success: true,
       timestamp: new Date().toISOString(),
-      batches: BATCHES
+      batches: enrichedBatches
     });
   }
 
   if (req.method === 'POST') {
     const { batchId } = req.body || {};
+    if (!batchId) {
+      return res.status(400).json({ success: false, error: 'batchId is required' });
+    }
     const matched = BATCHES.find((b) => b.id === batchId);
     if (!matched) {
       return res.status(404).json({ success: false, error: 'Batch not found' });
     }
+
+    const currentReserved = reservations.get(batchId) || 0;
+    const actualRemaining = matched.seatsRemaining - currentReserved;
+
+    if (actualRemaining <= 0) {
+      return res.status(409).json({ 
+        success: false, 
+        error: 'Batch capacity reached. All 12 seats in this classroom have been allocated.' 
+      });
+    }
+
+    const nextReserved = currentReserved + 1;
+    reservations.set(batchId, nextReserved);
+    const newRemaining = Math.max(0, matched.seatsRemaining - nextReserved);
+
     return res.status(200).json({
       success: true,
       batchId,
       reserved: true,
-      seatsRemaining: Math.max(0, matched.seatsRemaining - 1)
+      reservationId: `RES-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+      seatsRemaining: newRemaining,
+      enrolledCount: matched.enrolledCount + nextReserved,
+      message: 'Physical seat reserved at Thiripura Complex campus.'
     });
   }
 

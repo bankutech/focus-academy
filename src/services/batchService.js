@@ -39,7 +39,34 @@ export const BatchService = {
       const res = await response.json();
       return Boolean(res.success);
     } catch {
-      return true;
+      return false;
+    }
+  },
+
+  async reserveSeatWithDetails(batchId) {
+    try {
+      const response = await fetch('/api/batches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batchId })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || `Reservation rejected with HTTP ${response.status}`
+        };
+      }
+      return {
+        success: Boolean(data.success),
+        reservationId: data.reservationId,
+        seatsRemaining: data.seatsRemaining
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.message || 'Network error communicating with batch server'
+      };
     }
   }
 };

@@ -122,7 +122,12 @@ export const LeadService = {
   _recordSubmission(lead) {
     try {
       const logs = JSON.parse(localStorage.getItem(STORAGE_LOGS_KEY) || '[]');
-      logs.unshift(lead);
+      const existingIdx = logs.findIndex((item) => (item.id && item.id === lead.id) || (item.phone === lead.phone && item.studentName === lead.studentName));
+      if (existingIdx >= 0) {
+        logs[existingIdx] = lead;
+      } else {
+        logs.unshift(lead);
+      }
       if (logs.length > 50) logs.pop();
       localStorage.setItem(STORAGE_LOGS_KEY, JSON.stringify(logs));
     } catch {
@@ -150,12 +155,21 @@ export const LeadService = {
       for (const lead of queue) {
         if (webhookUrl) {
           try {
-            await fetch(webhookUrl, {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const response = await fetch(webhookUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(lead),
+              signal: controller.signal,
             });
-            this._recordSubmission(lead);
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+              remaining.push(lead);
+            } else {
+              this._recordSubmission(lead);
+            }
           } catch {
             remaining.push(lead);
           }

@@ -85,19 +85,17 @@ export default function StudentDetailsPage() {
 
     const validation = validateIndianMobile(phone);
     if (!validation.valid) {
-      setPhoneError(validation.message);
+      setPhoneError(validation.error || validation.message);
       return;
     }
 
     const found = lookupSavedStudent(validation.sanitized);
     if (found) {
-      setStudentName(found.studentName || '');
-      setParentName(found.parentName || '');
       if (found.grade) setGrade(found.grade);
       if (found.board) setBoard(found.board);
-      setLoginFeedback(`Welcome back, ${found.studentName || 'Student'}! Preferences restored.`);
+      setLoginFeedback(`Preferences restored for ${found.grade} (${found.board}). Please verify student name to continue.`);
     } else {
-      setLoginFeedback('No previous registration found for this number. You can enter details and proceed with sign up.');
+      setLoginFeedback('No prior admission found for this mobile. Enter details below to begin registration.');
     }
   };
 
@@ -109,14 +107,14 @@ export default function StudentDetailsPage() {
     if (authMode === 'login') {
       const validation = validateIndianMobile(phone);
       if (!validation.valid) {
-        setPhoneError(validation.message);
+        setPhoneError(validation.error || validation.message);
         return;
       }
     } else {
       if (phone.trim()) {
         const validation = validateIndianMobile(phone);
         if (!validation.valid) {
-          setPhoneError(validation.message);
+          setPhoneError(validation.error || validation.message);
           return;
         }
       }

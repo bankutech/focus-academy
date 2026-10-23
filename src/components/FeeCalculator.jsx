@@ -29,7 +29,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
 
   const modeMultiplier = mode === 'classroom' ? 1.0 : 0.9;
   const centerAdjustment = center === 'Thoramangalam' ? 1.0 : 1.05;
-  const siblingMultiplier = hasSiblingDiscount ? 0.9 : 1.0;
+  const siblingMultiplier = hasSiblingDiscount ? 0.85 : 1.0;
 
   const estimatedMonthlyFee = Math.round(baseCalculatedFee * modeMultiplier * centerAdjustment * siblingMultiplier);
   const discountedPackageFee = Math.round(estimatedMonthlyFee * 0.88);
@@ -175,7 +175,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
               }`}
             >
               <Users className="w-3.5 h-3.5 text-[#EA580C]" />
-              <span>2+ Children (10% Off)</span>
+              <span>2+ Children (15% Off)</span>
             </button>
           </div>
         </div>
@@ -230,7 +230,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             </div>
             {hasSiblingDiscount && (
               <span className="inline-block mt-1 text-xs text-emerald-700 font-bold">
-                ✓ 10% Sibling concession applied
+                ✓ 15% Sibling concession applied
               </span>
             )}
           </div>

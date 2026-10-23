@@ -4,8 +4,8 @@ test.describe('Focus Academy Admission Funnel E2E', () => {
   test('redirects unstarted visitors attempting to load /enroll directly to /student-details with requirement banner', async ({ page }) => {
     await page.goto('/enroll');
     await expect(page).toHaveURL(/.*student-details/);
-    await expect(page.getByText(/Step 1 Required/i)).toBeVisible();
-    await expect(page.getByText(/Please provide basic student details first to unlock batches/i)).toBeVisible();
+    await expect(page.getByText(/Step 1 Required/i).first()).toBeVisible();
+    await expect(page.getByText(/Please provide basic student details first to unlock batches/i).first()).toBeVisible();
   });
 
   test('completes full sequential 5-step admission flow in ascending order', async ({ page }) => {
@@ -20,7 +20,7 @@ test.describe('Focus Academy Admission Funnel E2E', () => {
     await expect(page).toHaveURL(/.*exam-prep/);
     await expect(page.getByText(/S. Kaviya/i)).toBeVisible();
 
-    await page.getByRole('button', { name: /Continue to Batch Schedules/i }).click();
+    await page.getByRole('button', { name: /View Available Batches/i }).click();
 
     await expect(page).toHaveURL(/.*batches/);
     await expect(page.getByTestId('batches-filter-bar')).toBeVisible();

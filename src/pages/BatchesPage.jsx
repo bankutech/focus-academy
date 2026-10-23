@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useLocation, Navigate } from 'react-router-dom';
 import { 
   Users, 
@@ -10,6 +10,7 @@ import {
   Filter 
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
+import { BatchService } from '../services/batchService';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow, getStepRedirect, isStep1Complete, isStep2Complete } from '../context/useAppContext';
 
@@ -27,13 +28,26 @@ export default function BatchesPage() {
     searchParams.get('board') || studentFlow.board || 'all'
   );
   const [selectedSlot, setSelectedSlot] = useState(urlSlot);
+  const [batchesList, setBatchesList] = useState(BATCHES_DATA);
+
+  useEffect(() => {
+    let mounted = true;
+    BatchService.getBatches().then((data) => {
+      if (mounted && Array.isArray(data) && data.length > 0) {
+        setBatchesList(data);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const redirectPath = getStepRedirect(3, studentFlow, location.pathname);
   if (redirectPath) {
     return <Navigate to={redirectPath} state={{ redirectedFrom: 3 }} replace />;
   }
 
-  const filteredBatches = BATCHES_DATA.filter((batch) => {
+  const filteredBatches = batchesList.filter((batch) => {
     let matchGrade = true;
     if (activeGradeFilter !== 'all') {
       if (activeGradeFilter.includes('6') || activeGradeFilter.includes('7') || activeGradeFilter.includes('8')) {

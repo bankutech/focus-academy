@@ -43,7 +43,7 @@ export default function FeesPage() {
               Have multiple children or need special subject combinations?
             </h3>
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-              We offer a 10% sibling discount and tailored combinations for students needing support across mathematics, science, and languages.
+              We offer a 15% sibling discount and tailored combinations for students needing support across mathematics, science, and languages.
             </p>
           </div>
 

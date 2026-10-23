@@ -46,21 +46,39 @@ export default async function handler(req, res) {
     campus: 'Thoramangalam, Perambalur',
   };
 
+  let deliveryStatus = 'received_at_campus';
+  let webhookDelivery = null;
+
   const webhookUrl = process.env.LEAD_WEBHOOK_URL || process.env.VITE_LEAD_WEBHOOK_URL;
   if (webhookUrl) {
     try {
-      await fetch(webhookUrl, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record),
+        signal: controller.signal,
       });
-    } catch {
+      clearTimeout(timeoutId);
+      if (response.ok) {
+        deliveryStatus = 'webhook_delivered';
+        webhookDelivery = { ok: true, status: response.status };
+      } else {
+        deliveryStatus = 'webhook_failed';
+        webhookDelivery = { ok: false, status: response.status };
+      }
+    } catch (err) {
+      deliveryStatus = 'webhook_failed';
+      webhookDelivery = { ok: false, error: err ? err.message : 'Webhook network failure' };
     }
   }
 
   return res.status(200).json({
     success: true,
     data: record,
+    deliveryStatus,
+    webhookDelivery,
     message: 'Admission inquiry registered successfully at Focus Academy campus desk.',
   });
 }
