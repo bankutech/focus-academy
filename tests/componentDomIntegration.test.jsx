@@ -7,6 +7,7 @@ import StepProgress from '../src/components/common/StepProgress';
 import Navbar from '../src/components/Navbar';
 import Footer from '../src/components/Footer';
 import MobileQuickBar from '../src/components/common/MobileQuickBar';
+import LoadingScreen from '../src/components/common/LoadingScreen';
 import { AppProvider } from '../src/context/AppContext';
 
 describe('React Component DOM Integration Tests', () => {
@@ -124,5 +125,14 @@ describe('React Component DOM Integration Tests', () => {
 
     const whatsappLink = screen.getByRole('link', { name: /Direct WhatsApp Helpdesk/i });
     expect(whatsappLink.getAttribute('href')).toContain('https://wa.me/919842451220');
+  });
+
+  it('renders LoadingScreen with Focus Academy branding and message', () => {
+    render(<LoadingScreen message="Loading custom test message..." />);
+    expect(screen.getByRole('status')).toBeDefined();
+    expect(screen.getByText(/Focus Academy/i)).toBeDefined();
+    expect(screen.getByText(/Thoramangalam • Perambalur/i)).toBeDefined();
+    expect(screen.getByText('FA')).toBeDefined();
+    expect(screen.getByText(/Loading custom test message.../i)).toBeDefined();
   });
 });

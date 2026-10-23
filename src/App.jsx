@@ -7,6 +7,7 @@ import ScrollToTop from './components/common/ScrollToTop';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import MobileQuickBar from './components/common/MobileQuickBar';
+import LoadingScreen from './components/common/LoadingScreen';
 
 import HomePage from './pages/HomePage';
 
@@ -21,11 +22,7 @@ const ContactPage = lazy(() => import('./pages/ContactPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 
 function RouteLoadingFallback() {
-  return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-8">
-      <div className="w-8 h-8 rounded-full border-2 border-[#EA580C] border-t-transparent animate-spin" />
-    </div>
-  );
+  return <LoadingScreen message="Loading Focus Academy portal..." />;
 }
 
 function MainLayout() {
