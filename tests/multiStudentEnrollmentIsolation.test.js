@@ -242,4 +242,26 @@ describe('Multi-Student Enrollment Isolation and Batch Assignment Stress Suite',
     expect(res.body.data.timing).toBe('6:00 PM – 7:30 PM');
     expect(res.body.data.studentName).toBe('Janani Balaji');
   });
+
+  it('enforces HTTP 422 Unprocessable Entity when lead inquiry receives mismatched batch for student grade', async () => {
+    const res = createMockRes();
+    const req = {
+      method: 'POST',
+      headers: { 'x-forwarded-for': '127.0.0.96' },
+      body: {
+        studentName: 'Aarav Raman',
+        parentName: 'Raman S.',
+        phone: '9842100001',
+        grade: 'Class 6',
+        board: 'TN State Board (Samacheer)',
+        batchId: 'batch-12-science-board',
+        notes: 'Attempting invalid senior batch'
+      }
+    };
+
+    await leadsHandler(req, res);
+    expect(res.statusCode).toBe(422);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toContain('Academic mismatch');
+  });
 });

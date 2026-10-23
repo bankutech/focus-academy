@@ -15,6 +15,48 @@ function checkRateLimit(ip, limit = MAX_LEADS_PER_WINDOW) {
   return true;
 }
 
+const BATCHES = [
+  { id: 'batch-10-state-board', grade: 'Class 10', board: 'TN State Board (Samacheer)' },
+  { id: 'batch-10-cbse', grade: 'Class 10', board: 'CBSE Board' },
+  { id: 'batch-10-icse', grade: 'Class 10', board: 'ICSE Board' },
+  { id: 'batch-12-science-board', grade: 'Class 12', board: 'TN State Board, CBSE & ISC' },
+  { id: 'batch-middle-foundation', grade: 'Classes 6 to 8', board: 'Samacheer, CBSE & ICSE' },
+  { id: 'batch-9-preboard', grade: 'Class 9', board: 'TN State Board, CBSE & ICSE' },
+  { id: 'batch-11-science', grade: 'Class 11', board: 'TN State Board, CBSE & ISC' },
+  { id: 'batch-remedial-maths', grade: 'Classes 9 & 10', board: 'Samacheer, CBSE & ICSE' }
+];
+
+function isCompatible(batch, grade, board) {
+  if (!batch || !grade) return false;
+  const g = String(grade).toLowerCase();
+  const bGrade = String(batch.grade || '').toLowerCase();
+  let gradeMatch = false;
+  if (g.includes('6') || g.includes('7') || g.includes('8') || g.includes('middle')) {
+    gradeMatch = bGrade.includes('6') || bGrade.includes('7') || bGrade.includes('8') || bGrade.includes('middle');
+  } else if (g.includes('9')) {
+    gradeMatch = bGrade.includes('9');
+  } else if (g.includes('10')) {
+    gradeMatch = bGrade.includes('10');
+  } else if (g.includes('11')) {
+    gradeMatch = bGrade.includes('11');
+  } else if (g.includes('12')) {
+    gradeMatch = bGrade.includes('12');
+  }
+  if (!gradeMatch) return false;
+  if (board && board !== 'all') {
+    const b = String(board).toLowerCase();
+    const bBoard = String(batch.board || '').toLowerCase();
+    if (b.includes('state') || b.includes('samacheer')) {
+      if (!bBoard.includes('state') && !bBoard.includes('samacheer')) return false;
+    } else if (b.includes('cbse')) {
+      if (!bBoard.includes('cbse')) return false;
+    } else if (b.includes('icse') || b.includes('isc')) {
+      if (!bBoard.includes('icse') && !bBoard.includes('isc')) return false;
+    }
+  }
+  return true;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -71,6 +113,16 @@ export default async function handler(req, res) {
 
   if (phone.length !== 10) {
     return res.status(400).json({ success: false, error: 'Valid 10-digit Indian mobile number is required' });
+  }
+
+  if (batchId) {
+    const matched = BATCHES.find((b) => b.id === batchId);
+    if (matched && grade && !isCompatible(matched, grade, board)) {
+      return res.status(422).json({
+        success: false,
+        error: `Academic mismatch: Batch ${matched.id} is incompatible with student grade ${grade} (${board || 'All'}).`
+      });
+    }
   }
 
   const leadId = `FA-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;

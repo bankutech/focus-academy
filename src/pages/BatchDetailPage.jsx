@@ -13,6 +13,7 @@ import {
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow, getStepRedirect, isStep3Complete } from '../context/useAppContext';
+import { isBatchCompatible } from '../types/schemas';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 
 export default function BatchDetailPage() {
@@ -25,6 +26,7 @@ export default function BatchDetailPage() {
   }
 
   const batch = BATCHES_DATA.find((b) => b.id === batchId) || BATCHES_DATA[0];
+  const isCompatible = !studentFlow.grade || isBatchCompatible(batch, studentFlow.grade, studentFlow.board);
 
   const handleProceedToEnroll = () => {
     const isStep3Done = isStep3Complete(studentFlow);
@@ -74,6 +76,15 @@ export default function BatchDetailPage() {
             Enrolling for: <strong className="text-[#0F172A]">{studentFlow.studentName || 'Student'}</strong>
           </span>
         </div>
+
+        {!isCompatible && studentFlow.grade && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start space-x-3 text-xs text-amber-950">
+            <span className="font-bold text-amber-800 shrink-0">Academic Notice:</span>
+            <span>
+              Your registration profile is set for <strong>{studentFlow.grade} ({studentFlow.board})</strong>. This batch ({batch.name}) is specifically structured for <strong>{batch.grade} ({batch.board})</strong>. To guarantee curriculum alignment, please choose an eligible batch for your grade.
+            </span>
+          </div>
+        )}
 
         <div className="bg-white rounded-lg p-6 sm:p-10 border border-[#E2E8F0] shadow-xs mb-8">
           <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -222,14 +233,24 @@ export default function BatchDetailPage() {
               Choose Other Batch
             </Link>
 
-            <Link
-              to={`/enroll/${batch.id}`}
-              onClick={handleProceedToEnroll}
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
-            >
-              <span>Confirm Batch & Proceed to Enrollment (Step 5)</span>
-              <ArrowRight className="w-4 h-4 text-orange-200" />
-            </Link>
+            {isCompatible ? (
+              <Link
+                to={`/enroll/${batch.id}`}
+                onClick={handleProceedToEnroll}
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+              >
+                <span>Confirm Batch & Proceed to Enrollment (Step 5)</span>
+                <ArrowRight className="w-4 h-4 text-orange-200" />
+              </Link>
+            ) : (
+              <Link
+                to={`/batches?grade=${encodeURIComponent(studentFlow.grade)}`}
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+              >
+                <span>View Eligible Batches for {studentFlow.grade}</span>
+                <ArrowRight className="w-4 h-4 text-orange-200" />
+              </Link>
+            )}
           </div>
         </div>
       </div>
