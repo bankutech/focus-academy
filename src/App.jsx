@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
@@ -70,10 +70,34 @@ function MainLayout() {
 }
 
 export default function App() {
+  const [showInitialSplash, setShowInitialSplash] = useState(true);
+  const [splashFading, setSplashFading] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplashFading(true);
+      const exitTimer = setTimeout(() => {
+        setShowInitialSplash(false);
+      }, 450);
+      return () => clearTimeout(exitTimer);
+    }, 2100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <ErrorBoundary title="Focus Academy Application">
       <BrowserRouter>
         <AppProvider>
+          {showInitialSplash && (
+            <div 
+              className={`fixed inset-0 z-50 transition-opacity duration-500 ease-out ${
+                splashFading ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <LoadingScreen message="Preparing small-batch academic portal..." initialMode />
+            </div>
+          )}
           <MainLayout />
         </AppProvider>
       </BrowserRouter>
