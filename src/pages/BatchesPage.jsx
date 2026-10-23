@@ -59,10 +59,12 @@ export default function BatchesPage() {
 
     let matchBoard = true;
     if (activeBoardFilter !== 'all') {
-      if (activeBoardFilter.includes('State')) {
+      if (activeBoardFilter.includes('State') || activeBoardFilter.includes('Samacheer')) {
         matchBoard = batch.board.includes('State') || batch.board.includes('Samacheer');
       } else if (activeBoardFilter.includes('CBSE')) {
         matchBoard = batch.board.includes('CBSE');
+      } else if (activeBoardFilter.includes('ICSE') || activeBoardFilter.includes('ISC')) {
+        matchBoard = batch.board.includes('ICSE') || batch.board.includes('ISC');
       }
     }
 
@@ -112,6 +114,7 @@ export default function BatchesPage() {
     { id: 'all', label: 'All Boards' },
     { id: 'TN State Board (Samacheer)', label: 'State Board' },
     { id: 'CBSE Board', label: 'CBSE' },
+    { id: 'ICSE Board', label: 'ICSE / ISC' },
   ];
 
   const slots = [

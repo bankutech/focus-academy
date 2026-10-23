@@ -43,12 +43,18 @@ export const BatchService = {
     }
   },
 
-  async reserveSeatWithDetails(batchId) {
+  async reserveSeatWithDetails(batchId, details = {}) {
     try {
       const response = await fetch('/api/batches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ batchId })
+        body: JSON.stringify({
+          batchId,
+          studentName: details.studentName,
+          phone: details.phone,
+          grade: details.grade,
+          board: details.board
+        })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {

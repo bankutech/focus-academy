@@ -56,3 +56,40 @@ export const validateLeadInquiry = (lead) => {
     } : null,
   };
 };
+
+export const isBatchCompatible = (batch, grade, board) => {
+  if (!batch || !grade) return false;
+
+  const g = String(grade).toLowerCase();
+  const bGrade = String(batch.grade || '').toLowerCase();
+
+  let gradeMatch = false;
+  if (g.includes('6') || g.includes('7') || g.includes('8') || g.includes('middle')) {
+    gradeMatch = bGrade.includes('6') || bGrade.includes('7') || bGrade.includes('8') || bGrade.includes('middle');
+  } else if (g.includes('9')) {
+    gradeMatch = bGrade.includes('9');
+  } else if (g.includes('10')) {
+    gradeMatch = bGrade.includes('10');
+  } else if (g.includes('11')) {
+    gradeMatch = bGrade.includes('11');
+  } else if (g.includes('12')) {
+    gradeMatch = bGrade.includes('12');
+  }
+
+  if (!gradeMatch) return false;
+
+  if (board && board !== 'all') {
+    const b = String(board).toLowerCase();
+    const bBoard = String(batch.board || '').toLowerCase();
+
+    if (b.includes('state') || b.includes('samacheer')) {
+      if (!bBoard.includes('state') && !bBoard.includes('samacheer')) return false;
+    } else if (b.includes('cbse')) {
+      if (!bBoard.includes('cbse')) return false;
+    } else if (b.includes('icse') || b.includes('isc')) {
+      if (!bBoard.includes('icse') && !bBoard.includes('isc')) return false;
+    }
+  }
+
+  return true;
+};

@@ -59,6 +59,9 @@ export default async function handler(req, res) {
   const phone = String(body.phone || '').replace(/\D/g, '').slice(-10);
   const grade = sanitize(body.grade, 50);
   const board = sanitize(body.board, 50);
+  const batchId = sanitize(body.batchId, 50);
+  const reservationId = sanitize(body.reservationId, 50);
+  const timing = sanitize(body.timing, 50);
   const subjects = sanitize(body.subjects, 150);
   const notes = sanitize(body.notes, 300);
 
@@ -81,6 +84,9 @@ export default async function handler(req, res) {
     phone,
     grade,
     board,
+    batchId: batchId || null,
+    reservationId: reservationId || null,
+    timing: timing || null,
     subjects,
     notes,
     campus: 'Thoramangalam, Perambalur',

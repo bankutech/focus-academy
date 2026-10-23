@@ -120,15 +120,23 @@ export default function StudentDetailsPage() {
       }
     }
 
-    setStudentFlow((prev) => ({
-      ...prev,
-      studentName: studentName.trim() || 'Focus Student',
-      parentName: parentName.trim(),
-      phone: phone.trim(),
-      board,
-      grade,
-      step: 2,
-    }));
+    setStudentFlow((prev) => {
+      const gradeChanged = prev.grade !== grade || prev.board !== board;
+      return {
+        ...prev,
+        studentName: studentName.trim() || 'Focus Student',
+        parentName: parentName.trim(),
+        phone: phone.trim(),
+        board,
+        grade,
+        step: 2,
+        selectedBatchId: gradeChanged ? '' : prev.selectedBatchId,
+        selectedBatchName: gradeChanged ? '' : prev.selectedBatchName,
+        batchTiming: gradeChanged ? '' : prev.batchTiming,
+        examPrep: gradeChanged ? '' : prev.examPrep,
+        examPrepId: gradeChanged ? '' : prev.examPrepId,
+      };
+    });
 
     navigate('/exam-prep');
   };
