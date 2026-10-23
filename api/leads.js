@@ -1,3 +1,20 @@
+const ipHits = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_LEADS_PER_WINDOW = 10;
+
+function checkRateLimit(ip, limit = MAX_LEADS_PER_WINDOW) {
+  const now = Date.now();
+  const history = ipHits.get(ip) || [];
+  const valid = history.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (valid.length >= limit) {
+    ipHits.set(ip, valid);
+    return false;
+  }
+  valid.push(now);
+  ipHits.set(ip, valid);
+  return true;
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,19 +25,42 @@ export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
 
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
+  const clientIp = req.headers['x-forwarded-for'] 
+    ? String(req.headers['x-forwarded-for']).split(',')[0].trim() 
+    : (req.socket?.remoteAddress || '127.0.0.1');
+
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({ 
+      success: false, 
+      error: 'Too many inquiries from this IP address. Please wait a minute before submitting again.' 
+    });
+  }
+
   const body = req.body || {};
-  const studentName = String(body.studentName || '').trim();
-  const parentName = String(body.parentName || '').trim();
+  if (typeof body !== 'object' || body === null) {
+    return res.status(400).json({ success: false, error: 'Malformed request body' });
+  }
+
+  const rawJson = JSON.stringify(body);
+  if (rawJson.length > 8192) {
+    return res.status(413).json({ success: false, error: 'Payload size exceeds limit' });
+  }
+
+  const sanitize = (val, max = 150) => String(val || '').replace(/[<>'"`;]/g, '').trim().slice(0, max);
+
+  const studentName = sanitize(body.studentName, 80);
+  const parentName = sanitize(body.parentName, 80);
   const phone = String(body.phone || '').replace(/\D/g, '').slice(-10);
-  const grade = String(body.grade || '').trim();
-  const board = String(body.board || '').trim();
-  const subjects = String(body.subjects || '').trim();
-  const notes = String(body.notes || '').trim();
+  const grade = sanitize(body.grade, 50);
+  const board = sanitize(body.board, 50);
+  const subjects = sanitize(body.subjects, 150);
+  const notes = sanitize(body.notes, 300);
 
   if (!studentName || studentName.length < 2) {
     return res.status(400).json({ success: false, error: 'Valid student name is required' });
