@@ -121,6 +121,22 @@ const BATCHES = [
 ];
 
 const reservations = new Map();
+const ipHits = new Map();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_RESERVATIONS_PER_WINDOW = 15;
+
+function checkRateLimit(ip, limit = MAX_RESERVATIONS_PER_WINDOW) {
+  const now = Date.now();
+  const history = ipHits.get(ip) || [];
+  const valid = history.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+  if (valid.length >= limit) {
+    ipHits.set(ip, valid);
+    return false;
+  }
+  valid.push(now);
+  ipHits.set(ip, valid);
+  return true;
+}
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
@@ -132,6 +148,7 @@ export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
 
   if (req.method === 'GET') {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -161,16 +178,28 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
+    const clientIp = req.headers['x-forwarded-for'] 
+      ? String(req.headers['x-forwarded-for']).split(',')[0].trim() 
+      : (req.socket?.remoteAddress || '127.0.0.1');
+
+    if (!checkRateLimit(clientIp)) {
+      return res.status(429).json({ 
+        success: false, 
+        error: 'Too many reservation requests from this connection. Please try again in a moment.' 
+      });
+    }
+
     const { batchId } = req.body || {};
-    if (!batchId) {
+    const sanitizedBatchId = String(batchId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 50);
+    if (!sanitizedBatchId) {
       return res.status(400).json({ success: false, error: 'batchId is required' });
     }
-    const matched = BATCHES.find((b) => b.id === batchId);
+    const matched = BATCHES.find((b) => b.id === sanitizedBatchId);
     if (!matched) {
       return res.status(404).json({ success: false, error: 'Batch not found' });
     }
 
-    const currentReserved = reservations.get(batchId) || 0;
+    const currentReserved = reservations.get(sanitizedBatchId) || 0;
     const actualRemaining = matched.seatsRemaining - currentReserved;
 
     if (actualRemaining <= 0) {
@@ -181,12 +210,12 @@ export default async function handler(req, res) {
     }
 
     const nextReserved = currentReserved + 1;
-    reservations.set(batchId, nextReserved);
+    reservations.set(sanitizedBatchId, nextReserved);
     const newRemaining = Math.max(0, matched.seatsRemaining - nextReserved);
 
     return res.status(200).json({
       success: true,
-      batchId,
+      batchId: sanitizedBatchId,
       reserved: true,
       reservationId: `RES-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
       seatsRemaining: newRemaining,
