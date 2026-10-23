@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { 
   isStep1Complete, 
@@ -235,7 +235,7 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     expect(screen.queryAllByText(/Please provide basic student details first to unlock batches/i).length).toBe(0);
   });
 
-  it('renders sticky mobile filter chips on BatchesPage and filters batches by class chip', () => {
+  it('renders sticky mobile filter chips on BatchesPage and filters batches by class chip', async () => {
     localStorage.setItem(
       'focus_academy_student_flow',
       JSON.stringify({
@@ -263,7 +263,9 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     const class12Btn = screen.getByRole('button', { name: /^Class 12$/i });
     fireEvent.click(class12Btn);
 
-    expect(screen.getByText(/Class 12 Higher Secondary/i)).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText(/Class 12 Higher Secondary/i)).toBeDefined();
+    });
     expect(screen.queryByText(/Class 10 Board Distinction/i)).toBeNull();
   });
 
@@ -299,6 +301,9 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
 
     expect(SessionAuthService.verifyClientStepToken(validToken, 4, 'Hacker', '9842451220')).toBe(false);
     expect(SessionAuthService.verifyClientStepToken('fake.token', 4, 'S. Kaviya', '9842451220')).toBe(false);
+
+    const expiredToken = SessionAuthService.createClientStepToken(4, 'S. Kaviya', '9842451220', -1000);
+    expect(SessionAuthService.verifyClientStepToken(expiredToken, 4, 'S. Kaviya', '9842451220')).toBe(false);
 
     const tamperedFlow = {
       step: 5,

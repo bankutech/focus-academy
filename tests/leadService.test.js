@@ -63,4 +63,39 @@ describe('LeadService', () => {
     const submissions = LeadService.getAllSubmissions();
     expect(submissions.length).toBe(0);
   });
+
+  it('preserves queued leads when sync request encounters HTTP error', async () => {
+    const queueItem = {
+      id: 'lead-test-1',
+      studentName: 'Vignesh',
+      phone: '9842451220',
+      grade: 'Class 10',
+      board: 'State Board',
+    };
+    LeadService._enqueueOffline(queueItem);
+    expect(LeadService.getQueuedLeadsCount()).toBe(1);
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: 'Server Error' }),
+    });
+
+    const syncedCount = await LeadService.syncOfflineQueue();
+    expect(syncedCount).toBe(0);
+    expect(LeadService.getQueuedLeadsCount()).toBe(1);
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true }),
+    });
+
+    const successfulSyncCount = await LeadService.syncOfflineQueue();
+    expect(successfulSyncCount).toBe(1);
+    expect(LeadService.getQueuedLeadsCount()).toBe(0);
+
+    globalThis.fetch = originalFetch;
+  });
 });

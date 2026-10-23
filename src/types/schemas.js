@@ -4,13 +4,18 @@ export const sanitizeText = (str, maxLength = 100) => {
 };
 
 export const validateIndianMobile = (phone) => {
-  if (!phone) return { valid: false, error: 'Phone number is required.' };
+  if (!phone) {
+    const error = 'Phone number is required.';
+    return { valid: false, error, message: error };
+  }
   const cleanPhone = phone.replace(/[\s\-()]/g, '');
   const regex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
   if (!regex.test(cleanPhone)) {
+    const error = 'Please enter a valid 10-digit Indian mobile number (e.g. 98424 51220).';
     return { 
       valid: false, 
-      error: 'Please enter a valid 10-digit Indian mobile number (e.g. 98424 51220).' 
+      error,
+      message: error 
     };
   }
   return { valid: true, sanitized: cleanPhone.slice(-10) };

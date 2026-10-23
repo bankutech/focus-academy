@@ -15,6 +15,7 @@ import { useStudentFlow, getStepRedirect } from '../context/useAppContext';
 import { validateIndianMobile } from '../types/schemas';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
+import { BatchService } from '../services/batchService';
 
 const getNowIsoString = () => new Date().toISOString();
 
@@ -57,11 +58,21 @@ export default function EnrollPage() {
 
     const validation = validateIndianMobile(phone);
     if (!validation.valid) {
-      setPhoneError(validation.message);
+      setPhoneError(validation.error || validation.message);
       return;
     }
 
     setIsSubmitting(true);
+
+    const reservation = await BatchService.reserveSeatWithDetails(selectedBatch.id);
+    if (!reservation.success) {
+      setIsSubmitting(false);
+      setSubmissionResult({
+        success: false,
+        error: reservation.error || 'This batch is currently at maximum 12-student capacity. Please select an alternate evening slot.',
+      });
+      return;
+    }
 
     const enrollmentRecord = {
       studentName: studentName.trim(),
@@ -76,6 +87,7 @@ export default function EnrollPage() {
       monthlyFee: selectedBatch.monthlyFee,
       startDatePreference,
       studentWeakness: studentWeakness.trim(),
+      reservationId: reservation.reservationId || 'RES-CONFIRMED',
       createdAt: getNowIsoString(),
     };
 
@@ -116,7 +128,29 @@ export default function EnrollPage() {
       <StepProgress currentStep={5} />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
-        {submissionResult ? (
+        {submissionResult && !submissionResult.success && (
+          <div className="mb-6 bg-rose-50 border border-rose-200 rounded-lg p-5 text-left max-w-2xl mx-auto animate-in fade-in">
+            <h3 className="text-sm font-bold text-rose-900">Seat Reservation Notice</h3>
+            <p className="text-xs text-rose-700 mt-1">{submissionResult.error}</p>
+            <div className="mt-3 flex items-center space-x-3">
+              <button 
+                type="button" 
+                onClick={() => setSubmissionResult(null)} 
+                className="text-xs font-bold px-3 py-1.5 bg-rose-100 text-rose-900 rounded-md hover:bg-rose-200 cursor-pointer"
+              >
+                Try Again
+              </button>
+              <Link 
+                to="/batches" 
+                className="text-xs font-bold text-[#EA580C] hover:underline"
+              >
+                Browse Alternative Batches →
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {submissionResult?.success ? (
           <div className="bg-white rounded-lg p-8 sm:p-12 border border-[#E2E8F0] shadow-sm text-center max-w-2xl mx-auto animate-in fade-in">
             <div className="w-16 h-16 rounded-full bg-[#0F172A] text-white flex items-center justify-center mx-auto mb-5 shadow-sm">
               <CheckCircle2 className="w-9 h-9 text-[#EA580C]" />

@@ -50,4 +50,10 @@ describe('Fee Calculation Engine', () => {
     const discounted = Math.round(monthly * 0.88);
     expect(discounted).toBe(2112);
   });
+
+  it('correctly calculates 15% sibling concession', () => {
+    const primary = calculateFee('class-9-10', 'State Board', 'classroom', 4);
+    const withSibling = Math.round(primary * 0.85);
+    expect(withSibling).toBe(2040);
+  });
 });

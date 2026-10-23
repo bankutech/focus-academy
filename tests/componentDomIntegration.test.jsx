@@ -24,10 +24,10 @@ describe('React Component DOM Integration Tests', () => {
 
     expect(screen.getByText(/Estimated Monthly Fee/i)).toBeDefined();
     
-    const siblingBtn = screen.getByText(/2\+ Children \(10% Off\)/i);
+    const siblingBtn = screen.getByText(/2\+ Children \(15% Off\)/i);
     fireEvent.click(siblingBtn);
 
-    expect(screen.getByText(/10% Sibling concession applied/i)).toBeDefined();
+    expect(screen.getByText(/15% Sibling concession applied/i)).toBeDefined();
 
     const bookTrialBtn = screen.getByRole('button', { name: /Book 1-Day Free Trial at this Rate/i });
     fireEvent.click(bookTrialBtn);

@@ -77,7 +77,13 @@ export function AppProvider({ children }) {
   const lookupSavedStudent = useCallback((phone) => {
     try {
       const list = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
-      return list.find((s) => s.phone === phone) || null;
+      const matched = list.find((s) => s.phone === phone);
+      if (!matched) return null;
+      return {
+        phone: matched.phone,
+        grade: matched.grade || 'Class 10',
+        board: matched.board || 'TN State Board (Samacheer)',
+      };
     } catch {
       return null;
     }
