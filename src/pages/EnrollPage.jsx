@@ -348,9 +348,16 @@ export default function EnrollPage() {
                   onSubmit={handleSubmit}
                   className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-5"
                 >
-                  <h2 className="text-base font-bold text-[#0F172A] pb-3 border-b border-slate-100">
-                    Student & Admission Details
-                  </h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-1.5">
+                    <h2 className="text-base font-bold text-[#0F172A]">
+                      Student & Admission Details
+                    </h2>
+                    {studentFlow.studentName && (
+                      <span className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-semibold self-start sm:self-auto">
+                        ✓ Verified from Step 1
+                      </span>
+                    )}
+                  </div>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>

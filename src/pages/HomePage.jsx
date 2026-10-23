@@ -317,7 +317,7 @@ export default function HomePage() {
 
                 <div className="md:col-span-3 flex sm:flex-row md:flex-col lg:flex-row items-center gap-2.5 justify-end">
                   <Link
-                    to={`/batches?slot=${slot.id}`}
+                    to={`/timings?slot=${slot.id}`}
                     className="flex-1 w-full min-h-[46px] inline-flex items-center justify-center px-4 py-2.5 bg-[#0F172A] hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-md text-center transition-colors"
                   >
                     Check Seats

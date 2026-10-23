@@ -336,7 +336,7 @@ export default function AboutPage() {
                     </div>
 
                     <Link
-                      to={`/batches?slot=${slot.id}`}
+                      to={`/timings?slot=${slot.id}`}
                       className="min-h-[38px] px-4 py-2 bg-white hover:bg-[#0F172A] hover:text-white text-[#0F172A] text-xs font-bold rounded-md border border-[#E2E8F0] transition-colors shrink-0 inline-flex items-center justify-center space-x-1"
                     >
                       <span>Check Seats</span>
