@@ -135,4 +135,10 @@ describe('React Component DOM Integration Tests', () => {
     expect(screen.getByText('FA')).toBeDefined();
     expect(screen.getByText(/Loading custom test message.../i)).toBeDefined();
   });
+
+  it('renders LoadingScreen in initialMode with live progress percentage', () => {
+    render(<LoadingScreen message="Preparing initial portal..." initialMode />);
+    expect(screen.getByText(/Preparing initial portal.../i)).toBeDefined();
+    expect(screen.getByText(/%/)).toBeDefined();
+  });
 });
