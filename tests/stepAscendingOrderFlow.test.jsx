@@ -321,4 +321,47 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     const reserved = await BatchService.reserveSeat('batch-10-state-board');
     expect(typeof reserved).toBe('boolean');
   });
+
+  it('distinguishes public /timings view from step 3 /batches admission view', () => {
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/timings']}>
+        <AppProvider>
+          <BatchesPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByText(/Step 3 of 5/i)).toBeNull();
+    expect(screen.getByRole('heading', { name: /Batch Timings & Schedule/i })).toBeDefined();
+    expect(screen.getByText(/Shift 1 \(Evening\)/i)).toBeDefined();
+    expect(screen.getByText(/Shift 2 \(Evening\)/i)).toBeDefined();
+    expect(screen.getByText(/Shift 3 \(Night\)/i)).toBeDefined();
+    expect(screen.queryByText(/Back to Exam Preparation Goals/i)).toBeNull();
+
+    unmount();
+
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        examPrep: '10th Board Exam Mastery',
+        step: 3
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/batches']}>
+        <AppProvider>
+          <BatchesPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Step 3 of 5/i)).toBeDefined();
+    expect(screen.getByRole('heading', { name: /Available Evening Batches/i })).toBeDefined();
+    expect(screen.getByText(/Back to Exam Preparation Goals/i)).toBeDefined();
+  });
 });
