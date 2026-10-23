@@ -93,7 +93,7 @@ export default function StudentDetailsPage() {
     if (found) {
       if (found.grade) setGrade(found.grade);
       if (found.board) setBoard(found.board);
-      setLoginFeedback(`Preferences restored for ${found.grade} (${found.board}). Please verify student name to continue.`);
+      setLoginFeedback(`Academic preferences restored for ${found.grade} (${found.board}). For student privacy on shared devices, please confirm the student's name to continue.`);
     } else {
       setLoginFeedback('No prior admission found for this mobile. Enter details below to begin registration.');
     }

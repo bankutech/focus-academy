@@ -140,9 +140,11 @@ export default function Navbar() {
                 onClick={handleBrandClick}
                 className="flex items-center space-x-3 group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded-md"
               >
-                <div className="w-10 h-10 rounded-md bg-[#0F172A] flex items-center justify-center text-white shadow-xs group-hover:bg-[#EA580C] transition-colors duration-200">
-                  <span className="font-editorial text-xl italic font-bold">F</span>
-                </div>
+                <img 
+                  src="/logo.png" 
+                  alt="Focus Academy Logo" 
+                  className="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-md" 
+                />
                 <div className="flex flex-col text-left">
                   <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#0F172A] leading-tight">
                     Focus Academy

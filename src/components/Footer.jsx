@@ -29,9 +29,11 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 pb-10 border-b border-[#1E293B]">
           <div className="md:col-span-5">
             <Link to="/" onClick={handleBackToTop} className="flex items-center space-x-3 group">
-              <div className="w-9 h-9 rounded-md bg-white text-[#0F172A] flex items-center justify-center font-bold text-lg group-hover:bg-[#EA580C] group-hover:text-white transition-colors">
-                F
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="Focus Academy Logo" 
+                className="w-10 h-10 object-contain rounded-md bg-white p-0.5" 
+              />
               <div>
                 <span className="text-xl font-extrabold text-white tracking-tight block">
                   Focus Academy

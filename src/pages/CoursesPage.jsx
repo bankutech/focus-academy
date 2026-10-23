@@ -369,7 +369,7 @@ export default function CoursesPage() {
                   )}
 
                   <Link
-                    to={`/batches?course=${course.id}&grade=${encodeURIComponent(
+                    to={`/timings?course=${course.id}&grade=${encodeURIComponent(
                       course.id.includes('12') ? 'Class 12' :
                       course.id.includes('11') ? 'Class 11' :
                       course.id.includes('10') ? 'Class 10' :

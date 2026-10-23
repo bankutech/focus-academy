@@ -64,7 +64,7 @@ export default function BatchDetailPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
           <Link
-            to="/batches"
+            to="/timings"
             className="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-[#0F172A]"
           >
             <span>← Back to All Batches</span>
@@ -216,7 +216,7 @@ export default function BatchDetailPage() {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
             <Link
-              to="/batches"
+              to="/timings"
               className="w-full sm:w-auto px-5 py-3.5 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-md border border-white/20 transition-all text-center"
             >
               Choose Other Batch
