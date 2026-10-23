@@ -258,6 +258,14 @@ export default function EnrollPage() {
           </div>
         ) : (
           <div className="space-y-8">
+            {candidateBatch && !isCandidateCompatible && studentFlow.grade && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start space-x-3 text-xs text-amber-950">
+                <span className="font-bold text-amber-800 shrink-0">Academic Alignment:</span>
+                <span>
+                  Your registration profile is set for <strong>{studentFlow.grade} ({studentFlow.board})</strong>. The selected batch has been adjusted to <strong>{selectedBatch.name}</strong> to match your grade curriculum.
+                </span>
+              </div>
+            )}
             {!studentFlow.studentName && (
               <div className="p-4 bg-orange-50 border border-orange-200 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700">
                 <span>Navigated directly? You can enter details here, or start from Step 1 for personalized board recommendations.</span>

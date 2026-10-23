@@ -96,7 +96,7 @@ export default async function handler(req, res) {
       const tokenExpiry = Number(parts[3]);
       const tokenSig = parts[4];
 
-      if (Date.now() > tokenExpiry) {
+      if (Date.now() > tokenExpiry + 5 * 60 * 1000) {
         return res.status(401).json({ valid: false, reason: 'Token expired' });
       }
 
