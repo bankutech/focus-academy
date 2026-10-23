@@ -1,27 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-const ACADEMY_TIPS = [
-  'Strict 1:12 teacher-student ratio for personal attention',
-  'Evening batches 4:30 PM to 9:00 PM aligned with Four Roads buses',
-  'Classes 6 to 12 • TN State Board & CBSE Academic Mastery',
-  'Thiripura Complex, Thoramangalam • 1-Day Free Trial',
-  '100% money-back guarantee after Session 1 trial'
-];
-
 export default function LoadingScreen({ 
   message = 'Loading academic portal...', 
   initialMode = false,
   onComplete 
 }) {
-  const [tipIndex, setTipIndex] = useState(0);
   const [progress, setProgress] = useState(initialMode ? 8 : 100);
-
-  useEffect(() => {
-    const tipInterval = setInterval(() => {
-      setTipIndex((prev) => (prev + 1) % ACADEMY_TIPS.length);
-    }, 1400);
-    return () => clearInterval(tipInterval);
-  }, []);
 
   useEffect(() => {
     if (!initialMode) return;
@@ -67,7 +51,7 @@ export default function LoadingScreen({
         </p>
       </div>
 
-      <div className="w-64 sm:w-80 mb-3">
+      <div className="w-64 sm:w-80">
         <div className="flex items-center justify-between text-xs mb-1.5 px-0.5">
           <span className="text-[11px] font-semibold text-slate-500">
             {message}
@@ -89,15 +73,6 @@ export default function LoadingScreen({
             <div className="h-full bg-gradient-to-r from-[#EA580C] via-[#F97316] to-[#EA580C] w-1/2 rounded-full animate-loader-shimmer" />
           )}
         </div>
-      </div>
-
-      <div className="h-8 flex items-center justify-center max-w-md px-2">
-        <span 
-          key={tipIndex} 
-          className="text-[11px] sm:text-xs text-[#EA580C] font-semibold bg-orange-50/90 px-3.5 py-1.5 rounded-full border border-orange-200/70 transition-all duration-300 shadow-xs"
-        >
-          {ACADEMY_TIPS[tipIndex]}
-        </span>
       </div>
     </div>
   );
