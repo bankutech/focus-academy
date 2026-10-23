@@ -130,31 +130,54 @@ export default function BatchesPage() {
           <div className="space-y-1">
             <div className="flex items-center space-x-2 text-xs text-slate-600">
               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              <span>Student: <strong className="text-[#0F172A]">{studentFlow.studentName || 'Student'}</strong></span>
-              <span>•</span>
-              <span>Target: <strong className="text-[#EA580C]">{studentFlow.examPrep || 'Academic Excellence'}</strong></span>
+              {studentFlow.studentName ? (
+                <>
+                  <span>Student: <strong className="text-[#0F172A]">{studentFlow.studentName}</strong></span>
+                  <span>•</span>
+                  <span>Target: <strong className="text-[#EA580C]">{studentFlow.examPrep || 'Academic Excellence'}</strong></span>
+                </>
+              ) : (
+                <>
+                  <span className="font-bold text-[#0F172A]">Thoramangalam Campus Evening Schedule</span>
+                  <span>•</span>
+                  <span className="text-emerald-700 font-bold">Strict 1:12 Batch Cap</span>
+                </>
+              )}
             </div>
             <p className="text-xs text-slate-500">
-              Showing matching small-batches at Thiripura Complex, Thoramangalam.
+              {studentFlow.studentName
+                ? 'Showing matching small-batches at Thiripura Complex, Thoramangalam.'
+                : 'Browse available evening batches (4:00 PM – 9:00 PM) at Thiripura Complex, Thoramangalam.'}
             </p>
           </div>
 
           <div className="flex items-center space-x-3 text-xs">
-            <Link
-              to="/student-details"
-              className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
-            >
-              <Edit2 className="w-3 h-3" />
-              <span>Change Class/Board</span>
-            </Link>
+            {studentFlow.studentName ? (
+              <>
+                <Link
+                  to="/student-details"
+                  className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
+                >
+                  <Edit2 className="w-3 h-3" />
+                  <span>Change Class/Board</span>
+                </Link>
 
-            <Link
-              to="/exam-prep"
-              className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
-            >
-              <Edit2 className="w-3 h-3" />
-              <span>Change Goal</span>
-            </Link>
+                <Link
+                  to="/exam-prep"
+                  className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
+                >
+                  <Edit2 className="w-3 h-3" />
+                  <span>Change Goal</span>
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/student-details"
+                className="inline-flex items-center space-x-1.5 text-xs font-bold text-white bg-[#EA580C] hover:bg-[#C2410C] px-3.5 py-2 rounded-md shadow-xs transition-colors"
+              >
+                <span>Personalize for My Child (Step 1) →</span>
+              </Link>
+            )}
           </div>
         </div>
 
