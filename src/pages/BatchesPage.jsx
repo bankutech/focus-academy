@@ -17,6 +17,7 @@ import { useStudentFlow, getStepRedirect, isStep1Complete, isStep2Complete } fro
 export default function BatchesPage() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const isTimingsView = location.pathname === '/timings';
   const urlSlot = searchParams.get('slot') || 'all';
 
   const { studentFlow, setStudentFlow } = useStudentFlow();
@@ -91,14 +92,20 @@ export default function BatchesPage() {
     }));
   };
 
-  const getBatchLink = (batchId) => {
+  const getBatchLink = (batch) => {
+    if (isTimingsView) {
+      if (studentFlow.studentName && isStep2Complete(studentFlow)) {
+        return `/batch/${batch.id}`;
+      }
+      return `/student-details?batch=${batch.id}&grade=${encodeURIComponent(batch.grade)}&board=${encodeURIComponent(batch.board)}`;
+    }
     if (!isStep1Complete(studentFlow)) {
       return '/student-details';
     }
     if (!isStep2Complete(studentFlow)) {
       return '/exam-prep';
     }
-    return `/batch/${batchId}`;
+    return `/batch/${batch.id}`;
   };
 
   const gradeOptions = [
@@ -126,76 +133,132 @@ export default function BatchesPage() {
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen text-left">
-      <StepProgress currentStep={3} />
+      {!isTimingsView && <StepProgress currentStep={3} />}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <div className="mb-6 bg-white p-4 sm:p-5 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2 text-xs text-slate-600">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              {studentFlow.studentName ? (
-                <>
-                  <span>Student: <strong className="text-[#0F172A]">{studentFlow.studentName}</strong></span>
-                  <span>•</span>
-                  <span>Target: <strong className="text-[#EA580C]">{studentFlow.examPrep || 'Academic Excellence'}</strong></span>
-                </>
-              ) : (
-                <>
-                  <span className="font-bold text-[#0F172A]">Thoramangalam Campus Evening Schedule</span>
-                  <span>•</span>
-                  <span className="text-emerald-700 font-bold">Strict 1:12 Batch Cap</span>
-                </>
-              )}
+        {isTimingsView ? (
+          <div>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+              <div className="flex items-center space-x-2">
+                <Link to="/" className="hover:text-[#0F172A] transition-colors">Home</Link>
+                <span>/</span>
+                <span className="text-[#0F172A] font-semibold">Campus Timetable & Batch Timings</span>
+              </div>
+              <div className="flex items-center space-x-2 text-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span className="font-semibold text-slate-700">Campus Hours: Mon – Sat (4:00 PM – 9:00 PM)</span>
+              </div>
             </div>
-            <p className="text-xs text-slate-500">
-              {studentFlow.studentName
-                ? 'Showing matching small-batches at Thiripura Complex, Thoramangalam.'
-                : 'Browse available evening batches (4:00 PM – 9:00 PM) at Thiripura Complex, Thoramangalam.'}
-            </p>
-          </div>
 
-          <div className="flex items-center space-x-3 text-xs">
-            {studentFlow.studentName ? (
-              <>
-                <Link
-                  to="/student-details"
-                  className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
-                >
-                  <Edit2 className="w-3 h-3" />
-                  <span>Change Class/Board</span>
-                </Link>
+            <div className="mb-8">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-100 text-[#EA580C] text-xs font-bold mb-3">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Thoramangalam Campus Evening Schedule</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
+                Batch Timings & Schedule
+              </h1>
+              <p className="text-sm text-slate-600 mt-2 max-w-2xl leading-relaxed">
+                All evening batches run Monday to Saturday between 4:00 PM and 9:00 PM at Thiripura Complex, Thoramangalam. Every batch has a strict 12-student cap, with timings synchronized with town and school bus arrivals from Four Roads and Trichy Main Road.
+              </p>
 
-                <Link
-                  to="/exam-prep"
-                  className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
-                >
-                  <Edit2 className="w-3 h-3" />
-                  <span>Change Goal</span>
-                </Link>
-              </>
-            ) : (
-              <Link
-                to="/student-details"
-                className="inline-flex items-center space-x-1.5 text-xs font-bold text-white bg-[#EA580C] hover:bg-[#C2410C] px-3.5 py-2 rounded-md shadow-xs transition-colors"
-              >
-                <span>Personalize for My Child (Step 1) →</span>
-              </Link>
-            )}
-          </div>
-        </div>
+              <div className="mt-6 grid sm:grid-cols-3 gap-3">
+                <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs">
+                  <div className="text-xs font-bold text-[#EA580C] uppercase tracking-wide">Shift 1 (Evening)</div>
+                  <div className="text-base font-extrabold text-[#0F172A] mt-0.5">4:30 PM – 6:00 PM</div>
+                  <div className="text-xs text-slate-500 mt-1">Classes 6–8 Foundation & Class 9. Synchronized with early school bus arrivals.</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs">
+                  <div className="text-xs font-bold text-[#EA580C] uppercase tracking-wide">Shift 2 (Evening)</div>
+                  <div className="text-base font-extrabold text-[#0F172A] mt-0.5">6:00 PM – 7:30 PM</div>
+                  <div className="text-xs text-slate-500 mt-1">Class 10 Board Distinction & Class 11 Core Science & Maths batches.</div>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs">
+                  <div className="text-xs font-bold text-[#EA580C] uppercase tracking-wide">Shift 3 (Night)</div>
+                  <div className="text-base font-extrabold text-[#0F172A] mt-0.5">7:30 PM – 9:00 PM</div>
+                  <div className="text-xs text-slate-500 mt-1">Class 12 Higher Secondary Mastery & Intensive Board / Competitive prep.</div>
+                </div>
+              </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
-            Available Evening Batches
-          </h1>
-          <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
-            All batches run Monday to Saturday between 4:00 PM and 9:00 PM with a strict 12-student cap. Timings are synchronized with local school buses arriving via Four Roads and Trichy Main Road so students arrive refreshed.
-          </p>
-          <div className="mt-3 p-3 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
-            <span className="font-bold text-[#EA580C]">1-Day Free Trial:</span>
-            <span>Attend one complete evening session before paying any fees. Zero registration fee.</span>
+              <div className="mt-4 p-3 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
+                <span className="font-bold text-[#EA580C]">1-Day Free Trial:</span>
+                <span>Attend one complete evening session in any scheduled slot before paying any tuition fees. Zero registration fee.</span>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div>
+            <div className="mb-6 bg-white p-4 sm:p-5 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2 text-xs text-slate-600">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span className="font-bold text-[#EA580C]">Step 3 of 5</span>
+                  <span>•</span>
+                  {studentFlow.studentName ? (
+                    <>
+                      <span>Student: <strong className="text-[#0F172A]">{studentFlow.studentName}</strong></span>
+                      <span>•</span>
+                      <span>Target: <strong className="text-[#EA580C]">{studentFlow.examPrep || 'Academic Excellence'}</strong></span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-bold text-[#0F172A]">Thoramangalam Campus Evening Schedule</span>
+                      <span>•</span>
+                      <span className="text-emerald-700 font-bold">Strict 1:12 Batch Cap</span>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500">
+                  {studentFlow.studentName
+                    ? 'Showing matching small-batches at Thiripura Complex, Thoramangalam.'
+                    : 'Browse available evening batches (4:00 PM – 9:00 PM) at Thiripura Complex, Thoramangalam.'}
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3 text-xs">
+                {studentFlow.studentName ? (
+                  <>
+                    <Link
+                      to="/student-details"
+                      className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      <span>Change Class/Board</span>
+                    </Link>
+
+                    <Link
+                      to="/exam-prep"
+                      className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      <span>Change Goal</span>
+                    </Link>
+                  </>
+                ) : (
+                  <Link
+                    to="/student-details"
+                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-white bg-[#EA580C] hover:bg-[#C2410C] px-3.5 py-2 rounded-md shadow-xs transition-colors"
+                  >
+                    <span>Personalize for My Child (Step 1) →</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <div className="mb-8">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
+                Available Evening Batches
+              </h1>
+              <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
+                All batches run Monday to Saturday between 4:00 PM and 9:00 PM with a strict 12-student cap. Timings are synchronized with local school buses arriving via Four Roads and Trichy Main Road so students arrive refreshed.
+              </p>
+              <div className="mt-3 p-3 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
+                <span className="font-bold text-[#EA580C]">1-Day Free Trial:</span>
+                <span>Attend one complete evening session before paying any fees. Zero registration fee.</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div 
           data-testid="batches-filter-bar"
@@ -357,11 +420,11 @@ export default function BatchesPage() {
 
                   <div className="flex items-center space-x-2 w-full sm:w-auto">
                     <Link
-                      to={getBatchLink(batch.id)}
+                      to={getBatchLink(batch)}
                       onClick={() => handleSelectBatch(batch)}
                       className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                     >
-                      <span>Select Batch & Details (Step 4)</span>
+                      <span>{isTimingsView ? 'Book Free Trial in this Slot' : 'Select Batch & Details (Step 4)'}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
                     </Link>
                   </div>
@@ -371,19 +434,43 @@ export default function BatchesPage() {
           })}
         </div>
 
-        <div className="mt-12 bg-white rounded-lg p-6 border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-slate-600">
-            <span className="font-bold text-[#0F172A] block">Focus Academy Thoramangalam Guarantee:</span>
-            <span>100% No-Questions-Asked Rematch or Refund Guarantee after Session 1.</span>
-          </div>
+        {isTimingsView ? (
+          <div className="mt-12 bg-white rounded-lg p-6 border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs text-slate-600">
+              <span className="font-bold text-[#0F172A] block">Need assistance choosing an evening timing slot?</span>
+              <span>Call our campus desk at +91 98424 51220 or visit us at Thiripura Complex, Thoramangalam.</span>
+            </div>
 
-          <Link
-            to="/exam-prep"
-            className="text-xs font-semibold text-slate-500 hover:text-[#0F172A] shrink-0"
-          >
-            ← Back to Exam Preparation Goals
-          </Link>
-        </div>
+            <div className="flex items-center space-x-3 shrink-0">
+              <Link
+                to="/contact"
+                className="text-xs font-semibold text-slate-600 hover:text-[#0F172A] px-3.5 py-2 rounded-md border border-[#E2E8F0] bg-slate-50 transition-colors"
+              >
+                Contact Campus Desk
+              </Link>
+              <Link
+                to="/student-details"
+                className="text-xs font-bold text-white bg-[#EA580C] hover:bg-[#C2410C] px-4 py-2 rounded-md shadow-xs transition-colors"
+              >
+                Start Admission (Step 1) →
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-12 bg-white rounded-lg p-6 border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs text-slate-600">
+              <span className="font-bold text-[#0F172A] block">Focus Academy Thoramangalam Guarantee:</span>
+              <span>100% No-Questions-Asked Rematch or Refund Guarantee after Session 1.</span>
+            </div>
+
+            <Link
+              to="/exam-prep"
+              className="text-xs font-semibold text-slate-500 hover:text-[#0F172A] shrink-0"
+            >
+              ← Back to Exam Preparation Goals
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );
