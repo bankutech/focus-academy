@@ -210,14 +210,15 @@ export default function AdminLoginPage() {
 
   return (
     <div className="w-full lg:w-[100vw] min-h-[100dvh] lg:h-[100dvh] flex flex-col lg:flex-row bg-[#0B1120] text-slate-100 overflow-x-hidden lg:overflow-hidden font-sans-body">
-      <div className="w-full lg:w-1/2 relative lg:h-full shrink-0 flex flex-col justify-between overflow-hidden bg-[#0A0F1D] p-5 sm:p-7 lg:p-10 xl:p-12">
+      {/* Left Hero Branding Panel */}
+      <div className="w-full lg:w-1/2 relative lg:h-full shrink-0 flex flex-col justify-between overflow-hidden bg-[#0A0F1D] p-6 sm:p-8 lg:p-10 xl:p-14">
         <img 
           src="/campus-library.jpg" 
           alt="Focus Academy Educational Environment" 
           className="absolute inset-0 w-full h-full object-cover" 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-[#0B1120]/70 to-[#0B1120]/75 mix-blend-multiply" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0F172A]/75 via-[#0F172A]/40 to-[#0F172A]/85" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B1120] via-[#0B1120]/75 to-[#0B1120]/80 mix-blend-multiply" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0F172A]/85 via-[#0F172A]/50 to-[#0F172A]/90" />
 
         <div className="relative z-10 flex flex-col justify-between h-full">
           <div className="flex items-center justify-between gap-4">
@@ -225,13 +226,13 @@ export default function AdminLoginPage() {
               <img 
                 src="/logo.png" 
                 alt="Focus Academy Logo" 
-                className="w-10 h-10 object-contain rounded-xl bg-white p-1 shadow-lg border border-slate-700/60" 
+                className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-xl bg-white p-1 shadow-lg border border-slate-700/60" 
               />
               <div className="flex flex-col text-left">
-                <span className="text-white font-extrabold text-base sm:text-lg tracking-tight block leading-tight">
+                <span className="text-white font-extrabold text-base sm:text-xl tracking-tight block leading-tight">
                   Focus Academy
                 </span>
-                <span className="text-[11px] text-orange-400 font-semibold uppercase tracking-wider block">
+                <span className="text-xs text-orange-400 font-semibold uppercase tracking-wider block">
                   Thoramangalam • Perambalur
                 </span>
               </div>
@@ -239,43 +240,51 @@ export default function AdminLoginPage() {
 
             <Link
               to="/"
-              className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors py-1.5 px-3 rounded-lg bg-slate-900/60 hover:bg-slate-900/90 backdrop-blur-xs border border-white/10 shadow-xs cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+              className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition-colors py-2 px-3.5 rounded-lg bg-slate-900/60 hover:bg-slate-900/90 backdrop-blur-xs border border-white/10 shadow-xs cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
             >
               <span>Back to website →</span>
             </Link>
           </div>
 
-          <div className="mt-4 lg:mt-auto pt-2 lg:pt-6">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-extrabold text-white tracking-tight leading-tight">
+          <div className="mt-6 lg:mt-auto pt-4 lg:pt-8">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-white tracking-tight leading-tight">
               Learn Today. Lead Tomorrow.
             </h1>
-            <p className="mt-1.5 lg:mt-2 text-xs sm:text-sm xl:text-base text-slate-300 leading-relaxed max-w-md">
+            <p className="mt-2 lg:mt-3 text-sm sm:text-base xl:text-lg text-slate-300 leading-relaxed max-w-lg">
               A focused learning experience for every student's future.
             </p>
           </div>
         </div>
       </div>
 
+      {/* Right Authentication Panel */}
       <div 
         data-testid="auth-right-panel"
-        className="w-full lg:w-1/2 flex-1 flex flex-col justify-center items-center px-5 sm:px-8 lg:px-8 xl:px-12 py-5 lg:py-6 overflow-y-auto bg-[#0B1120]"
+        className="w-full lg:w-1/2 flex-1 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 xl:px-12 py-3 sm:py-4 lg:py-2.5 2xl:py-6 overflow-y-auto bg-[#0B1120] relative"
       >
-        <div className="w-full max-w-[400px] xl:max-w-[420px] mx-auto flex flex-col justify-center">
-          <div className="mb-3.5">
-            <div className="flex items-center space-x-2 text-xs font-bold text-orange-400 uppercase tracking-wider mb-1.5">
+        {/* Subtle Ambient Glow */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -right-32 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
+        </div>
+
+        {/* Elevated Form Card */}
+        <div className="w-full max-w-[460px] sm:max-w-[490px] lg:max-w-[500px] xl:max-w-[530px] 2xl:max-w-[560px] mx-auto relative z-10 bg-slate-900/75 sm:bg-slate-900/85 border border-slate-800/90 rounded-2xl p-5 sm:p-6 lg:p-6 2xl:p-8 shadow-2xl shadow-black/60 backdrop-blur-md flex flex-col justify-center">
+          <div className="mb-3 sm:mb-4">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-xs sm:text-sm font-bold text-orange-400 uppercase tracking-wider mb-2">
               <ShieldCheck className="w-4 h-4 text-[#EA580C]" />
               <span>Administrator Management Portal</span>
             </div>
 
             {mode === 'login' && (
               <>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                <h2 className="text-2xl sm:text-3xl xl:text-4xl font-black text-white tracking-tight">
                   Welcome back
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                <p className="text-xs sm:text-sm xl:text-base text-slate-400 mt-1">
                   Sign in to continue your learning journey.
                 </p>
-                <p className="text-xs text-slate-400 mt-1.5">
+                <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
                   Don't have an account?{' '}
                   <button
                     type="button"
@@ -294,13 +303,13 @@ export default function AdminLoginPage() {
 
             {mode === 'register' && (
               <>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                <h2 className="text-2xl sm:text-3xl xl:text-4xl font-black text-white tracking-tight">
                   Create account
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                <p className="text-xs sm:text-sm xl:text-base text-slate-400 mt-1">
                   Start your focused learning journey with us today.
                 </p>
-                <p className="text-xs text-slate-400 mt-1.5">
+                <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
                   Already have an account?{' '}
                   <button
                     type="button"
@@ -319,13 +328,13 @@ export default function AdminLoginPage() {
 
             {mode === 'forgot' && (
               <>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                <h2 className="text-2xl sm:text-3xl xl:text-4xl font-black text-white tracking-tight">
                   Reset password
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+                <p className="text-xs sm:text-sm xl:text-base text-slate-400 mt-1">
                   Enter your verified email to receive password reset instructions.
                 </p>
-                <p className="text-xs text-slate-400 mt-1.5">
+                <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -343,35 +352,35 @@ export default function AdminLoginPage() {
           </div>
 
           {error && (
-            <div className="mb-2.5 p-2.5 bg-red-950/70 border border-red-500/50 rounded-lg flex items-start space-x-2 text-red-200 text-xs leading-relaxed animate-in fade-in duration-150">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div className="mb-3 p-3 bg-red-950/70 border border-red-500/50 rounded-xl flex items-start space-x-2 text-red-200 text-xs sm:text-sm leading-relaxed animate-in fade-in duration-150">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-2.5 p-2.5 bg-emerald-950/70 border border-emerald-500/50 rounded-lg flex items-start space-x-2 text-emerald-200 text-xs leading-relaxed animate-in fade-in duration-150">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div className="mb-3 p-3 bg-emerald-950/70 border border-emerald-500/50 rounded-xl flex items-start space-x-2 text-emerald-200 text-xs sm:text-sm leading-relaxed animate-in fade-in duration-150">
+              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0 mt-0.5" />
               <span>{successMsg}</span>
             </div>
           )}
 
           {!hasFirebase && mode === 'login' && (
-            <div className="mb-2.5 px-2.5 py-1.5 bg-blue-950/40 border border-blue-500/30 rounded-lg text-blue-200 text-[11px] leading-snug flex items-center space-x-2">
-              <Info className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <div className="mb-3 px-3.5 py-2 bg-blue-950/40 border border-blue-500/30 rounded-xl text-blue-200 text-xs sm:text-sm leading-snug flex items-center space-x-2">
+              <Info className="w-4 h-4 text-blue-400 shrink-0" />
               <span>Local Sync Mode: Operating in verified campus state. Use allowlist below.</span>
             </div>
           )}
 
           {mode === 'login' && (
             <>
-              <form onSubmit={handleEmailSubmit} className="space-y-2.5">
+              <form onSubmit={handleEmailSubmit} className="space-y-3 sm:space-y-3.5">
                 <div>
-                  <label htmlFor="admin-email" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  <label htmlFor="admin-email" className="block text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                     Email address
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Mail className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       id="admin-email"
                       type="email"
@@ -379,17 +388,17 @@ export default function AdminLoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="admin@focusacademyperambalur.com"
                       required
-                      className="w-full pl-9 pr-3 py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors"
+                      className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="admin-password" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  <label htmlFor="admin-password" className="block text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Lock className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       id="admin-password"
                       type={showPassword ? 'text' : 'password'}
@@ -397,26 +406,26 @@ export default function AdminLoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
                       required
-                      className="w-full pl-9 pr-10 py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors"
+                      className="w-full pl-10 sm:pl-11 pr-11 py-2.5 sm:py-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors shadow-xs"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer p-1"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? <EyeOff className="w-4.5 h-4.5 sm:w-5 sm:h-5" /> : <Eye className="w-4.5 h-4.5 sm:w-5 sm:h-5" />}
                     </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs pt-0.5">
+                <div className="flex items-center justify-between text-xs sm:text-sm pt-0.5">
                   <label className="flex items-center space-x-2 text-slate-300 cursor-pointer select-none">
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="rounded-sm border-slate-700 bg-slate-900 text-[#EA580C] focus:ring-[#EA580C] focus:ring-offset-slate-900"
+                      className="w-4 h-4 rounded-sm border-slate-700 bg-slate-900 text-[#EA580C] focus:ring-[#EA580C] focus:ring-offset-slate-900"
                     />
                     <span>Remember me</span>
                   </label>
@@ -438,17 +447,17 @@ export default function AdminLoginPage() {
                   type="submit"
                   disabled={loading}
                   aria-label="Sign in to Access Admin Console"
-                  className="w-full py-2.5 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs sm:text-sm rounded-lg shadow-md transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center space-x-2"
+                  className="w-full py-2.5 sm:py-3.5 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-sm sm:text-base rounded-xl shadow-md shadow-orange-950/40 transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center space-x-2"
                 >
                   <span>{loading ? 'Signing in...' : 'Sign in'}</span>
                   <span className="sr-only">Access Admin Console</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                 </button>
               </form>
 
-              <div className="relative flex py-2 items-center">
+              <div className="relative flex py-2 sm:py-2.5 items-center">
                 <div className="flex-grow border-t border-slate-800"></div>
-                <span className="flex-shrink mx-3 text-slate-500 text-xs font-medium uppercase tracking-wider">
+                <span className="flex-shrink mx-3 text-slate-400 text-xs sm:text-sm font-medium uppercase tracking-wider">
                   or continue with
                 </span>
                 <div className="flex-grow border-t border-slate-800"></div>
@@ -458,9 +467,9 @@ export default function AdminLoginPage() {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full flex items-center justify-center space-x-3 px-4 py-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-200 font-semibold text-xs sm:text-sm rounded-lg shadow-xs transition-colors cursor-pointer active:scale-98 disabled:opacity-50"
+                className="w-full flex items-center justify-center space-x-3 px-4 py-2.5 sm:py-3 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-200 font-semibold text-sm sm:text-base rounded-xl shadow-xs transition-colors cursor-pointer active:scale-98 disabled:opacity-50"
               >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -485,10 +494,10 @@ export default function AdminLoginPage() {
 
           {mode === 'register' && (
             <>
-              <form onSubmit={handleRegisterSubmit} className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
+              <form onSubmit={handleRegisterSubmit} className="space-y-2 sm:space-y-2.5">
+                <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                   <div>
-                    <label htmlFor="reg-first-name" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                    <label htmlFor="reg-first-name" className="block text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1">
                       First name
                     </label>
                     <input
@@ -498,11 +507,11 @@ export default function AdminLoginPage() {
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="Campus"
                       required
-                      className="w-full px-3 py-1.5 sm:py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors"
+                      className="w-full px-3 py-1.5 sm:py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors shadow-xs"
                     />
                   </div>
                   <div>
-                    <label htmlFor="reg-last-name" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                    <label htmlFor="reg-last-name" className="block text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1">
                       Last name
                     </label>
                     <input
@@ -512,17 +521,17 @@ export default function AdminLoginPage() {
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Admin"
                       required
-                      className="w-full px-3 py-1.5 sm:py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors"
+                      className="w-full px-3 py-1.5 sm:py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="reg-email" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  <label htmlFor="reg-email" className="block text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1">
                     Email address
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Mail className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       id="reg-email"
                       type="email"
@@ -530,17 +539,17 @@ export default function AdminLoginPage() {
                       onChange={(e) => setRegEmail(e.target.value)}
                       placeholder="coordinator@focusacademyperambalur.com"
                       required
-                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors"
+                      className="w-full pl-10 pr-3 py-1.5 sm:py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="reg-password" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  <label htmlFor="reg-password" className="block text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1">
                     Password
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Lock className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       id="reg-password"
                       type={showRegPassword ? 'text' : 'password'}
@@ -549,21 +558,21 @@ export default function AdminLoginPage() {
                       placeholder="••••••••••••"
                       required
                       minLength={6}
-                      className="w-full pl-9 pr-10 py-1.5 sm:py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors"
+                      className="w-full pl-10 pr-10 py-1.5 sm:py-2.5 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors shadow-xs"
                     />
                     <button
                       type="button"
                       onClick={() => setShowRegPassword(!showRegPassword)}
                       aria-label={showRegPassword ? 'Hide password' : 'Show password'}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer p-1"
                     >
-                      {showRegPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showRegPassword ? <EyeOff className="w-4.5 h-4.5 sm:w-5 sm:h-5" /> : <Eye className="w-4.5 h-4.5 sm:w-5 sm:h-5" />}
                     </button>
                   </div>
                 </div>
 
                 <div className="pt-0.5">
-                  <label className="flex items-start space-x-2 text-xs text-slate-300 cursor-pointer select-none">
+                  <label className="flex items-start space-x-2 text-xs sm:text-sm text-slate-300 cursor-pointer select-none">
                     <input
                       id="reg-terms"
                       type="checkbox"
@@ -584,16 +593,16 @@ export default function AdminLoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs sm:text-sm rounded-lg shadow-md transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center space-x-2"
+                  className="w-full py-2.5 sm:py-3 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-orange-950/30 transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center space-x-2"
                 >
                   <span>{loading ? 'Creating account...' : 'Create account'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
                 </button>
               </form>
 
               <div className="relative flex py-2 items-center">
                 <div className="flex-grow border-t border-slate-800"></div>
-                <span className="flex-shrink mx-3 text-slate-500 text-xs font-medium uppercase tracking-wider">
+                <span className="flex-shrink mx-3 text-slate-400 text-xs sm:text-sm font-medium uppercase tracking-wider">
                   or continue with
                 </span>
                 <div className="flex-grow border-t border-slate-800"></div>
@@ -603,9 +612,9 @@ export default function AdminLoginPage() {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full flex items-center justify-center space-x-3 px-4 py-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-200 font-semibold text-xs sm:text-sm rounded-lg shadow-xs transition-colors cursor-pointer active:scale-98 disabled:opacity-50"
+                className="w-full flex items-center justify-center space-x-3 px-4 py-2 sm:py-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-200 font-semibold text-xs sm:text-sm rounded-xl shadow-xs transition-colors cursor-pointer active:scale-98 disabled:opacity-50"
               >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -631,11 +640,11 @@ export default function AdminLoginPage() {
           {mode === 'forgot' && (
             <form onSubmit={handleResetSubmit} className="space-y-3">
               <div>
-                <label htmlFor="reset-email" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label htmlFor="reset-email" className="block text-xs sm:text-sm font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   Email address
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Mail className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     id="reset-email"
                     type="email"
@@ -643,7 +652,7 @@ export default function AdminLoginPage() {
                     onChange={(e) => setResetEmail(e.target.value)}
                     placeholder="admin@focusacademyperambalur.com"
                     required
-                    className="w-full pl-9 pr-3 py-2 bg-slate-900/80 border border-slate-700 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors"
+                    className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 bg-slate-900/90 border border-slate-700/80 rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-colors shadow-xs"
                   />
                 </div>
               </div>
@@ -651,27 +660,27 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs sm:text-sm rounded-lg shadow-md transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center space-x-2"
+                className="w-full py-2.5 sm:py-3.5 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-sm sm:text-base rounded-xl shadow-md shadow-orange-950/30 transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
                 <span>{loading ? 'Sending instructions...' : 'Send reset instructions'}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
               </button>
             </form>
           )}
 
-          <div className="mt-3.5 pt-2.5 border-t border-slate-800/60">
-            <div className="flex items-center justify-between text-[11px] text-slate-500">
-              <span className="font-semibold flex items-center gap-1.5 text-slate-400">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#EA580C]" />
+          <div className="mt-4 pt-3.5 border-t border-slate-800/80">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs sm:text-sm text-slate-400">
+              <span className="font-semibold flex items-center gap-1.5 text-slate-300">
+                <ShieldCheck className="w-4 h-4 text-[#EA580C]" />
                 <span>Authorized Desks:</span>
               </span>
-              <div className="flex flex-wrap gap-1.5 justify-end">
+              <div className="flex flex-wrap gap-1.5">
                 {allowlist.slice(0, 3).map((allowed) => (
                   <button
                     key={allowed}
                     type="button"
                     onClick={() => handleQuickDemoLogin(allowed)}
-                    className="text-[10px] px-2 py-0.5 rounded bg-slate-900 hover:bg-orange-500/10 hover:text-orange-400 border border-slate-800 text-slate-400 transition-colors cursor-pointer"
+                    className="text-xs px-2.5 py-1 rounded-md bg-slate-900 hover:bg-orange-500/10 hover:text-orange-400 border border-slate-800 hover:border-orange-500/30 text-slate-300 transition-colors cursor-pointer"
                   >
                     {allowed.split('@')[0]}
                   </button>

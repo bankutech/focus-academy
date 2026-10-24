@@ -4,7 +4,6 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   Video, 
-  ClipboardCheck, 
   PhoneCall,
   Building2 
 } from 'lucide-react';
@@ -109,11 +108,6 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
           >
             <X className="w-4 h-4" />
           </button>
-
-          <div className="flex items-center space-x-1.5 text-xs uppercase tracking-wider text-orange-200 mb-1">
-            <ClipboardCheck className="w-3.5 h-3.5 text-[#EA580C]" />
-            <span>Focus Academy Pedagogical Protocol</span>
-          </div>
 
           <h3 id="demo-modal-headline" className="text-xl sm:text-2xl font-bold tracking-tight text-white">
             {sessionType === 'alignment-call' ? 'Schedule 5-Min Parent Alignment Call' : 'Schedule 45-Min Diagnostic Trial'}

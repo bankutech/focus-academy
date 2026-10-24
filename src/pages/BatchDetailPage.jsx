@@ -87,7 +87,11 @@ export default function BatchDetailPage() {
         )}
 
         <div className="bg-white rounded-lg p-6 sm:p-10 border border-[#E2E8F0] shadow-xs mb-8">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
+            {batch.name}
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-2 mt-3">
             <span className="px-3 py-1 bg-[#0F172A] text-white rounded-md text-xs font-bold">
               {batch.grade} • {batch.board}
             </span>
@@ -99,11 +103,7 @@ export default function BatchDetailPage() {
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
-            {batch.name}
-          </h1>
-
-          <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
+          <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed">
             {batch.description}
           </p>
 

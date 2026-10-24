@@ -8,7 +8,6 @@ import {
   MapPin, 
   Phone, 
   ArrowRight, 
-  Building2, 
   Target, 
   MessageSquare, 
   ExternalLink 
@@ -83,11 +82,6 @@ export default function AboutPage() {
         <section aria-labelledby="about-hero-heading" className="bg-white rounded-lg p-6 sm:p-10 lg:p-12 border border-[#E2E8F0] shadow-xs mb-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             <div className="lg:col-span-7">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-orange-50 text-[#EA580C] rounded-md text-xs font-bold mb-4">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Thiripura Complex • Thoramangalam, Perambalur</span>
-              </div>
-
               <h1 id="about-hero-heading" className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
                 Academic Coaching Built on Direct Attention
               </h1>

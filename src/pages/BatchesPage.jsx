@@ -151,10 +151,6 @@ export default function BatchesPage() {
             </div>
 
             <div className="mb-8">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-100 text-[#EA580C] text-xs font-bold mb-3">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Thoramangalam Campus Evening Schedule</span>
-              </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
                 Batch Timings & Schedule
               </h1>
