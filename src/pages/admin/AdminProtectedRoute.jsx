@@ -12,12 +12,13 @@ export default function AdminProtectedRoute({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    const localSessionRaw = sessionStorage.getItem('focus_academy_admin_session');
+    const localSessionRaw = sessionStorage.getItem('focus_academy_admin_session') || localStorage.getItem('focus_academy_admin_session');
     if (localSessionRaw) {
       try {
         const parsed = JSON.parse(localSessionRaw);
         if (parsed && parsed.email) {
           const isAdmin = isUserAdmin({ email: parsed.email });
+          sessionStorage.setItem('focus_academy_admin_session', localSessionRaw);
           setAuthState({
             loading: false,
             user: parsed,
@@ -27,6 +28,7 @@ export default function AdminProtectedRoute({ children }) {
         }
       } catch {
         sessionStorage.removeItem('focus_academy_admin_session');
+        localStorage.removeItem('focus_academy_admin_session');
       }
     }
 
@@ -69,6 +71,7 @@ export default function AdminProtectedRoute({ children }) {
         user={authState.user} 
         onSignOut={() => {
           sessionStorage.removeItem('focus_academy_admin_session');
+          localStorage.removeItem('focus_academy_admin_session');
           setAuthState({ loading: false, user: null, isAdmin: false });
         }} 
       />
