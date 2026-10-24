@@ -477,4 +477,74 @@ describe('AdminDataService & Institutional Management Tests', () => {
       ).rejects.toThrow(/Unauthorized/i);
     });
   });
+  describe('Cash Drawer (Till) Sessions & Cross-Student Duplicate Prevention', () => {
+    it('blocks cross-student / cross-obligation duplicate UPI transaction references', async () => {
+      const obligations = await AdminDataService.getFeeObligations();
+      const openObls = obligations.filter(o => o.balance >= 500);
+      const firstObl = openObls[0];
+      const secondObl = openObls[1];
+      const customUtr = 'UPI-SBI-2026-X998811';
+
+      await AdminDataService.recordPayment({
+        obligationId: firstObl.id,
+        studentId: firstObl.studentId,
+        amount: 500,
+        paymentMethod: 'upi',
+        referenceNumber: customUtr
+      });
+
+      // Attempting to use the SAME custom UTR on a different obligation/student must be rejected
+      await expect(
+        AdminDataService.recordPayment({
+          obligationId: secondObl.id,
+          studentId: secondObl.studentId,
+          amount: 500,
+          paymentMethod: 'upi',
+          referenceNumber: customUtr
+        })
+      ).rejects.toThrow(/Duplicate Transaction Reference/i);
+    });
+
+    it('manages cash drawer till session lifecycle: open, summary tally, and close with difference tracking', async () => {
+      const activeInitial = await AdminDataService.getActiveTillSession();
+      expect(activeInitial).toBeNull();
+
+      // 1. Open till session with float 2000
+      const session = await AdminDataService.openTillSession({
+        openingFloat: 2000,
+        notes: 'Thiripura Desk Morning Shift'
+      }, 'admin@focusacademyperambalur.com');
+
+      expect(session.status).toBe('open');
+      expect(session.openingFloat).toBe(2000);
+
+      const activeAfterOpen = await AdminDataService.getActiveTillSession();
+      expect(activeAfterOpen).not.toBeNull();
+      expect(activeAfterOpen.id).toBe(session.id);
+
+      // Attempting to open another session while one is active should throw
+      await expect(
+        AdminDataService.openTillSession({ openingFloat: 1000 })
+      ).rejects.toThrow(/already open/i);
+
+      // 2. Summary
+      const summary = await AdminDataService.getTillSessionSummary(session.id);
+      expect(summary.openingFloat).toBe(2000);
+      expect(summary.expectedCashInDrawer).toBeGreaterThanOrEqual(2000);
+
+      // 3. Close till session with exact cash count
+      const closed = await AdminDataService.closeTillSession(session.id, {
+        closingCashActual: summary.expectedCashInDrawer,
+        handedOverTo: 'Managing Director Ramanathan',
+        closingNotes: 'Evening shift hand-off reconciled'
+      }, 'admin@focusacademyperambalur.com');
+
+      expect(closed.status).toBe('closed');
+      expect(closed.difference).toBe(0);
+      expect(closed.handedOverTo).toBe('Managing Director Ramanathan');
+
+      const activeAfterClose = await AdminDataService.getActiveTillSession();
+      expect(activeAfterClose).toBeNull();
+    });
+  });
 });

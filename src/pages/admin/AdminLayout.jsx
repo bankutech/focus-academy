@@ -14,12 +14,15 @@ import {
   X,
   ExternalLink,
   Database,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Keyboard
 } from 'lucide-react';
 import { logOutAdmin, isFirebaseConfigured } from '../../services/firebase';
 
 export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const hasFirebase = isFirebaseConfigured();
@@ -48,6 +51,44 @@ export default function AdminLayout() {
     navigate('/admin-portal/login');
   };
 
+  React.useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        if (e.key === 'Escape') {
+          e.target.blur();
+        }
+        return;
+      }
+      if (e.altKey && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        navigate('/admin-portal/ledger');
+      } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        navigate('/admin-portal/students');
+      } else if (e.altKey && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault();
+        navigate('/admin-portal/batches');
+      } else if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        navigate('/admin-portal/reports');
+      } else if (e.key === '?') {
+        e.preventDefault();
+        setShortcutsModalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [navigate]);
   const navItems = [
     { name: 'Dashboard', path: '/admin-portal', icon: LayoutDashboard, end: true },
     { name: 'Batches', path: '/admin-portal/batches', icon: Layers },
@@ -97,10 +138,28 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-300">
+            <div 
+              title="Cloud Firestore project: focus-academy-7efeb (Mumbai asia-south1)"
+              className={`hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${
+                isOnline && hasFirebase 
+                  ? 'bg-slate-800 border-emerald-500/30 text-slate-200' 
+                  : 'bg-amber-950/40 border-amber-600/40 text-amber-200'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${isOnline && hasFirebase ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
               <Database className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{hasFirebase ? 'Cloud Firestore Live' : 'Verified Local Sync'}</span>
+              <span>{isOnline && hasFirebase ? 'Cloud Firestore Live' : 'Verified Local Sync'}</span>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShortcutsModalOpen(true)}
+              title="Desk POS Keyboard Shortcuts (?)"
+              className="hidden lg:flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-mono cursor-pointer transition-colors"
+            >
+              <span className="bg-slate-900 px-1 rounded text-[10px] text-orange-400 font-bold border border-slate-700">?</span>
+              <span className="text-[11px]">POS Keys</span>
+            </button>
 
             <div className="hidden sm:flex flex-col text-right">
               <span className="text-xs font-bold text-white leading-tight truncate max-w-[180px]">
@@ -255,6 +314,58 @@ export default function AdminLayout() {
           </div>
         </main>
       </div>
+      {shortcutsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 text-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <div className="flex items-center space-x-2 text-slate-900">
+                <Keyboard className="w-5 h-5 text-orange-600" />
+                <h3 className="font-extrabold text-sm uppercase">Front-Desk Keyboard Shortcuts</h3>
+              </div>
+              <button onClick={() => setShortcutsModalOpen(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+                <span className="text-slate-700 font-medium">Record Payment / Ledger</span>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Alt + P</kbd>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+                <span className="text-slate-700 font-medium">Students Directory</span>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Alt + S</kbd>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+                <span className="text-slate-700 font-medium">Batches &amp; Timings</span>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Alt + B</kbd>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+                <span className="text-slate-700 font-medium">Reports &amp; Cash Till</span>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Alt + R</kbd>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+                <span className="text-slate-700 font-medium">Close Modal / Blur Input</span>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Esc</kbd>
+              </div>
+              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+                <span className="text-slate-700 font-medium">Toggle Shortcuts Cheatsheet</span>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">?</kbd>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-200 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShortcutsModalOpen(false)}
+                className="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white font-bold rounded-lg cursor-pointer"
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

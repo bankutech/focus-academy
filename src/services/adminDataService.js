@@ -558,7 +558,8 @@ function loadLocalStore() {
       payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
       reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
       auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-      settings: JSON.parse(JSON.stringify(SEED_SETTINGS))
+      settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
+      tillSessions: []
     };
   }
   try {
@@ -571,7 +572,8 @@ function loadLocalStore() {
         payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
         reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
         auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-        settings: JSON.parse(JSON.stringify(SEED_SETTINGS))
+        settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
+        tillSessions: []
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
@@ -584,7 +586,8 @@ function loadLocalStore() {
       payments: parsed.payments || JSON.parse(JSON.stringify(SEED_PAYMENTS)),
       reminders: parsed.reminders || JSON.parse(JSON.stringify(SEED_REMINDERS)),
       auditLogs: parsed.auditLogs || JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-      settings: parsed.settings || JSON.parse(JSON.stringify(SEED_SETTINGS))
+      settings: parsed.settings || JSON.parse(JSON.stringify(SEED_SETTINGS)),
+      tillSessions: parsed.tillSessions || []
     };
   } catch {
     return {
@@ -594,7 +597,8 @@ function loadLocalStore() {
       payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
       reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
       auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-      settings: JSON.parse(JSON.stringify(SEED_SETTINGS))
+      settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
+      tillSessions: []
     };
   }
 }
@@ -617,7 +621,8 @@ export const AdminDataService = {
       payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
       reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
       auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-      settings: JSON.parse(JSON.stringify(SEED_SETTINGS))
+      settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
+      tillSessions: []
     };
     saveLocalStore(seed);
     return seed;
@@ -1762,6 +1767,22 @@ export const AdminDataService = {
       if (existingByRef) {
         return Object.assign(existingByRef, { payment: existingByRef, obligation });
       }
+
+      if (!String(paymentData.referenceNumber).startsWith('REF-')) {
+        const cleanRef = String(paymentData.referenceNumber).trim().toLowerCase();
+        const crossDuplicate = store.payments.find(p => 
+          !p.isReversed && 
+          !p.reversed && 
+          p.referenceNumber && 
+          !String(p.referenceNumber).startsWith('REF-') &&
+          String(p.referenceNumber).trim().toLowerCase() === cleanRef
+        );
+        if (crossDuplicate) {
+          throw new Error(
+            `Duplicate Transaction Reference: "${paymentData.referenceNumber}" has already been recorded on receipt #${crossDuplicate.receiptNumber} for student ${crossDuplicate.studentName || crossDuplicate.studentId}. Duplicate transaction references are blocked across the institute.`
+          );
+        }
+      }
     }
 
     if (amount > currentBalance) {
@@ -2645,5 +2666,175 @@ export const AdminDataService = {
       students: importedStudents,
       errors
     };
+  },
+
+  async getTillSessions() {
+    if (isFirebaseConfigured() && db) {
+      try {
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'till_sessions')), 800);
+        if (!snap.empty) {
+          return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.openedAt || '').localeCompare(a.openedAt || ''));
+        }
+      } catch (err) {
+        console.warn('Firestore getTillSessions fallback to local store:', err.message);
+      }
+    }
+    const store = loadLocalStore();
+    return (store.tillSessions || []).sort((a, b) => (b.openedAt || '').localeCompare(a.openedAt || ''));
+  },
+
+  async getActiveTillSession(_actor = 'admin') {
+    const sessions = await this.getTillSessions();
+    return sessions.find(s => s.status === 'open') || null;
+  },
+
+  async openTillSession({ openingFloat = 0, notes = '' }, actor = 'admin') {
+    this.verifyPermission(actor, 'canRecordPayments', 'opening cash drawer till session');
+    const floatAmount = Number(openingFloat);
+    if (isNaN(floatAmount) || floatAmount < 0) {
+      throw new Error('Opening cash float must be a non-negative amount.');
+    }
+
+    const active = await this.getActiveTillSession(actor);
+    if (active) {
+      throw new Error(`A cash drawer session is already open (Opened by ${active.openedBy} at ${active.openedAt}). Please close the active session before opening a new one.`);
+    }
+
+    const session = {
+      id: `TILL-${Date.now().toString(36).toUpperCase()}`,
+      date: new Date().toISOString().split('T')[0],
+      openedAt: new Date().toISOString(),
+      openedBy: normalizeActorEmail(actor),
+      openingFloat: floatAmount,
+      notes: notes || '',
+      status: 'open',
+      closedAt: null,
+      closedBy: null,
+      closingCashActual: null,
+      expectedDrawerCash: null,
+      difference: null,
+      closingNotes: null,
+      handedOverTo: null,
+      denominations: null
+    };
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 800);
+      } catch (err) {
+        console.warn('Firestore openTillSession fallback:', err.message);
+      }
+    }
+
+    const store = loadLocalStore();
+    if (!store.tillSessions) store.tillSessions = [];
+    store.tillSessions.unshift(session);
+    saveLocalStore(store);
+
+    await this.logAudit('TILL_SESSION_OPENED', session.id, actor, {
+      openingFloat: floatAmount,
+      date: session.date
+    });
+
+    return session;
+  },
+
+  async getTillSessionSummary(sessionId) {
+    const sessions = await this.getTillSessions();
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) {
+      throw new Error(`Till session not found: ${sessionId}`);
+    }
+
+    const payments = await this.getPayments();
+    const sessionPayments = payments.filter(p => {
+      if (p.createdAt < session.openedAt) return false;
+      if (session.closedAt && p.createdAt > session.closedAt) return false;
+      return true;
+    });
+
+    const activePayments = sessionPayments.filter(p => !p.isReversed && !p.reversed);
+    const reversedPayments = sessionPayments.filter(p => p.isReversed || p.reversed);
+
+    const cashCollected = activePayments.filter(p => p.paymentMethod === 'cash').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const upiCollected = activePayments.filter(p => p.paymentMethod === 'upi' || p.paymentMethod === 'upi_online').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const bankCollected = activePayments.filter(p => p.paymentMethod === 'bank_transfer').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const totalCollected = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const reversedCash = reversedPayments.filter(p => p.paymentMethod === 'cash').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const expectedCashInDrawer = Math.max(0, session.openingFloat + cashCollected - reversedCash);
+
+    return {
+      session,
+      openingFloat: session.openingFloat,
+      cashCollected,
+      upiCollected,
+      bankCollected,
+      totalCollected,
+      reversedCash,
+      expectedCashInDrawer,
+      transactionCount: activePayments.length,
+      cashTransactionCount: activePayments.filter(p => p.paymentMethod === 'cash').length,
+      payments: activePayments
+    };
+  },
+
+  async closeTillSession(sessionId, { closingCashActual, handedOverTo = '', closingNotes = '', denominations = null }, actor = 'admin') {
+    this.verifyPermission(actor, 'canRecordPayments', 'closing cash drawer till session');
+    const sessions = await this.getTillSessions();
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) {
+      throw new Error(`Till session not found: ${sessionId}`);
+    }
+    if (session.status !== 'open') {
+      throw new Error(`Till session ${sessionId} is already closed.`);
+    }
+
+    const actual = Number(closingCashActual);
+    if (isNaN(actual) || actual < 0) {
+      throw new Error('Closing cash actual count must be a non-negative amount.');
+    }
+
+    const summary = await this.getTillSessionSummary(sessionId);
+    const difference = actual - summary.expectedCashInDrawer;
+
+    session.status = 'closed';
+    session.closedAt = new Date().toISOString();
+    session.closedBy = normalizeActorEmail(actor);
+    session.closingCashActual = actual;
+    session.expectedDrawerCash = summary.expectedCashInDrawer;
+    session.difference = difference;
+    session.handedOverTo = handedOverTo || 'Managing Director';
+    session.closingNotes = closingNotes || '';
+    session.denominations = denominations;
+    session.cashCollected = summary.cashCollected;
+    session.upiCollected = summary.upiCollected;
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 800);
+      } catch (err) {
+        console.warn('Firestore closeTillSession fallback:', err.message);
+      }
+    }
+
+    const store = loadLocalStore();
+    const idx = (store.tillSessions || []).findIndex(s => s.id === sessionId);
+    if (idx !== -1) {
+      store.tillSessions[idx] = session;
+    } else {
+      if (!store.tillSessions) store.tillSessions = [];
+      store.tillSessions.unshift(session);
+    }
+    saveLocalStore(store);
+
+    await this.logAudit('TILL_SESSION_CLOSED', session.id, actor, {
+      expectedDrawerCash: summary.expectedCashInDrawer,
+      closingCashActual: actual,
+      difference,
+      handedOverTo: session.handedOverTo
+    });
+
+    return session;
   }
 };

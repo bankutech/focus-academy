@@ -26,6 +26,7 @@ export default function AdminLedgerPage() {
 
   const [recordModalOpen, setRecordModalOpen] = useState(false);
   const [receiptModalPayment, setReceiptModalPayment] = useState(null);
+  const [receiptFormat, setReceiptFormat] = useState('standard');
   const [reverseModalPayment, setReverseModalPayment] = useState(null);
   const [reverseReason, setReverseReason] = useState('');
   const [reverseError, setReverseError] = useState('');
@@ -569,94 +570,208 @@ export default function AdminLedgerPage() {
 
       {receiptModalPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4 print:hidden">
-              <span className="text-xs uppercase font-extrabold text-slate-400">Official Fee Receipt</span>
-              <button onClick={() => setReceiptModalPayment(null)} className="text-slate-400 hover:text-slate-700">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3 print:hidden">
+              <div className="flex items-center space-x-3">
+                <span className="text-xs uppercase font-extrabold text-slate-500">Official Fee Receipt</span>
+                <div className="flex items-center bg-slate-100 rounded-md p-0.5 border border-slate-200 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setReceiptFormat('standard')}
+                    className={`px-2.5 py-1 rounded font-bold cursor-pointer transition-colors ${
+                      receiptFormat === 'standard' 
+                        ? 'bg-white text-slate-900 shadow-xs' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Standard Slip
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setReceiptFormat('thermal_80mm')}
+                    className={`px-2.5 py-1 rounded font-bold cursor-pointer transition-colors ${
+                      receiptFormat === 'thermal_80mm' 
+                        ? 'bg-[#0F172A] text-white shadow-xs' 
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    80mm Thermal (POS)
+                  </button>
+                </div>
+              </div>
+              <button onClick={() => setReceiptModalPayment(null)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div id="printable-receipt" className="p-4 border border-slate-200 rounded-lg bg-slate-50 text-xs">
-              <div className="text-center border-b border-slate-200 pb-3 mb-3">
-                <h3 className="text-base font-extrabold text-[#0F172A] uppercase">
-                  {settings?.academyName || 'FOCUS ACADEMY'}
-                </h3>
-                <p className="text-[11px] text-slate-600 font-medium">
-                  {settings?.campusAddress || 'Thiripura Complex, Thoramangalam, Perambalur – 621220'}
-                </p>
-                <p className="text-[10px] text-slate-500">
-                  Phone: {settings?.primaryPhone || '+91 98424 51220'} • {settings?.email || 'contact@focusacademyperambalur.com'}
-                </p>
-              </div>
+            {receiptFormat === 'thermal_80mm' ? (
+              <div id="printable-receipt" className="p-4 border border-dashed border-slate-400 rounded-sm bg-white font-mono text-[11px] leading-tight text-slate-900 max-w-[340px] mx-auto shadow-xs select-text">
+                <div className="text-center pb-2 border-b border-dashed border-slate-400">
+                  <div className="font-extrabold text-sm tracking-wider uppercase">{settings?.academyName || 'FOCUS ACADEMY'}</div>
+                  <div className="text-[10px] text-slate-700 font-bold">Thiripura Complex, Thoramangalam</div>
+                  <div className="text-[9px] text-slate-600">Perambalur - 621220 | Ph: +91 98424 51220</div>
+                  <div className="text-[10px] font-bold text-slate-900 mt-1 uppercase">*** TUITION FEE RECEIPT ***</div>
+                </div>
 
-              <div className="flex justify-between items-center mb-3 text-[11px]">
-                <div>
-                  <span className="text-slate-500">Receipt No: </span>
-                  <span className="font-mono font-bold text-[#EA580C]">{receiptModalPayment.receiptNumber}</span>
-                </div>
-                <div>
-                  <span className="text-slate-500">Date: </span>
-                  <span className="font-mono font-bold text-slate-800">{receiptModalPayment.paymentDate}</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1.5 mb-3">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Student Name:</span>
-                  <span className="font-bold text-slate-900">{receiptModalPayment.studentName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Student ID:</span>
-                  <span className="font-mono font-bold text-slate-900">{receiptModalPayment.studentId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Payment Mode:</span>
-                  <span className="capitalize font-bold text-slate-900">{receiptModalPayment.paymentMethod.replace('_', ' ')}</span>
-                </div>
-                {receiptModalPayment.referenceNumber && (
+                <div className="py-2 border-b border-dashed border-slate-400 space-y-0.5 text-[10px]">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Reference / UTR:</span>
-                    <span className="font-mono text-slate-700">{receiptModalPayment.referenceNumber}</span>
+                    <span>RCP NO:</span>
+                    <span className="font-bold">{receiptModalPayment.receiptNumber}</span>
                   </div>
-                )}
-              </div>
-
-              <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-md flex justify-between items-center mb-3">
-                <span className="font-bold text-emerald-800 text-sm">AMOUNT RECEIVED:</span>
-                <span className="font-extrabold text-emerald-700 text-lg">
-                  {settings?.currencySymbol || '₹'}{Number(receiptModalPayment.amount).toLocaleString('en-IN')}
-                </span>
-              </div>
-
-              <div className="pt-4 flex justify-between items-end text-[10px] text-slate-500 border-t border-slate-200">
-                <div>
-                  <p>Recorded By: {receiptModalPayment.recordedBy || 'Campus Admin'}</p>
-                  <p>Computer-generated verifiable receipt.</p>
+                  <div className="flex justify-between">
+                    <span>DATE/TIME:</span>
+                    <span>{receiptModalPayment.paymentDate}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>CASHIER:</span>
+                    <span className="truncate max-w-[140px]">{receiptModalPayment.recordedBy || 'admin'}</span>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="w-24 border-b border-slate-400 mb-1"></div>
-                  <span>Authorized Signature</span>
+
+                <div className="py-2 border-b border-dashed border-slate-400 space-y-0.5 text-[10px]">
+                  <div className="flex justify-between">
+                    <span>STUDENT:</span>
+                    <span className="font-bold">{receiptModalPayment.studentName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>ROLL ID:</span>
+                    <span>{receiptModalPayment.studentId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>PAY METHOD:</span>
+                    <span className="uppercase font-bold">{receiptModalPayment.paymentMethod.replace('_', ' ')}</span>
+                  </div>
+                  {receiptModalPayment.referenceNumber && (
+                    <div className="flex justify-between text-[9px]">
+                      <span>UTR/REF:</span>
+                      <span className="font-mono">{receiptModalPayment.referenceNumber}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="py-2.5 border-b-2 border-dashed border-slate-900 flex justify-between items-center text-xs">
+                  <span className="font-extrabold uppercase">AMOUNT PAID:</span>
+                  <span className="font-extrabold text-base">
+                    {settings?.currencySymbol || '₹'}{Number(receiptModalPayment.amount).toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                <div className="pt-2 text-[9px] text-slate-600 text-center space-y-0.5">
+                  <p className="font-bold text-slate-800 uppercase">STATUTORY NOTICE (TN Coaching Acts)</p>
+                  <p>1. Tuition fees once paid are non-refundable and non-transferable.</p>
+                  <p>2. Computer verified receipt. Valid across Focus Academy records.</p>
+                  <p className="font-extrabold pt-1 text-slate-900">Learn Today. Lead Tomorrow.</p>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div id="printable-receipt" className="p-4 border border-slate-200 rounded-lg bg-slate-50 text-xs">
+                <div className="text-center border-b border-slate-200 pb-3 mb-3">
+                  <h3 className="text-base font-extrabold text-[#0F172A] uppercase">
+                    {settings?.academyName || 'FOCUS ACADEMY'}
+                  </h3>
+                  <p className="text-[11px] text-slate-600 font-medium">
+                    {settings?.campusAddress || 'Thiripura Complex, Thoramangalam, Perambalur – 621220'}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    Phone: {settings?.primaryPhone || '+91 98424 51220'} • {settings?.email || 'contact@focusacademyperambalur.com'}
+                  </p>
+                </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-200 flex justify-end space-x-2 print:hidden">
-              <button
-                type="button"
-                onClick={() => setReceiptModalPayment(null)}
-                className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 cursor-pointer"
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white font-bold rounded-lg flex items-center space-x-1.5 cursor-pointer"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Print Official Receipt</span>
-              </button>
+                <div className="flex justify-between items-center mb-3 text-[11px]">
+                  <div>
+                    <span className="text-slate-500">Receipt No: </span>
+                    <span className="font-mono font-bold text-[#EA580C]">{receiptModalPayment.receiptNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">Date: </span>
+                    <span className="font-mono font-bold text-slate-800">{receiptModalPayment.paymentDate}</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-3 rounded-md border border-slate-200 space-y-1.5 mb-3">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Student Name:</span>
+                    <span className="font-bold text-slate-900">{receiptModalPayment.studentName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Student ID:</span>
+                    <span className="font-mono font-bold text-slate-900">{receiptModalPayment.studentId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Payment Mode:</span>
+                    <span className="capitalize font-bold text-slate-900">{receiptModalPayment.paymentMethod.replace('_', ' ')}</span>
+                  </div>
+                  {receiptModalPayment.referenceNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Reference / UTR:</span>
+                      <span className="font-mono text-slate-700">{receiptModalPayment.referenceNumber}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-md flex justify-between items-center mb-3">
+                  <span className="font-bold text-emerald-800 text-sm">AMOUNT RECEIVED:</span>
+                  <span className="font-extrabold text-emerald-700 text-lg">
+                    {settings?.currencySymbol || '₹'}{Number(receiptModalPayment.amount).toLocaleString('en-IN')}
+                  </span>
+                </div>
+
+                <div className="py-2 px-2.5 bg-slate-100 rounded text-[10px] text-slate-600 mb-3 space-y-0.5">
+                  <p className="font-semibold text-slate-700">Notice:</p>
+                  <p>1. Tuition fees once paid are non-refundable and non-transferable under Academy Policy.</p>
+                  <p>2. Computer-generated verifiable receipt. No physical signature required.</p>
+                </div>
+
+                <div className="pt-2 flex justify-between items-end text-[10px] text-slate-500 border-t border-slate-200">
+                  <div>
+                    <p>Recorded By: {receiptModalPayment.recordedBy || 'Campus Admin'}</p>
+                    <p>Verified Campus Record.</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-24 border-b border-slate-400 mb-1"></div>
+                    <span>Authorized Stamp</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <style dangerouslySetInnerHTML={{ __html: `
+              @media print {
+                body * { visibility: hidden !important; }
+                #printable-receipt, #printable-receipt * { visibility: visible !important; }
+                #printable-receipt { 
+                  position: absolute !important; 
+                  left: 0 !important; 
+                  top: 0 !important; 
+                  width: ${receiptFormat === 'thermal_80mm' ? '80mm' : '100%'} !important; 
+                  margin: 0 !important;
+                  padding: 8px !important;
+                  border: none !important;
+                }
+              }
+            `}} />
+
+            <div className="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center print:hidden">
+              <span className="text-[11px] text-slate-500 font-mono">
+                {receiptFormat === 'thermal_80mm' ? '80mm Thermal Mode' : 'Standard A4 Slip'}
+              </span>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setReceiptModalPayment(null)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white font-bold rounded-lg flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>{receiptFormat === 'thermal_80mm' ? 'Print 80mm Slip' : 'Print Official Receipt'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
