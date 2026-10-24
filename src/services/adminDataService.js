@@ -9,7 +9,8 @@ import {
   deleteDoc, 
   query, 
   where, 
-  orderBy, 
+  orderBy,
+  writeBatch,
   limit 
 } from 'firebase/firestore';
 
@@ -803,7 +804,8 @@ export const AdminDataService = {
       try {
         await setDoc(doc(db, 'audit_logs', entry.id), entry);
       } catch (err) {
-        console.warn('Firestore audit log error, saving locally:', err);
+        console.error('Firestore audit log error:', err);
+        throw new Error(`Production Database Error: Failed to record audit log in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1302,7 +1304,8 @@ export const AdminDataService = {
           await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
         }
       } catch (err) {
-        console.warn('Firestore updateStudentLifecycleStatus error:', err);
+        console.error('Firestore updateStudentLifecycleStatus error:', err);
+        throw new Error(`Production Database Error: Failed to update student lifecycle status in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1387,7 +1390,8 @@ export const AdminDataService = {
           updatedAt: new Date().toISOString()
         });
       } catch (err) {
-        console.warn('Firestore transferStudentBatch error:', err);
+        console.error('Firestore transferStudentBatch error:', err);
+        throw new Error(`Production Database Error: Failed to transfer student in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1499,7 +1503,8 @@ export const AdminDataService = {
       try {
         await updateDoc(doc(db, 'students', studentId), student);
       } catch (err) {
-        console.warn('Firestore applyFeeDiscount error:', err);
+        console.error('Firestore applyFeeDiscount error:', err);
+        throw new Error(`Production Database Error: Failed to apply fee discount in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1787,8 +1792,10 @@ export const AdminDataService = {
 
     if (isFirebaseConfigured() && db) {
       try {
-        await setDoc(doc(db, 'payments', newPayment.id), newPayment);
-        await updateDoc(doc(db, 'fee_obligations', obligation.id), obligation);
+        const batch = writeBatch(db);
+        batch.set(doc(db, 'payments', newPayment.id), newPayment);
+        batch.update(doc(db, 'fee_obligations', obligation.id), obligation);
+        await batch.commit();
       } catch (err) {
         console.error('Firestore recordPayment error:', err);
         throw new Error(`Production Database Error: Failed to record payment in Cloud Firestore: ${err.message}`);
@@ -1863,8 +1870,10 @@ export const AdminDataService = {
 
     if (isFirebaseConfigured() && db) {
       try {
-        await updateDoc(doc(db, 'payments', payment.id), payment);
-        await updateDoc(doc(db, 'fee_obligations', obligation.id), obligation);
+        const batch = writeBatch(db);
+        batch.update(doc(db, 'payments', payment.id), payment);
+        batch.update(doc(db, 'fee_obligations', obligation.id), obligation);
+        await batch.commit();
       } catch (err) {
         console.error('Firestore reversePayment error:', err);
         throw new Error(`Production Database Error: Failed to reverse payment in Cloud Firestore: ${err.message}`);
@@ -2395,7 +2404,8 @@ export const AdminDataService = {
         for (const p of payments) await setDoc(doc(db, 'payments', p.id), p);
         if (settings) await setDoc(doc(db, 'academy_settings', 'main_config'), settings);
       } catch (err) {
-        console.warn('Firestore restoreFromBackupSnapshot sync error:', err);
+        console.error('Firestore restoreFromBackupSnapshot sync error:', err);
+        throw new Error(`Production Database Error: Failed to restore backup in Cloud Firestore: ${err.message}`);
       }
     }
 
