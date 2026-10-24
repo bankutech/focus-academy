@@ -232,22 +232,31 @@ export default function AdminLedgerPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-        <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Fees Collected This Month</span>
-          <span className="text-2xl font-extrabold text-emerald-600">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Fees Collected This Month</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">Verified</span>
+          </div>
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-mono tracking-tight block">
             ₹{(metrics?.feesCollectedThisMonth ?? 0).toLocaleString('en-IN')}
           </span>
         </div>
-        <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Total Outstanding Fees</span>
-          <span className="text-2xl font-extrabold text-amber-600">
+        <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Outstanding Fees</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-amber-50 text-amber-800 border-amber-200">Pending</span>
+          </div>
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-mono tracking-tight block">
             ₹{(metrics?.totalOutstandingFees ?? 0).toLocaleString('en-IN')}
           </span>
         </div>
-        <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Overdue Fees</span>
-          <span className="text-2xl font-extrabold text-red-600">
+        <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Overdue Fees</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-rose-50 text-rose-700 border-rose-200">Action Required</span>
+          </div>
+          <span className="text-2xl sm:text-3xl font-extrabold text-rose-600 font-mono tracking-tight block">
             ₹{(metrics?.totalOverdueFees ?? 0).toLocaleString('en-IN')}
           </span>
         </div>
