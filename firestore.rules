@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        request.auth.token.role == 'admin' ||
+        request.auth.token.email.lower() in [
+          'admin@focusacademyperambalur.com',
+          'focusacademy.perambalur@gmail.com',
+          'director@focusacademyperambalur.com',
+          'principal@focusacademyperambalur.com',
+          'coordinator@focusacademyperambalur.com'
+        ]
+      );
+    }
+
+    function isValidLead(data) {
+      return data.keys().hasAll(['studentName', 'phone']) &&
+        data.studentName is string &&
+        data.studentName.size() >= 2 &&
+        data.studentName.size() <= 100 &&
+        data.phone is string &&
+        data.phone.size() >= 10 &&
+        data.phone.size() <= 15;
+    }
+
+    // Batches: Public can read curriculum, schedules, and capacity; only admins can modify
+    match /batches/{batchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Students: Private administrative records
+    match /students/{studentId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Fee Obligations: Sensitive financial schedules
+    match /fee_obligations/{obligationId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Payments: Verified receipt & transaction ledger
+    match /payments/{paymentId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Reminders: Automated and manual WhatsApp log records
+    match /reminders/{reminderId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Audit Logs: Append-only, immutable tamper-evident log
+    match /audit_logs/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Leads: Prospective admissions submitted by parents / students
+    match /leads/{leadId} {
+      allow create: if isValidLead(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import ScrollToTop from './components/common/ScrollToTop';
@@ -20,11 +20,23 @@ const FeesPage = lazy(() => import('./pages/FeesPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 
+const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
+const AdminProtectedRoute = lazy(() => import('./pages/admin/AdminProtectedRoute'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminBatchesPage = lazy(() => import('./pages/admin/AdminBatchesPage'));
+const AdminStudentsPage = lazy(() => import('./pages/admin/AdminStudentsPage'));
+const AdminFeesPage = lazy(() => import('./pages/admin/AdminFeesPage'));
+const AdminLedgerPage = lazy(() => import('./pages/admin/AdminLedgerPage'));
+const AdminRemindersPage = lazy(() => import('./pages/admin/AdminRemindersPage'));
+const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage'));
+const AdminAuditLogsPage = lazy(() => import('./pages/admin/AdminAuditLogsPage'));
+
 function RouteLoadingFallback() {
   return null;
 }
 
-function MainLayout() {
+function PublicLayout() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans-body flex flex-col selection:bg-[#EA580C] selection:text-white">
       <a 
@@ -39,25 +51,7 @@ function MainLayout() {
       <main id="main-content" tabIndex="-1" className="flex-1 focus:outline-hidden">
         <ErrorBoundary title="Focus Academy Page Router">
           <Suspense fallback={<RouteLoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/student-details" element={<StudentDetailsPage />} />
-              <Route path="/login" element={<StudentDetailsPage />} />
-              <Route path="/signup" element={<StudentDetailsPage />} />
-              <Route path="/exam-prep" element={<ExamPrepPage />} />
-              <Route path="/batches" element={<BatchesPage />} />
-              <Route path="/batch/:batchId" element={<BatchDetailPage />} />
-              <Route path="/timings" element={<BatchesPage />} />
-              <Route path="/enroll" element={<EnrollPage />} />
-              <Route path="/enroll/:batchId" element={<EnrollPage />} />
-              <Route path="/courses" element={<CoursesPage />} />
-              <Route path="/classes" element={<CoursesPage />} />
-              <Route path="/faculty" element={<Navigate to="/batches" replace />} />
-              <Route path="/fees" element={<FeesPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            <Outlet />
           </Suspense>
         </ErrorBoundary>
       </main>
@@ -73,7 +67,49 @@ export default function App() {
     <ErrorBoundary title="Focus Academy Application">
       <BrowserRouter>
         <AppProvider>
-          <MainLayout />
+          <Suspense fallback={<RouteLoadingFallback />}>
+            <Routes>
+              <Route path="/admin-portal/login" element={<AdminLoginPage />} />
+              <Route
+                path="/admin-portal"
+                element={
+                  <AdminProtectedRoute>
+                    <AdminLayout />
+                  </AdminProtectedRoute>
+                }
+              >
+                <Route index element={<AdminDashboardPage />} />
+                <Route path="batches" element={<AdminBatchesPage />} />
+                <Route path="students" element={<AdminStudentsPage />} />
+                <Route path="fees" element={<AdminFeesPage />} />
+                <Route path="ledger" element={<AdminLedgerPage />} />
+                <Route path="reminders" element={<AdminRemindersPage />} />
+                <Route path="reports" element={<AdminReportsPage />} />
+                <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+                <Route path="*" element={<Navigate to="/admin-portal" replace />} />
+              </Route>
+
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/student-details" element={<StudentDetailsPage />} />
+                <Route path="/login" element={<StudentDetailsPage />} />
+                <Route path="/signup" element={<StudentDetailsPage />} />
+                <Route path="/exam-prep" element={<ExamPrepPage />} />
+                <Route path="/batches" element={<BatchesPage />} />
+                <Route path="/batch/:batchId" element={<BatchDetailPage />} />
+                <Route path="/timings" element={<BatchesPage />} />
+                <Route path="/enroll" element={<EnrollPage />} />
+                <Route path="/enroll/:batchId" element={<EnrollPage />} />
+                <Route path="/courses" element={<CoursesPage />} />
+                <Route path="/classes" element={<CoursesPage />} />
+                <Route path="/faculty" element={<Navigate to="/batches" replace />} />
+                <Route path="/fees" element={<FeesPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </Suspense>
         </AppProvider>
       </BrowserRouter>
     </ErrorBoundary>

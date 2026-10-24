@@ -1,0 +1,89 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('Focus Academy Admin Portal E2E', () => {
+  test('redirects unauthenticated users attempting to access /admin-portal to /admin-portal/login', async ({ page }) => {
+    await page.goto('/admin-portal');
+    await expect(page).toHaveURL(/.*admin-portal\/login/);
+    await expect(page.getByText(/Administrator Management Portal/i)).toBeVisible();
+  });
+
+  test('rejects non-allowlisted email address with access denied warning', async ({ page }) => {
+    await page.goto('/admin-portal/login');
+
+    await page.locator('#admin-email').fill('unauthorized.student@gmail.com');
+    await page.locator('#admin-password').fill('SomePassword123');
+    await page.getByRole('button', { name: /Access Admin Console/i }).click();
+
+    await expect(page.getByText(/Access Denied/i).first()).toBeVisible();
+    await expect(page.getByText(/not on the Focus Academy administrator allowlist/i).first()).toBeVisible();
+  });
+
+  test('authenticates authorized administrator, views dashboard, and navigates all admin modules', async ({ page }) => {
+    await page.goto('/admin-portal/login');
+
+    // Fill in authorized administrator email
+    await page.locator('#admin-email').fill('admin@focusacademyperambalur.com');
+    await page.locator('#admin-password').fill('FocusCampus@2026');
+    await page.getByRole('button', { name: /Access Admin Console/i }).click();
+
+    // Verifies redirection to dashboard
+    await expect(page).toHaveURL(/.*admin-portal/);
+    await expect(page.getByText(/Campus Operations Dashboard/i)).toBeVisible();
+    await expect(page.getByText(/Active Students/i).first()).toBeVisible();
+
+    // Navigate to Batches
+    await page.getByRole('link', { name: 'Batches' }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/batches/);
+    await expect(page.getByText('Batch Management').first()).toBeVisible();
+
+    // Navigate to Students
+    await page.getByRole('link', { name: 'Students' }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/students/);
+    await expect(page.getByText('Student Management').first()).toBeVisible();
+
+    // Verify Edit Student modal opens with student name prefilled
+    await page.getByTitle('Edit Student').first().click();
+    await expect(page.getByText(/Edit Student:/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /Save Student Updates/i })).toBeVisible();
+    await page.getByRole('button', { name: /Cancel/i }).first().click();
+
+    // Navigate to Fee Schedules
+    await page.getByRole('link', { name: 'Fee Schedules' }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/fees/);
+    await expect(page.getByText(/Recurring Fee Schedules/i).first()).toBeVisible();
+
+    // Click Pay on an obligation and verify ledger opens with prefilled amount
+    await page.getByRole('link', { name: 'Pay', exact: true }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/ledger\?studentId=/);
+    await expect(page.getByText('Record Verified Payment')).toBeVisible();
+    const amountInput = page.locator('input[type="number"]');
+    await expect(amountInput).toBeVisible();
+    const amountVal = await amountInput.inputValue();
+    expect(Number(amountVal)).toBeGreaterThan(0);
+    await page.getByRole('button', { name: /Cancel/i }).first().click();
+
+    // Navigate to Ledger & Payments
+    await page.getByRole('link', { name: 'Ledger & Payments' }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/ledger/);
+    await expect(page.getByText('Financial Ledger & Payments').first()).toBeVisible();
+
+    // Navigate to WhatsApp Reminders
+    await page.getByRole('link', { name: 'WhatsApp Reminders' }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/reminders/);
+    await expect(page.getByText('WhatsApp Fee Reminders').first()).toBeVisible();
+
+    // Navigate to Reports & Analytics
+    await page.getByRole('link', { name: 'Reports & Analytics' }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/reports/);
+    await expect(page.getByText('Institutional Reports & Analytics').first()).toBeVisible();
+
+    // Navigate to Audit Logs
+    await page.getByRole('link', { name: 'Audit Logs' }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/audit-logs/);
+    await expect(page.getByText('Administrative Audit Trail').first()).toBeVisible();
+
+    // Sign out
+    await page.getByRole('button', { name: /Sign Out/i }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/login/);
+  });
+});
