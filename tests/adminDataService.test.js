@@ -349,4 +349,132 @@ describe('AdminDataService & Institutional Management Tests', () => {
       expect(studentAfter.batchName).toBe('Class 10 Samacheer Kalvi Elite Evening Batch');
     });
   });
+
+  describe('Payment Reversals, Idempotency & Financial Consistency Audit', () => {
+    it('successfully reverses a payment and recalculates obligation balance and status', async () => {
+      const paymentResult = await AdminDataService.recordPayment({
+        obligationId: 'OBL-2026-102',
+        amount: 800,
+        paymentDate: '2026-10-24',
+        paymentMethod: 'upi_online',
+        referenceNumber: 'UPI/REV-TEST-001'
+      }, 'admin@focusacademyperambalur.com');
+
+      const oblBeforeReversal = (await AdminDataService.getFeeObligations()).find(o => o.id === 'OBL-2026-102');
+      const paidBeforeReversal = oblBeforeReversal.amountPaid;
+      const balanceBeforeReversal = oblBeforeReversal.balance;
+
+      const reversalResult = await AdminDataService.reversePayment(
+        paymentResult.payment.id,
+        'Bank returned UPI chargeback due to customer bank server timeout',
+        'director@focusacademyperambalur.com'
+      );
+
+      expect(reversalResult.success).toBe(true);
+      expect(reversalResult.payment.isReversed).toBe(true);
+      expect(reversalResult.payment.reversalReason).toBe('Bank returned UPI chargeback due to customer bank server timeout');
+      expect(reversalResult.payment.reversedBy).toBe('director@focusacademyperambalur.com');
+
+      const oblAfterReversal = (await AdminDataService.getFeeObligations()).find(o => o.id === 'OBL-2026-102');
+      expect(oblAfterReversal.amountPaid).toBe(paidBeforeReversal - 800);
+      expect(oblAfterReversal.balance).toBe(balanceBeforeReversal + 800);
+      expect(oblAfterReversal.status).toBe('partially_paid');
+
+      const logs = await AdminDataService.getAuditLogs();
+      const reversalLog = logs.find(l => l.action === 'PAYMENT_REVERSED' && l.entityId === paymentResult.payment.id);
+      expect(reversalLog).toBeDefined();
+      expect(reversalLog.actor).toBe('director@focusacademyperambalur.com');
+      expect(reversalLog.details).toContain('Reversed payment of ₹800');
+    });
+
+    it('rejects payment reversal when reason is less than 5 characters', async () => {
+      const payment = (await AdminDataService.getPayments())[0];
+      await expect(
+        AdminDataService.reversePayment(payment.id, 'bad')
+      ).rejects.toThrow(/at least 5 characters/i);
+    });
+
+    it('prevents double reversal of an already reversed payment', async () => {
+      const payments = await AdminDataService.getPayments();
+      const target = payments[0];
+
+      await AdminDataService.reversePayment(
+        target.id,
+        'First valid reversal for bounced transaction',
+        'director@focusacademyperambalur.com'
+      );
+
+      await expect(
+        AdminDataService.reversePayment(
+          target.id,
+          'Second attempt to reverse the same payment',
+          'director@focusacademyperambalur.com'
+        )
+      ).rejects.toThrow(/already been reversed/i);
+    });
+
+    it('rejects reversal when payment ID does not exist', async () => {
+      await expect(
+        AdminDataService.reversePayment('TXN-NON-EXISTENT', 'Valid audit reason')
+      ).rejects.toThrow(/Payment transaction not found/i);
+    });
+
+    it('excludes reversed payments from student ledger calculations and outstanding balance', async () => {
+      const studentId = 'FA-2026-001';
+      const ledgerBefore = await AdminDataService.getStudentLedger(studentId);
+      const initialPaid = ledgerBefore.totalAmountPaid;
+
+      const p = ledgerBefore.payments[0];
+      await AdminDataService.reversePayment(
+        p.id,
+        'Duplicate entry corrected by fee coordinator',
+        'director@focusacademyperambalur.com'
+      );
+
+      const ledgerAfter = await AdminDataService.getStudentLedger(studentId);
+      expect(ledgerAfter.totalAmountPaid).toBe(initialPaid - p.amount);
+      expect(ledgerAfter.outstandingBalance).toBe(ledgerBefore.outstandingBalance + p.amount);
+    });
+
+    it('excludes reversed payments from dashboard metrics total collections', async () => {
+      const metricsBefore = await AdminDataService.getDashboardMetrics();
+      const payments = await AdminDataService.getPayments();
+      const activePayment = payments.find(p => !p.isReversed);
+
+      await AdminDataService.reversePayment(
+        activePayment.id,
+        'Director approved refund and reversal',
+        'director@focusacademyperambalur.com'
+      );
+
+      const metricsAfter = await AdminDataService.getDashboardMetrics();
+      expect(metricsAfter.totalOutstandingFees).toBe(metricsBefore.totalOutstandingFees + activePayment.amount);
+    });
+
+    it('prevents concurrent payments from exceeding obligation balance', async () => {
+      const obligations = await AdminDataService.getFeeObligations();
+      const obl = obligations.find(o => o.balance > 0);
+      const remaining = obl.balance;
+
+      const p1 = await AdminDataService.recordPayment({
+        obligationId: obl.id,
+        amount: remaining
+      });
+      expect(p1.obligation.balance).toBe(0);
+
+      await expect(
+        AdminDataService.recordPayment({
+          obligationId: obl.id,
+          amount: 100
+        })
+      ).rejects.toThrow(/exceeds the remaining balance of ₹0/i);
+    });
+
+    it('forbids unauthorized users from reversing payments', async () => {
+      const payments = await AdminDataService.getPayments();
+      await expect(
+        AdminDataService.reversePayment(payments[0].id, 'Unauthorized reversal attempt', 'unauthorized_user@gmail.com')
+      ).rejects.toThrow(/Unauthorized/i);
+    });
+  });
 });

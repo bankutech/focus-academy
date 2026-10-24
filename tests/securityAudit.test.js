@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import sessionHandler from '../api/session.js';
 import leadsHandler from '../api/leads.js';
 import batchesHandler from '../api/batches.js';
+import whatsappHandler from '../api/whatsapp.js';
 
 function createMockRes() {
   const res = {
@@ -145,5 +146,88 @@ describe('Security & Authorization Hardening Audit Tests', () => {
     await sessionHandler(verifyReq, verifyRes);
     expect(verifyRes.statusCode).toBe(401);
     expect(verifyRes.body.valid).toBe(false);
+  });
+
+  describe('WhatsApp Serverless Endpoint (/api/whatsapp) Audit', () => {
+    it('returns gateway operational status and security headers via GET', async () => {
+      const res = createMockRes();
+      const req = {
+        method: 'GET',
+        headers: { 'x-forwarded-for': '192.168.1.160' }
+      };
+      await whatsappHandler(req, res);
+      expect(res.statusCode).toBe(200);
+      expect(res.headers['X-Content-Type-Options']).toBe('nosniff');
+      expect(res.body.success).toBe(true);
+      expect(res.body.service).toContain('WhatsApp');
+      expect(res.body.deliveryChannel).toBe('manual_click_to_chat_fallback');
+    });
+
+    it('rejects invalid recipient mobile number with HTTP 400', async () => {
+      const res = createMockRes();
+      const req = {
+        method: 'POST',
+        headers: { 'x-forwarded-for': '192.168.1.161' },
+        body: {
+          studentName: 'S. Kaviya',
+          phone: '12345',
+          amount: 3200,
+          dueDate: '2026-11-05'
+        }
+      };
+      await whatsappHandler(req, res);
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('10 digits');
+    });
+
+    it('returns structured manual fallback with RFC-encoded link when Cloud API unconfigured', async () => {
+      const res = createMockRes();
+      const req = {
+        method: 'POST',
+        headers: { 'x-forwarded-for': '192.168.1.162' },
+        body: {
+          studentName: 'S. Kaviya',
+          phone: '9842451220',
+          amount: 3200,
+          dueDate: '2026-11-05',
+          reminderType: 'upcoming'
+        }
+      };
+      await whatsappHandler(req, res);
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.mode).toBe('manual_fallback');
+      expect(res.body.automated).toBe(false);
+      expect(res.body.clickToChatUrl).toContain('https://wa.me/919842451220');
+      expect(res.body.clickToChatUrl).toContain('Focus%20Academy');
+      expect(res.body.payload.amount).toBe(3200);
+    });
+
+    it('enforces rate limiting on WhatsApp endpoint returning HTTP 429 after 20 attempts', async () => {
+      const burstIp = '10.0.0.77';
+      let rateLimited = false;
+
+      for (let i = 0; i < 25; i++) {
+        const res = createMockRes();
+        const req = {
+          method: 'POST',
+          headers: { 'x-forwarded-for': burstIp },
+          body: {
+            studentName: `Student ${i}`,
+            phone: '9842451220',
+            amount: 2500,
+            dueDate: '2026-11-05'
+          }
+        };
+        await whatsappHandler(req, res);
+        if (res.statusCode === 429) {
+          rateLimited = true;
+          break;
+        }
+      }
+
+      expect(rateLimited).toBe(true);
+    });
   });
 });

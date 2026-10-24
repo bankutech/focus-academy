@@ -7,7 +7,8 @@ import {
   CheckCircle2, 
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RotateCcw
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 
@@ -25,6 +26,9 @@ export default function AdminLedgerPage() {
 
   const [recordModalOpen, setRecordModalOpen] = useState(false);
   const [receiptModalPayment, setReceiptModalPayment] = useState(null);
+  const [reverseModalPayment, setReverseModalPayment] = useState(null);
+  const [reverseReason, setReverseReason] = useState('');
+  const [reverseError, setReverseError] = useState('');
 
   const [formError, setFormError] = useState('');
   const [settings, setSettings] = useState(null);
@@ -137,6 +141,32 @@ export default function AdminLedgerPage() {
       await loadData();
     } catch (err) {
       setFormError(err.message || 'Payment recording failed.');
+    }
+  };
+
+  const handleExecuteReverse = async (e) => {
+    e.preventDefault();
+    setReverseError('');
+    if (!reverseReason || reverseReason.trim().length < 5) {
+      setReverseError('A valid reason of at least 5 characters is mandatory for audit compliance.');
+      return;
+    }
+    try {
+      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
+      let currentAdmin = 'admin@focusacademyperambalur.com';
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          if (parsed?.email) currentAdmin = parsed.email;
+        } catch {}
+      }
+      await AdminDataService.reversePayment(reverseModalPayment.id, reverseReason, currentAdmin);
+      setFormSuccess(`Reversed payment ₹${reverseModalPayment.amount} for ${reverseModalPayment.studentName}.`);
+      setReverseModalPayment(null);
+      setReverseReason('');
+      await loadData();
+    } catch (err) {
+      setReverseError(err.message || 'Payment reversal failed.');
     }
   };
 
@@ -311,8 +341,15 @@ export default function AdminLedgerPage() {
                       {pay.studentName}
                     </td>
 
-                    <td className="py-3.5 px-4 font-extrabold text-emerald-600 text-sm">
-                      ₹{Number(pay.amount).toLocaleString('en-IN')}
+                    <td className="py-3.5 px-4 font-extrabold text-sm">
+                      <span className={pay.isReversed || pay.reversed ? 'line-through text-slate-400' : 'text-emerald-600'}>
+                        ₹{Number(pay.amount).toLocaleString('en-IN')}
+                      </span>
+                      {(pay.isReversed || pay.reversed) && (
+                        <span className="ml-1.5 px-1.5 py-0.5 text-[9px] font-bold bg-red-100 text-red-700 rounded-sm">
+                          REVERSED
+                        </span>
+                      )}
                     </td>
 
                     <td className="py-3.5 px-4">
@@ -333,7 +370,7 @@ export default function AdminLedgerPage() {
                       {pay.paymentDate}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right space-x-1.5">
                       <button
                         type="button"
                         onClick={() => setReceiptModalPayment(pay)}
@@ -342,6 +379,21 @@ export default function AdminLedgerPage() {
                         <Printer className="w-3 h-3" />
                         <span>Receipt</span>
                       </button>
+                      {!(pay.isReversed || pay.reversed) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReverseModalPayment(pay);
+                            setReverseReason('');
+                            setReverseError('');
+                          }}
+                          className="px-2.5 py-1 bg-red-50 hover:bg-red-600 hover:text-white text-red-700 rounded-md font-bold text-[11px] inline-flex items-center space-x-1 cursor-pointer transition-colors"
+                          title="Reverse Payment"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Reverse</span>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -597,6 +649,78 @@ export default function AdminLedgerPage() {
                 <span>Print Official Receipt</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {reverseModalPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <div className="flex items-center space-x-2 text-red-600">
+                <RotateCcw className="w-5 h-5" />
+                <h2 className="text-base font-extrabold text-[#0F172A]">
+                  Reverse Payment Transaction
+                </h2>
+              </div>
+              <button onClick={() => setReverseModalPayment(null)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {reverseError && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 flex items-start space-x-2 text-xs text-red-700">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-600" />
+                <span>{reverseError}</span>
+              </div>
+            )}
+
+            <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Receipt Number:</span>
+                <span className="font-mono font-bold text-[#EA580C]">{reverseModalPayment.receiptNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Student:</span>
+                <span className="font-bold text-slate-800">{reverseModalPayment.studentName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Amount to Reverse:</span>
+                <span className="font-extrabold text-red-600">₹{Number(reverseModalPayment.amount).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleExecuteReverse} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Reason for Reversal <span className="text-red-500">* (Min 5 chars for audit)</span>
+                </label>
+                <textarea
+                  required
+                  rows="3"
+                  value={reverseReason}
+                  onChange={(e) => setReverseReason(e.target.value)}
+                  placeholder="e.g. Bounced cheque, UPI chargeback, or entry made in error"
+                  className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setReverseModalPayment(null)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg text-xs hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer"
+                >
+                  Confirm Reversal
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

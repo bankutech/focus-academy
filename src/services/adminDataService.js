@@ -694,8 +694,10 @@ export const AdminDataService = {
           const docData = snap.docs[0].data();
           return { ...SEED_SETTINGS, ...docData };
         }
+        return { ...SEED_SETTINGS };
       } catch (err) {
-        console.warn('Firestore getSettings error, fallback to local:', err);
+        console.error('Firestore getSettings error:', err);
+        throw new Error(`Production Database Error: Failed to retrieve settings from Cloud Firestore: ${err.message}`);
       }
     }
     const store = loadLocalStore();
@@ -721,7 +723,8 @@ export const AdminDataService = {
       try {
         await setDoc(doc(db, 'academy_settings', 'main_config'), updated);
       } catch (err) {
-        console.warn('Firestore updateSettings error:', err);
+        console.error('Firestore updateSettings error:', err);
+        throw new Error(`Production Database Error: Failed to update settings in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -815,11 +818,10 @@ export const AdminDataService = {
       try {
         const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(limitCount));
         const snap = await getDocs(q);
-        if (!snap.empty) {
-          return snap.docs.map(d => d.data());
-        }
+        return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getAuditLogs error, fallback to local:', err);
+        console.error('Firestore getAuditLogs error:', err);
+        throw new Error(`Production Database Error: Failed to retrieve audit logs from Cloud Firestore: ${err.message}`);
       }
     }
     const store = loadLocalStore();
@@ -830,11 +832,10 @@ export const AdminDataService = {
     if (isFirebaseConfigured() && db) {
       try {
         const snap = await getDocs(collection(db, 'batches'));
-        if (!snap.empty) {
-          return snap.docs.map(d => d.data());
-        }
+        return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getBatches error, fallback to local:', err);
+        console.error('Firestore getBatches error:', err);
+        throw new Error(`Production Database Error: Failed to retrieve batches from Cloud Firestore: ${err.message}`);
       }
     }
     const store = loadLocalStore();
@@ -881,7 +882,8 @@ export const AdminDataService = {
       try {
         await setDoc(doc(db, 'batches', newBatch.id), newBatch);
       } catch (err) {
-        console.warn('Firestore createBatch error, saving locally:', err);
+        console.error('Firestore createBatch error:', err);
+        throw new Error(`Production Database Error: Failed to save batch to Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -927,7 +929,8 @@ export const AdminDataService = {
       try {
         await updateDoc(doc(db, 'batches', batchId), updated);
       } catch (err) {
-        console.warn('Firestore updateBatch error, saving locally:', err);
+        console.error('Firestore updateBatch error:', err);
+        throw new Error(`Production Database Error: Failed to update batch in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -973,7 +976,8 @@ export const AdminDataService = {
       try {
         await deleteDoc(doc(db, 'batches', batchId));
       } catch (err) {
-        console.warn('Firestore deleteBatch error, deleting locally:', err);
+        console.error('Firestore deleteBatch error:', err);
+        throw new Error(`Production Database Error: Failed to delete batch from Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -997,14 +1001,12 @@ export const AdminDataService = {
     if (isFirebaseConfigured() && db) {
       try {
         const snap = await getDocs(collection(db, 'students'));
-        if (!snap.empty) {
-          list = snap.docs.map(d => d.data());
-        }
+        list = snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getStudents error, fallback to local:', err);
+        console.error('Firestore getStudents error:', err);
+        throw new Error(`Production Database Error: Failed to retrieve students from Cloud Firestore: ${err.message}`);
       }
-    }
-    if (!list) {
+    } else {
       const store = loadLocalStore();
       list = store.students;
     }
@@ -1153,7 +1155,8 @@ export const AdminDataService = {
       try {
         await setDoc(doc(db, 'students', newStudent.id), newStudent);
       } catch (err) {
-        console.warn('Firestore createStudent error, saving locally:', err);
+        console.error('Firestore createStudent error:', err);
+        throw new Error(`Production Database Error: Failed to save student to Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1208,7 +1211,8 @@ export const AdminDataService = {
       try {
         await updateDoc(doc(db, 'students', studentId), updated);
       } catch (err) {
-        console.warn('Firestore updateStudent error, saving locally:', err);
+        console.error('Firestore updateStudent error:', err);
+        throw new Error(`Production Database Error: Failed to update student in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1550,11 +1554,10 @@ export const AdminDataService = {
           q = collection(db, 'fee_obligations');
         }
         const snap = await getDocs(q);
-        if (!snap.empty) {
-          return snap.docs.map(d => d.data());
-        }
+        return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getFeeObligations error, fallback to local:', err);
+        console.error('Firestore getFeeObligations error:', err);
+        throw new Error(`Production Database Error: Failed to retrieve fee obligations from Cloud Firestore: ${err.message}`);
       }
     }
     const store = loadLocalStore();
@@ -1621,7 +1624,8 @@ export const AdminDataService = {
       try {
         await setDoc(doc(db, 'fee_obligations', newObligation.id), newObligation);
       } catch (err) {
-        console.warn('Firestore createFeeObligation error:', err);
+        console.error('Firestore createFeeObligation error:', err);
+        throw new Error(`Production Database Error: Failed to save fee obligation to Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1676,7 +1680,8 @@ export const AdminDataService = {
       try {
         await updateDoc(doc(db, 'fee_obligations', obligationId), obl);
       } catch (err) {
-        console.warn('Firestore waiveFeeObligation error:', err);
+        console.error('Firestore waiveFeeObligation error:', err);
+        throw new Error(`Production Database Error: Failed to record fee waiver in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1703,11 +1708,10 @@ export const AdminDataService = {
           q = collection(db, 'payments');
         }
         const snap = await getDocs(q);
-        if (!snap.empty) {
-          return snap.docs.map(d => d.data());
-        }
+        return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getPayments error, fallback to local:', err);
+        console.error('Firestore getPayments error:', err);
+        throw new Error(`Production Database Error: Failed to retrieve payments from Cloud Firestore: ${err.message}`);
       }
     }
     const store = loadLocalStore();
@@ -1786,7 +1790,8 @@ export const AdminDataService = {
         await setDoc(doc(db, 'payments', newPayment.id), newPayment);
         await updateDoc(doc(db, 'fee_obligations', obligation.id), obligation);
       } catch (err) {
-        console.warn('Firestore recordPayment error:', err);
+        console.error('Firestore recordPayment error:', err);
+        throw new Error(`Production Database Error: Failed to record payment in Cloud Firestore: ${err.message}`);
       }
     }
 
@@ -1809,6 +1814,80 @@ export const AdminDataService = {
     return this.recordPayment(paymentData, actor);
   },
 
+  async reversePayment(paymentId, reason, actor = 'admin') {
+    this.verifyPermission(actor, 'canRecordPayments', 'reversing financial payment');
+    if (!paymentId) {
+      throw new Error('Payment ID is required to reverse payment.');
+    }
+    if (!reason || String(reason).trim().length < 5) {
+      throw new Error('A detailed audit reason (at least 5 characters) is required to reverse a payment.');
+    }
+
+    const store = loadLocalStore();
+    const payment = store.payments.find(p => p.id === paymentId);
+    if (!payment) {
+      throw new Error(`Payment transaction not found: ${paymentId}`);
+    }
+    if (payment.isReversed || payment.reversed) {
+      throw new Error(`Payment ${paymentId} (${payment.receiptNumber}) has already been reversed.`);
+    }
+
+    const oblIdx = store.obligations.findIndex(o => o.id === payment.obligationId);
+    if (oblIdx === -1) {
+      throw new Error(`Associated fee obligation not found: ${payment.obligationId}`);
+    }
+
+    const obligation = store.obligations[oblIdx];
+    const reverseAmount = Number(payment.amount) || 0;
+
+    obligation.amountPaid = Math.max(0, (obligation.amountPaid || 0) - reverseAmount);
+    obligation.balance = Math.max(0, obligation.amountDue - obligation.amountPaid - (obligation.waivedAmount || 0));
+
+    const today = new Date().toISOString().split('T')[0];
+    if (obligation.balance === 0) {
+      obligation.status = (obligation.waivedAmount > 0 && obligation.amountPaid === 0) ? 'waived' : 'paid';
+    } else if (obligation.amountPaid > 0) {
+      obligation.status = 'partially_paid';
+    } else {
+      obligation.status = (obligation.balance > 0 && today > obligation.dueDate) ? 'overdue' : 'pending';
+    }
+    obligation.updatedAt = new Date().toISOString();
+
+    const timestamp = new Date().toISOString();
+    const actorEmail = normalizeActorEmail(actor);
+    payment.isReversed = true;
+    payment.reversed = true;
+    payment.reversalReason = reason.trim();
+    payment.reversedBy = actorEmail;
+    payment.reversedAt = timestamp;
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await updateDoc(doc(db, 'payments', payment.id), payment);
+        await updateDoc(doc(db, 'fee_obligations', obligation.id), obligation);
+      } catch (err) {
+        console.error('Firestore reversePayment error:', err);
+        throw new Error(`Production Database Error: Failed to reverse payment in Cloud Firestore: ${err.message}`);
+      }
+    }
+
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'PAYMENT_REVERSED',
+      entityType: 'payment',
+      entityId: payment.id,
+      details: `Reversed payment of ₹${reverseAmount} (Receipt: ${payment.receiptNumber}) for '${obligation.studentName}'. Reason: ${reason.trim()}`
+    });
+
+    return {
+      success: true,
+      payment,
+      obligation
+    };
+  },
+
   async getStudentLedger(studentId) {
     const student = await this.getStudentById(studentId);
     if (!student) {
@@ -1817,9 +1896,10 @@ export const AdminDataService = {
 
     const obligations = await this.getFeeObligations(studentId);
     const payments = await this.getPayments(studentId);
+    const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
 
     const totalFeesCharged = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
-    const totalAmountPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const totalAmountPaid = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
     const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
     const outstandingBalance = Math.max(0, totalFeesCharged - totalAmountPaid - totalWaived);
 
@@ -1852,6 +1932,7 @@ export const AdminDataService = {
     const students = await this.getStudents();
     const obligations = await this.getFeeObligations();
     const payments = await this.getPayments();
+    const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
 
     const activeStudents = students.filter(s => s.status === 'active' || s.status === 'new_enrollment');
     const activeBatches = batches.filter(b => !b.isArchived);
@@ -1860,12 +1941,12 @@ export const AdminDataService = {
     const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const today = now.toISOString().split('T')[0];
 
-    const feesCollectedThisMonth = payments
+    const feesCollectedThisMonth = activePayments
       .filter(p => p.paymentDate && p.paymentDate.startsWith(currentMonthPrefix))
       .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
     const totalFeesCharged = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
-    const totalAmountPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const totalAmountPaid = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
     const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
     const totalOutstandingFees = Math.max(0, totalFeesCharged - totalAmountPaid - totalWaived);
 
@@ -1895,6 +1976,7 @@ export const AdminDataService = {
     const payments = await this.getPayments();
     const byAdmin = {};
     for (const p of payments) {
+      if (p.isReversed || p.reversed) continue;
       const admin = p.recordedBy || 'admin';
       const cleanAdminKey = admin.includes('@') ? admin.split('@')[0] : admin;
       if (!byAdmin[cleanAdminKey]) {
@@ -1931,6 +2013,7 @@ export const AdminDataService = {
     const payments = await this.getPayments();
     const byDate = {};
     for (const p of payments) {
+      if (p.isReversed || p.reversed) continue;
       const date = p.paymentDate || 'Unknown Date';
       if (startDate && date < startDate) continue;
       if (endDate && date > endDate) continue;
@@ -1988,7 +2071,7 @@ export const AdminDataService = {
 
     return batches.map(batch => {
       const batchObligations = obligations.filter(o => o.batchId === batch.id || studentBatchMap.get(o.studentId) === batch.id);
-      const batchPayments = payments.filter(p => p.batchId === batch.id || studentBatchMap.get(p.studentId) === batch.id);
+      const batchPayments = payments.filter(p => (!p.isReversed && !p.reversed) && (p.batchId === batch.id || studentBatchMap.get(p.studentId) === batch.id));
 
       const totalCharged = batchObligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
       const totalCollected = batchPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
@@ -2025,11 +2108,12 @@ export const AdminDataService = {
   async reconcileLedger(actor = 'admin') {
     const obligations = await this.getFeeObligations();
     const payments = await this.getPayments();
+    const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
 
     const discrepancies = [];
     const paymentsByObligation = {};
 
-    for (const p of payments) {
+    for (const p of activePayments) {
       if (!p.obligationId) {
         discrepancies.push({
           type: 'ORPHAN_PAYMENT',
@@ -2059,7 +2143,7 @@ export const AdminDataService = {
     }
 
     const totalCharged = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
-    const totalCollected = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const totalCollected = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
     const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
     const netOutstanding = Math.max(0, totalCharged - totalCollected - totalWaived);
 
@@ -2092,11 +2176,10 @@ export const AdminDataService = {
     if (isFirebaseConfigured() && db) {
       try {
         const snap = await getDocs(collection(db, 'reminders'));
-        if (!snap.empty) {
-          return snap.docs.map(d => d.data());
-        }
+        return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getReminders error, fallback to local:', err);
+        console.error('Firestore getReminders error:', err);
+        throw new Error(`Production Database Error: Failed to retrieve reminders from Cloud Firestore: ${err.message}`);
       }
     }
     const store = loadLocalStore();
@@ -2185,7 +2268,8 @@ export const AdminDataService = {
       try {
         await setDoc(doc(db, 'reminders', reminderEntry.id), reminderEntry);
       } catch (err) {
-        console.warn('Firestore sendOrLogWhatsAppReminder error:', err);
+        console.error('Firestore sendOrLogWhatsAppReminder error:', err);
+        throw new Error(`Production Database Error: Failed to log reminder in Cloud Firestore: ${err.message}`);
       }
     }
 
