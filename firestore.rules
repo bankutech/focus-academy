@@ -9,10 +9,10 @@ service cloud.firestore {
     function isOwner() {
       return isAuthenticated() && (
         request.auth.token.role == 'owner' ||
-        request.auth.token.email.lower() in [
+        (request.auth.token.email != null && request.auth.token.email.lower() in [
           'admin@focusacademyperambalur.com',
           'director@focusacademyperambalur.com'
-        ]
+        ])
       );
     }
 
@@ -21,10 +21,10 @@ service cloud.firestore {
         isAuthenticated() && (
           request.auth.token.admin == true ||
           request.auth.token.role in ['admin', 'administrator'] ||
-          request.auth.token.email.lower() in [
+          (request.auth.token.email != null && request.auth.token.email.lower() in [
             'principal@focusacademyperambalur.com',
             'focusacademy.perambalur@gmail.com'
-          ]
+          ])
         )
       );
     }
@@ -33,9 +33,9 @@ service cloud.firestore {
       return isAdministrator() || (
         isAuthenticated() && (
           request.auth.token.role == 'fee_manager' ||
-          request.auth.token.email.lower() in [
+          (request.auth.token.email != null && request.auth.token.email.lower() in [
             'coordinator@focusacademyperambalur.com'
-          ]
+          ])
         )
       );
     }
