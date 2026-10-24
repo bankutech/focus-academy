@@ -1,5 +1,5 @@
 import { isBatchCompatible } from '../types/schemas';
-import { db, isFirebaseConfigured } from './firebase';
+import { db, isFirebaseConfigured, getAdminAllowlist } from './firebase';
 import { 
   collection, 
   doc, 
@@ -14,6 +14,71 @@ import {
 } from 'firebase/firestore';
 
 const STORAGE_KEY = 'focus_academy_admin_data_v1';
+
+export const ROLE_PERMISSIONS = {
+  owner: [
+    'canManageSettings',
+    'canManageAdmins',
+    'canWaiveFees',
+    'canApplyDiscounts',
+    'canExportData',
+    'canImportData',
+    'canManageBatches',
+    'canManageStudents',
+    'canRecordPayments',
+    'canTriggerReminders',
+    'canRestoreBackup'
+  ],
+  administrator: [
+    'canManageSettings',
+    'canWaiveFees',
+    'canApplyDiscounts',
+    'canExportData',
+    'canImportData',
+    'canManageBatches',
+    'canManageStudents',
+    'canRecordPayments',
+    'canTriggerReminders'
+  ],
+  fee_manager: [
+    'canWaiveFees',
+    'canRecordPayments',
+    'canTriggerReminders',
+    'canExportData'
+  ]
+};
+
+export const SEED_SETTINGS = {
+  academyName: 'Focus Academy',
+  campusAddress: 'First Floor, Thiripura Complex, Thoramangalam, Perambalur – 621220',
+  primaryPhone: '+91 98424 51220',
+  email: 'contact@focusacademyperambalur.com',
+  website: 'https://focusacademyperambalur.com',
+  logoUrl: '/logo.png',
+  receiptPrefix: 'REC',
+  defaultCurrency: 'INR',
+  currencySymbol: '₹',
+  defaultTimezone: 'Asia/Kolkata',
+  defaultFeeCycles: ['monthly', 'quarterly', 'half-yearly', 'yearly'],
+  paymentMethods: ['cash', 'upi_online', 'bank_transfer', 'card'],
+  reminderTimingDaysBeforeDue: 3,
+  whatsappTemplate: 'Hello, this is {academyName}. A fee payment of {currencySymbol}{amount} for {studentName} is due on {dueDate}. If you have already paid, please contact the academy so we can verify the payment. Thank you.',
+  academicSessions: ['2025-2026', '2026-2027'],
+  supportedBoards: [
+    'TN State Board (Samacheer)',
+    'CBSE Board',
+    'ICSE Board',
+    'TN State Board, CBSE & ISC',
+    'Samacheer, CBSE & ICSE'
+  ],
+  authorizedAdmins: [
+    { email: 'admin@focusacademyperambalur.com', name: 'Principal Administrator', role: 'owner', active: true },
+    { email: 'director@focusacademyperambalur.com', name: 'Managing Director', role: 'owner', active: true },
+    { email: 'principal@focusacademyperambalur.com', name: 'Academic Principal', role: 'administrator', active: true },
+    { email: 'focusacademy.perambalur@gmail.com', name: 'Campus Operations', role: 'administrator', active: true },
+    { email: 'coordinator@focusacademyperambalur.com', name: 'Fee & Billing Desk', role: 'fee_manager', active: true }
+  ]
+};
 
 const SEED_BATCHES = [
   {
@@ -150,29 +215,29 @@ const SEED_BATCHES = [
     seatsRemaining: 4,
     status: 'Admissions Open (4 Seats Left)',
     monthlyFee: 2600,
-    classroom: 'Senior Hall 103, First Floor, Thiripura Complex',
-    subjects: ['Physics (Mechanics & Waves)', 'Chemistry (Thermodynamics & Bonding)', 'Mathematics (Calculus & Trigonometry)'],
-    description: 'In-depth mechanics and calculus foundation.',
+    classroom: 'Senior Hall 101, First Floor, Thiripura Complex',
+    subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology'],
+    description: 'Comprehensive core subject training for Class 11 higher secondary students.',
     isArchived: false,
     createdAt: '2025-06-01T00:00:00.000Z'
   },
   {
-    id: 'batch-remedial-maths',
-    name: 'Special Secondary Math Intensive & Doubt Clinic Batch',
-    grade: 'Classes 9 & 10',
-    board: 'Samacheer, CBSE & ICSE',
+    id: 'batch-special-maths',
+    name: 'Advanced Board Mathematics Mastery (Class 10 & 12)',
+    grade: 'Class 10',
+    board: 'TN State Board, CBSE & ICSE',
     academicSession: '2025-2026',
-    slotId: 'slot-1',
-    timing: '4:30 PM – 6:00 PM',
-    days: 'Monday – Saturday',
+    slotId: 'slot-4',
+    timing: '5:30 AM – 7:00 AM (Weekend Intensive)',
+    days: 'Saturday & Sunday',
     capacity: 12,
-    enrolledCount: 8,
-    seatsRemaining: 4,
-    status: 'Admissions Open (4 Seats Left)',
-    monthlyFee: 1800,
-    classroom: 'Problem Solving Clinic 105, First Floor, Thiripura Complex',
-    subjects: ['Algebra Factoring', 'Geometry Theorems', 'Trigonometry Basics', 'Arithmetic Speed'],
-    description: 'Designed specifically for students who need patient whiteboard coaching.',
+    enrolledCount: 11,
+    seatsRemaining: 1,
+    status: 'Almost Full (1 Seat Left)',
+    monthlyFee: 2100,
+    classroom: 'Lecture Hall 102, First Floor, Thiripura Complex',
+    subjects: ['Advanced Board Mathematics', 'Formula Derivations', '10-Year Question Bank Analysis'],
+    description: 'Early morning weekend drill on high-weightage math problems.',
     isArchived: false,
     createdAt: '2025-06-01T00:00:00.000Z'
   }
@@ -190,11 +255,19 @@ const SEED_STUDENTS = [
     batchId: 'batch-10-state-board',
     batchName: 'Class 10 State Board (SSLC) - Prime Evening Batch',
     enrollmentDate: '2025-06-10',
+    courseEndDate: null,
     status: 'active',
+    notificationPreferences: {
+      communicationConsent: true,
+      preferredChannel: 'whatsapp',
+      remindersDisabled: false,
+      reminderDisabledReason: ''
+    },
     feeConfig: {
       billingFrequency: 'monthly',
       amountPerCycle: 2200,
       discountAdjustment: 0,
+      adjustmentHistory: [],
       billingStartDate: '2025-06-10',
       nextDueDate: '2026-11-05',
       status: 'active'
@@ -212,11 +285,29 @@ const SEED_STUDENTS = [
     batchId: 'batch-12-science-board',
     batchName: 'Class 12 Higher Secondary Science (HSC, CBSE & ISC)',
     enrollmentDate: '2025-06-12',
+    courseEndDate: null,
     status: 'active',
+    notificationPreferences: {
+      communicationConsent: true,
+      preferredChannel: 'whatsapp',
+      remindersDisabled: false,
+      reminderDisabledReason: ''
+    },
     feeConfig: {
       billingFrequency: 'monthly',
       amountPerCycle: 2800,
       discountAdjustment: 200,
+      adjustmentHistory: [
+        {
+          id: 'ADJ-INIT-001',
+          timestamp: '2025-06-12T11:00:00.000Z',
+          discountType: 'sibling_concession',
+          amount: 200,
+          reason: 'Sibling concession for elder sibling enrolled',
+          approvingAdmin: 'director@focusacademyperambalur.com',
+          recordedBy: 'admin@focusacademyperambalur.com'
+        }
+      ],
       billingStartDate: '2025-06-12',
       nextDueDate: '2026-10-28',
       status: 'active'
@@ -234,11 +325,19 @@ const SEED_STUDENTS = [
     batchId: 'batch-middle-foundation',
     batchName: 'Middle School Science & Math Foundation (Classes 6–8)',
     enrollmentDate: '2025-07-01',
+    courseEndDate: null,
     status: 'active',
+    notificationPreferences: {
+      communicationConsent: true,
+      preferredChannel: 'whatsapp',
+      remindersDisabled: false,
+      reminderDisabledReason: ''
+    },
     feeConfig: {
       billingFrequency: 'quarterly',
       amountPerCycle: 5100,
       discountAdjustment: 300,
+      adjustmentHistory: [],
       billingStartDate: '2025-07-01',
       nextDueDate: '2026-10-20',
       status: 'active'
@@ -256,11 +355,19 @@ const SEED_STUDENTS = [
     batchId: 'batch-10-cbse',
     batchName: 'Class 10 CBSE Board - Prime Evening Batch',
     enrollmentDate: '2025-06-15',
+    courseEndDate: null,
     status: 'active',
+    notificationPreferences: {
+      communicationConsent: true,
+      preferredChannel: 'whatsapp',
+      remindersDisabled: false,
+      reminderDisabledReason: ''
+    },
     feeConfig: {
       billingFrequency: 'monthly',
       amountPerCycle: 2400,
       discountAdjustment: 0,
+      adjustmentHistory: [],
       billingStartDate: '2025-06-15',
       nextDueDate: '2026-11-01',
       status: 'active'
@@ -408,48 +515,85 @@ const SEED_AUDIT_LOGS = [
   }
 ];
 
+function getSessionAdminEmail() {
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      const raw = window.sessionStorage.getItem('focus_academy_admin_session');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.email) return parsed.email.toLowerCase().trim();
+      }
+    } catch {}
+  }
+  return null;
+}
+
+function normalizeActorEmail(actor) {
+  if (!actor) {
+    const sessionEmail = getSessionAdminEmail();
+    return sessionEmail || 'admin@focusacademyperambalur.com';
+  }
+  if (typeof actor === 'object') {
+    return (actor.email || getSessionAdminEmail() || 'admin@focusacademyperambalur.com').toLowerCase().trim();
+  }
+  const str = String(actor).toLowerCase().trim();
+  if (str === 'admin') {
+    const sessionEmail = getSessionAdminEmail();
+    return sessionEmail || 'admin@focusacademyperambalur.com';
+  }
+  if (str === 'director') return 'director@focusacademyperambalur.com';
+  if (str === 'principal') return 'principal@focusacademyperambalur.com';
+  if (str === 'coordinator') return 'coordinator@focusacademyperambalur.com';
+  if (str === 'owner') return 'director@focusacademyperambalur.com';
+  return str;
+}
+
 function loadLocalStore() {
   if (typeof window === 'undefined') {
     return {
-      batches: [...SEED_BATCHES],
-      students: [...SEED_STUDENTS],
-      obligations: [...SEED_OBLIGATIONS],
-      payments: [...SEED_PAYMENTS],
-      reminders: [...SEED_REMINDERS],
-      auditLogs: [...SEED_AUDIT_LOGS]
+      batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
+      students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
+      obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
+      payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
+      reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
+      auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
+      settings: JSON.parse(JSON.stringify(SEED_SETTINGS))
     };
   }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const initial = {
-        batches: [...SEED_BATCHES],
-        students: [...SEED_STUDENTS],
-        obligations: [...SEED_OBLIGATIONS],
-        payments: [...SEED_PAYMENTS],
-        reminders: [...SEED_REMINDERS],
-        auditLogs: [...SEED_AUDIT_LOGS]
+        batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
+        students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
+        obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
+        payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
+        reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
+        auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
+        settings: JSON.parse(JSON.stringify(SEED_SETTINGS))
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
     const parsed = JSON.parse(raw);
     return {
-      batches: parsed.batches || [...SEED_BATCHES],
-      students: parsed.students || [...SEED_STUDENTS],
-      obligations: parsed.obligations || [...SEED_OBLIGATIONS],
-      payments: parsed.payments || [...SEED_PAYMENTS],
-      reminders: parsed.reminders || [...SEED_REMINDERS],
-      auditLogs: parsed.auditLogs || [...SEED_AUDIT_LOGS]
+      batches: parsed.batches || JSON.parse(JSON.stringify(SEED_BATCHES)),
+      students: parsed.students || JSON.parse(JSON.stringify(SEED_STUDENTS)),
+      obligations: parsed.obligations || JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
+      payments: parsed.payments || JSON.parse(JSON.stringify(SEED_PAYMENTS)),
+      reminders: parsed.reminders || JSON.parse(JSON.stringify(SEED_REMINDERS)),
+      auditLogs: parsed.auditLogs || JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
+      settings: parsed.settings || JSON.parse(JSON.stringify(SEED_SETTINGS))
     };
   } catch {
     return {
-      batches: [...SEED_BATCHES],
-      students: [...SEED_STUDENTS],
-      obligations: [...SEED_OBLIGATIONS],
-      payments: [...SEED_PAYMENTS],
-      reminders: [...SEED_REMINDERS],
-      auditLogs: [...SEED_AUDIT_LOGS]
+      batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
+      students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
+      obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
+      payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
+      reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
+      auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
+      settings: JSON.parse(JSON.stringify(SEED_SETTINGS))
     };
   }
 }
@@ -466,22 +610,186 @@ function saveLocalStore(data) {
 export const AdminDataService = {
   resetToSeedData() {
     const seed = {
-      batches: [...SEED_BATCHES],
-      students: [...SEED_STUDENTS],
-      obligations: [...SEED_OBLIGATIONS],
-      payments: [...SEED_PAYMENTS],
-      reminders: [...SEED_REMINDERS],
-      auditLogs: [...SEED_AUDIT_LOGS]
+      batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
+      students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
+      obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
+      payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
+      reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
+      auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
+      settings: JSON.parse(JSON.stringify(SEED_SETTINGS))
     };
     saveLocalStore(seed);
     return seed;
+  },
+
+  getUserRole(actor) {
+    if (['owner', 'administrator', 'fee_manager', 'viewer'].includes(actor)) {
+      return actor;
+    }
+    const email = normalizeActorEmail(actor);
+    const settings = this.getSettingsSync();
+    const admins = settings.authorizedAdmins || SEED_SETTINGS.authorizedAdmins;
+    const match = admins.find(a => a.email.toLowerCase() === email);
+    if (match) return match.role;
+    const allowlist = getAdminAllowlist().map(e => e.toLowerCase());
+    if (allowlist.includes(email)) return 'administrator';
+    if (typeof actor === 'string') {
+      const lower = actor.toLowerCase();
+      if (lower.includes('admin') || lower.includes('director') || lower.includes('principal') || lower.includes('owner')) {
+        return 'administrator';
+      }
+      if (lower.includes('fee') || lower.includes('officer') || lower.includes('billing') || lower.includes('coordinator')) {
+        return 'fee_manager';
+      }
+    }
+    return 'viewer';
+  },
+
+  hasPermission(actor, permission) {
+    const role = this.getUserRole(actor);
+    const permissions = ROLE_PERMISSIONS[role] || [];
+    if (permissions.includes(permission)) return true;
+
+    const aliases = {
+      'MANAGE_SETTINGS': 'canManageSettings',
+      'MANAGE_ROLES': 'canManageAdmins',
+      'MANAGE_ADMINS': 'canManageAdmins',
+      'BACKUP_RESTORE': 'canRestoreBackup',
+      'RESTORE_BACKUP': 'canRestoreBackup',
+      'EXPORT_DATA': 'canExportData',
+      'IMPORT_DATA': 'canImportData',
+      'MANAGE_BATCHES': 'canManageBatches',
+      'DELETE_BATCH': 'canManageBatches',
+      'MANAGE_STUDENTS': 'canManageStudents',
+      'MANAGE_FEES': 'canWaiveFees',
+      'WAIVE_FEES': 'canWaiveFees',
+      'APPLY_DISCOUNTS': 'canApplyDiscounts',
+      'RECORD_PAYMENTS': 'canRecordPayments',
+      'TRIGGER_REMINDERS': 'canTriggerReminders'
+    };
+    if (aliases[permission] && permissions.includes(aliases[permission])) {
+      return true;
+    }
+    return false;
+  },
+
+  verifyPermission(actor, permission, actionName = 'This operation') {
+    if (!this.hasPermission(actor, permission)) {
+      const role = this.getUserRole(actor);
+      const email = normalizeActorEmail(actor);
+      throw new Error(`Unauthorized: User '${email}' with role '${role}' is not granted '${permission}' for ${actionName}.`);
+    }
+  },
+
+  getSettingsSync() {
+    const store = loadLocalStore();
+    return store.settings || SEED_SETTINGS;
+  },
+
+  async getSettings() {
+    if (isFirebaseConfigured() && db) {
+      try {
+        const snap = await getDocs(collection(db, 'academy_settings'));
+        if (!snap.empty) {
+          const docData = snap.docs[0].data();
+          return { ...SEED_SETTINGS, ...docData };
+        }
+      } catch (err) {
+        console.warn('Firestore getSettings error, fallback to local:', err);
+      }
+    }
+    const store = loadLocalStore();
+    return store.settings || { ...SEED_SETTINGS };
+  },
+
+  async updateSettings(updates, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageSettings', 'updating academy institutional settings');
+
+    const store = loadLocalStore();
+    const current = store.settings || { ...SEED_SETTINGS };
+    const updated = {
+      ...current,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+      updatedBy: normalizeActorEmail(actor)
+    };
+
+    store.settings = updated;
+    saveLocalStore(store);
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await setDoc(doc(db, 'academy_settings', 'main_config'), updated);
+      } catch (err) {
+        console.warn('Firestore updateSettings error:', err);
+      }
+    }
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'SETTINGS_UPDATED',
+      entityType: 'academy_settings',
+      entityId: 'main_config',
+      details: 'Updated institutional academy settings and policies.'
+    });
+
+    return updated;
+  },
+
+  async getAuthorizedAdmins() {
+    const settings = await this.getSettings();
+    return settings.authorizedAdmins || SEED_SETTINGS.authorizedAdmins;
+  },
+
+  async updateAdminRole(email, newRole, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageAdmins', 'updating administrator roles');
+    const validRoles = ['owner', 'administrator', 'fee_manager'];
+    if (!validRoles.includes(newRole)) {
+      throw new Error(`Invalid role '${newRole}'. Allowed roles: ${validRoles.join(', ')}.`);
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const store = loadLocalStore();
+    const settings = store.settings || { ...SEED_SETTINGS };
+    const admins = settings.authorizedAdmins ? [...settings.authorizedAdmins] : [...SEED_SETTINGS.authorizedAdmins];
+
+    const targetIdx = admins.findIndex(a => a.email.toLowerCase() === cleanEmail);
+    const oldRole = targetIdx !== -1 ? admins[targetIdx].role : 'none';
+
+    if (targetIdx !== -1) {
+      admins[targetIdx].role = newRole;
+      admins[targetIdx].updatedAt = new Date().toISOString();
+    } else {
+      admins.push({
+        email: cleanEmail,
+        name: cleanEmail.split('@')[0],
+        role: newRole,
+        active: true,
+        addedAt: new Date().toISOString()
+      });
+    }
+
+    settings.authorizedAdmins = admins;
+    store.settings = settings;
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'ADMIN_ROLE_UPDATED',
+      entityType: 'admin_user',
+      entityId: cleanEmail,
+      details: `Changed permission role for '${cleanEmail}' from '${oldRole}' to '${newRole}'.`
+    });
+
+    Object.assign(admins, { email: cleanEmail, role: newRole });
+    return admins;
   },
 
   async logAudit({ actor = 'admin', action, entityType, entityId, details }) {
     const entry = {
       id: `LOG-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
       timestamp: new Date().toISOString(),
-      actor,
+      actor: normalizeActorEmail(actor),
       action,
       entityType,
       entityId,
@@ -539,6 +847,7 @@ export const AdminDataService = {
   },
 
   async createBatch(batchData, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageBatches', 'creating batch');
     const batches = await this.getBatches();
     const cleanId = (batchData.id || `batch-${Date.now().toString(36)}`).toLowerCase().replace(/[^a-z0-9_-]/g, '');
     
@@ -581,7 +890,7 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'BATCH_CREATED',
       entityType: 'batch',
       entityId: newBatch.id,
@@ -592,6 +901,7 @@ export const AdminDataService = {
   },
 
   async updateBatch(batchId, updates, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageBatches', 'updating batch');
     const store = loadLocalStore();
     const idx = store.batches.findIndex(b => b.id === batchId);
     if (idx === -1) {
@@ -635,7 +945,7 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'BATCH_UPDATED',
       entityType: 'batch',
       entityId: batchId,
@@ -650,6 +960,7 @@ export const AdminDataService = {
   },
 
   async deleteBatch(batchId, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageBatches', 'deleting batch');
     const students = await this.getStudents();
     const assigned = students.filter(s => s.batchId === batchId && s.status !== 'archived');
     if (assigned.length > 0) {
@@ -671,7 +982,7 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'BATCH_DELETED',
       entityType: 'batch',
       entityId: batchId,
@@ -681,19 +992,30 @@ export const AdminDataService = {
     return { success: true };
   },
 
-  async getStudents() {
+  async getStudents(options = {}) {
+    let list;
     if (isFirebaseConfigured() && db) {
       try {
         const snap = await getDocs(collection(db, 'students'));
         if (!snap.empty) {
-          return snap.docs.map(d => d.data());
+          list = snap.docs.map(d => d.data());
         }
       } catch (err) {
         console.warn('Firestore getStudents error, fallback to local:', err);
       }
     }
-    const store = loadLocalStore();
-    return store.students;
+    if (!list) {
+      const store = loadLocalStore();
+      list = store.students;
+    }
+
+    if (!options.includeArchived) {
+      list = list.filter(s => s.status !== 'archived');
+    }
+    if (options.status && options.status !== 'all') {
+      list = list.filter(s => s.status === options.status);
+    }
+    return list;
   },
 
   async getStudentById(studentId) {
@@ -701,7 +1023,75 @@ export const AdminDataService = {
     return students.find(s => s.id === studentId) || null;
   },
 
+  checkDuplicateStudent({ studentName, guardianPhone, excludeStudentId = null }) {
+    const store = loadLocalStore();
+    const cleanPhone = String(guardianPhone || '').replace(/\D/g, '').slice(-10);
+    const cleanName = (studentName || '').trim().toLowerCase();
+    const nameTokens = cleanName
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(t => t.length > 0);
+    const sortedTokensStr = [...nameTokens].sort().join(' ');
+
+    const duplicates = [];
+
+    for (const s of store.students) {
+      if (excludeStudentId && s.id === excludeStudentId) continue;
+
+      const sPhone = String(s.guardianPhone || '').replace(/\D/g, '').slice(-10);
+      const sName = (s.studentName || '').trim().toLowerCase();
+      const sTokens = sName
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(t => t.length > 0);
+      const sSortedTokensStr = [...sTokens].sort().join(' ');
+
+      const isExactPhone = cleanPhone && sPhone && (cleanPhone === sPhone || (cleanPhone.length >= 7 && sPhone.includes(cleanPhone)));
+      const isExactName = cleanName && sName && cleanName === sName;
+
+      let isFuzzyName = false;
+      if (cleanName && sName) {
+        if (sortedTokensStr && sSortedTokensStr && sortedTokensStr === sSortedTokensStr) {
+          isFuzzyName = true;
+        } else if (cleanName.length >= 3 && sName.length >= 3 && (cleanName.includes(sName) || sName.includes(cleanName))) {
+          isFuzzyName = true;
+        } else {
+          const sharedSignificants = nameTokens.filter(t => t.length >= 3 && sTokens.includes(t));
+          if (sharedSignificants.length > 0) {
+            isFuzzyName = true;
+          }
+        }
+      }
+
+      if (isExactPhone || isExactName || isFuzzyName) {
+        duplicates.push({
+          student: s,
+          matchType: isExactPhone && isExactName ? 'exact_phone_and_name' :
+                     isExactPhone ? 'matching_guardian_phone' :
+                     isExactName ? 'exact_student_name' : 'similar_student_name',
+          warning: isExactPhone && isExactName
+            ? `Exact phone and name match with student ${s.studentName} (${s.id}) in ${s.batchName}.`
+            : isExactPhone
+            ? `Guardian phone +91 ${cleanPhone} is already registered to ${s.studentName} (${s.id}) in ${s.batchName}.`
+            : `Similar student name matches existing student ${s.studentName} (${s.id}) in ${s.batchName}.`
+        });
+      }
+    }
+
+    const reasons = duplicates.map(d => d.warning);
+    const existingStudents = duplicates.map(d => d.student);
+
+    return {
+      hasDuplicate: duplicates.length > 0,
+      duplicates,
+      reasons,
+      existingStudents,
+      warning: duplicates.length > 0 ? duplicates.map(d => d.warning).join(' ') : null
+    };
+  },
+
   async createStudent(studentData, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'enrolling student');
     const batches = await this.getBatches();
     const targetBatch = batches.find(b => b.id === studentData.batchId);
     if (!targetBatch) {
@@ -738,11 +1128,19 @@ export const AdminDataService = {
       batchId: targetBatch.id,
       batchName: targetBatch.name,
       enrollmentDate: studentData.enrollmentDate || new Date().toISOString().split('T')[0],
-      status: 'active',
+      courseEndDate: studentData.courseEndDate || null,
+      status: studentData.status || 'active',
+      notificationPreferences: {
+        communicationConsent: studentData.communicationConsent !== undefined ? Boolean(studentData.communicationConsent) : true,
+        preferredChannel: studentData.preferredChannel || 'whatsapp',
+        remindersDisabled: Boolean(studentData.remindersDisabled),
+        reminderDisabledReason: studentData.reminderDisabledReason || ''
+      },
       feeConfig: {
         billingFrequency: studentData.billingFrequency || 'monthly',
         amountPerCycle: Number(studentData.amountPerCycle) || targetBatch.monthlyFee,
         discountAdjustment: Number(studentData.discountAdjustment) || 0,
+        adjustmentHistory: studentData.adjustmentHistory || [],
         billingStartDate: studentData.enrollmentDate || new Date().toISOString().split('T')[0],
         nextDueDate: studentData.nextDueDate || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         status: 'active'
@@ -770,7 +1168,7 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'STUDENT_CREATED',
       entityType: 'student',
       entityId: newStudent.id,
@@ -791,6 +1189,7 @@ export const AdminDataService = {
   },
 
   async updateStudent(studentId, updates, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'updating student record');
     const store = loadLocalStore();
     const idx = store.students.findIndex(s => s.id === studentId);
     if (idx === -1) {
@@ -817,7 +1216,7 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'STUDENT_UPDATED',
       entityType: 'student',
       entityId: studentId,
@@ -827,7 +1226,105 @@ export const AdminDataService = {
     return updated;
   },
 
+  async updateStudentLifecycleStatus(studentId, statusOrPayload, reasonOrActor = 'admin', optionalActor = 'admin') {
+    let status;
+    let courseEndDate;
+    let reason;
+    let actor;
+
+    if (typeof statusOrPayload === 'object' && statusOrPayload !== null) {
+      status = statusOrPayload.status;
+      courseEndDate = statusOrPayload.courseEndDate;
+      reason = statusOrPayload.reason;
+      actor = reasonOrActor || 'admin';
+    } else {
+      status = statusOrPayload;
+      reason = reasonOrActor;
+      actor = optionalActor || 'admin';
+    }
+
+    this.verifyPermission(actor, 'canManageStudents', 'updating student lifecycle status');
+    const validStatuses = ['new_enrollment', 'active', 'paused', 'completed', 'archived'];
+    if (!validStatuses.includes(status)) {
+      throw new Error(`Invalid lifecycle status '${status}'. Must be one of: ${validStatuses.join(', ')}.`);
+    }
+
+    const store = loadLocalStore();
+    const sIdx = store.students.findIndex(s => s.id === studentId);
+    if (sIdx === -1) {
+      throw new Error(`Student not found with ID: ${studentId}`);
+    }
+
+    const student = store.students[sIdx];
+    const prevStatus = student.status;
+    const batchId = student.batchId;
+    const bIdx = store.batches.findIndex(b => b.id === batchId);
+
+    const isPrevAttending = prevStatus === 'active' || prevStatus === 'new_enrollment';
+    const isNewAttending = status === 'active' || status === 'new_enrollment';
+
+    if (bIdx !== -1) {
+      if (isPrevAttending && !isNewAttending) {
+        store.batches[bIdx].enrolledCount = Math.max(0, store.batches[bIdx].enrolledCount - 1);
+        store.batches[bIdx].seatsRemaining = Math.max(0, 12 - store.batches[bIdx].enrolledCount);
+      } else if (!isPrevAttending && isNewAttending) {
+        if (store.batches[bIdx].enrolledCount >= 12) {
+          throw new Error(`Cannot reactivate student: Batch '${store.batches[bIdx].name}' has reached physical capacity of 12 students.`);
+        }
+        store.batches[bIdx].enrolledCount += 1;
+        store.batches[bIdx].seatsRemaining = Math.max(0, 12 - store.batches[bIdx].enrolledCount);
+      }
+    }
+
+    const historyEntry = {
+      fromStatus: prevStatus,
+      toStatus: status,
+      reason: reason || '',
+      updatedAt: new Date().toISOString(),
+      updatedBy: normalizeActorEmail(actor)
+    };
+
+    student.status = status;
+    student.courseEndDate = courseEndDate !== undefined ? courseEndDate : (status === 'completed' || status === 'archived' ? new Date().toISOString().split('T')[0] : null);
+    student.statusReason = reason || '';
+    student.statusUpdatedAt = new Date().toISOString();
+    student.lifecycleHistory = [...(student.lifecycleHistory || []), historyEntry];
+    student.updatedAt = new Date().toISOString();
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await updateDoc(doc(db, 'students', studentId), student);
+        if (bIdx !== -1) {
+          await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
+        }
+      } catch (err) {
+        console.warn('Firestore updateStudentLifecycleStatus error:', err);
+      }
+    }
+
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'STUDENT_LIFECYCLE_CHANGED',
+      entityType: 'student',
+      entityId: studentId,
+      details: `Changed lifecycle status for '${student.studentName}' from '${prevStatus}' to '${status}'. Reason: ${reason || 'N/A'}`
+    });
+
+    return student;
+  },
+
+  async archiveStudent(studentId, actor = 'admin') {
+    return this.updateStudentLifecycleStatus(studentId, { status: 'archived', reason: 'Archived by administrator' }, actor);
+  },
+
+  async restoreStudent(studentId, actor = 'admin') {
+    return this.updateStudentLifecycleStatus(studentId, { status: 'active', reason: 'Restored to active status by administrator' }, actor);
+  },
+
   async transferStudentBatch(studentId, newBatchId, reason = 'Academic progression', actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'transferring student between batches');
     const student = await this.getStudentById(studentId);
     if (!student) {
       throw new Error(`Student not found with ID: ${studentId}`);
@@ -891,7 +1388,7 @@ export const AdminDataService = {
     }
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'STUDENT_TRANSFERRED',
       entityType: 'student',
       entityId: studentId,
@@ -906,12 +1403,141 @@ export const AdminDataService = {
     };
   },
 
-  async archiveStudent(studentId, actor = 'admin') {
-    return this.updateStudent(studentId, { status: 'archived' }, actor);
+  async applyFeeDiscount(arg1, arg2, actorArg = 'admin') {
+    let studentId, discountType, amount, reason, approvingAdmin, actor;
+    if (typeof arg1 === 'object' && arg1 !== null) {
+      studentId = arg1.studentId;
+      discountType = arg1.discountType || arg1.category;
+      amount = arg1.amount;
+      reason = arg1.reason;
+      approvingAdmin = arg1.approvingAdmin;
+      actor = actorArg || approvingAdmin || 'admin';
+    } else {
+      studentId = arg1;
+      discountType = arg2?.discountType || arg2?.category;
+      amount = arg2?.amount;
+      reason = arg2?.reason;
+      approvingAdmin = arg2?.approvingAdmin || actorArg;
+      actor = actorArg || approvingAdmin || 'admin';
+    }
+
+    this.verifyPermission(actor, 'canApplyDiscounts', 'applying fee discounts / scholarships');
+
+    const parsedAmount = Number(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      throw new Error('Discount amount must be a positive number greater than zero.');
+    }
+    if (!reason || reason.trim().length < 5) {
+      throw new Error('A detailed reason (at least 5 characters) is mandatory for audit trail compliance.');
+    }
+
+    const validTypes = ['merit_scholarship', 'sibling_concession', 'financial_aid', 'special_waiver', 'custom_discount'];
+    if (!validTypes.includes(discountType)) {
+      throw new Error(`Invalid discount type '${discountType}'. Allowed types: ${validTypes.join(', ')}.`);
+    }
+
+    const store = loadLocalStore();
+    const sIdx = store.students.findIndex(s => s.id === studentId);
+    if (sIdx === -1) {
+      throw new Error(`Student not found: ${studentId}`);
+    }
+
+    const student = store.students[sIdx];
+    const cycleFee = student.feeConfig?.amountPerCycle || 0;
+    if (cycleFee > 0 && parsedAmount > cycleFee) {
+      throw new Error(`Discount amount (₹${parsedAmount}) cannot exceed the billing cycle fee of ₹${cycleFee}.`);
+    }
+
+    const prevDiscount = student.feeConfig?.discountAdjustment || 0;
+
+    const adjustmentEntry = {
+      id: `ADJ-${Date.now().toString(36).toUpperCase()}`,
+      timestamp: new Date().toISOString(),
+      discountType,
+      category: discountType,
+      amount: parsedAmount,
+      previousDiscount: prevDiscount,
+      reason: reason.trim(),
+      approvingAdmin: approvingAdmin || normalizeActorEmail(actor),
+      approvedBy: approvingAdmin || normalizeActorEmail(actor),
+      recordedBy: normalizeActorEmail(actor)
+    };
+
+    student.feeConfig = {
+      ...student.feeConfig,
+      discountAdjustment: parsedAmount,
+      discountCategory: discountType,
+      adjustmentHistory: [...(student.feeConfig?.adjustmentHistory || []), adjustmentEntry],
+      discountHistory: [...(student.feeConfig?.discountHistory || []), adjustmentEntry]
+    };
+    student.updatedAt = new Date().toISOString();
+
+    const diff = parsedAmount - prevDiscount;
+    if (diff > 0) {
+      for (const obl of store.obligations) {
+        if (obl.studentId === studentId && obl.status !== 'paid' && obl.status !== 'cancelled') {
+          if (obl.originalAmountDue === undefined && obl.originalAmount === undefined) {
+            obl.originalAmountDue = obl.amountDue;
+            obl.originalAmount = obl.amountDue;
+          }
+          obl.discountAmount = (obl.discountAmount || 0) + diff;
+          obl.amountDue = Math.max(0, obl.amountDue - diff);
+          obl.balance = Math.max(0, obl.amountDue - (obl.amountPaid || 0) - (obl.waivedAmount || 0));
+          if (obl.balance === 0) obl.status = 'paid';
+          obl.updatedAt = new Date().toISOString();
+        }
+      }
+    }
+
+    saveLocalStore(store);
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await updateDoc(doc(db, 'students', studentId), student);
+      } catch (err) {
+        console.warn('Firestore applyFeeDiscount error:', err);
+      }
+    }
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'FEE_DISCOUNT_APPLIED',
+      entityType: 'student',
+      entityId: studentId,
+      details: `Applied ${discountType.replace(/_/g, ' ')} of ₹${parsedAmount} for '${student.studentName}'. Reason: ${reason} (Approved by: ${approvingAdmin || actor}).`
+    });
+
+    Object.assign(student, { student, adjustmentEntry });
+    return student;
   },
 
-  async restoreStudent(studentId, actor = 'admin') {
-    return this.updateStudent(studentId, { status: 'active' }, actor);
+  async updateNotificationPreferences(studentId, { communicationConsent, preferredChannel, remindersDisabled, reminderDisabledReason, reminderTimingDays }, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'updating notification preferences');
+    const store = loadLocalStore();
+    const sIdx = store.students.findIndex(s => s.id === studentId);
+    if (sIdx === -1) throw new Error(`Student not found: ${studentId}`);
+
+    const student = store.students[sIdx];
+    student.notificationPreferences = {
+      communicationConsent: communicationConsent !== undefined ? Boolean(communicationConsent) : true,
+      preferredChannel: preferredChannel || student.notificationPreferences?.preferredChannel || 'whatsapp',
+      remindersDisabled: remindersDisabled !== undefined ? Boolean(remindersDisabled) : false,
+      reminderDisabledReason: reminderDisabledReason || '',
+      reminderTimingDays: reminderTimingDays !== undefined ? Number(reminderTimingDays) : (student.notificationPreferences?.reminderTimingDays || 3)
+    };
+    student.updatedAt = new Date().toISOString();
+
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'NOTIFICATION_PREFERENCES_UPDATED',
+      entityType: 'student',
+      entityId: studentId,
+      details: `Updated reminder preferences for '${student.studentName}': Reminders ${student.notificationPreferences.remindersDisabled ? 'DISABLED (' + student.notificationPreferences.reminderDisabledReason + ')' : 'ENABLED'}.`
+    });
+
+    return student;
   },
 
   async getFeeObligations(studentId = null) {
@@ -957,6 +1583,7 @@ export const AdminDataService = {
   },
 
   async createFeeObligation(obligationData, actor = 'admin') {
+    this.verifyPermission(actor, 'canWaiveFees', 'generating fee obligation');
     const store = loadLocalStore();
     const exists = store.obligations.some(
       o => o.studentId === obligationData.studentId && 
@@ -1002,7 +1629,7 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'FEE_OBLIGATION_GENERATED',
       entityType: 'fee_obligation',
       entityId: newObligation.id,
@@ -1013,6 +1640,7 @@ export const AdminDataService = {
   },
 
   async waiveFeeObligation(obligationId, waiveAmount, reason, actor = 'admin') {
+    this.verifyPermission(actor, 'canWaiveFees', 'waiving fee obligation');
     if (!reason || reason.trim().length < 5) {
       throw new Error('A detailed reason (at least 5 characters) is required to waive fees.');
     }
@@ -1040,6 +1668,8 @@ export const AdminDataService = {
     obl.balance = Math.max(0, obl.amountDue - (obl.amountPaid || 0) - obl.waivedAmount);
     obl.status = obl.balance === 0 ? 'waived' : (obl.amountPaid > 0 ? 'partially_paid' : 'pending');
     obl.waiverReason = reason;
+    obl.waivedBy = normalizeActorEmail(actor);
+    obl.waivedAt = new Date().toISOString();
     obl.updatedAt = new Date().toISOString();
 
     if (isFirebaseConfigured() && db) {
@@ -1053,7 +1683,7 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'FEE_WAIVED',
       entityType: 'fee_obligation',
       entityId: obligationId,
@@ -1088,6 +1718,7 @@ export const AdminDataService = {
   },
 
   async recordPayment(paymentData, actor = 'admin') {
+    this.verifyPermission(actor, 'canRecordPayments', 'recording financial payment');
     const amount = Number(paymentData.amount);
     if (!amount || amount <= 0) {
       throw new Error('Payment amount must be greater than zero.');
@@ -1102,13 +1733,31 @@ export const AdminDataService = {
     const obligation = store.obligations[oblIdx];
     const currentBalance = Math.max(0, obligation.amountDue - (obligation.amountPaid || 0) - (obligation.waivedAmount || 0));
 
+    // Idempotency check: prevent duplicate payments on retries or concurrent submissions
+    if (paymentData.id) {
+      const existingById = store.payments.find(p => p.id === paymentData.id);
+      if (existingById) {
+        return Object.assign(existingById, { payment: existingById, obligation });
+      }
+    }
+    if (paymentData.referenceNumber) {
+      const existingByRef = store.payments.find(
+        p => p.referenceNumber === paymentData.referenceNumber && p.obligationId === paymentData.obligationId
+      );
+      if (existingByRef) {
+        return Object.assign(existingByRef, { payment: existingByRef, obligation });
+      }
+    }
+
     if (amount > currentBalance) {
       throw new Error(`Payment amount (₹${amount}) exceeds the remaining balance of ₹${currentBalance}.`);
     }
 
+    const settings = this.getSettingsSync();
     const nextReceiptNum = store.payments.length + 1;
     const year = new Date().getFullYear();
-    const receiptNumber = paymentData.receiptNumber || `REC-${year}-${String(nextReceiptNum).padStart(4, '0')}`;
+    const prefix = settings.receiptPrefix || 'REC';
+    const receiptNumber = paymentData.receiptNumber || `${prefix}-${year}-${String(nextReceiptNum).padStart(4, '0')}`;
     const transactionId = paymentData.id || `TXN-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
     const newPayment = {
@@ -1122,7 +1771,7 @@ export const AdminDataService = {
       paymentDate: paymentData.paymentDate || new Date().toISOString().split('T')[0],
       paymentMethod: paymentData.paymentMethod || 'cash',
       referenceNumber: paymentData.referenceNumber || `REF-${Date.now().toString(36).toUpperCase()}`,
-      recordedBy: actor,
+      recordedBy: normalizeActorEmail(actor),
       notes: paymentData.notes || '',
       createdAt: new Date().toISOString()
     };
@@ -1145,17 +1794,19 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'PAYMENT_RECORDED',
       entityType: 'payment',
       entityId: newPayment.id,
       details: `Recorded payment ₹${amount} for '${obligation.studentName}' (${obligation.billingCycle}). Receipt: ${receiptNumber}`
     });
 
-    return {
-      payment: newPayment,
-      obligation
-    };
+    Object.assign(newPayment, { payment: newPayment, obligation });
+    return newPayment;
+  },
+
+  async recordFeePayment(paymentData, actor = 'admin') {
+    return this.recordPayment(paymentData, actor);
   },
 
   async getStudentLedger(studentId) {
@@ -1202,7 +1853,7 @@ export const AdminDataService = {
     const obligations = await this.getFeeObligations();
     const payments = await this.getPayments();
 
-    const activeStudents = students.filter(s => s.status === 'active');
+    const activeStudents = students.filter(s => s.status === 'active' || s.status === 'new_enrollment');
     const activeBatches = batches.filter(b => !b.isArchived);
 
     const now = new Date();
@@ -1240,6 +1891,203 @@ export const AdminDataService = {
     };
   },
 
+  async getAdminCollectionReport() {
+    const payments = await this.getPayments();
+    const byAdmin = {};
+    for (const p of payments) {
+      const admin = p.recordedBy || 'admin';
+      const cleanAdminKey = admin.includes('@') ? admin.split('@')[0] : admin;
+      if (!byAdmin[cleanAdminKey]) {
+        byAdmin[cleanAdminKey] = {
+          admin: cleanAdminKey,
+          adminEmail: admin.includes('@') ? admin : `${admin}@focusacademyperambalur.com`,
+          totalCollected: 0,
+          transactionCount: 0,
+          cashTotal: 0,
+          upiTotal: 0,
+          bankTotal: 0,
+          cardTotal: 0,
+          lastCollectedDate: null,
+          transactions: []
+        };
+      }
+      const amt = Number(p.amount || 0);
+      byAdmin[cleanAdminKey].totalCollected += amt;
+      byAdmin[cleanAdminKey].transactionCount += 1;
+      if (p.paymentMethod === 'cash') byAdmin[cleanAdminKey].cashTotal += amt;
+      else if (p.paymentMethod === 'upi_online' || p.paymentMethod === 'upi') byAdmin[cleanAdminKey].upiTotal += amt;
+      else if (p.paymentMethod === 'bank_transfer') byAdmin[cleanAdminKey].bankTotal += amt;
+      else if (p.paymentMethod === 'card') byAdmin[cleanAdminKey].cardTotal += amt;
+
+      if (!byAdmin[cleanAdminKey].lastCollectedDate || p.paymentDate > byAdmin[cleanAdminKey].lastCollectedDate) {
+        byAdmin[cleanAdminKey].lastCollectedDate = p.paymentDate;
+      }
+      byAdmin[cleanAdminKey].transactions.push(p);
+    }
+    return Object.values(byAdmin).sort((a, b) => b.totalCollected - a.totalCollected);
+  },
+
+  async getDailyCollectionReport(startDate = null, endDate = null) {
+    const payments = await this.getPayments();
+    const byDate = {};
+    for (const p of payments) {
+      const date = p.paymentDate || 'Unknown Date';
+      if (startDate && date < startDate) continue;
+      if (endDate && date > endDate) continue;
+
+      if (!byDate[date]) {
+        byDate[date] = {
+          date,
+          total: 0,
+          totalCollected: 0,
+          transactionCount: 0,
+          cashTotal: 0,
+          upiTotal: 0,
+          bankTotal: 0,
+          cardTotal: 0,
+          modes: {
+            cash: 0,
+            upi: 0,
+            bank_transfer: 0,
+            card: 0
+          },
+          transactions: []
+        };
+      }
+      const amt = Number(p.amount || 0);
+      byDate[date].total += amt;
+      byDate[date].totalCollected += amt;
+      byDate[date].transactionCount += 1;
+      if (p.paymentMethod === 'cash') {
+        byDate[date].cashTotal += amt;
+        byDate[date].modes.cash += amt;
+      } else if (p.paymentMethod === 'upi_online' || p.paymentMethod === 'upi') {
+        byDate[date].upiTotal += amt;
+        byDate[date].modes.upi += amt;
+      } else if (p.paymentMethod === 'bank_transfer') {
+        byDate[date].bankTotal += amt;
+        byDate[date].modes.bank_transfer += amt;
+      } else if (p.paymentMethod === 'card') {
+        byDate[date].cardTotal += amt;
+        byDate[date].modes.card += amt;
+      }
+
+      byDate[date].transactions.push(p);
+    }
+    return Object.values(byDate).sort((a, b) => b.date.localeCompare(a.date));
+  },
+
+  async getBatchCollectionSummary() {
+    const batches = await this.getBatches();
+    const obligations = await this.getFeeObligations();
+    const payments = await this.getPayments();
+    const students = await this.getStudents({ includeArchived: true });
+
+    const studentBatchMap = new Map(students.map(s => [s.id, s.batchId]));
+    const today = new Date().toISOString().split('T')[0];
+
+    return batches.map(batch => {
+      const batchObligations = obligations.filter(o => o.batchId === batch.id || studentBatchMap.get(o.studentId) === batch.id);
+      const batchPayments = payments.filter(p => p.batchId === batch.id || studentBatchMap.get(p.studentId) === batch.id);
+
+      const totalCharged = batchObligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
+      const totalCollected = batchPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      const totalWaived = batchObligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
+      const totalPending = batchObligations
+        .filter(o => o.balance > 0 && o.dueDate >= today)
+        .reduce((sum, o) => sum + Number(o.balance || 0), 0);
+      const totalOverdue = batchObligations
+        .filter(o => o.balance > 0 && o.dueDate < today)
+        .reduce((sum, o) => sum + Number(o.balance || 0), 0);
+      const netCollectible = Math.max(0, totalCharged - totalWaived);
+      const collectionRatePct = netCollectible > 0 ? Math.round((totalCollected / netCollectible) * 100) : 0;
+
+      return {
+        batchId: batch.id,
+        batchName: batch.name,
+        grade: batch.grade,
+        board: batch.board,
+        enrolledCount: batch.enrolledCount,
+        studentCount: batch.enrolledCount,
+        capacity: batch.capacity || 12,
+        totalDue: totalCharged,
+        totalCharged,
+        totalCollected,
+        outstandingBalance: Math.max(0, totalCharged - totalCollected - totalWaived),
+        totalWaived,
+        totalPending,
+        totalOverdue,
+        collectionRatePct
+      };
+    });
+  },
+
+  async reconcileLedger(actor = 'admin') {
+    const obligations = await this.getFeeObligations();
+    const payments = await this.getPayments();
+
+    const discrepancies = [];
+    const paymentsByObligation = {};
+
+    for (const p of payments) {
+      if (!p.obligationId) {
+        discrepancies.push({
+          type: 'ORPHAN_PAYMENT',
+          paymentId: p.id,
+          receiptNumber: p.receiptNumber,
+          details: `Payment ₹${p.amount} has no associated obligation ID.`
+        });
+        continue;
+      }
+      paymentsByObligation[p.obligationId] = (paymentsByObligation[p.obligationId] || 0) + Number(p.amount || 0);
+    }
+
+    for (const obl of obligations) {
+      const paymentSum = paymentsByObligation[obl.id] || 0;
+      const recordedPaid = Number(obl.amountPaid || 0);
+      if (paymentSum !== recordedPaid) {
+        discrepancies.push({
+          type: 'OBLIGATION_PAYMENT_MISMATCH',
+          obligationId: obl.id,
+          studentId: obl.studentId,
+          studentName: obl.studentName,
+          expectedPaid: paymentSum,
+          recordedPaid,
+          details: `Obligation ${obl.id} recorded ₹${recordedPaid} paid, but sum of receipt transactions is ₹${paymentSum}.`
+        });
+      }
+    }
+
+    const totalCharged = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
+    const totalCollected = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
+    const netOutstanding = Math.max(0, totalCharged - totalCollected - totalWaived);
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'LEDGER_RECONCILED',
+      entityType: 'ledger',
+      entityId: 'institutional_reconciliation',
+      details: `Ledger reconciliation audit executed: ${discrepancies.length} discrepancies detected across ${payments.length} receipts.`
+    });
+
+    return {
+      reconciled: discrepancies.length === 0,
+      isBalanced: discrepancies.length === 0,
+      totalDiscrepancies: discrepancies.length,
+      discrepancies,
+      ledgerTotals: {
+        totalCharged,
+        totalCollected,
+        totalWaived,
+        netOutstanding,
+        paymentsCount: payments.length,
+        obligationsCount: obligations.length
+      },
+      reconciledAt: new Date().toISOString()
+    };
+  },
+
   async getReminders() {
     if (isFirebaseConfigured() && db) {
       try {
@@ -1255,14 +2103,32 @@ export const AdminDataService = {
     return store.reminders;
   },
 
-  generateWhatsAppMessage({ studentName, amount, dueDate }) {
-    return `Hello, this is Focus Academy. A fee payment of ₹${amount} for ${studentName} is due on ${dueDate}. If you have already paid, please contact the academy so we can verify the payment. Thank you.`;
+  generateWhatsAppMessage({ studentName, amount, balance, dueDate }) {
+    const amt = amount !== undefined ? amount : balance;
+    const settings = this.getSettingsSync();
+    const template = settings.whatsappTemplate || 'Hello, this is {academyName}. A fee payment of {currencySymbol}{amount} for {studentName} is due on {dueDate}. If you have already paid, please contact the academy so we can verify the payment. Thank you.';
+    return template
+      .replace(/\{academyName\}|\{\{academyName\}\}/g, settings.academyName || 'Focus Academy')
+      .replace(/\{currencySymbol\}|\{\{currencySymbol\}\}/g, settings.currencySymbol || '₹')
+      .replace(/\{studentName\}|\{\{studentName\}\}/g, studentName || '')
+      .replace(/\{amount\}|\{\{amount\}\}|\{balance\}|\{\{balance\}\}/g, amt !== undefined ? amt : '')
+      .replace(/\{dueDate\}|\{\{dueDate\}\}/g, dueDate || '')
+      .replace(/\{contactPhone\}|\{\{contactPhone\}\}/g, settings.primaryPhone || '');
   },
 
   async sendOrLogWhatsAppReminder({ studentId, obligationId, reminderType = 'upcoming' }, actor = 'admin') {
+    this.verifyPermission(actor, 'canTriggerReminders', 'dispatching fee reminders');
     const student = await this.getStudentById(studentId);
     if (!student) {
       throw new Error(`Student not found: ${studentId}`);
+    }
+
+    const prefs = student.notificationPreferences || {};
+    if (prefs.remindersDisabled) {
+      throw new Error(`Reminders are disabled for student ${student.studentName}: ${prefs.reminderDisabledReason || 'Guardian opted out'}.`);
+    }
+    if (prefs.communicationConsent === false) {
+      throw new Error(`Guardian communication consent not granted for ${student.studentName}. Reminders cannot be dispatched.`);
     }
 
     const obligations = await this.getFeeObligations(studentId);
@@ -1311,7 +2177,8 @@ export const AdminDataService = {
       channel: 'whatsapp',
       messagePreview: message,
       timestamp: new Date().toISOString(),
-      providerResponse: 'Dispatched via verified Focus Academy WhatsApp protocol'
+      providerResponse: 'Dispatched via verified Focus Academy WhatsApp protocol',
+      retryCount: 0
     };
 
     if (isFirebaseConfigured() && db) {
@@ -1326,7 +2193,7 @@ export const AdminDataService = {
     saveLocalStore(store);
 
     await this.logAudit({
-      actor,
+      actor: normalizeActorEmail(actor),
       action: 'REMINDER_TRIGGERED',
       entityType: 'reminder',
       entityId: reminderEntry.id,
@@ -1336,6 +2203,346 @@ export const AdminDataService = {
     return {
       reminder: reminderEntry,
       clickToChatUrl
+    };
+  },
+
+  async retryFailedReminder(reminderId, actor = 'admin') {
+    this.verifyPermission(actor, 'canTriggerReminders', 'retrying reminder');
+    const store = loadLocalStore();
+    const rem = store.reminders.find(r => r.id === reminderId);
+    if (!rem) throw new Error(`Reminder not found: ${reminderId}`);
+
+    const student = await this.getStudentById(rem.studentId);
+    if (!student) throw new Error(`Student not found: ${rem.studentId}`);
+
+    const cleanPhone = String(rem.guardianPhone || student.guardianPhone || '').replace(/\D/g, '').slice(-10);
+    const clickToChatUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(rem.messagePreview)}`;
+
+    rem.status = 'sent';
+    rem.deliveryStatus = 'delivered';
+    rem.retryCount = (rem.retryCount || 0) + 1;
+    rem.lastRetriedAt = new Date().toISOString();
+    rem.retriedAt = rem.lastRetriedAt;
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'REMINDER_RETRIED',
+      entityType: 'reminder',
+      entityId: reminderId,
+      details: `Manually retried WhatsApp reminder for ${rem.studentName} (${cleanPhone}). Attempt #${rem.retryCount}.`
+    });
+
+    Object.assign(rem, { reminder: rem, clickToChatUrl });
+    return rem;
+  },
+
+  async createFullBackupSnapshot(actor = 'admin') {
+    this.verifyPermission(actor, 'canManageSettings', 'creating institutional data backup');
+    const store = loadLocalStore();
+    const settings = this.getSettingsSync();
+
+    const snapshot = {
+      version: '1.0.0',
+      campus: 'Focus Academy Thiripura Complex Perambalur',
+      exportedAt: new Date().toISOString(),
+      exportedBy: normalizeActorEmail(actor),
+      rtoTarget: 'RTO < 1 Hour',
+      rpoTarget: 'RPO < 24 Hours',
+      counts: {
+        batches: store.batches.length,
+        students: store.students.length,
+        obligations: store.obligations.length,
+        payments: store.payments.length,
+        reminders: store.reminders.length,
+        auditLogs: store.auditLogs.length
+      },
+      data: {
+        batches: store.batches,
+        students: store.students,
+        obligations: store.obligations,
+        payments: store.payments,
+        reminders: store.reminders,
+        auditLogs: store.auditLogs,
+        settings
+      }
+    };
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'BACKUP_CREATED',
+      entityType: 'system_backup',
+      entityId: `BACKUP-${Date.now().toString(36).toUpperCase()}`,
+      details: `Created institutional backup snapshot: ${snapshot.counts.students} students, ${snapshot.counts.batches} batches, ${snapshot.counts.payments} payments.`
+    });
+
+    return snapshot;
+  },
+
+  async restoreFromBackupSnapshot(snapshot, actor = 'admin') {
+    this.verifyPermission(actor, 'canRestoreBackup', 'restoring institutional data backup');
+
+    if (!snapshot || !snapshot.data) {
+      throw new Error('Corrupted or invalid backup file: Missing snapshot data block.');
+    }
+
+    const { batches, students, obligations, payments, reminders, auditLogs, settings } = snapshot.data;
+    if (!Array.isArray(batches) || !Array.isArray(students) || !Array.isArray(obligations) || !Array.isArray(payments)) {
+      throw new Error('Invalid backup schema: Missing required collections (batches, students, obligations, payments).');
+    }
+
+    const restoredStore = {
+      batches: [...batches],
+      students: [...students],
+      obligations: [...obligations],
+      payments: [...payments],
+      reminders: Array.isArray(reminders) ? [...reminders] : [],
+      auditLogs: Array.isArray(auditLogs) ? [...auditLogs] : [],
+      settings: settings || this.getSettingsSync()
+    };
+
+    saveLocalStore(restoredStore);
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        for (const b of batches) await setDoc(doc(db, 'batches', b.id), b);
+        for (const s of students) await setDoc(doc(db, 'students', s.id), s);
+        for (const o of obligations) await setDoc(doc(db, 'fee_obligations', o.id), o);
+        for (const p of payments) await setDoc(doc(db, 'payments', p.id), p);
+        if (settings) await setDoc(doc(db, 'academy_settings', 'main_config'), settings);
+      } catch (err) {
+        console.warn('Firestore restoreFromBackupSnapshot sync error:', err);
+      }
+    }
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'BACKUP_RESTORED',
+      entityType: 'system_backup',
+      entityId: `RESTORE-${Date.now().toString(36).toUpperCase()}`,
+      details: `Restored institutional snapshot exported at ${snapshot.exportedAt || 'Unknown'}: ${batches.length} batches, ${students.length} students, ${payments.length} payments.`
+    });
+
+    return {
+      success: true,
+      counts: snapshot.counts || {
+        batches: batches.length,
+        students: students.length,
+        obligations: obligations.length,
+        payments: payments.length
+      }
+    };
+  },
+
+  validateAndParseStudentCSV(csvContent) {
+    if (!csvContent || typeof csvContent !== 'string') {
+      const errs = [{ line: 0, reason: 'Empty or invalid CSV content', error: 'Empty or invalid CSV content' }];
+      return { isValid: false, totalRows: 0, validRows: [], invalidRows: errs, duplicateRows: [], students: [], errors: errs, rejectedCount: errs.length };
+    }
+
+    const lines = csvContent.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) {
+      const errs = [{ line: 1, reason: 'CSV must contain a header line and at least one student data row', error: 'CSV must contain a header line and at least one student data row' }];
+      return { isValid: false, totalRows: Math.max(0, lines.length - 1), validRows: [], invalidRows: errs, duplicateRows: [], students: [], errors: errs, rejectedCount: errs.length };
+    }
+
+    const headerLine = lines[0];
+    const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+
+    const requiredCols = ['studentname', 'guardianphone', 'grade', 'board'];
+    for (const col of requiredCols) {
+      if (!headers.includes(col)) {
+        const errs = [{ line: 1, reason: `Missing required header column '${col}'. Headers found: ${headers.join(', ')}`, error: `Missing required header column '${col}'.` }];
+        return {
+          isValid: false,
+          totalRows: lines.length - 1,
+          validRows: [],
+          invalidRows: errs,
+          duplicateRows: [],
+          students: [],
+          errors: errs,
+          rejectedCount: errs.length
+        };
+      }
+    }
+
+    const nameIdx = headers.indexOf('studentname');
+    const parentIdx = headers.indexOf('guardianname');
+    const phoneIdx = headers.indexOf('guardianphone');
+    const gradeIdx = headers.indexOf('grade');
+    const boardIdx = headers.indexOf('board');
+    const batchIdx = headers.indexOf('batchid');
+    const freqIdx = headers.indexOf('billingfrequency');
+    const feeIdx = headers.indexOf('amountpercycle');
+
+    const validRows = [];
+    const invalidRows = [];
+    const duplicateRows = [];
+
+    const store = loadLocalStore();
+    const batches = store.batches;
+    const existingStudents = store.students;
+    const phoneSetInCSV = new Set();
+
+    const batchAllocations = new Map();
+    for (const b of batches) {
+      batchAllocations.set(b.id, b.enrolledCount || 0);
+    }
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      const cells = [];
+      let cur = '';
+      let inQuotes = false;
+      for (let c = 0; c < line.length; c++) {
+        const ch = line[c];
+        if (ch === '"') {
+          if (inQuotes && line[c + 1] === '"') {
+            cur += '"';
+            c++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (ch === ',' && !inQuotes) {
+          cells.push(cur.trim());
+          cur = '';
+        } else {
+          cur += ch;
+        }
+      }
+      cells.push(cur.trim());
+
+      const studentName = cells[nameIdx] || '';
+      const guardianName = parentIdx !== -1 ? cells[parentIdx] : 'Parent / Guardian';
+      const guardianPhone = cells[phoneIdx] || '';
+      const grade = cells[gradeIdx] || '';
+      const board = cells[boardIdx] || '';
+      const batchId = batchIdx !== -1 ? cells[batchIdx] : '';
+      const billingFrequency = freqIdx !== -1 ? cells[freqIdx] : 'monthly';
+      const amountPerCycle = feeIdx !== -1 ? Number(cells[feeIdx]) : 2200;
+
+      if (!studentName || studentName.length < 2) {
+        invalidRows.push({ line: i + 1, reason: `Student name '${studentName}' is invalid or missing (minimum 2 chars).` });
+        continue;
+      }
+
+      const cleanPhone = String(guardianPhone).replace(/\D/g, '').slice(-10);
+      if (cleanPhone.length !== 10) {
+        invalidRows.push({
+          line: i + 1,
+          reason: `Invalid phone '${guardianPhone}'. Must be valid 10-digit Indian phone number.`,
+          error: `Invalid phone '${guardianPhone}'. Must be valid 10-digit Indian phone number.`
+        });
+        continue;
+      }
+
+      let matchedBatch = null;
+      if (batchId) {
+        matchedBatch = batches.find(b => b.id === batchId);
+        if (!matchedBatch) {
+          invalidRows.push({
+            line: i + 1,
+            reason: `Specified batch ID '${batchId}' does not exist.`,
+            error: `Specified batch ID '${batchId}' does not exist.`
+          });
+          continue;
+        }
+      } else {
+        matchedBatch = batches.find(b => !b.isArchived && isBatchCompatible(b, grade, board) && (batchAllocations.get(b.id) || 0) < 12);
+      }
+
+      if (!matchedBatch) {
+        invalidRows.push({ line: i + 1, reason: `No available compatible batch with open seats for grade '${grade}' and board '${board}'.` });
+        continue;
+      }
+
+      if (!isBatchCompatible(matchedBatch, grade, board)) {
+        invalidRows.push({ line: i + 1, reason: `Batch '${matchedBatch.name}' is incompatible with student grade '${grade}' (${board}).` });
+        continue;
+      }
+
+      const currentAllocated = batchAllocations.get(matchedBatch.id) || 0;
+      if (currentAllocated >= 12) {
+        invalidRows.push({
+          line: i + 1,
+          reason: `Batch '${matchedBatch.name}' capacity of 12 seats exceeded (already has ${matchedBatch.enrolledCount} enrolled + preceding CSV rows).`,
+          error: `Batch '${matchedBatch.name}' capacity of 12 seats exceeded.`
+        });
+        continue;
+      }
+
+      batchAllocations.set(matchedBatch.id, currentAllocated + 1);
+
+      const duplicateInDb = existingStudents.find(s => {
+        const sp = String(s.guardianPhone).replace(/\D/g, '').slice(-10);
+        return sp === cleanPhone || s.studentName.toLowerCase() === studentName.toLowerCase();
+      });
+
+      if (phoneSetInCSV.has(cleanPhone)) {
+        duplicateRows.push({ line: i + 1, studentName, guardianPhone: cleanPhone, warning: 'Duplicate phone number repeated inside CSV file.' });
+      } else if (duplicateInDb) {
+        duplicateRows.push({ line: i + 1, studentName, guardianPhone: cleanPhone, warning: `Existing student ${duplicateInDb.studentName} (${duplicateInDb.id}) already shares phone or name.` });
+      }
+
+      phoneSetInCSV.add(cleanPhone);
+
+      validRows.push({
+        studentName,
+        guardianName: guardianName || 'Parent / Guardian',
+        guardianPhone: cleanPhone,
+        grade,
+        board,
+        batchId: matchedBatch.id,
+        batchName: matchedBatch.name,
+        billingFrequency: billingFrequency || 'monthly',
+        amountPerCycle: amountPerCycle || matchedBatch.monthlyFee,
+        enrollmentDate: new Date().toISOString().split('T')[0]
+      });
+    }
+
+    return {
+      isValid: invalidRows.length === 0,
+      totalRows: lines.length - 1,
+      validRows,
+      invalidRows,
+      duplicateRows,
+      students: validRows,
+      errors: invalidRows.map(r => ({ line: r.line, reason: r.reason, error: r.error || r.reason })),
+      rejectedCount: invalidRows.length,
+      invalidCount: invalidRows.length
+    };
+  },
+
+  async importStudentsFromCSV(validRows, actor = 'admin') {
+    this.verifyPermission(actor, 'canImportData', 'importing student records from CSV');
+    const importedStudents = [];
+    const errors = [];
+
+    for (const row of validRows) {
+      try {
+        const student = await this.createStudent(row, actor);
+        importedStudents.push(student);
+      } catch (err) {
+        errors.push({ studentName: row.studentName, error: err.message });
+      }
+    }
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'STUDENTS_IMPORTED_CSV',
+      entityType: 'student',
+      entityId: `BATCH-IMPORT-${Date.now().toString(36).toUpperCase()}`,
+      details: `Imported ${importedStudents.length} student records from CSV. ${errors.length} failed.`
+    });
+
+    return {
+      importedCount: importedStudents.length,
+      successCount: importedStudents.length,
+      failedCount: errors.length,
+      rejectedCount: errors.length,
+      importedStudents,
+      students: importedStudents,
+      errors
     };
   }
 };
