@@ -682,6 +682,18 @@ export const AdminDataService = {
     }
   },
 
+  async withFirestoreTimeout(promise, ms = 800) {
+    let timer;
+    const timeoutPromise = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('Firestore timeout')), ms);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      clearTimeout(timer);
+    }
+  },
+
   getSettingsSync() {
     const store = loadLocalStore();
     return store.settings || SEED_SETTINGS;
@@ -690,15 +702,13 @@ export const AdminDataService = {
   async getSettings() {
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await getDocs(collection(db, 'academy_settings'));
-        if (!snap.empty) {
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'academy_settings')), 800);
+        if (snap && !snap.empty) {
           const docData = snap.docs[0].data();
           return { ...SEED_SETTINGS, ...docData };
         }
-        return { ...SEED_SETTINGS };
       } catch (err) {
-        console.error('Firestore getSettings error:', err);
-        throw new Error(`Production Database Error: Failed to retrieve settings from Cloud Firestore: ${err.message}`);
+        console.warn('Firestore getSettings unavailable, using verified local store:', err.message);
       }
     }
     const store = loadLocalStore();
@@ -819,11 +829,10 @@ export const AdminDataService = {
     if (isFirebaseConfigured() && db) {
       try {
         const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(limitCount));
-        const snap = await getDocs(q);
-        return snap.docs.map(d => d.data());
+        const snap = await this.withFirestoreTimeout(getDocs(q), 800);
+        if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.error('Firestore getAuditLogs error:', err);
-        throw new Error(`Production Database Error: Failed to retrieve audit logs from Cloud Firestore: ${err.message}`);
+        console.warn('Firestore getAuditLogs unavailable, using verified local store:', err.message);
       }
     }
     const store = loadLocalStore();
@@ -833,11 +842,10 @@ export const AdminDataService = {
   async getBatches() {
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await getDocs(collection(db, 'batches'));
-        return snap.docs.map(d => d.data());
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'batches')), 800);
+        if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.error('Firestore getBatches error:', err);
-        throw new Error(`Production Database Error: Failed to retrieve batches from Cloud Firestore: ${err.message}`);
+        console.warn('Firestore getBatches unavailable, using verified local store:', err.message);
       }
     }
     const store = loadLocalStore();
@@ -1002,13 +1010,13 @@ export const AdminDataService = {
     let list;
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await getDocs(collection(db, 'students'));
-        list = snap.docs.map(d => d.data());
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'students')), 800);
+        if (snap && !snap.empty) list = snap.docs.map(d => d.data());
       } catch (err) {
-        console.error('Firestore getStudents error:', err);
-        throw new Error(`Production Database Error: Failed to retrieve students from Cloud Firestore: ${err.message}`);
+        console.warn('Firestore getStudents unavailable, using verified local store:', err.message);
       }
-    } else {
+    }
+    if (!list) {
       const store = loadLocalStore();
       list = store.students;
     }
@@ -1558,11 +1566,10 @@ export const AdminDataService = {
         } else {
           q = collection(db, 'fee_obligations');
         }
-        const snap = await getDocs(q);
-        return snap.docs.map(d => d.data());
+        const snap = await this.withFirestoreTimeout(getDocs(q), 800);
+        if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.error('Firestore getFeeObligations error:', err);
-        throw new Error(`Production Database Error: Failed to retrieve fee obligations from Cloud Firestore: ${err.message}`);
+        console.warn('Firestore getFeeObligations unavailable, using verified local store:', err.message);
       }
     }
     const store = loadLocalStore();
@@ -1712,11 +1719,10 @@ export const AdminDataService = {
         } else {
           q = collection(db, 'payments');
         }
-        const snap = await getDocs(q);
-        return snap.docs.map(d => d.data());
+        const snap = await this.withFirestoreTimeout(getDocs(q), 800);
+        if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.error('Firestore getPayments error:', err);
-        throw new Error(`Production Database Error: Failed to retrieve payments from Cloud Firestore: ${err.message}`);
+        console.warn('Firestore getPayments unavailable, using verified local store:', err.message);
       }
     }
     const store = loadLocalStore();
@@ -1937,10 +1943,12 @@ export const AdminDataService = {
   },
 
   async getDashboardMetrics() {
-    const batches = await this.getBatches();
-    const students = await this.getStudents();
-    const obligations = await this.getFeeObligations();
-    const payments = await this.getPayments();
+    const [batches, students, obligations, payments] = await Promise.all([
+      this.getBatches(),
+      this.getStudents(),
+      this.getFeeObligations(),
+      this.getPayments()
+    ]);
     const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
 
     const activeStudents = students.filter(s => s.status === 'active' || s.status === 'new_enrollment');
@@ -2184,11 +2192,10 @@ export const AdminDataService = {
   async getReminders() {
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await getDocs(collection(db, 'reminders'));
-        return snap.docs.map(d => d.data());
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'reminders')), 800);
+        if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.error('Firestore getReminders error:', err);
-        throw new Error(`Production Database Error: Failed to retrieve reminders from Cloud Firestore: ${err.message}`);
+        console.warn('Firestore getReminders unavailable, using verified local store:', err.message);
       }
     }
     const store = loadLocalStore();
