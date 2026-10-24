@@ -77,7 +77,8 @@ export const SEED_SETTINGS = {
     { email: 'director@focusacademyperambalur.com', name: 'Managing Director', role: 'owner', active: true },
     { email: 'principal@focusacademyperambalur.com', name: 'Academic Principal', role: 'administrator', active: true },
     { email: 'focusacademy.perambalur@gmail.com', name: 'Campus Operations', role: 'administrator', active: true },
-    { email: 'coordinator@focusacademyperambalur.com', name: 'Fee & Billing Desk', role: 'fee_manager', active: true }
+    { email: 'coordinator@focusacademyperambalur.com', name: 'Fee & Billing Desk', role: 'fee_manager', active: true },
+    { email: 'sagnikmitra1302@gmail.com', name: 'Sagnik Mitra', role: 'owner', active: true }
   ]
 };
 
