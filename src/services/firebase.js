@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
@@ -107,6 +108,13 @@ export const logOutAdmin = async () => {
   if (auth) {
     await signOut(auth);
   }
+};
+
+export const sendAdminPasswordReset = async (email) => {
+  if (!auth) {
+    throw new Error('Firebase Authentication is not configured. Please supply valid VITE_FIREBASE_* credentials in your environment.');
+  }
+  await sendPasswordResetEmail(auth, email);
 };
 
 export const onAdminAuthStateChanged = (callback) => {

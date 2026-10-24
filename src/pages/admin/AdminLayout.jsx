@@ -44,6 +44,7 @@ export default function AdminLayout() {
       // ignore
     }
     sessionStorage.removeItem('focus_academy_admin_session');
+    localStorage.removeItem('focus_academy_admin_session');
     navigate('/admin-portal/login');
   };
 
