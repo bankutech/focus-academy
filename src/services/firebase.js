@@ -56,7 +56,8 @@ const DEFAULT_ADMIN_ALLOWLIST = [
   'focusacademy.perambalur@gmail.com',
   'director@focusacademyperambalur.com',
   'principal@focusacademyperambalur.com',
-  'coordinator@focusacademyperambalur.com'
+  'coordinator@focusacademyperambalur.com',
+  'sagnikmitra1302@gmail.com'
 ];
 
 export const getAdminAllowlist = () => {
