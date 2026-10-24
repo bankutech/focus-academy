@@ -16,7 +16,8 @@ import {
   Award,
   ChevronLeft,
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  Download
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { validateIndianMobile, isBatchCompatible } from '../../types/schemas';
@@ -127,6 +128,36 @@ export default function AdminStudentsPage() {
     }
   };
 
+  const exportStudentsCSV = () => {
+    const headers = ['ID', 'Student Name', 'Grade', 'Board', 'Batch', 'Guardian Phone', 'Status', 'Enrollment Date', 'Course End Date'];
+    const rows = students.map(s => {
+      let phone = s.guardianPhone || '';
+      if (phone.length >= 7) {
+        phone = phone.slice(0, 3) + '•••••' + phone.slice(-2);
+      }
+      return [
+        s.id,
+        `"${(s.studentName || '').replace(/"/g, '""')}"`,
+        `"${(s.grade || '').replace(/"/g, '""')}"`,
+        `"${(s.board || '').replace(/"/g, '""')}"`,
+        `"${(s.batchName || s.batchId || '').replace(/"/g, '""')}"`,
+        `"${phone}"`,
+        s.status,
+        s.enrollmentDate,
+        s.courseEndDate || ''
+      ];
+    });
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Focus_Academy_Students_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
   const handleOpenCreate = () => {
     setEditStudent(null);
     const defaultBatch = batches.find(b => !b.isArchived && isBatchCompatible(b, 'Class 10', 'TN State Board (Samacheer)'));
@@ -514,6 +545,16 @@ export default function AdminStudentsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={exportStudentsCSV}
+            title="Export Student Roster to CSV with Minor Contact Masking"
+            className="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          >
+            <Download className="w-4 h-4 text-slate-500" />
+            <span>Export CSV</span>
+          </button>
+
           <button
             type="button"
             onClick={() => { setCsvModalOpen(true); setCsvPreview(null); setCsvImportResult(null); setCsvContent(''); }}
