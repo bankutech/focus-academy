@@ -13,7 +13,8 @@ import {
   Menu, 
   X,
   ExternalLink,
-  Database
+  Database,
+  Settings as SettingsIcon
 } from 'lucide-react';
 import { logOutAdmin, isFirebaseConfigured } from '../../services/firebase';
 
@@ -54,7 +55,8 @@ export default function AdminLayout() {
     { name: 'Ledger & Payments', path: '/admin-portal/ledger', icon: Receipt },
     { name: 'WhatsApp Reminders', path: '/admin-portal/reminders', icon: MessageSquare },
     { name: 'Reports & Analytics', path: '/admin-portal/reports', icon: BarChart3 },
-    { name: 'Audit Logs', path: '/admin-portal/audit-logs', icon: ShieldAlert }
+    { name: 'Audit Logs', path: '/admin-portal/audit-logs', icon: ShieldAlert },
+    { name: 'Academy Settings', path: '/admin-portal/settings', icon: SettingsIcon }
   ];
 
   return (

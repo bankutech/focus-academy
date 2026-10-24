@@ -6,7 +6,9 @@ import {
   AlertCircle, 
   CheckCircle2, 
   X, 
-  ShieldAlert
+  ShieldAlert,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 
@@ -17,6 +19,8 @@ export default function AdminFeesPage() {
 
   const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || 'all');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const [waiveModalObligation, setWaiveModalObligation] = useState(null);
   const [waiveAmount, setWaiveAmount] = useState('');
@@ -63,10 +67,20 @@ export default function AdminFeesPage() {
     }
 
     try {
+      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
+      let currentAdmin = 'admin@focusacademyperambalur.com';
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          if (parsed?.email) currentAdmin = parsed.email;
+        } catch {}
+      }
+
       await AdminDataService.waiveFeeObligation(
         waiveModalObligation.id,
         waiveAmount,
-        waiveReason
+        waiveReason,
+        currentAdmin
       );
       setFormSuccess(`Waived ₹${waiveAmount} for ${waiveModalObligation.studentName}.`);
       setWaiveModalObligation(null);
@@ -80,12 +94,21 @@ export default function AdminFeesPage() {
     setFormError('');
     setFormSuccess('');
     try {
-      const activeStudents = students.filter(s => s.status === 'active');
+      const activeStudents = students.filter(s => s.status === 'active' || s.status === 'new_enrollment');
       let createdCount = 0;
       const now = new Date();
       const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
       const cycleName = `${nextMonth.toLocaleString('en-US', { month: 'long' })} ${nextMonth.getFullYear()}`;
       const nextDueDate = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-05`;
+
+      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
+      let currentAdmin = 'admin@focusacademyperambalur.com';
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          if (parsed?.email) currentAdmin = parsed.email;
+        } catch {}
+      }
 
       for (const student of activeStudents) {
         const amount = Math.max(0, (student.feeConfig?.amountPerCycle || 2000) - (student.feeConfig?.discountAdjustment || 0));
@@ -96,7 +119,7 @@ export default function AdminFeesPage() {
           billingCycle: cycleName,
           dueDate: nextDueDate,
           amountDue: amount
-        });
+        }, currentAdmin);
         createdCount++;
       }
 
@@ -121,6 +144,12 @@ export default function AdminFeesPage() {
     }
     return true;
   });
+
+  const totalPages = Math.ceil(filteredObligations.length / pageSize) || 1;
+  const paginatedObligations = filteredObligations.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <div className="space-y-6">
@@ -174,7 +203,10 @@ export default function AdminFeesPage() {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search by student name, obligation ID, or cycle..."
             className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
           />
@@ -183,7 +215,10 @@ export default function AdminFeesPage() {
         <div className="flex items-center space-x-2">
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
           >
             <option value="all">All Statuses</option>
@@ -213,8 +248,8 @@ export default function AdminFeesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredObligations.length > 0 ? (
-                filteredObligations.map((obl) => (
+              {paginatedObligations.length > 0 ? (
+                paginatedObligations.map((obl) => (
                   <tr key={obl.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-slate-700">
                       {obl.id}
@@ -294,6 +329,33 @@ export default function AdminFeesPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
+            <span>
+              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredObligations.length)} of {filteredObligations.length} obligations
+            </span>
+            <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-40 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="px-2 font-bold text-slate-700">{currentPage} / {totalPages}</span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-40 cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {waiveModalObligation && (

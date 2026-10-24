@@ -29,20 +29,23 @@ export default function AdminRemindersPage() {
   const [filterType, setFilterType] = useState(initialFilter); // 'all' | 'overdue' | 'upcoming' | 'today'
 
   const [previewModal, setPreviewModal] = useState(null);
+  const [settings, setSettings] = useState(null);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const [sendingId, setSendingId] = useState(null);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [r, o, s] = await Promise.all([
+      const [r, o, s, setts] = await Promise.all([
         AdminDataService.getReminders(),
         AdminDataService.getFeeObligations(),
-        AdminDataService.getStudents()
+        AdminDataService.getStudents(),
+        AdminDataService.getSettings()
       ]);
       setReminders(r);
       setObligations(o);
       setStudents(s);
+      setSettings(setts);
     } catch (err) {
       console.error('Failed to load reminders data:', err);
       setStatusMessage({ type: 'error', text: 'Failed to load reminders data.' });
@@ -83,11 +86,20 @@ export default function AdminRemindersPage() {
         throw new Error('Student record not found for this obligation.');
       }
 
+      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
+      let currentAdmin = 'admin@focusacademyperambalur.com';
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          if (parsed?.email) currentAdmin = parsed.email;
+        } catch {}
+      }
+
       const result = await AdminDataService.sendOrLogWhatsAppReminder({
         studentId: obligation.studentId,
         obligationId: obligation.id,
         reminderType
-      });
+      }, currentAdmin);
 
       setStatusMessage({
         type: 'success',
@@ -109,6 +121,35 @@ export default function AdminRemindersPage() {
     }
   };
 
+  const handleRetryReminder = async (reminderId) => {
+    setStatusMessage({ type: '', text: '' });
+    try {
+      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
+      let currentAdmin = 'admin@focusacademyperambalur.com';
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          if (parsed?.email) currentAdmin = parsed.email;
+        } catch {}
+      }
+
+      const result = await AdminDataService.retryFailedReminder(reminderId, currentAdmin);
+      setStatusMessage({
+        type: 'success',
+        text: `Retried reminder. Opening WhatsApp dispatch window...`
+      });
+      if (result.clickToChatUrl) {
+        window.open(result.clickToChatUrl, '_blank', 'noopener,noreferrer');
+      }
+      await loadData();
+    } catch (err) {
+      setStatusMessage({
+        type: 'error',
+        text: err.message || 'Retry failed.'
+      });
+    }
+  };
+
   const filteredPending = pendingObligations.filter(obl => {
     const sName = (obl.studentName || '').toLowerCase();
     const oId = (obl.id || '').toLowerCase();
@@ -124,7 +165,11 @@ export default function AdminRemindersPage() {
     const today = new Date().toISOString().split('T')[0];
     if (filterType === 'overdue') return obl.status === 'overdue';
     if (filterType === 'today') return obl.dueDate === today;
-    if (filterType === 'upcoming') return obl.status !== 'overdue';
+    if (filterType === 'upcoming') {
+      const timingDays = settings?.reminderTimingDaysBeforeDue || 3;
+      const diffDays = Math.ceil((new Date(obl.dueDate).getTime() - new Date(today).getTime()) / (1000 * 3600 * 24));
+      return obl.status !== 'overdue' && diffDays >= 0 && diffDays <= timingDays;
+    }
     return true;
   });
 
@@ -298,6 +343,11 @@ export default function AdminRemindersPage() {
                 {filteredPending.length > 0 ? (
                   filteredPending.map((obl) => {
                     const student = studentMap.get(obl.studentId);
+                    const prefs = student?.notificationPreferences || {};
+                    const isRemindersDisabled = Boolean(prefs.remindersDisabled) || prefs.communicationConsent === false;
+                    const disabledNotice = prefs.remindersDisabled
+                      ? (prefs.reminderDisabledReason || 'Reminders disabled for student')
+                      : (prefs.communicationConsent === false ? 'Guardian consent not granted' : '');
                     const recentReminder = getRecentReminderForObligation(obl.id);
                     const isOverdue = obl.status === 'overdue';
                     const reminderType = isOverdue ? 'overdue' : 'upcoming';
@@ -321,6 +371,11 @@ export default function AdminRemindersPage() {
                           <div className="text-[10px] text-slate-500">
                             {student?.guardianName || 'Guardian'}
                           </div>
+                          {isRemindersDisabled && (
+                            <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-slate-200 text-slate-700">
+                              {disabledNotice}
+                            </span>
+                          )}
                         </td>
 
                         <td className="py-3.5 px-4 font-mono text-slate-600">
@@ -373,9 +428,10 @@ export default function AdminRemindersPage() {
                             <button
                               type="button"
                               onClick={() => handleSendReminder(obl, reminderType)}
-                              disabled={sendingId === obl.id || Boolean(recentReminder)}
+                              disabled={sendingId === obl.id || Boolean(recentReminder) || isRemindersDisabled}
+                              title={isRemindersDisabled ? disabledNotice : undefined}
                               className={`px-3 py-1 rounded-md font-bold text-[11px] inline-flex items-center space-x-1.5 transition-colors cursor-pointer ${
-                                recentReminder
+                                recentReminder || isRemindersDisabled
                                   ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                   : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
                               }`}
@@ -415,6 +471,7 @@ export default function AdminRemindersPage() {
                   <th className="py-3 px-4 font-bold">Type</th>
                   <th className="py-3 px-4 font-bold">Channel</th>
                   <th className="py-3 px-4 font-bold">Message Content</th>
+                  <th className="py-3 px-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -463,11 +520,23 @@ export default function AdminRemindersPage() {
                       <td className="py-3.5 px-4 text-slate-600 max-w-xs truncate" title={rem.messagePreview}>
                         {rem.messagePreview}
                       </td>
+
+                      <td className="py-3.5 px-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleRetryReminder(rem.id)}
+                          className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-md font-bold text-[10px] inline-flex items-center space-x-1 cursor-pointer"
+                          title="Manually retry dispatch without duplicate obligation"
+                        >
+                          <RotateCw className="w-3 h-3" />
+                          <span>Retry</span>
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="py-8 text-center text-slate-400 text-xs">
+                    <td colSpan="9" className="py-8 text-center text-slate-400 text-xs">
                       No reminder logs match the search query.
                     </td>
                   </tr>

@@ -31,6 +31,7 @@ const AdminLedgerPage = lazy(() => import('./pages/admin/AdminLedgerPage'));
 const AdminRemindersPage = lazy(() => import('./pages/admin/AdminRemindersPage'));
 const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage'));
 const AdminAuditLogsPage = lazy(() => import('./pages/admin/AdminAuditLogsPage'));
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
 
 function RouteLoadingFallback() {
   return null;
@@ -86,6 +87,7 @@ export default function App() {
                 <Route path="reminders" element={<AdminRemindersPage />} />
                 <Route path="reports" element={<AdminReportsPage />} />
                 <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
                 <Route path="*" element={<Navigate to="/admin-portal" replace />} />
               </Route>
 

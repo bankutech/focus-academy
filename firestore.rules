@@ -6,18 +6,42 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
+    function isOwner() {
       return isAuthenticated() && (
-        request.auth.token.admin == true ||
-        request.auth.token.role == 'admin' ||
+        request.auth.token.role == 'owner' ||
         request.auth.token.email.lower() in [
           'admin@focusacademyperambalur.com',
-          'focusacademy.perambalur@gmail.com',
-          'director@focusacademyperambalur.com',
-          'principal@focusacademyperambalur.com',
-          'coordinator@focusacademyperambalur.com'
+          'director@focusacademyperambalur.com'
         ]
       );
+    }
+
+    function isAdministrator() {
+      return isOwner() || (
+        isAuthenticated() && (
+          request.auth.token.admin == true ||
+          request.auth.token.role in ['admin', 'administrator'] ||
+          request.auth.token.email.lower() in [
+            'principal@focusacademyperambalur.com',
+            'focusacademy.perambalur@gmail.com'
+          ]
+        )
+      );
+    }
+
+    function isFeeManager() {
+      return isAdministrator() || (
+        isAuthenticated() && (
+          request.auth.token.role == 'fee_manager' ||
+          request.auth.token.email.lower() in [
+            'coordinator@focusacademyperambalur.com'
+          ]
+        )
+      );
+    }
+
+    function isAdmin() {
+      return isFeeManager();
     }
 
     function isValidLead(data) {
@@ -33,39 +57,45 @@ service cloud.firestore {
     // Batches: Public can read curriculum, schedules, and capacity; only admins can modify
     match /batches/{batchId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdministrator();
     }
 
     // Students: Private administrative records
     match /students/{studentId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isAdministrator();
     }
 
     // Fee Obligations: Sensitive financial schedules
     match /fee_obligations/{obligationId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isFeeManager();
     }
 
     // Payments: Verified receipt & transaction ledger
     match /payments/{paymentId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isFeeManager();
     }
 
     // Reminders: Automated and manual WhatsApp log records
     match /reminders/{reminderId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isFeeManager();
     }
 
     // Audit Logs: Append-only, immutable tamper-evident log
     match /audit_logs/{logId} {
-      allow read, create: if isAdmin();
+      allow read: if isAdministrator();
+      allow create: if isFeeManager();
       allow update, delete: if false;
     }
 
     // Leads: Prospective admissions submitted by parents / students
     match /leads/{leadId} {
       allow create: if isValidLead(request.resource.data);
-      allow read, update, delete: if isAdmin();
+      allow read, update, delete: if isAdministrator();
+    }
+
+    // Academy Settings: System configuration & policies restricted to administrators
+    match /academy_settings/{settingId} {
+      allow read, write: if isAdministrator();
     }
 
     // Deny all other access by default

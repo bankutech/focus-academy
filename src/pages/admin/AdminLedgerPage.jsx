@@ -5,7 +5,9 @@ import {
   Printer, 
   AlertCircle, 
   CheckCircle2, 
-  X
+  X,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 
@@ -17,11 +19,15 @@ export default function AdminLedgerPage() {
 
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState('all');
+  const [adminFilter, setAdminFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const [recordModalOpen, setRecordModalOpen] = useState(false);
   const [receiptModalPayment, setReceiptModalPayment] = useState(null);
 
   const [formError, setFormError] = useState('');
+  const [settings, setSettings] = useState(null);
   const [formSuccess, setFormSuccess] = useState('');
 
   const [paymentForm, setPaymentForm] = useState({
@@ -36,16 +42,18 @@ export default function AdminLedgerPage() {
 
   const loadData = async () => {
     try {
-      const [p, s, o, m] = await Promise.all([
+      const [p, s, o, m, setts] = await Promise.all([
         AdminDataService.getPayments(),
         AdminDataService.getStudents(),
         AdminDataService.getFeeObligations(),
-        AdminDataService.getDashboardMetrics()
+        AdminDataService.getDashboardMetrics(),
+        AdminDataService.getSettings()
       ]);
       setPayments(p);
       setStudents(s);
       setObligations(o);
       setMetrics(m);
+      setSettings(setts);
 
       const params = new URLSearchParams(window.location.search);
       const stuId = params.get('studentId');
@@ -109,10 +117,19 @@ export default function AdminLedgerPage() {
     }
 
     try {
+      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
+      let currentAdmin = 'admin@focusacademyperambalur.com';
+      if (rawSession) {
+        try {
+          const parsed = JSON.parse(rawSession);
+          if (parsed?.email) currentAdmin = parsed.email;
+        } catch {}
+      }
+
       const result = await AdminDataService.recordPayment({
         ...paymentForm,
         amount: Number(paymentForm.amount)
-      });
+      }, currentAdmin);
 
       setFormSuccess(`Recorded payment ₹${paymentForm.amount}. Receipt: ${result.payment.receiptNumber}`);
       setRecordModalOpen(false);
@@ -123,8 +140,13 @@ export default function AdminLedgerPage() {
     }
   };
 
+  const uniqueAdmins = Array.from(new Set(payments.map(p => p.recordedBy || 'admin@focusacademyperambalur.com'))).filter(Boolean);
+
   const filteredPayments = payments.filter((p) => {
     if (methodFilter !== 'all' && p.paymentMethod !== methodFilter) {
+      return false;
+    }
+    if (adminFilter !== 'all' && (p.recordedBy || 'admin@focusacademyperambalur.com') !== adminFilter) {
       return false;
     }
     if (search) {
@@ -132,11 +154,15 @@ export default function AdminLedgerPage() {
       return (
         p.studentName.toLowerCase().includes(q) ||
         p.receiptNumber.toLowerCase().includes(q) ||
+        (p.recordedBy && p.recordedBy.toLowerCase().includes(q)) ||
         (p.referenceNumber && p.referenceNumber.toLowerCase().includes(q))
       );
     }
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / pageSize));
+  const paginatedPayments = filteredPayments.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="space-y-6">
@@ -235,8 +261,19 @@ export default function AdminLedgerPage() {
 
         <div className="flex items-center space-x-2">
           <select
+            value={adminFilter}
+            onChange={(e) => { setAdminFilter(e.target.value); setCurrentPage(1); }}
+            className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
+          >
+            <option value="all">All Administrators</option>
+            {uniqueAdmins.map(adm => (
+              <option key={adm} value={adm}>{adm}</option>
+            ))}
+          </select>
+
+          <select
             value={methodFilter}
-            onChange={(e) => setMethodFilter(e.target.value)}
+            onChange={(e) => { setMethodFilter(e.target.value); setCurrentPage(1); }}
             className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
           >
             <option value="all">All Payment Methods</option>
@@ -256,14 +293,15 @@ export default function AdminLedgerPage() {
                 <th className="py-3 px-4 font-bold">Student</th>
                 <th className="py-3 px-4 font-bold">Amount Paid</th>
                 <th className="py-3 px-4 font-bold">Payment Method</th>
+                <th className="py-3 px-4 font-bold">Recorded By</th>
                 <th className="py-3 px-4 font-bold">Reference / UTR</th>
                 <th className="py-3 px-4 font-bold">Date</th>
                 <th className="py-3 px-4 font-bold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredPayments.length > 0 ? (
-                filteredPayments.map((pay) => (
+              {paginatedPayments.length > 0 ? (
+                paginatedPayments.map((pay) => (
                   <tr key={pay.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-[#EA580C]">
                       {pay.receiptNumber}
@@ -281,6 +319,10 @@ export default function AdminLedgerPage() {
                       <span className="capitalize font-bold text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
                         {pay.paymentMethod.replace('_', ' ')}
                       </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600">
+                      {pay.recordedBy || 'admin'}
                     </td>
 
                     <td className="py-3.5 px-4 font-mono text-slate-600">
@@ -305,7 +347,7 @@ export default function AdminLedgerPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-slate-400 text-xs">
+                  <td colSpan="8" className="py-8 text-center text-slate-400 text-xs">
                     No transactions match the filter.
                   </td>
                 </tr>
@@ -313,6 +355,33 @@ export default function AdminLedgerPage() {
             </tbody>
           </table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
+            <span>
+              Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredPayments.length)} of {filteredPayments.length} transactions
+            </span>
+            <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-40 cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="px-2 font-bold text-slate-700">{currentPage} / {totalPages}</span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-1 border border-slate-200 rounded hover:bg-slate-100 disabled:opacity-40 cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {recordModalOpen && (
@@ -449,9 +518,15 @@ export default function AdminLedgerPage() {
 
             <div id="printable-receipt" className="p-4 border border-slate-200 rounded-lg bg-slate-50 text-xs">
               <div className="text-center border-b border-slate-200 pb-3 mb-3">
-                <h3 className="text-base font-extrabold text-[#0F172A]">FOCUS ACADEMY</h3>
-                <p className="text-[11px] text-slate-600 font-medium">Thiripura Complex, Thoramangalam, Perambalur – 621220</p>
-                <p className="text-[10px] text-slate-500">Phone: +91 98424 51220 • contact@focusacademyperambalur.com</p>
+                <h3 className="text-base font-extrabold text-[#0F172A] uppercase">
+                  {settings?.academyName || 'FOCUS ACADEMY'}
+                </h3>
+                <p className="text-[11px] text-slate-600 font-medium">
+                  {settings?.campusAddress || 'Thiripura Complex, Thoramangalam, Perambalur – 621220'}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Phone: {settings?.primaryPhone || '+91 98424 51220'} • {settings?.email || 'contact@focusacademyperambalur.com'}
+                </p>
               </div>
 
               <div className="flex justify-between items-center mb-3 text-[11px]">
@@ -489,7 +564,7 @@ export default function AdminLedgerPage() {
               <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-md flex justify-between items-center mb-3">
                 <span className="font-bold text-emerald-800 text-sm">AMOUNT RECEIVED:</span>
                 <span className="font-extrabold text-emerald-700 text-lg">
-                  ₹{Number(receiptModalPayment.amount).toLocaleString('en-IN')}
+                  {settings?.currencySymbol || '₹'}{Number(receiptModalPayment.amount).toLocaleString('en-IN')}
                 </span>
               </div>
 
