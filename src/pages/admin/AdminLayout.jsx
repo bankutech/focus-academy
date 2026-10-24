@@ -62,8 +62,8 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body">
-      <header className="bg-[#0F172A] text-white border-b border-[#1E293B] sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="bg-[#0F172A] text-white border-b border-[#1E293B] sticky top-0 z-40 shadow-xs">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
               type="button"
@@ -133,41 +133,51 @@ export default function AdminLayout() {
         </div>
       </header>
 
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
-        <aside className="hidden lg:block w-64 flex-shrink-0">
-          <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-3 sticky top-22">
-            <div className="text-[11px] uppercase tracking-wider font-extrabold text-slate-400 px-3 py-2">
-              Institute Administration
+      <div className="flex-1 flex min-h-[calc(100vh-4rem)]">
+        <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 shrink-0 sticky top-16 h-[calc(100vh-4rem)] justify-between select-none">
+          <div className="p-4 space-y-3 overflow-y-auto">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-3 pb-2">
+                Campus Navigation
+              </div>
+              <nav className="space-y-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = item.end 
+                    ? location.pathname === item.path 
+                    : location.pathname.startsWith(item.path);
+
+                  return (
+                    <NavLink
+                      key={item.name}
+                      to={item.path}
+                      end={item.end}
+                      className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        active
+                          ? 'bg-[#0F172A] text-white shadow-xs'
+                          : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${active ? 'text-[#EA580C]' : 'text-slate-400'}`} />
+                      <span>{item.name}</span>
+                    </NavLink>
+                  );
+                })}
+              </nav>
             </div>
-            <nav className="space-y-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const active = item.end 
-                  ? location.pathname === item.path 
-                  : location.pathname.startsWith(item.path);
+          </div>
 
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.path}
-                    end={item.end}
-                    className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      active
-                        ? 'bg-[#0F172A] text-white shadow-xs'
-                        : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${active ? 'text-[#EA580C]' : 'text-slate-400'}`} />
-                    <span>{item.name}</span>
-                  </NavLink>
-                );
-              })}
-            </nav>
-
-            <div className="mt-6 pt-4 border-t border-slate-100 px-3 text-[11px] text-slate-500 space-y-1">
-              <p className="font-semibold text-slate-700">Focus Academy</p>
-              <p>Perambalur Campus Desk</p>
-              <p className="text-[10px] text-slate-400">Security Version 2026.1</p>
+          <div className="p-4 border-t border-slate-200 bg-slate-50/70 text-[11px] text-slate-500 space-y-1.5">
+            <div className="flex items-center space-x-1.5 font-bold text-[#0F172A]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+              <span>Focus Academy</span>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-snug">
+              Thiripura Complex, Thoramangalam, Perambalur — 621220
+            </p>
+            <div className="pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+              <span>Ratio Guard: 1:12</span>
+              <span>v2026.1</span>
             </div>
           </div>
         </aside>
@@ -239,8 +249,10 @@ export default function AdminLayout() {
           </div>
         )}
 
-        <main className="flex-1 min-w-0">
-          <Outlet />
+        <main className="flex-1 min-w-0 bg-[#F8FAFC] p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

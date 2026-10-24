@@ -8,7 +8,6 @@ import {
   AlertCircle, 
   CheckCircle2, 
   Info, 
-  Sparkles, 
   Eye, 
   EyeOff 
 } from 'lucide-react';
@@ -662,9 +661,9 @@ export default function AdminLoginPage() {
 
           <div className="mt-3.5 pt-2.5 border-t border-slate-800/60">
             <div className="flex items-center justify-between text-[11px] text-slate-500">
-              <span className="font-semibold flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-orange-400" />
-                <span>Demo Allowlist:</span>
+              <span className="font-semibold flex items-center gap-1.5 text-slate-400">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#EA580C]" />
+                <span>Authorized Desks:</span>
               </span>
               <div className="flex flex-wrap gap-1.5 justify-end">
                 {allowlist.slice(0, 3).map((allowed) => (

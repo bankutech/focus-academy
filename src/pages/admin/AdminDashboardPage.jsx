@@ -6,13 +6,13 @@ import {
   Receipt, 
   AlertTriangle, 
   Clock, 
-  ArrowUpRight, 
   ArrowRight,
   TrendingUp,
   CreditCard,
   MessageSquare,
-  Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck,
+  UserPlus
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 
@@ -41,9 +41,9 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-8 text-center bg-white rounded-xl border border-slate-200">
-        <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-xs font-semibold text-slate-500">Calculating Campus Financial Records...</p>
+      <div className="p-12 text-center bg-white rounded-xl border border-slate-200">
+        <div className="w-8 h-8 border-3 border-[#EA580C] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-xs font-semibold text-slate-500">Loading Campus Records...</p>
       </div>
     );
   }
@@ -54,9 +54,8 @@ export default function AdminDashboardPage() {
       value: metrics?.totalActiveStudents ?? 0,
       sub: 'Enrolled in 2025-2026 batches',
       icon: Users,
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-      border: 'border-blue-100',
+      badge: 'Academic Roster',
+      badgeClass: 'bg-slate-100 text-slate-700 border-slate-200',
       link: '/admin-portal/students'
     },
     {
@@ -64,64 +63,59 @@ export default function AdminDashboardPage() {
       value: metrics?.totalActiveBatches ?? 0,
       sub: 'Capped at 12 students / classroom',
       icon: Layers,
-      color: 'text-indigo-600',
-      bg: 'bg-indigo-50',
-      border: 'border-indigo-100',
+      badge: '1:12 Ratio Guard',
+      badgeClass: 'bg-slate-100 text-slate-700 border-slate-200',
       link: '/admin-portal/batches'
     },
     {
       title: 'Collected This Month',
       value: `₹${(metrics?.feesCollectedThisMonth ?? 0).toLocaleString('en-IN')}`,
-      sub: 'Actual verified receipts',
+      sub: 'Verified ledger receipts',
       icon: TrendingUp,
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-50',
-      border: 'border-emerald-100',
+      badge: 'Verified Ledger',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       link: '/admin-portal/ledger'
     },
     {
       title: 'Total Outstanding',
       value: `₹${(metrics?.totalOutstandingFees ?? 0).toLocaleString('en-IN')}`,
-      sub: 'Valid obligations pending',
+      sub: 'Active pending balances',
       icon: Receipt,
-      color: 'text-amber-600',
-      bg: 'bg-amber-50',
-      border: 'border-amber-100',
+      badge: 'Pending Balance',
+      badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
       link: '/admin-portal/fees?status=pending'
     },
     {
       title: 'Overdue Fees',
       value: `₹${(metrics?.totalOverdueFees ?? 0).toLocaleString('en-IN')}`,
-      sub: 'Due date lapsed',
+      sub: 'Payment due date lapsed',
       icon: AlertTriangle,
-      color: 'text-red-600',
-      bg: 'bg-red-50',
-      border: 'border-red-100',
+      badge: 'Action Required',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
       link: '/admin-portal/reminders?tab=overdue'
     },
     {
       title: 'Due Today',
       value: metrics?.paymentsDueTodayCount ?? 0,
-      sub: 'Requires reminder check',
+      sub: 'Requires reminder dispatch',
       icon: Clock,
-      color: 'text-orange-600',
-      bg: 'bg-orange-50',
-      border: 'border-orange-100',
+      badge: 'Daily Schedule',
+      badgeClass: 'bg-orange-50 text-orange-800 border-orange-200',
       link: '/admin-portal/reminders?tab=today'
     }
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+      <div className="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2.5">
             <h1 className="text-xl sm:text-2xl font-extrabold text-[#0F172A] tracking-tight">
               Campus Operations Dashboard
             </h1>
-            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              <span>Session 2025-2026</span>
+              <span>Session 2025–2026</span>
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
@@ -129,7 +123,7 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/admin-portal/ledger"
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
@@ -138,11 +132,18 @@ export default function AdminDashboardPage() {
             <span>Record Payment</span>
           </Link>
           <Link
-            to="/admin-portal/reminders"
+            to="/admin-portal/students"
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#0F172A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
           >
-            <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-            <span>WhatsApp Reminders</span>
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Add Student</span>
+          </Link>
+          <Link
+            to="/admin-portal/reminders"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold border border-slate-200 transition-colors cursor-pointer"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+            <span>WhatsApp Due Notices</span>
           </Link>
         </div>
       </div>
@@ -154,26 +155,34 @@ export default function AdminDashboardPage() {
             <Link
               key={card.title}
               to={card.link}
-              className={`p-4 bg-white rounded-xl border ${card.border} shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer group flex flex-col justify-between`}
+              className="p-5 bg-white rounded-xl border border-slate-200 hover:border-slate-300 shadow-xs hover:shadow-sm transition-all duration-150 cursor-pointer group flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  {card.title}
-                </span>
-                <div className={`p-2 rounded-lg ${card.bg} ${card.color}`}>
-                  <Icon className="w-4 h-4" />
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <div className="p-1.5 rounded-md bg-slate-100 text-slate-700 group-hover:bg-[#0F172A] group-hover:text-white transition-colors">
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    {card.title}
+                  </span>
                 </div>
+                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border ${card.badgeClass}`}>
+                  {card.badge}
+                </span>
               </div>
 
-              <div className="my-2">
-                <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
+              <div className="my-1">
+                <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight font-mono">
                   {card.value}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-xs text-slate-400 group-hover:text-slate-600 transition-colors">
-                <span>{card.sub}</span>
-                <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#EA580C] transition-colors" />
+              <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 group-hover:text-slate-700 transition-colors">
+                <span className="truncate">{card.sub}</span>
+                <div className="flex items-center space-x-1 text-[#EA580C] font-semibold text-[11px] flex-shrink-0 ml-2">
+                  <span>View</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </div>
             </Link>
           );
@@ -181,14 +190,14 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-xs p-5">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-xs p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
             <div>
               <h2 className="text-sm font-extrabold text-[#0F172A]">
                 Recent Verified Transactions
               </h2>
-              <p className="text-[11px] text-slate-400">
-                Latest student fee payments with generated receipt numbers
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Official student fee receipts generated and attributed to campus administrators
               </p>
             </div>
             <Link
@@ -214,14 +223,14 @@ export default function AdminDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {metrics.recentPayments.slice(0, 5).map((pay) => (
-                    <tr key={pay.id} className="hover:bg-slate-50/80">
+                    <tr key={pay.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3 font-mono font-bold text-[#EA580C]">
                         {pay.receiptNumber}
                       </td>
                       <td className="py-3 font-semibold text-[#0F172A]">
                         {pay.studentName}
                       </td>
-                      <td className="py-3 font-extrabold text-[#0F172A]">
+                      <td className="py-3 font-extrabold text-[#0F172A] font-mono">
                         ₹{Number(pay.amount).toLocaleString('en-IN')}
                       </td>
                       <td className="py-3">
@@ -229,7 +238,7 @@ export default function AdminDashboardPage() {
                           {pay.paymentMethod.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="py-3 text-slate-500">
+                      <td className="py-3 text-slate-500 font-mono text-[11px]">
                         {pay.paymentDate}
                       </td>
                     </tr>
@@ -238,35 +247,40 @@ export default function AdminDashboardPage() {
               </table>
             </div>
           ) : (
-            <p className="text-xs text-slate-400 py-6 text-center">
-              No transactions recorded yet.
+            <p className="text-xs text-slate-400 py-8 text-center">
+              No transactions recorded yet in current cycle.
             </p>
           )}
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 flex flex-col justify-between">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 sm:p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-              <h2 className="text-sm font-extrabold text-[#0F172A]">
-                12-Seat Capacity Guard
-              </h2>
+              <div>
+                <h2 className="text-sm font-extrabold text-[#0F172A]">
+                  12-Seat Capacity Guard
+                </h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Classroom density enforcement
+                </p>
+              </div>
               <Link to="/admin-portal/batches" className="text-xs text-[#EA580C] font-bold hover:underline">
-                Manage
+                Manage Batches →
               </Link>
             </div>
 
-            <div className="space-y-3.5">
-              {batches.slice(0, 4).map((b) => {
+            <div className="space-y-4">
+              {batches.slice(0, 5).map((b) => {
                 const pct = Math.round((b.enrolledCount / 12) * 100);
                 const isFull = b.enrolledCount >= 12;
                 return (
                   <div key={b.id} className="text-xs">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-slate-700 truncate max-w-[150px]">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-bold text-slate-800 truncate max-w-[160px]">
                         {b.name}
                       </span>
                       <span className={`font-mono text-[11px] font-bold ${isFull ? 'text-red-600' : 'text-slate-600'}`}>
-                        {b.enrolledCount}/12 Seats
+                        {b.enrolledCount} / 12 Seats
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
@@ -275,7 +289,7 @@ export default function AdminDashboardPage() {
                           isFull 
                             ? 'bg-red-500' 
                             : pct >= 75 
-                            ? 'bg-orange-500' 
+                            ? 'bg-amber-500' 
                             : 'bg-emerald-500'
                         }`}
                         style={{ width: `${Math.min(100, pct)}%` }}
@@ -287,10 +301,10 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-100 bg-slate-50 -mx-5 -mb-5 p-4 rounded-b-xl flex items-center justify-between">
-            <div className="flex items-center space-x-1.5 text-xs text-slate-600">
-              <Sparkles className="w-3.5 h-3.5 text-orange-500" />
-              <span className="font-semibold">Thoramangalam Campus</span>
+          <div className="mt-6 pt-4 border-t border-slate-100 bg-slate-50 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 p-4 rounded-b-xl flex items-center justify-between text-xs text-slate-600">
+            <div className="flex items-center space-x-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <span className="font-semibold text-[11px]">Strict 1:12 Faculty Ratio</span>
             </div>
             <Link
               to="/admin-portal/reports"
