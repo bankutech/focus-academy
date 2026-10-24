@@ -85,7 +85,12 @@ export default function AdminLoginPage() {
         handleSuccessfulAuth(demoUser);
       }
     } catch (err) {
-      setError(err.message || 'Google sign-in failed. Please try again.');
+      if (err.code === 'auth/unauthorized-domain') {
+        const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'your current domain';
+        setError(`Domain not authorized: '${currentDomain}' is not in your Firebase Authentication Authorized Domains list. Please add '${currentDomain}' in Firebase Console (Authentication > Settings > Authorized domains) or sign in with your administrator email/password below.`);
+      } else {
+        setError(err.message || 'Google sign-in failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
