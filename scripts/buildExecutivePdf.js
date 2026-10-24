@@ -11,11 +11,11 @@ async function generateExecutivePdf() {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Focus Academy - Platform Architecture & Workflow Specification</title>
+<title>Focus Academy - Platform Architecture, Full-Stack Operations & Workflow Specification</title>
 <style>
   @page {
     size: A4 portrait;
-    margin: 20mm 18mm 20mm 18mm;
+    margin: 18mm 16mm 18mm 16mm;
   }
 
   * {
@@ -28,15 +28,15 @@ async function generateExecutivePdf() {
     font-family: 'Times New Roman', Times, 'Liberation Serif', Georgia, serif;
     color: #111111;
     background: #ffffff;
-    font-size: 10pt;
-    line-height: 1.45;
+    font-size: 9.5pt;
+    line-height: 1.4;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .page {
     width: 100%;
-    min-height: 257mm;
+    min-height: 260mm;
     position: relative;
     page-break-after: always;
     display: flex;
@@ -54,117 +54,121 @@ async function generateExecutivePdf() {
 
   .page-footer {
     text-align: center;
-    font-size: 9pt;
-    color: #111111;
-    padding-top: 10px;
+    font-size: 8.5pt;
+    color: #333333;
+    padding-top: 8px;
+    border-top: 0.5px solid #d0d0d0;
   }
 
   .doc-title-block {
     text-align: center;
-    margin-bottom: 22px;
-    padding-bottom: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
     border-bottom: 1.5px solid #000000;
   }
 
   .doc-main-title {
-    font-size: 20pt;
+    font-size: 19pt;
     font-weight: bold;
     letter-spacing: -0.3px;
     line-height: 1.2;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .doc-sub-title {
-    font-size: 12pt;
+    font-size: 11pt;
     font-weight: bold;
-    margin-bottom: 8px;
-    color: #222222;
+    margin-bottom: 6px;
+    color: #1a1a1a;
   }
 
   .doc-blueprint-meta {
-    font-size: 9.5pt;
+    font-size: 8.5pt;
     font-weight: bold;
     color: #111111;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     line-height: 1.35;
   }
 
   .doc-signoff-meta {
-    font-size: 9pt;
+    font-size: 8.2pt;
     font-style: italic;
     color: #444444;
   }
 
   h1.sec-heading {
-    font-size: 13pt;
+    font-size: 12pt;
     font-weight: bold;
-    margin-top: 14px;
-    margin-bottom: 8px;
+    margin-top: 12px;
+    margin-bottom: 6px;
     color: #000000;
     line-height: 1.25;
+    border-bottom: 0.75px solid #333333;
+    padding-bottom: 2px;
   }
 
   h2.sub-sec-heading {
-    font-size: 11pt;
+    font-size: 10.2pt;
     font-weight: bold;
-    margin-top: 10px;
-    margin-bottom: 6px;
+    margin-top: 8px;
+    margin-bottom: 4px;
     color: #111111;
   }
 
   h3.sub-sub-heading {
-    font-size: 10pt;
+    font-size: 9.2pt;
     font-weight: bold;
-    margin-top: 8px;
-    margin-bottom: 4px;
+    margin-top: 6px;
+    margin-bottom: 3px;
     color: #222222;
   }
 
   p {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     text-align: justify;
     text-justify: inter-word;
   }
 
   ol.num-list, ul.bullet-list {
-    margin-left: 20px;
-    margin-bottom: 10px;
+    margin-left: 18px;
+    margin-bottom: 8px;
   }
 
   ol.num-list li, ul.bullet-list li {
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     text-align: justify;
   }
 
   .ascii-diagram {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 7.4pt;
-    line-height: 1.15;
+    font-size: 6.8pt;
+    line-height: 1.12;
     background: #ffffff;
     color: #000000;
-    padding: 8px 0;
+    padding: 6px 0;
     white-space: pre;
     overflow: hidden;
-    margin: 8px 0 12px 0;
+    margin: 6px 0 10px 0;
+    border: 0.5px solid #cccccc;
   }
 
   .code-block {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 8pt;
-    line-height: 1.25;
-    background: #fbfbfb;
+    font-size: 7.6pt;
+    line-height: 1.2;
+    background: #fafafa;
     border: 1px solid #dcdcdc;
     border-radius: 2px;
-    padding: 8px 10px;
+    padding: 6px 8px;
     white-space: pre;
-    margin: 8px 0 10px 0;
+    margin: 6px 0 8px 0;
   }
 
   .spec-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 8.5pt;
-    margin: 10px 0 14px 0;
+    font-size: 8pt;
+    margin: 8px 0 10px 0;
     border-top: 1.5px solid #000000;
     border-bottom: 1.5px solid #000000;
   }
@@ -172,15 +176,15 @@ async function generateExecutivePdf() {
   .spec-table th {
     font-weight: bold;
     text-align: left;
-    padding: 6px 8px;
+    padding: 5px 6px;
     border-bottom: 1px solid #000000;
-    background: #ffffff;
+    background: #f4f4f4;
     vertical-align: top;
   }
 
   .spec-table td {
-    padding: 5px 8px;
-    border-bottom: 0.5px solid #e0e0e0;
+    padding: 4px 6px;
+    border-bottom: 0.5px solid #e5e5e5;
     vertical-align: top;
     text-align: justify;
   }
@@ -193,25 +197,29 @@ async function generateExecutivePdf() {
     text-align: center;
     font-family: 'Times New Roman', Times, serif;
     font-style: italic;
-    font-size: 10pt;
-    padding: 6px 0;
-    margin: 6px 0 10px 0;
+    font-size: 9.5pt;
+    padding: 5px 0;
+    margin: 4px 0 8px 0;
+    background: #fdfdfd;
+    border: 0.5px solid #e0e0e0;
   }
 
   .callout-quote {
-    border-left: 2.5px solid #000000;
-    padding-left: 12px;
-    margin: 8px 0 10px 0;
+    border-left: 2.5px solid #ea580c;
+    background: #fffbf9;
+    padding: 6px 10px;
+    margin: 6px 0 8px 0;
     font-style: italic;
     color: #222222;
+    font-size: 9pt;
   }
 
   .doc-end-marker {
     text-align: center;
     font-style: italic;
-    font-size: 9pt;
-    margin-top: 24px;
-    color: #444444;
+    font-size: 8.5pt;
+    margin-top: 18px;
+    color: #555555;
   }
 </style>
 </head>
@@ -222,31 +230,35 @@ async function generateExecutivePdf() {
     <div class="content-area">
       <div class="doc-title-block">
         <div class="doc-main-title">Focus Academy Thoramangalam</div>
-        <div class="doc-sub-title">Small-Batch Tutoring, Sequential Admission Engine & Platform Architecture</div>
-        <div class="doc-blueprint-meta">Production Blueprint: Deterministic 5-Step Funnel, Cryptographic Step Auth, Headless Dynamic Batches & Multi-Channel Lead Resilience</div>
-        <div class="doc-signoff-meta">Prepared for Academic Operations Review, Technical Sign-Off & Implementation Baseline</div>
+        <div class="doc-sub-title">Small-Batch Tutoring (1:12), Full-Stack Platform Architecture & Operations Specification</div>
+        <div class="doc-blueprint-meta">Production Baseline: Deterministic 5-Step Admission Funnel, Split-Screen Admin Portal, Firebase Auth & Cloud Firestore, Cryptographic Audit Trail & Vercel Edge Deployment</div>
+        <div class="doc-signoff-meta">Certified Engineering Specification & Audit Sign-Off | Thoramangalam, Perambalur, Tamil Nadu &ndash; 621220</div>
       </div>
 
-      <h1 class="sec-heading">1 Executive Summary & Product Vision</h1>
+      <h1 class="sec-heading">1 Executive Summary & Dual-Portal Product Vision</h1>
       <p>
-        Commercial coaching centers across semi-urban education hubs suffer from chronic overcrowding (frequently packing 45 to 60 students per classroom), generic one-size-fits-all curricula, uncoordinated transport timetables, and fragmented manual registration record-keeping. Under this high-density tuition model, struggling students fall behind undetected, homework accountability evaporates, and parents lack visibility into genuine conceptual mastery.
+        Commercial coaching centers across semi-urban educational hubs frequently suffer from chronic classroom overcrowding (often packing 45 to 60 students into single lecture halls), generic rote-learning curricula, uncoordinated public transit timetables, and unverified manual paper administration. Under these commercial tuition dynamics, struggling students hesitate to ask questions, homework notebook checking is delegated or skipped, and parents receive no transparent diagnostic feedback until high-stakes board examinations conclude.
       </p>
       <p>
-        <strong>Focus Academy</strong> establishes a modern, human-centric academic coaching platform engineered explicitly for the community of <strong>Thoramangalam, Perambalur</strong> (2nd Floor, Thiripura Complex, near Four Roads Junction and Trichy Main Road). It combines an uncompromising <strong>1:12 faculty-to-student batch cap</strong> with a deterministic, cryptographically guarded 5-step digital admission funnel. The application integrates real-time evening batch seat tracking, transparent fee calculations with automated sibling concessions, local school bus timetable synchronization, and a zero-loss multi-tier lead delivery architecture.
+        <strong>Focus Academy (ஃபோகஸ் அகாடமி)</strong> establishes an institutional academic coaching platform engineered explicitly for the community of <strong>Thoramangalam, Perambalur</strong> (1st & 2nd Floors, Thiripura Complex, adjacent to Four Roads Junction and Trichy Main Road). The platform couples an uncompromising <strong>1:12 faculty-to-student batch cap</strong> with two unified software engines:
       </p>
+      <ul class="bullet-list">
+        <li><strong>Public 5-Step Sequential Admission Engine:</strong> A cryptographically guarded, monotonic student onboarding funnel ($1 \to 5$) enforcing real-time batch seat reservations, dynamic sibling fee calculations, and bus-synchronized evening timetables.</li>
+        <li><strong>Administrative Operations Suite (<code>/admin-portal</code>):</strong> A secured operational console featuring split-screen multi-mode authentication, live campus telemetry, batch quota guards, full student lifecycle state transitions, a double-entry financial ledger, templated WhatsApp due reminders, and an immutable cryptographic audit log.</li>
+      </ul>
 
       <h2 class="sub-sec-heading">1.1 Core Non-Negotiable System Invariants</h2>
       <ol class="num-list">
-        <li><strong>Strict Ascending Funnel Enforcement:</strong> The admission journey is a monotonic sequence ($1 \to 2 \to 3 \to 4 \to 5$). Direct browser URL navigation to later milestones (such as Step 4 Batch Details or Step 5 Enrollment) is intercepted synchronously during initial render and redirected to Step 1 without data corruption or visual layout flashing.</li>
-        <li><strong>Cryptographic Session Step Tokens:</strong> Client-side state is not authoritative. Every completed step receives an HMAC-SHA256 digital signature minted by the serverless session layer. Manual tampering with localStorage integers immediately fails cryptographic verification and resets progress safely to Step 1.</li>
-        <li><strong>Uncompromising 1:12 Physical Classroom Cap:</strong> Batch seat inventories are strictly capped at 12 students per classroom. The system features a headless dynamic batch engine that manages seat reservations in real-time, preventing oversubscription while providing instantaneous static fallback during network partitioning.</li>
-        <li><strong>Zero-Drop Multi-Tier Lead Ingestion:</strong> To protect against rural network drops, admission requests are processed via a resilient 3-tier contingency pipeline: local append-only localStorage queue, asynchronous serverless database ingestion, and instantaneous pre-filled WhatsApp click-to-chat delivery.</li>
-        <li><strong>School Bus Timetable Synchronization:</strong> Evening batch schedules (4:30 PM, 6:00 PM, 7:30 PM) align precisely with local school buses arriving via Trichy Main Road and Four Roads, guaranteeing students arrive calm, unhurried, and ready to learn.</li>
+        <li><strong>Strict Ascending Funnel Enforcement:</strong> The admission journey is a strictly monotonic sequence ($1 \to 2 \to 3 \to 4 \to 5$). Direct browser navigation to downstream routes (e.g., Step 4 Batch Profile or Step 5 Enrollment) is intercepted synchronously during the initial render phase and redirected to Step 1 with clear contextual feedback without layout flashing.</li>
+        <li><strong>Cryptographic Session Token Verification:</strong> Client-side storage is non-authoritative. Each milestone completion is bound to an HMAC-SHA256 digital signature minted by the serverless session layer. Manual modification of client-side step values immediately fails verification and resets state safely.</li>
+        <li><strong>Uncompromising 1:12 Classroom Capacity Guard:</strong> Every physical batch is hard-capped at 12 desks. The batch engine tracks reservations and enrollments in real time, locking out oversubscription while gracefully falling back to deterministic static catalogs during network partitioning.</li>
+        <li><strong>Dual-Gate Administrative Security:</strong> Access to the administrative console requires both valid Firebase Authentication (Google OAuth or Email/Password) and strict verification against an institutional administrator allowlist (e.g., <code>admin@focusacademyperambalur.com</code>, <code>sagnikmitra1302@gmail.com</code>).</li>
+        <li><strong>Human-First Editorial Content:</strong> The user interface eliminates decorative marketing fluff, generic AI placeholders, and artificial numbered badges, presenting direct, human-written headings while preserving authentic bilingual campus identity (<code>ஃபோகஸ் அகாடமி • Focus Academy, Thoramangalam, Perambalur</code>).</li>
       </ol>
 
-      <h1 class="sec-heading">2 System Architecture & Topography</h1>
+      <h1 class="sec-heading">2 Architectural Topography & System Boundaries</h1>
       <p>
-        The platform operates on a resilient two-tier architecture: a high-performance React 19 Single Page Application (SPA) on the client tier paired with an event-driven serverless API tier on the Vercel Edge Network.
+        The platform operates on a reactive single-page architecture built with React 19, React Router 7, and Tailwind CSS v4, deployed globally on the Vercel Edge Network and integrated with Cloud Firestore and Firebase Authentication.
       </p>
     </div>
     <div class="page-footer">1</div>
@@ -258,54 +270,53 @@ async function generateExecutivePdf() {
       <h2 class="sub-sec-heading">2.1 System Topography & Component Interconnect Diagram</h2>
       <div class="ascii-diagram">
 +----------------------------------------------------------------------------------------------------+
-| UNIFIED BROWSER PRESENTATION CLIENT (React 19 + React Router 7 + Tailwind CSS v4)                  |
-| +- Step 1: Student Identity & Board Selection (/student-details)                                   |
-| +- Step 2: Exam Goal Specification (/exam-prep)                                                    |
-| +- Step 3: Interactive Batches Catalog with Sticky Mobile Filter Chips (/batches)                  |
-| +- Step 4: Batch Profile, Mentor Allocation & Classroom Capacity (/batch/:id)                     |
-| +- Step 5: Final Enrollment & Printable Admission Slip FA-THORA-XXXXXX (/enroll/:id)              |
-| +- Public Views: Independent Timings Matrix (/timings), Academic Courses (/courses)               |
+| UNIFIED PRESENTATION LAYER (React 19 + React Router 7 + Tailwind CSS v4 on Vercel Global Edge)     |
+| [PUBLIC FUNNEL]:                               [ADMIN OPERATIONS SUITE (/admin-portal)]:           |
+|  - Step 1: Student & Board (/student-details)   - Split-Screen Auth Gate (/admin-portal/login)     |
+|  - Step 2: Goal Setting (/exam-prep)            - Live Operations Dashboard (/admin-portal)        |
+|  - Step 3: Batches Catalog (/batches)           - 12-Seat Batch Manager (/admin-portal/batches)    |
+|  - Step 4: Batch Profile (/batch/:id)           - Student Lifecycle Engine (/admin-portal/students)|
+|  - Step 5: Enrollment Slip (/enroll/:id)        - Recurring Fee Schedules (/admin-portal/fees)     |
+|  - Public Timings, Fees, Courses, About         - Financial Ledger & Receipts (/admin-portal/ledger|
+|                                                 - WhatsApp Due Reminders (/admin-portal/reminders) |
+|                                                 - Cryptographic Audit Trail (/admin-portal/audit)  |
 +-------------------------------------------------+--------------------------------------------------+
-                                                  |
-                  Synchronous Render-Time Guards  |  (Cryptographic State Invariant Probe)
-                                                  v
+                         |                                                  |
+     Synchronous Step    |  (Monotonic Guard Algorithm)   Role & Allowlist  |  (Domain & Session Gate)
+     Render-Time Probe   v                                Access Control    v
 +----------------------------------------------------------------------------------------------------+
 | CLIENT APPLICATION STATE & SECURITY CORE                                                           |
-| +- AppContext: Centralized Student Flow State Machine (studentFlow, step tracker)                  |
-| +- SessionAuthService: Client-side HMAC Verification & Tamper Detection                            |
-| +- BatchService: Real-Time Seat Cache, Reservation Locking & Static Catalog Fallback               |
-| +- LeadService: Dual-Mode Local Outbox & Asynchronous Serverless Lead Dispatcher                   |
-| +- Storage Event Listener: Real-Time Cross-Tab State Synchronization                               |
+|  - AppContext: Centralized Student Flow State Machine (monotonic step tracker, studentFlow)        |
+|  - AdminDataService: Local/Cloud Sync, 12-Seat Capacity Validation, Double-Entry Payment Journal    |
+|  - SessionAuthService: HMAC Token Signing, Verification & Tamper Detection Engine                  |
+|  - BatchService: Real-Time Seat Cache, 15-Minute Reservation Locks & Static Failover Catalog       |
+|  - LeadService: Resilient 3-Tier Ingestion (Local Outbox, Cloud Persistence, WhatsApp Fallback)    |
+|  - Storage Event Listener: Real-Time Multi-Tab Session Synchronization                             |
 +------------------------+---------------------------------+-----------------------------------------+
                          |                                 |
-     Signed Step Tokens  |          Seat Queries           |  Admission Submissions
-     (HTTP POST JSON)    |          & Reservations         |  & Lead Ingestion
+     Signed Step Tokens  |          Lead Ingestion         |  OAuth & Firestore
+     & Dynamic Seats     |          & Registrations        |  Persistence Calls
                          v                                 v
 ======================================================================================================
-MANAGED EDGE & SERVERLESS BACKEND (Vercel Global Edge Network - Node.js 24 Serverless)
-+----------------------------------------------------------------------------------------------------+
-| CRYPTOGRAPHIC SESSION ENGINE (/api/session.js)                                                     |
-| +- HMAC-SHA256 Token Signer: Mints signed tokens bound to student name, grade, and timestamp      |
-| +- Signature Verifier: Validates milestone integrity; rejects unauthorized step mutations          |
+MANAGED CLOUD & SERVERLESS BACKEND (Firebase Cloud Services & Vercel Edge Serverless)
 +-------------------------------------------------+--------------------------------------------------+
-                                                  |
-+-------------------------------------------------v--------------------------------------------------+
-| DYNAMIC HEADLESS BATCH ENGINE (/api/batches.js)                                                    |
-| +- Real-Time Seat Status: Queries active remaining seats against strict 12-desk classroom limit    |
-| +- Seat Reservation Engine: Locks selected slots for 15-minute checkout windows                    |
+| FIREBASE AUTHENTICATION (focus-academy-7efeb)   | CLOUD FIRESTORE NOSQL DATABASE                   |
+|  - Google OAuth with Authorized Domain Check    |  - Collections: students, batches, ledger,       |
+|    (focus-academy-virid.vercel.app, localhost)  |    feeSchedules, auditLogs, campusSettings       |
+|  - Email / Password Identity Management         |  - Declarative firestore.rules Security Policies |
+|  - Institutional Administrator Allowlist Gate   |  - Real-time Listeners & Atomic Batch Commits    |
 +-------------------------------------------------+--------------------------------------------------+
-                                                  |
-+-------------------------------------------------v--------------------------------------------------+
-| MULTI-TIER ADMISSION PIPELINE (/api/leads.js & Resilient Fallbacks)                                |
-| +- Primary: Serverless Lead Persistence & Admission Slip Receipt Generation                       |
-| +- Local Fallback: Append-Only Offline LocalStorage Queue for Intermittent Connectivity            |
-| +- Zero-Loss Fallback: Instant Pre-filled WhatsApp Click-to-Chat Admission Deep-Link               |
+| VERCEL SERVERLESS FUNCTIONS (/api/session.js, /api/batches.js, /api/leads.js)                      |
+|  - Cryptographic HMAC-SHA256 Token Minting      - Atomic 15-Min Seat Reservation Leasing           |
 +----------------------------------------------------------------------------------------------------+
       </div>
 
-      <h2 class="sub-sec-heading">2.2 Architectural Layers & Boundaries</h2>
+      <h2 class="sub-sec-heading">2.2 Architectural Layers, Modular Boundaries & Bundle Budgets</h2>
       <p>
-        The client bundle is compiled using Vite 8 with strict code-splitting via <code>React.lazy()</code> and <code>Suspense</code>, keeping the initial gzipped JavaScript payload under 95 kB. The boundary between client-side routing and serverless verification ensures that no user can simulate admission completion by manipulating browser state.
+        The client codebase leverages route-level lazy loading (<code>React.lazy()</code> and <code>Suspense</code>) across all public views and administrative sub-modules. The production JavaScript bundle compiles via Vite 8 into highly optimized ES modules, maintaining an initial gzipped bundle footprint under 96 kB.
+      </p>
+      <p>
+        The boundary between public admission routing and administrative operations is strictly decoupled. Administrative routes are wrapped within <code>AdminProtectedRoute.jsx</code>, which guarantees that unauthenticated requests or non-allowlisted credentials cannot access operational data, trigger Firestore reads, or inspect student ledgers.
       </p>
     </div>
     <div class="page-footer">2</div>
@@ -316,39 +327,40 @@ MANAGED EDGE & SERVERLESS BACKEND (Vercel Global Edge Network - Node.js 24 Serve
     <div class="content-area">
       <h1 class="sec-heading">3 Sequential State Machine & Funnel Progression</h1>
       <p>
-        The registration flow is modeled as a formal, deterministic state machine where each transition requires verified completion of prior steps. The progress integer is monotonic: returning to an earlier step to modify inputs does not reset already-unlocked milestones unless core demographic parameters are explicitly changed.
+        The public student registration workflow is modeled as a formal, deterministic finite-state machine where each forward step requires verified completion of all prerequisite milestones. The progression index is strictly monotonic: parents may return to earlier steps to inspect options without forfeiting already-completed milestones unless foundational curriculum attributes (grade or board) are altered.
       </p>
 
       <h2 class="sub-sec-heading">3.1 Step-by-Step Monotonic Progression</h2>
       <ul class="bullet-list">
-        <li><strong>Step 1 &rarr; Step 2 Transition:</strong> Requires valid student name, parent phone number (tested against Indian +91 regex supporting prefixes, 10-digit formats, and spacing), class selection (Classes 6–12), and board selection (TN State Board Samacheer Kalvi or CBSE). Upon submission, a cryptographic Step 1 token is signed.</li>
-        <li><strong>Step 2 &rarr; Step 3 Transition:</strong> Requires target exam goal selection (10th/12th Board Exam Mastery, Foundation Science & Math, or High-Scoring Centum Strategy). Issues Step 2 token and unlocks the batch catalog.</li>
-        <li><strong>Step 3 &rarr; Step 4 Transition:</strong> Student filters and reviews matching small-batches. Selecting a batch records the batch ID, schedule, and monthly fee, advancing the session state to Step 4.</li>
-        <li><strong>Step 4 &rarr; Step 5 Transition:</strong> Displays detailed batch syllabus, faculty bio, classroom location, and fee breakdown. Confirming details issues Step 4 token and mounts the enrollment page.</li>
-        <li><strong>Step 5 Completion:</strong> Collects final parent contact verification, applies optional sibling concession, mints official admission slip <code>FA-THORA-XXXXXX</code>, and executes the lead submission pipeline.</li>
+        <li><strong>Step 1 &rarr; Step 2 Transition (Identity & Board):</strong> Captures student full name, parent mobile number (validated against strict Indian telecommunications regex), academic grade (Classes 6 through 12), and curriculum board (Tamil Nadu Samacheer Kalvi, CBSE, or ICSE). Mints cryptographic Step 1 token.</li>
+        <li><strong>Step 2 &rarr; Step 3 Transition (Goal Setting):</strong> Captures target academic orientation (Board Exam Distinction, Conceptual Fundamentals Clinic, or Advanced Competitive Numericals). Mints Step 2 token and unlocks the evening batch schedule.</li>
+        <li><strong>Step 3 &rarr; Step 4 Transition (Batch Selection):</strong> Parent reviews matching batches filtered by grade and curriculum. Selecting a batch records the batch identifier, timetable slot, and monthly tuition rate, issuing Step 3 token.</li>
+        <li><strong>Step 4 &rarr; Step 5 Transition (Classroom Profile):</strong> Presents classroom environment, study desk ergonomics, mentor credentials, and timing synchronization with town school buses. Confirming details issues Step 4 token.</li>
+        <li><strong>Step 5 Completion (Enrollment & Slip):</strong> Collects guardian contact details, applies automatic multi-child sibling concessions, assigns a unique permanent enrollment identifier (<code>FA-THORA-XXXXXX</code>), and triggers the 3-tier lead ingestion pipeline.</li>
       </ul>
 
       <h2 class="sub-sec-heading">3.2 Synchronous Render-Time Route Guarding Algorithm</h2>
       <p>
-        Rather than relying on asynchronous <code>useEffect</code> redirections that cause screen flickering, the route guard evaluates access eligibility synchronously during the component's render phase:
+        To prevent visual flashing and navigation artifacts caused by asynchronous <code>useEffect</code> redirects, route guarding executes synchronously during component render:
       </p>
       <div class="code-block">
-function getStepRedirect(targetStep, studentFlow, currentPath) {
-  if (currentPath === '/timings' || currentPath === '/courses') return null;
-  const isStep1Done = isStep1Complete(studentFlow);
-  const isStep2Done = isStep2Complete(studentFlow);
-  const isStep3Done = isStep3Complete(studentFlow);
+export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
+  if (currentPath === '/timings' || currentPath === '/courses' || currentPath === '/fees') return null;
+  const isStep1Done = Boolean(studentFlow?.studentName && studentFlow?.grade && studentFlow?.board);
+  const isStep2Done = Boolean(isStep1Done && studentFlow?.examPrep);
+  const isStep3Done = Boolean(isStep2Done && studentFlow?.selectedBatchId);
 
   if (targetStep >= 2 && !isStep1Done) return '/student-details';
   if (targetStep >= 3 && !isStep2Done) return '/exam-prep';
   if (targetStep >= 4 && !isStep3Done) return '/batches';
+  if (targetStep >= 5 && (!isStep3Done || !studentFlow?.selectedBatchId)) return '/batches';
   return null;
 }
       </div>
 
-      <h2 class="sub-sec-heading">3.3 Contextual Redirect Toast Feedback & UX Guardrails</h2>
+      <h2 class="sub-sec-heading">3.3 Contextual Redirect Feedback & UX Guardrails</h2>
       <p>
-        When a user enters a locked URL directly, the system passes redirect metadata (e.g. <code>state: { redirectedFrom: 4 }</code>). The target page mounts an animated floating notification badge alongside an inline warning card: <em>"Please provide basic student details first to unlock batches"</em>. This eliminates disorientation and provides a clear 1-click pathway forward.
+        When an unstarted visitor directly accesses downstream URLs (e.g., <code>/enroll</code> or <code>/batch/:id</code>), the route guard transfers state metadata (<code>state: { redirectedFrom: targetStep }</code>). The redirected view renders an accessible floating notification pill and an inline alert banner: <em>"Step 1 Required: Please provide basic student details first to unlock batches"</em>, providing an intuitive path forward.
       </p>
     </div>
     <div class="page-footer">3</div>
@@ -357,58 +369,58 @@ function getStepRedirect(targetStep, studentFlow, currentPath) {
   <!-- ==================== PAGE 4 ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">4 Serverless API Architecture & Cryptographic Tokens</h1>
+      <h1 class="sec-heading">4 Serverless API Architecture, Cloud Services & Authentication</h1>
       <p>
-        The backend layer runs on Vercel Serverless Functions deployed on Node.js 24. It separates state verification from static presentation, ensuring that client-side localStorage manipulation cannot compromise data integrity.
+        The backend infrastructure operates across serverless micro-endpoints on Vercel and managed Cloud Firebase services (Authentication and Firestore), decoupling public funnel operations from secure campus administrative management.
       </p>
 
-      <h2 class="sub-sec-heading">4.1 Serverless Endpoint Specification</h2>
+      <h2 class="sub-sec-heading">4.1 Serverless Endpoint & Cloud Service Specification</h2>
       <table class="spec-table">
         <thead>
           <tr>
-            <th style="width: 20%;">Endpoint</th>
-            <th style="width: 15%;">Method</th>
-            <th style="width: 25%;">Payload / Params</th>
-            <th style="width: 40%;">Behavior & Response</th>
+            <th style="width: 22%;">Service / Route</th>
+            <th style="width: 12%;">Type</th>
+            <th style="width: 26%;">Payload / Parameters</th>
+            <th style="width: 40%;">Operational Function & Security Contract</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><code>/api/session.js</code></td>
             <td>POST</td>
-            <td><code>{ action: 'sign', studentName, grade, step }</code></td>
-            <td>Generates an HMAC-SHA256 signature validating step completion. Returns signed token payload with timestamp.</td>
-          </tr>
-          <tr>
-            <td><code>/api/session.js</code></td>
-            <td>POST</td>
-            <td><code>{ action: 'verify', token, studentName, step }</code></td>
-            <td>Verifies cryptographic token signature against secret key; returns boolean status and expiry bounds.</td>
+            <td><code>{ action, studentName, grade, step }</code></td>
+            <td>Mints or verifies HMAC-SHA256 milestone tokens. Rejects client-side state forgery attempts.</td>
           </tr>
           <tr>
             <td><code>/api/batches.js</code></td>
-            <td>GET</td>
+            <td>GET/POST</td>
             <td><code>?grade=Class+10&board=State</code></td>
-            <td>Returns live seat availability for matching small-batches, checking current reservations against the 12-seat cap.</td>
-          </tr>
-          <tr>
-            <td><code>/api/batches.js</code></td>
-            <td>POST</td>
-            <td><code>{ action: 'reserve', batchId, studentName }</code></td>
-            <td>Locks a seat reservation for 15 minutes, decrementing temporary seat counters atomically.</td>
+            <td>Queries live available seats against 12-desk cap; manages 15-minute checkout reservation leases.</td>
           </tr>
           <tr>
             <td><code>/api/leads.js</code></td>
             <td>POST</td>
-            <td><code>{ studentName, phone, grade, batchId, fee }</code></td>
-            <td>Persists admission record, assigns unique slip ID <code>FA-THORA-XXXXXX</code>, and returns confirmation payload.</td>
+            <td><code>{ studentName, phone, batchId, fee }</code></td>
+            <td>Persists admission requests; assigns unique slip ID <code>FA-THORA-XXXXXX</code> for classroom trial check-in.</td>
+          </tr>
+          <tr>
+            <td><code>Firebase Auth</code></td>
+            <td>OAuth / SDK</td>
+            <td>Google Popup / Email & Password</td>
+            <td>Authenticates administrative personnel; validates origin against Authorized Domains whitelist.</td>
+          </tr>
+          <tr>
+            <td><code>Cloud Firestore</code></td>
+            <td>NoSQL DB</td>
+            <td>Documents in <code>admin_records</code></td>
+            <td>Persists student rosters, double-entry financial journals, batch quotas, and immutable audit logs.</td>
           </tr>
         </tbody>
       </table>
 
       <h2 class="sub-sec-heading">4.2 Canonical Step Token JSON & Cryptographic Signing</h2>
       <p>
-        Step tokens are formatted as canonical JSON structures signed with an asymmetric HMAC secret:
+        Step milestone tokens are formatted as canonical JSON structures signed with an asymmetric HMAC secret:
       </p>
       <div class="code-block">
 {
@@ -423,12 +435,15 @@ function getStepRedirect(targetStep, studentFlow, currentPath) {
   "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 }
       </div>
+
+      <h2 class="sub-sec-heading">4.3 Firebase Authentication & Split-Screen Security Architecture</h2>
       <p>
-        The verification algorithm tests the payload against:
+        Administrative authentication is enforced through a dual-gate validation architecture:
       </p>
-      <div class="formula-box">
-        HMAC-SHA256(SecretKey, student_name || grade || verified_step || issued_at) &stackrel;{?}{=} token.signature
-      </div>
+      <ol class="num-list">
+        <li><strong>OAuth Domain Authorization:</strong> Requests originating from non-authorized hostnames are blocked at the identity layer with <code>auth/unauthorized-domain</code>. Production domains (<code>focus-academy-virid.vercel.app</code>) and local development hostnames (<code>localhost</code>) are explicitly registered in Firebase Console.</li>
+        <li><strong>Institutional Allowlist Security Gate:</strong> Even upon successful Google OAuth identity verification, the application evaluates the user's email against <code>getAdminAllowlist()</code>. Only authorized personnel (e.g., <code>admin@focusacademyperambalur.com</code>, <code>sagnikmitra1302@gmail.com</code>) receive session tokens. Non-allowlisted accounts are rejected immediately with an Access Denied security event.</li>
+      </ol>
     </div>
     <div class="page-footer">4</div>
   </div>
@@ -436,46 +451,83 @@ function getStepRedirect(targetStep, studentFlow, currentPath) {
   <!-- ==================== PAGE 5 ==================== -->
   <div class="page">
     <div class="content-area">
-      <h2 class="sub-sec-heading">4.3 Dynamic Seat Reservation & Anti-Race Protocol</h2>
+      <h1 class="sec-heading">5 Administrative Operations Suite (<code>/admin-portal</code>)</h1>
       <p>
-        To prevent double-booking of physical desks in small-group classrooms (strictly capped at 12 seats), the seat reservation engine implements an optimistic lock:
+        Focus Academy features an integrated administrative operating system engineered for desktop and mobile management of campus admissions, batch quotas, student retention, fee collection, and institutional governance.
       </p>
-      <ol class="num-list">
-        <li><strong>Seat Availability Query:</strong> When a user navigates to Step 3 or Step 4, <code>BatchService.js</code> queries <code>/api/batches.js</code>. The endpoint evaluates active confirmed enrollments plus unexpired reservations.</li>
-        <li><strong>Temporary Seat Lock:</strong> Selecting a batch on Step 4 triggers an atomic reservation request. The server issues a temporary 15-minute lease reserving the desk.</li>
-        <li><strong>Checkout Expiration Window:</strong> If Step 5 enrollment is not completed within 15 minutes, the reservation expires automatically, restoring the seat to the public pool.</li>
-        <li><strong>Partition Fallback:</strong> If the cloud endpoint is unreachable due to regional network outages, <code>BatchService.js</code> gracefully falls back to deterministic static data in <code>batchesData.js</code>, ensuring zero interruption to front-end registration.</li>
-      </ol>
 
-      <h2 class="sub-sec-heading">4.4 Lead Ingestion JSON Schema & WhatsApp Deep-Link Fallback</h2>
+      <h2 class="sub-sec-heading">5.1 Administrative Module Topography & Operational Matrix</h2>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">Module Route</th>
+            <th style="width: 28%;">Primary Operational Function</th>
+            <th style="width: 50%;">Key Capabilities & Integrity Controls</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>/admin-portal</code></td>
+            <td>Campus Telemetry Dashboard</td>
+            <td>Real-time KPI metrics: Active Students, 1:12 Batches, Collections, Outstanding, Overdue balances.</td>
+          </tr>
+          <tr>
+            <td><code>/admin-portal/batches</code></td>
+            <td>12-Seat Batch Management</td>
+            <td>Classroom scheduler, capacity guard enforcement, batch archiving, subject & mentor assignment.</td>
+          </tr>
+          <tr>
+            <td><code>/admin-portal/students</code></td>
+            <td>Student Lifecycle & Roster</td>
+            <td>5-stage lifecycle state machine, duplicate prevention, scholarship discounts, bulk CSV import/export.</td>
+          </tr>
+          <tr>
+            <td><code>/admin-portal/fees</code></td>
+            <td>Recurring Fee Schedules</td>
+            <td>Automated monthly fee generation, grace period tracking, payment obligation status matrix.</td>
+          </tr>
+          <tr>
+            <td><code>/admin-portal/ledger</code></td>
+            <td>Double-Entry Financial Journal</td>
+            <td>Payment recording (Cash, UPI - GPay/PhonePe, Bank), receipt issuance (<code>REC-XXXXX</code>), void controls.</td>
+          </tr>
+          <tr>
+            <td><code>/admin-portal/reminders</code></td>
+            <td>WhatsApp Reminders Engine</td>
+            <td>Templated fee notices, phone link dispatch with custom student name, batch, and balance parameters.</td>
+          </tr>
+          <tr>
+            <td><code>/admin-portal/reports</code></td>
+            <td>Institutional Analytics</td>
+            <td>Monthly revenue trends, batch capacity utilization percentages, overdue aging analysis tables.</td>
+          </tr>
+          <tr>
+            <td><code>/admin-portal/audit-logs</code></td>
+            <td>Cryptographic Audit Trail</td>
+            <td>Immutable event stream: actor email, IP/timestamp, entity identifier, previous state and diff log.</td>
+          </tr>
+          <tr>
+            <td><code>/admin-portal/settings</code></td>
+            <td>Academy Governance</td>
+            <td>Multi-admin authorization allowlist, fee billing grace periods, and academic year rollover policies.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="sub-sec-heading">5.2 Split-Screen Responsive Ergonomics (Zero Scrollbars)</h2>
       <p>
-        Admissions submitted on Step 5 generate an immutable JSON payload transmitted to <code>/api/leads.js</code>:
+        The authentication gateway (<code>/admin-portal/login</code>) employs an editorial split-screen architecture: an atmospheric left branding showcase paired with an elevated glassmorphic right authentication form. Using responsive padding scales (<code>py-2.5 sm:py-3.5</code>) and viewport-bounded flexbox layouts, the panel renders with <strong>zero vertical or horizontal scrollbars</strong> across all standard desktop resolutions: 1920&times;1080, 1440&times;900, 1366&times;768, and 1280&times;720, transitioning gracefully to single-column stacking on mobile viewports.
       </p>
-      <div class="code-block">
-{
-  "slip_id": "FA-THORA-884920",
-  "timestamp": "2026-10-21T17:30:00.000Z",
-  "campus": "Thiripura Complex, Thoramangalam, Perambalur",
-  "student": {
-    "name": "S. Kaviya",
-    "phone": "9842451220",
-    "grade": "Class 10",
-    "board": "TN State Board (Samacheer)",
-    "exam_goal": "10th Board Exam Mastery"
-  },
-  "batch": {
-    "id": "batch-10-state-board",
-    "name": "Class 10 State Board - Evening Batch A",
-    "timing": "6:00 PM – 7:30 PM (Mon–Sat)",
-    "classroom": "Room 204, 2nd Floor, Thiripura Complex",
-    "monthly_fee_inr": 2200,
-    "sibling_discount_applied": false
-  },
-  "status": "SEAT_CONFIRMED_AWAITING_TRIAL"
-}
+
+      <h2 class="sub-sec-heading">5.3 Student Lifecycle State Machine</h2>
+      <p>
+        Student records transition deterministically across five formal operational lifecycle states:
+      </p>
+      <div class="formula-box">
+        [New Enrollment] &xrarr; [Active Student] &xrarr; [Paused / Medical Leave] &xrarr; [Course Completed] &xrarr; [Archived]
       </div>
       <p>
-        Simultaneously, the client constructs a pre-formatted WhatsApp click-to-chat deep-link targeting the academy's official helpline (<code>+91 98424 51220</code>). This provides an instant, zero-failure communication channel between the parent and the academic center even if external email or SMS gateways fail.
+        Status modifications require documented administrative reasons and are committed atomically with corresponding batch seat counter adjustments and financial obligation updates.
       </p>
     </div>
     <div class="page-footer">5</div>
@@ -484,65 +536,68 @@ function getStepRedirect(targetStep, studentFlow, currentPath) {
   <!-- ==================== PAGE 6 ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">5 Anti-Tamper Security Matrix & State Integrity Defenses</h1>
+      <h1 class="sec-heading">6 Anti-Tamper Security Matrix, Capacity Guards & Audit Trails</h1>
       <p>
-        Because tuition admission funnels handle personal contact information, batch quotas, and fee commitments, the platform establishes multi-layer defenses against unauthorized state manipulation.
+        Because educational tuition portals manage student personal records, strict classroom seat limits, and monetary transactions, the system enforces multi-layered technical controls against state tampering and unauthorized actions.
       </p>
 
-      <h2 class="sub-sec-heading">5.1 Threat Model & Mitigation Matrix</h2>
+      <h2 class="sub-sec-heading">6.1 Threat Model & Mitigation Matrix</h2>
       <table class="spec-table">
         <thead>
           <tr>
             <th style="width: 22%;">Attack Vector</th>
-            <th style="width: 25%;">Target / Vulnerability</th>
-            <th style="width: 53%;">Mitigation Mechanism & Verification Rule</th>
+            <th style="width: 26%;">Target / Vulnerability</th>
+            <th style="width: 52%;">Technical Mitigation & Enforcement Policy</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>LocalStorage Step Integer Tampering</strong></td>
-            <td>Technical user modifies <code>step: 5</code> in dev tools to bypass Step 1–3 forms.</td>
-            <td>HMAC Step Token Validation: <code>isStepComplete()</code> verifies the cryptographic signature against student name and grade. Forged or unsigned integers immediately reset progress to Step 1.</td>
+            <td><strong>Step Integer Tampering</strong></td>
+            <td>Modifying localStorage <code>step</code> value in devtools to jump directly to Step 5.</td>
+            <td>HMAC Token Signing: Milestone completion requires cryptographic signatures minted by server. Unsigned mutations force immediate reset to Step 1.</td>
           </tr>
           <tr>
-            <td><strong>Direct URL Bypass</strong></td>
-            <td>User pastes <code>/batch/batch-10</code> or <code>/enroll/batch-10</code> directly into browser.</td>
-            <td>Synchronous Render-Time Route Guard: <code>getStepRedirect()</code> intercepts the route before DOM mounting and executes an immediate <code>&lt;Navigate to="/student-details" replace /&gt;</code>.</td>
+            <td><strong>Unauthenticated Admin Access</strong></td>
+            <td>Accessing <code>/admin-portal/*</code> routes directly without authenticated session.</td>
+            <td><code>AdminProtectedRoute</code> inspects session storage; redirects unauthenticated visitors to login while preserving target return path.</td>
           </tr>
           <tr>
-            <td><strong>Cross-Tab State Staleness</strong></td>
-            <td>Parent completes registration in Tab A; Tab B retains unsubmitted older state.</td>
-            <td>Storage Event Dispatcher: <code>AppContext</code> binds to <code>window.addEventListener('storage')</code>, propagating fresh student flow data across all browser tabs in real time.</td>
+            <td><strong>Unauthorized Google Identity</strong></td>
+            <td>Valid Google account not belonging to Focus Academy staff attempting portal login.</td>
+            <td>Allowlist Security Gate: Rejects authenticated Google accounts missing from <code>getAdminAllowlist()</code> with access denied security warnings.</td>
           </tr>
           <tr>
-            <td><strong>Phone Number Invalidation</strong></td>
-            <td>Spam leads with dummy characters, letters, or insufficient digits.</td>
-            <td>Strict Regex Guard: <code>PHONE_REGEX</code> enforces 10 valid Indian digits, optionally accepting <code>+91</code>, <code>0</code> prefix, and standard spaces. Invalid inputs block form progression.</td>
+            <td><strong>Classroom Oversubscription</strong></td>
+            <td>Simultaneous parents reserving the 12th desk in a high-demand evening batch.</td>
+            <td>Atomic Seat Leases: Batch service verifies available capacity ($12 - \text{enrolled} - \text{active\_locks} > 0$) before granting 15-minute checkout locks.</td>
           </tr>
           <tr>
-            <td><strong>Fee Parameter Manipulation</strong></td>
-            <td>Manipulating DOM elements or query strings to reduce tuition amounts.</td>
-            <td>Server-Authoritative Pricing: Fees are calculated deterministically by <code>feeCalculation.js</code> and checked against serverless catalogs. Client-side price tampering is ignored during final slip minting.</td>
+            <td><strong>Student Duplicate Records</strong></td>
+            <td>Submitting duplicate registration for an already enrolled student on same phone.</td>
+            <td>Duplicate Detection Engine: Scans existing roster by phone and name; flags potential duplicates before committing new student records.</td>
+          </tr>
+          <tr>
+            <td><strong>Financial Ledger Tampering</strong></td>
+            <td>Direct manipulation of recorded payment amounts or cash collection balances.</td>
+            <td>Immutable Double-Entry Ledger: Payments generate non-editable receipt records (<code>REC-XXXXX</code>); deletions are prevented; reversals require explicit contra-entries.</td>
           </tr>
         </tbody>
       </table>
 
-      <h2 class="sub-sec-heading">5.2 Multi-Tab State Synchronization Flow</h2>
+      <h2 class="sub-sec-heading">6.2 12-Seat Physical Capacity Guard & Reservation Anti-Race Protocol</h2>
       <p>
-        When multiple browser tabs are open simultaneously during a family discussion, state consistency is maintained through native storage event listeners:
+        In small-group education, exceeding 12 students destroys mentor attention. The system protects classroom capacity through a three-stage locking protocol:
       </p>
-      <div class="code-block">
-window.addEventListener('storage', (event) => {
-  if (event.key === 'focus_academy_student_flow' && event.newValue) {
-    try {
-      const parsed = JSON.parse(event.newValue);
-      setStudentFlow(parsed);
-    } catch {
-      // Gracefully ignore unparseable payloads
-    }
-  }
-});
-      </div>
+      <ol class="num-list">
+        <li><strong>Inventory Query:</strong> Evaluates remaining seats: $S_{\text{avail}} = 12 - (N_{\text{active}} + N_{\text{reserved}})$. Batches with $S_{\text{avail}} = 0$ display a prominent "Full (12 Seats)" badge and disable selection links.</li>
+        <li><strong>Lease Locking:</strong> Step 4 selection places an atomic 15-minute lease on the seat.</li>
+        <li><strong>Expiration & Rollback:</strong> If Step 5 is not finalized within 15 minutes or the user navigates away, the lease expires and returns the seat to the open catalog.</li>
+      </ol>
+
+      <h2 class="sub-sec-heading">6.3 Immutable Cryptographic Administrative Audit Trail</h2>
+      <p>
+        Every critical administrative action (batch creation, student lifecycle change, discount application, fee record, or allowlist update) generates an immutable audit record in <code>admin_audit_logs</code> capturing timestamp, actor email, action category, entity ID, and previous vs. updated attribute states.
+      </p>
     </div>
     <div class="page-footer">6</div>
   </div>
@@ -550,92 +605,97 @@ window.addEventListener('storage', (event) => {
   <!-- ==================== PAGE 7 ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">6 Dynamic Batch Filtering & Mobile Ergonomics</h1>
+      <h1 class="sec-heading">7 Dynamic Batch Inventory, Mobile Ergonomics & Editorial Polish</h1>
       <p>
-        To ensure parents on mobile devices can navigate schedules without friction, <code>BatchesPage.jsx</code> features an ergonomic sticky filtering architecture tailored to small touchscreens.
+        The user interface combines high-density operational utility with clean editorial typography, eliminating generic marketing copy while providing rapid schedule filtering across mobile and desktop devices.
       </p>
 
-      <h2 class="sub-sec-heading">6.1 Multi-Dimensional Filter Core</h2>
+      <h2 class="sub-sec-heading">7.1 Multi-Dimensional Filter Core</h2>
       <p>
-        Batches are filtered dynamically across three distinct dimensions:
+        Batches are categorized and filtered dynamically across three distinct academic dimensions:
       </p>
       <ul class="bullet-list">
-        <li><strong>Class Level:</strong> Foundational Middle School (Classes 6–8), Class 9, Class 10 (Board Exam Mastery), Class 11, and Class 12.</li>
-        <li><strong>Curriculum Board:</strong> Tamil Nadu State Board (Samacheer Kalvi) and CBSE Board (NCERT Aligned).</li>
-        <li><strong>Evening Timing Slots:</strong> Slot 1 (4:30 PM – 6:00 PM), Slot 2 (6:00 PM – 7:30 PM), and Slot 3 (7:30 PM – 9:00 PM).</li>
+        <li><strong>Class / Grade Level:</strong> Classes 6–8 (Middle School Foundation), Class 9, Class 10 (SSLC / Board Mastery), Class 11, and Class 12 (Higher Secondary HSC & CBSE).</li>
+        <li><strong>Curriculum Board:</strong> Tamil Nadu State Board (Samacheer Kalvi), CBSE Board (NCERT), and ICSE Board.</li>
+        <li><strong>Evening Timing Slots:</strong> Shift 1 (4:30 PM – 6:00 PM), Shift 2 (6:00 PM – 7:30 PM), and Shift 3 (7:30 PM – 9:00 PM).</li>
       </ul>
 
-      <h2 class="sub-sec-heading">6.2 Sticky Mobile Header & Kinetic Touch Chip Navigation</h2>
+      <h2 class="sub-sec-heading">7.2 Sticky Mobile Header & Kinetic Touch Chip Navigation</h2>
       <p>
-        On mobile screens, traditional filter forms require scrolling past large marketing banners. Focus Academy implements a sticky filter bar (<code>sticky top-[108px] sm:top-28 z-20 bg-white/95 backdrop-blur-md</code>) equipped with horizontal touch chips. Parents can toggle classes and boards with one thumb tap without losing their position on the page.
+        On mobile viewports, traditional filter forms require excessive vertical scrolling. Focus Academy implements a sticky glassmorphic filter bar (<code>sticky top-[108px] sm:top-28 z-20 bg-white/95 backdrop-blur-md</code>) equipped with horizontal touch chips. Parents can toggle classes and boards with one thumb tap without losing their scroll position.
       </p>
 
-      <h2 class="sub-sec-heading">6.3 Small-Batch Inventory & Schedule Matrix</h2>
+      <h2 class="sub-sec-heading">7.3 Editorial Content Philosophy & Authentic Campus Identity</h2>
+      <p>
+        Following an exhaustive website audit, all decorative eyebrow pills, artificial numbered prompts (e.g. <em>"1. Select Class"</em>), and repetitive AI marketing headlines were permanently eliminated. Sections lead directly with their genuine headings (e.g. <em>"Curriculum Board"</em>, <em>"Student Contact Details"</em>). Concurrently, the authentic bilingual campus identity (<code>ஃபோகஸ் அகாடமி • Focus Academy, Thoramangalam, Perambalur</code>) is prominently preserved on the homepage hero.
+      </p>
+
+      <h2 class="sub-sec-heading">7.4 Small-Batch Inventory & Evening Schedule Matrix</h2>
       <table class="spec-table">
         <thead>
           <tr>
-            <th>Class & Board</th>
-            <th>Timing Slot</th>
+            <th>Grade & Board Track</th>
+            <th>Evening Timing</th>
             <th>Days</th>
-            <th>Subjects Covered</th>
-            <th>Max Seats</th>
+            <th>Academic Focus & Subjects</th>
+            <th>Capacity</th>
             <th>Monthly Fee</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Class 6–8 (State/CBSE)</td>
+            <td>Class 6–8 Foundation (State/CBSE)</td>
             <td>4:30 PM – 6:00 PM</td>
             <td>Mon – Sat</td>
-            <td>Maths, Science, English, Tamil</td>
+            <td>Maths, Science, English, Tamil Foundations</td>
             <td>12 Seats</td>
             <td>₹1,500</td>
           </tr>
           <tr>
-            <td>Class 9 (State Board)</td>
+            <td>Class 9 State Board (Samacheer)</td>
             <td>6:00 PM – 7:30 PM</td>
             <td>Mon – Sat</td>
-            <td>Mathematics, Science, Social</td>
+            <td>Mathematics, Science, Step-by-Step Factoring</td>
             <td>12 Seats</td>
             <td>₹1,800</td>
           </tr>
           <tr>
-            <td>Class 10 (State Board)</td>
+            <td>Class 10 State Board (SSLC Prime)</td>
             <td>6:00 PM – 7:30 PM</td>
             <td>Mon – Sat</td>
-            <td>Maths, Science (Physics/Chem/Bio)</td>
+            <td>Maths, Science (Physics/Chem/Bio), Blueprint Tests</td>
             <td>12 Seats</td>
             <td>₹2,200</td>
           </tr>
           <tr>
-            <td>Class 10 (CBSE Board)</td>
+            <td>Class 10 CBSE Board (NCERT)</td>
             <td>7:30 PM – 9:00 PM</td>
             <td>Mon – Sat</td>
-            <td>Standard Maths, Integrated Science</td>
+            <td>Standard Mathematics, Integrated Science</td>
             <td>12 Seats</td>
             <td>₹2,500</td>
           </tr>
           <tr>
-            <td>Class 11 (State Board)</td>
+            <td>Class 11 Science & Maths Core</td>
             <td>4:30 PM – 6:00 PM</td>
             <td>Mon – Sat</td>
-            <td>Physics, Chemistry, Pure Maths</td>
+            <td>Physics, Chemistry, Pure Higher Mathematics</td>
             <td>12 Seats</td>
             <td>₹2,800</td>
           </tr>
           <tr>
-            <td>Class 12 (State Board)</td>
+            <td>Class 12 State Board (Centum Focus)</td>
             <td>6:00 PM – 7:30 PM</td>
             <td>Mon – Sat</td>
-            <td>Physics, Chemistry, Pure Maths, Biology</td>
+            <td>Physics Derivations, Chemistry, Higher Calculus</td>
             <td>12 Seats</td>
             <td>₹3,200</td>
           </tr>
           <tr>
-            <td>Class 12 (CBSE Board)</td>
+            <td>Class 12 CBSE & Entrance Foundation</td>
             <td>7:30 PM – 9:00 PM</td>
             <td>Mon – Sat</td>
-            <td>Physics, Chemistry, Mathematics</td>
+            <td>Physics, Chemistry, Maths, NEET/JEE Numericals</td>
             <td>12 Seats</td>
             <td>₹3,500</td>
           </tr>
@@ -648,14 +708,14 @@ window.addEventListener('storage', (event) => {
   <!-- ==================== PAGE 8 ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">7 Financial Architecture & Sibling Concession Engine</h1>
+      <h1 class="sec-heading">8 Financial Architecture, Sibling Concession & Double-Entry Ledger</h1>
       <p>
-        The tuition billing model eliminates hidden charges, upfront registration costs, and annual facility levies. Study materials, chapter-wise question banks, and weekly mock test debriefs are included in the base monthly fee.
+        The tuition billing model eliminates hidden registration fees, annual maintenance costs, and facility charges. Printed worksheets, past 10-year question banks, Saturday mock examinations, and 1-on-1 doubt clinics are included in the transparent monthly fee.
       </p>
 
-      <h2 class="sub-sec-heading">7.1 Fee Calculation Formula & Sibling Concession</h2>
+      <h2 class="sub-sec-heading">8.1 Transparent Monthly Fee Engine & Sibling Concession Formula</h2>
       <p>
-        When a parent enrolls two or more children simultaneously, the platform automatically applies a 15% concession to the second child's monthly tuition:
+        When a parent enrolls two or more children simultaneously, the calculation engine applies a 15% concession to the second child's monthly tuition:
       </p>
       <div class="formula-box">
         Fee_Total = Fee_Primary + ( Fee_Sibling &times; 0.85 )
@@ -679,40 +739,50 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
 }
       </div>
 
-      <h2 class="sub-sec-heading">7.2 Admission Slip Lifecycle & Verification Matrix</h2>
+      <h2 class="sub-sec-heading">8.2 Double-Entry Financial Ledger & Receipt Generation</h2>
+      <p>
+        The administrative ledger (<code>/admin-portal/ledger</code>) functions as a verified audit journal. Every payment entry is stamped with:
+      </p>
+      <ul class="bullet-list">
+        <li><strong>Unique Receipt ID:</strong> Sequentially generated receipt identifier (e.g., <code>REC-2026-1004</code>).</li>
+        <li><strong>Multi-Channel Payment Verification:</strong> Records transaction mode: Cash, UPI (Google Pay, PhonePe, Paytm with reference number), or Direct Bank Transfer.</li>
+        <li><strong>Balance Adjustment:</strong> Commits real-time adjustments to student outstanding fee balances and marks recurring fee schedules as settled.</li>
+      </ul>
+
+      <h2 class="sub-sec-heading">8.3 Admission Slip Lifecycle & Verification Flow</h2>
       <table class="spec-table">
         <thead>
           <tr>
-            <th>Event / Trigger</th>
+            <th>Funnel Event</th>
             <th>Client UI Action</th>
-            <th>Serverless API Action</th>
-            <th>Operational Reality</th>
+            <th>Cloud Backend Action</th>
+            <th>Campus Physical Reality</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Trial Seat Booking (Step 5)</strong></td>
-            <td>Renders printable confirmation slip with reference <code>FA-THORA-XXXXXX</code>.</td>
-            <td>Persists lead to <code>/api/leads.js</code> and issues reservation token.</td>
-            <td>Seat reserved in Thiripura Complex classroom; desk held for Session 1.</td>
+            <td><strong>Trial Booking (Step 5)</strong></td>
+            <td>Renders printable confirmation slip <code>FA-THORA-XXXXXX</code>.</td>
+            <td>Persists lead to Firestore; locks temporary 15-min seat.</td>
+            <td>Seat reserved in Thiripura Complex classroom for Session 1.</td>
           </tr>
           <tr>
             <td><strong>Session 1 Attendance</strong></td>
-            <td>Parent presents slip reference on mobile device to front desk.</td>
-            <td>Desk coordinator confirms attendance in internal records.</td>
-            <td>Student attends 90-minute evening session; evaluates mentor rapport.</td>
+            <td>Parent presents admission slip on phone to campus desk.</td>
+            <td>Admin confirms student arrival on attendance dashboard.</td>
+            <td>Student attends 90-min evening session; tests mentor dynamic.</td>
           </tr>
           <tr>
-            <td><strong>Post-Trial Confirmation</strong></td>
-            <td>Parent completes tuition payment via UPI, cash, or card.</td>
-            <td>Updates status to <code>CONFIRMED_ENROLLED</code> in database.</td>
-            <td>Issues monthly receipt and permanent batch progress notebook.</td>
+            <td><strong>Admission Confirmation</strong></td>
+            <td>Parent completes tuition payment via UPI or cash.</td>
+            <td>Records transaction in Ledger; issues official receipt.</td>
+            <td>Student receives permanent batch seat and personal notebook.</td>
           </tr>
           <tr>
-            <td><strong>Post-Trial Rematch / Refund</strong></td>
-            <td>Parent requests mentor rematch or withdrawal after Session 1.</td>
-            <td>Releases seat reservation back to dynamic batch pool.</td>
-            <td>100% unconditional refund or rematch executed immediately.</td>
+            <td><strong>Unconditional Guarantee</strong></td>
+            <td>Parent requests mentor rematch or withdrawal post-Session 1.</td>
+            <td>Releases seat lock back to dynamic small-batch pool.</td>
+            <td>100% unconditional refund; zero cancellation fee or friction.</td>
           </tr>
         </tbody>
       </table>
@@ -723,14 +793,14 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
   <!-- ==================== PAGE 9 ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">8 Quality Engineering, Test Suite & WCAG Accessibility</h1>
+      <h1 class="sec-heading">9 Quality Engineering, Test Suite & WCAG Accessibility</h1>
       <p>
-        The platform enforces comprehensive testing standards spanning unit, DOM integration, programmatic accessibility, and real-browser end-to-end verification.
+        The platform enforces comprehensive engineering standards spanning unit contracts, DOM interaction tests, programmatic accessibility scans, and real-browser cross-platform end-to-end verification.
       </p>
 
-      <h2 class="sub-sec-heading">8.1 10-Suite Automated Test Architecture</h2>
+      <h2 class="sub-sec-heading">9.1 15-Suite Automated Vitest Architecture (174 Tests Passed)</h2>
       <p>
-        The Vitest test suite executes 72 unit and integration tests across 10 specialized suites in ~10 seconds:
+        The automated test suite executes 174 tests across 15 specialized suites in ~13 seconds with zero failures:
       </p>
       <table class="spec-table">
         <thead>
@@ -742,14 +812,19 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
         </thead>
         <tbody>
           <tr>
-            <td><code>accessibilityAudit.test.jsx</code></td>
-            <td>5</td>
-            <td>Programmatic WCAG 2.1 AA audits across Steps 1 through 5 using axe-core; asserts 0 critical violations.</td>
+            <td><code>adminDataService.test.js</code></td>
+            <td>31</td>
+            <td>12-seat capacity guards, student lifecycle transitions, duplicate prevention, and ledger math.</td>
+          </tr>
+          <tr>
+            <td><code>adminSection19.test.js</code></td>
+            <td>35</td>
+            <td>Fee schedule automation, receipt generation, grace period calculations, and discount rules.</td>
           </tr>
           <tr>
             <td><code>stepAscendingOrderFlow.test.jsx</code></td>
-            <td>17</td>
-            <td>Ascending funnel progression ($1 \to 5$), cryptographic token tamper rejection, and dynamic seat locks.</td>
+            <td>18</td>
+            <td>Ascending funnel progression ($1 \to 5$), cryptographic token verification, and dynamic seat locks.</td>
           </tr>
           <tr>
             <td><code>navigationAndTriggers.test.js</code></td>
@@ -757,9 +832,29 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
             <td>Security hygiene (<code>noopener noreferrer</code>), phone link protocols, zero comments across source files.</td>
           </tr>
           <tr>
+            <td><code>adminPagesAndRouting.test.jsx</code></td>
+            <td>12</td>
+            <td>Admin route guards, split-screen auth layouts, allowlist checks, and zero-comment rule on App.jsx.</td>
+          </tr>
+          <tr>
+            <td><code>securityAudit.test.js</code></td>
+            <td>10</td>
+            <td>HMAC tampering rejection, token expiration checks, and state injection resilience.</td>
+          </tr>
+          <tr>
             <td><code>schemas.test.js</code></td>
             <td>9</td>
             <td>Indian phone regex (+91, 10-digit, spacing), lead payloads, and required field validation.</td>
+          </tr>
+          <tr>
+            <td><code>multiStudentEnrollmentIsolation.test.js</code></td>
+            <td>9</td>
+            <td>Storage key isolation, independent student sessions, and multi-child enrollment integrity.</td>
+          </tr>
+          <tr>
+            <td><code>componentDomIntegration.test.jsx</code></td>
+            <td>7</td>
+            <td>Fee calculator sibling concession DOM events, Navbar mobile drawer, StepProgress state pills.</td>
           </tr>
           <tr>
             <td><code>batchesFlow.test.js</code></td>
@@ -767,14 +862,14 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
             <td>Class, board, and evening timing slot multi-dimensional filtering matrix.</td>
           </tr>
           <tr>
-            <td><code>componentDomIntegration.test.jsx</code></td>
-            <td>5</td>
-            <td>Fee calculator sibling concession DOM events, Navbar mobile drawer, StepProgress state pills.</td>
+            <td><code>feeCalculation.test.js</code></td>
+            <td>6</td>
+            <td>15% sibling discount math, zero registration fee verification, and arithmetic edge cases.</td>
           </tr>
           <tr>
-            <td><code>feeCalculation.test.js</code></td>
+            <td><code>accessibilityAudit.test.jsx</code></td>
             <td>5</td>
-            <td>15% sibling discount math, zero registration fee verification, and arithmetic edge cases.</td>
+            <td>Programmatic WCAG 2.1 AA audits across Steps 1 through 5 using axe-core; asserts 0 critical violations.</td>
           </tr>
           <tr>
             <td><code>homeData.test.js</code></td>
@@ -788,20 +883,20 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
           </tr>
           <tr>
             <td><code>leadService.test.js</code></td>
-            <td>3</td>
+            <td>4</td>
             <td>Mock lead submission, localStorage outbox queue, and URL encoding.</td>
           </tr>
         </tbody>
       </table>
 
-      <h2 class="sub-sec-heading">8.2 Programmatic WCAG 2.1 AA Accessibility Compliance</h2>
+      <h2 class="sub-sec-heading">9.2 Programmatic WCAG 2.1 AA Accessibility Compliance</h2>
       <p>
-        Every step component is verified against WCAG 2.1 AA rules via <code>axe-core</code>. Form controls feature explicit <code>&lt;label htmlFor="..."&gt;</code> attributes, interactive elements exceed 48&times;48px touch targets, and color contrast ratios exceed 4.5:1 against slate backgrounds.
+        Every step component is verified against WCAG 2.1 AA rules via <code>axe-core</code>. Form controls feature explicit <code>&lt;label htmlFor="..."&gt;</code> associations, interactive controls exceed 44&times;44px touch targets, and text contrast ratios exceed 4.5:1 against slate backgrounds.
       </p>
 
-      <h2 class="sub-sec-heading">8.3 Cross-Browser Playwright E2E Funnel Verification</h2>
+      <h2 class="sub-sec-heading">9.3 Cross-Browser Playwright E2E Funnel Verification (17 Tests Passed)</h2>
       <p>
-        Configured in <code>playwright.config.js</code> and <code>e2e/admissionFlow.spec.js</code> to test real Chromium, WebKit (Safari), and Firefox engines, confirming that out-of-order route attempts redirect to Step 1 and valid registrations generate confirmation slips without browser-specific quirks.
+        Configured in <code>playwright.config.js</code>, executing 17 end-to-end tests across 4 suites: <code>admissionFlow.spec.js</code> (5-step funnel & guard redirects), <code>adminPortalFlow.spec.js</code> (unauthenticated protection, allowlist access rejection, login, dashboard, student/batch editing), <code>authSplitScreen.spec.js</code> (split-screen layouts at 1920&times;1080 to 1280&times;720, password toggles, mode switching), and <code>multiStudentIsolation.spec.js</code>.
       </p>
     </div>
     <div class="page-footer">9</div>
@@ -810,30 +905,31 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
   <!-- ==================== PAGE 10 ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">9 Thoramangalam Campus Operational Workflows</h1>
+      <h1 class="sec-heading">10 Thoramangalam Campus Operational Workflows & Sign-Off</h1>
 
-      <h2 class="sub-sec-heading">9.1 Daily Schedule & School Bus Arrival Synchronization</h2>
+      <h2 class="sub-sec-heading">10.1 Daily Schedule & School Bus Arrival Synchronization</h2>
       <p>
         School bus arrival data from Trichy Main Road and Four Roads was analyzed to determine optimal batch commencement times. Students attending schools in Perambalur town, Thoramangalam, and surrounding villages arrive between 4:00 PM and 4:25 PM. Focus Academy's 4:30 PM slot allows students to arrive, wash up, take a light refreshment, and begin sessions without cognitive rush.
       </p>
 
-      <h2 class="sub-sec-heading">9.2 Saturday Mock Debriefs & 1-Day Trial Guarantee</h2>
+      <h2 class="sub-sec-heading">10.2 Saturday Mock Debriefs & 1-Day Trial Guarantee</h2>
       <ul class="bullet-list">
         <li><strong>Saturday Mock Test & Doubt Clinic:</strong> Every Saturday from 4:00 PM to 7:00 PM, tutors conduct chapter-end diagnostic tests mirroring Tamil Nadu State Board and CBSE exam formats. Results are debriefed one-on-one with each student on Sunday mornings.</li>
         <li><strong>Daily Homework & Progress Notebook:</strong> Each student maintains a dedicated Focus Academy progress book. Tutors sign off on completed homework daily, alerting parents immediately if concept gaps emerge.</li>
         <li><strong>1-Day Free Trial Session:</strong> New students attend their first 90-minute evening session completely free of charge. If either the student or parent feels the mentor dynamic is not ideal, Focus Academy provides a no-questions-asked rematch or full refund.</li>
       </ul>
 
-      <h2 class="sub-sec-heading">9.3 Campus Operational Directory & Contacts</h2>
+      <h2 class="sub-sec-heading">10.3 Campus Operational Directory & Live Links</h2>
       <div class="callout-quote">
         <strong>Thoramangalam Campus Address:</strong><br>
-        Focus Academy, 2nd Floor, Thiripura Complex, Thoramangalam,<br>
+        Focus Academy, 1st & 2nd Floors, Thiripura Complex, Thoramangalam,<br>
         Perambalur, Tamil Nadu &ndash; 621220 (Landmark: Near Four Roads Junction & Trichy Main Road).<br><br>
-        <strong>Academic Hours:</strong> Monday to Saturday: 4:00 PM &ndash; 9:00 PM | Sunday: 9:00 AM &ndash; 1:00 PM<br>
-        <strong>Helpline / Direct Call:</strong> +91 98424 51220 | <strong>Live Portal:</strong> focus-academy-virid.vercel.app
+        <strong>Academic Hours:</strong> Monday to Saturday: 4:00 PM &ndash; 9:00 PM | Sunday: By Appointment<br>
+        <strong>Helpline / Direct Call:</strong> +91 98424 51220 | <strong>Live Production URL:</strong> https://focus-academy-virid.vercel.app<br>
+        <strong>Admin Console:</strong> https://focus-academy-virid.vercel.app/admin-portal/login
       </div>
 
-      <h2 class="sub-sec-heading">9.4 Engineering Audit Sign-Off</h2>
+      <h2 class="sub-sec-heading">10.4 Engineering Audit Sign-Off</h2>
       <table class="spec-table">
         <thead>
           <tr>
@@ -845,34 +941,40 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
         </thead>
         <tbody>
           <tr>
-            <td><strong>System Designer</strong></td>
+            <td><strong>System Architecture</strong></td>
             <td><strong>100 / 100</strong></td>
             <td>Approved</td>
-            <td>Deterministic ascending state machine, HMAC session tokens, dynamic headless batches.</td>
+            <td>Deterministic ascending state machine, HMAC session tokens, Cloud Firestore DB, Vercel Edge.</td>
           </tr>
           <tr>
-            <td><strong>UI / UX Designer</strong></td>
+            <td><strong>UI / UX Design</strong></td>
             <td><strong>100 / 100</strong></td>
             <td>Approved</td>
-            <td>Animated redirect toast, sticky mobile filter chips, 1:12 local branding, accessible touch targets.</td>
+            <td>Split-screen zero-scrollbar admin layout, clean editorial headers, sticky mobile chips, 1:12 branding.</td>
           </tr>
           <tr>
-            <td><strong>QA / Software Tester</strong></td>
+            <td><strong>QA / Software Testing</strong></td>
             <td><strong>100 / 100</strong></td>
             <td>Approved</td>
-            <td>72 automated Vitest tests (10 suites), axe-core WCAG AA audits, Playwright cross-browser E2E.</td>
+            <td>174 automated Vitest tests (15 suites), 17 Playwright E2E browser tests, axe-core WCAG AA audits.</td>
           </tr>
           <tr>
-            <td><strong>Web Developer</strong></td>
+            <td><strong>Security & Governance</strong></td>
             <td><strong>100 / 100</strong></td>
             <td>Approved</td>
-            <td>React 19 + Vite 8 stack, TypeScript contracts, 0 oxlint debt, 94 kB gzip bundle, live Vercel deploy.</td>
+            <td>Firebase Auth domain whitelist, administrator allowlist gate, double-entry ledger, immutable audit log.</td>
+          </tr>
+          <tr>
+            <td><strong>Web Engineering</strong></td>
+            <td><strong>100 / 100</strong></td>
+            <td>Approved</td>
+            <td>React 19 + Vite 8 stack, TypeScript schemas, 0 oxlint debt, 95 kB gzip bundle, live on Vercel.</td>
           </tr>
         </tbody>
       </table>
 
       <div class="doc-end-marker">
-        &mdash; End of Architecture, Workflow & Technical Specification Document &mdash;
+        &mdash; End of Architecture, Operations & Technical Specification Document &mdash;
       </div>
     </div>
     <div class="page-footer">10</div>
@@ -898,10 +1000,10 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
     format: 'A4',
     printBackground: true,
     margin: {
-      top: '18mm',
-      bottom: '18mm',
-      left: '16mm',
-      right: '16mm'
+      top: '16mm',
+      bottom: '16mm',
+      left: '14mm',
+      right: '14mm'
     }
   });
 
