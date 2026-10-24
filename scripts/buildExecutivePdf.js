@@ -905,73 +905,34 @@ export function calculateAdmissionFee(baseMonthlyFee, hasSiblingDiscount = false
   <!-- ==================== PAGE 10 ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">10 Thoramangalam Campus Operational Workflows & Sign-Off</h1>
+      <h1 class="sec-heading">10 Thoramangalam Campus Operational Workflows</h1>
 
       <h2 class="sub-sec-heading">10.1 Daily Schedule & School Bus Arrival Synchronization</h2>
       <p>
         School bus arrival data from Trichy Main Road and Four Roads was analyzed to determine optimal batch commencement times. Students attending schools in Perambalur town, Thoramangalam, and surrounding villages arrive between 4:00 PM and 4:25 PM. Focus Academy's 4:30 PM slot allows students to arrive, wash up, take a light refreshment, and begin sessions without cognitive rush.
       </p>
+      <p>
+        Later evening slots (6:00 PM – 7:30 PM and 7:30 PM – 9:00 PM) cater to senior secondary students (Classes 10, 11, and 12) who have extended school hours or laboratory commitments. The campus is strategically located opposite the EB Office in Thiripura Complex, ensuring well-lit, secure walking access to Four Roads town bus stops.
+      </p>
 
-      <h2 class="sub-sec-heading">10.2 Saturday Mock Debriefs & 1-Day Trial Guarantee</h2>
+      <h2 class="sub-sec-heading">10.2 Saturday Timed Mock Debriefs & Diagnostic Assessment</h2>
       <ul class="bullet-list">
-        <li><strong>Saturday Mock Test & Doubt Clinic:</strong> Every Saturday from 4:00 PM to 7:00 PM, tutors conduct chapter-end diagnostic tests mirroring Tamil Nadu State Board and CBSE exam formats. Results are debriefed one-on-one with each student on Sunday mornings.</li>
-        <li><strong>Daily Homework & Progress Notebook:</strong> Each student maintains a dedicated Focus Academy progress book. Tutors sign off on completed homework daily, alerting parents immediately if concept gaps emerge.</li>
-        <li><strong>1-Day Free Trial Session:</strong> New students attend their first 90-minute evening session completely free of charge. If either the student or parent feels the mentor dynamic is not ideal, Focus Academy provides a no-questions-asked rematch or full refund.</li>
+        <li><strong>Saturday Mock Test & Doubt Clinic:</strong> Every Saturday from 4:00 PM to 7:00 PM, tutors conduct chapter-end diagnostic tests mirroring Tamil Nadu State Board and CBSE exam formats. Evaluated answer sheets with step-by-step corrections are returned before Monday evening classes.</li>
+        <li><strong>Daily Homework & Progress Notebook:</strong> Each student maintains a dedicated Focus Academy progress book. Tutors inspect homework daily, identifying calculation errors, algebraic slips, and handwriting gaps in real time.</li>
+        <li><strong>Direct Parent Transparency:</strong> Tutors communicate attendance anomalies and test marks directly to parents via automated WhatsApp notices and periodic one-on-one diagnostic parent reviews.</li>
+        <li><strong>1-Day Free Trial Session:</strong> New students attend their first 90-minute evening session completely free of charge. If either the student or parent feels the mentor dynamic is not ideal, Focus Academy provides a no-questions-asked rematch or full refund guarantee.</li>
       </ul>
 
-      <h2 class="sub-sec-heading">10.3 Campus Operational Directory & Live Links</h2>
+      <h2 class="sub-sec-heading">10.3 Campus Operational Directory & Verification Links</h2>
       <div class="callout-quote">
         <strong>Thoramangalam Campus Address:</strong><br>
-        Focus Academy, 1st & 2nd Floors, Thiripura Complex, Thoramangalam,<br>
-        Perambalur, Tamil Nadu &ndash; 621220 (Landmark: Near Four Roads Junction & Trichy Main Road).<br><br>
+        Focus Academy (ஃபோகஸ் அகாடமி), 1st & 2nd Floors, Thiripura Complex, Rajanagar, Thoramangalam,<br>
+        Perambalur, Tamil Nadu &ndash; 621220 (Landmarks: Opposite EB Office, near Malar Hospital, 2 mins from Four Roads).<br><br>
         <strong>Academic Hours:</strong> Monday to Saturday: 4:00 PM &ndash; 9:00 PM | Sunday: By Appointment<br>
-        <strong>Helpline / Direct Call:</strong> +91 98424 51220 | <strong>Live Production URL:</strong> https://focus-academy-virid.vercel.app<br>
-        <strong>Admin Console:</strong> https://focus-academy-virid.vercel.app/admin-portal/login
+        <strong>Helpline / Direct Call:</strong> +91 98424 51220 | <strong>Campus Email:</strong> focusacademy.perambalur@gmail.com<br>
+        <strong>Live Production Web Portal:</strong> https://focus-academy-virid.vercel.app<br>
+        <strong>Administrative Console:</strong> https://focus-academy-virid.vercel.app/admin-portal/login
       </div>
-
-      <h2 class="sub-sec-heading">10.4 Engineering Audit Sign-Off</h2>
-      <table class="spec-table">
-        <thead>
-          <tr>
-            <th>Engineering Dimension</th>
-            <th>Rating</th>
-            <th>Status</th>
-            <th>Primary Sign-Off Criteria</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>System Architecture</strong></td>
-            <td><strong>100 / 100</strong></td>
-            <td>Approved</td>
-            <td>Deterministic ascending state machine, HMAC session tokens, Cloud Firestore DB, Vercel Edge.</td>
-          </tr>
-          <tr>
-            <td><strong>UI / UX Design</strong></td>
-            <td><strong>100 / 100</strong></td>
-            <td>Approved</td>
-            <td>Split-screen zero-scrollbar admin layout, clean editorial headers, sticky mobile chips, 1:12 branding.</td>
-          </tr>
-          <tr>
-            <td><strong>QA / Software Testing</strong></td>
-            <td><strong>100 / 100</strong></td>
-            <td>Approved</td>
-            <td>174 automated Vitest tests (15 suites), 17 Playwright E2E browser tests, axe-core WCAG AA audits.</td>
-          </tr>
-          <tr>
-            <td><strong>Security & Governance</strong></td>
-            <td><strong>100 / 100</strong></td>
-            <td>Approved</td>
-            <td>Firebase Auth domain whitelist, administrator allowlist gate, double-entry ledger, immutable audit log.</td>
-          </tr>
-          <tr>
-            <td><strong>Web Engineering</strong></td>
-            <td><strong>100 / 100</strong></td>
-            <td>Approved</td>
-            <td>React 19 + Vite 8 stack, TypeScript schemas, 0 oxlint debt, 95 kB gzip bundle, live on Vercel.</td>
-          </tr>
-        </tbody>
-      </table>
 
       <div class="doc-end-marker">
         &mdash; End of Architecture, Operations & Technical Specification Document &mdash;
