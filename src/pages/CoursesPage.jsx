@@ -144,12 +144,9 @@ export default function CoursesPage() {
 
         <div className="bg-white rounded-lg p-6 sm:p-8 border border-[#E2E8F0] shadow-xs mb-12 space-y-6">
           <div>
-            <div className="flex items-center space-x-2 mb-3">
-              <span className="w-5 h-5 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center">1</span>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
-                Select Your Curriculum Board:
-              </h2>
-            </div>
+            <h2 className="text-sm font-bold text-[#0F172A] mb-3">
+              Curriculum Board
+            </h2>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {boards.map(b => (
                 <button
@@ -171,12 +168,9 @@ export default function CoursesPage() {
           <div className="border-t border-slate-100" />
 
           <div>
-            <div className="flex items-center space-x-2 mb-3">
-              <span className="w-5 h-5 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center">2</span>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
-                Select Student's Grade / Class:
-              </h2>
-            </div>
+            <h2 className="text-sm font-bold text-[#0F172A] mb-3">
+              Grade / Class
+            </h2>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {grades.map(g => (
                 <button
@@ -198,12 +192,9 @@ export default function CoursesPage() {
           <div className="border-t border-slate-100" />
 
           <div>
-            <div className="flex items-center space-x-2 mb-3">
-              <span className="w-5 h-5 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center">3</span>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#0F172A]">
-                What are you preparing for? (Preparation Goal):
-              </h2>
-            </div>
+            <h2 className="text-sm font-bold text-[#0F172A] mb-3">
+              Preparation Goal
+            </h2>
             <div className="flex flex-wrap gap-2 sm:gap-3">
               {goals.map(goal => (
                 <button

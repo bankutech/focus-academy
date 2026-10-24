@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ContactSection from '../components/ContactSection';
-import { MapPin, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 export default function ContactPage() {
   return (
@@ -16,10 +16,6 @@ export default function ContactPage() {
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-orange-50 text-[#EA580C] rounded-lg text-xs font-bold mb-2">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>Thiripura Complex • Thoramangalam, Perambalur</span>
-              </div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0F172A] tracking-tight">
                 Visit Our Campus & Classrooms
               </h1>

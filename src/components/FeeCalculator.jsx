@@ -66,7 +66,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
       <div className="p-6 sm:p-7 lg:col-span-7 space-y-4 border-b lg:border-b-0 lg:border-r border-[#E2E8F0]">
         <div>
           <label htmlFor="calculator-grade" className="block text-xs uppercase tracking-wider text-slate-600 mb-1.5 font-bold">
-            1. Select Class / Grade
+            Class / Grade
           </label>
           <select
             id="calculator-grade"
@@ -84,7 +84,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label htmlFor="calculator-board" className="block text-xs uppercase tracking-wider text-slate-600 mb-1.5 font-bold">
-              2. Board (CBSE / State Board)
+              Curriculum Board
             </label>
             <select
               id="calculator-board"
@@ -101,7 +101,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
 
           <div>
             <label htmlFor="calculator-center" className="block text-xs uppercase tracking-wider text-slate-600 mb-1.5 font-bold">
-              3. Campus Location
+              Campus Location
             </label>
             <select
               id="calculator-center"
@@ -117,7 +117,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
 
         <div>
           <label className="block text-xs uppercase tracking-wider text-slate-600 mb-1.5 font-bold">
-            4. Batch Mode
+            Batch Mode
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -150,7 +150,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
 
         <div>
           <label className="block text-xs uppercase tracking-wider text-slate-600 mb-1.5 font-bold">
-            5. Sibling Concession
+            Sibling Concession
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -183,7 +183,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
         <div>
           <div className="flex justify-between items-center mb-1">
             <label htmlFor="calculator-frequency" className="text-xs uppercase tracking-wider text-slate-600 font-bold">
-              6. Weekly Class Hours
+              Weekly Class Hours
             </label>
             <span className="text-xs font-bold text-[#EA580C] bg-orange-50 px-2.5 py-0.5 rounded border border-orange-200">
               {hoursPerWeek} Hours / Week ({monthlyHours} hrs/mo)

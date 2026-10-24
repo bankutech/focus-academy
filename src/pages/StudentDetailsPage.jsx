@@ -247,7 +247,7 @@ export default function StudentDetailsPage() {
           <div className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-[#0F172A]">
-                1. {authMode === 'login' ? 'Log In with Mobile Number' : 'Student Contact Details'}
+                {authMode === 'login' ? 'Log In with Mobile Number' : 'Student Contact Details'}
               </h2>
               <span className="text-xs text-slate-500">
                 Thoramangalam / Perambalur
@@ -387,7 +387,7 @@ export default function StudentDetailsPage() {
           <div className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-[#0F172A]">
-                2. Select Education Board
+                Education Board
               </h2>
               <span className="text-xs text-slate-500">
                 Selected: <strong className="text-[#EA580C]">{board}</strong>
@@ -437,7 +437,7 @@ export default function StudentDetailsPage() {
           <div className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-[#0F172A]">
-                3. Select Student Class / Grade
+                Student Class / Grade
               </h2>
               <span className="text-xs text-slate-500">
                 Selected: <strong className="text-[#EA580C]">{grade}</strong>

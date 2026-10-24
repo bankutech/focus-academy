@@ -177,10 +177,6 @@ export default function EnrollPage() {
               <CheckCircle2 className="w-9 h-9 text-[#EA580C]" />
             </div>
 
-            <span className="text-xs uppercase tracking-wider text-[#EA580C] font-bold block mb-1">
-              Seat Reservation Confirmed
-            </span>
-
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
               Seat Reserved & Admission Slip Generated!
             </h1>
