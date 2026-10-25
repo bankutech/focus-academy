@@ -472,11 +472,22 @@ export default function StudentDetailsPage() {
             </div>
           </div>
 
-          <div className="p-4 bg-emerald-50 rounded-md border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-            <span>
-              Your information is strictly private and used only for academic batch allocation at Focus Academy Thoramangalam.
-            </span>
+          <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200 text-xs text-emerald-900 space-y-2">
+            <div className="flex items-center space-x-2 font-bold text-emerald-950">
+              <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+              <span>Verifiable Parental / Guardian Consent (DPDP Act 2023 Compliance)</span>
+            </div>
+            <label className="flex items-start space-x-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                required
+                defaultChecked={true}
+                className="mt-0.5 rounded text-[#EA580C] focus:ring-[#EA580C] h-4 w-4 border-emerald-300"
+              />
+              <span className="leading-snug text-emerald-900 font-medium">
+                I confirm that I am the parent or legal guardian of this student, and I consent to Focus Academy collecting and processing educational details strictly for academic batch allocation and counseling.
+              </span>
+            </label>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">

@@ -54,19 +54,23 @@ export const BatchService = {
           phone: details.phone,
           grade: details.grade,
           board: details.board,
-          stepToken: details.stepToken
+          stepToken: details.stepToken,
+          allowWaitlist: Boolean(details.allowWaitlist)
         })
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         return {
           success: false,
-          error: data.error || `Reservation rejected with HTTP ${response.status}`
+          error: data.error || `Reservation rejected with HTTP ${response.status}`,
+          canWaitlist: Boolean(data.canWaitlist)
         };
       }
       return {
         success: Boolean(data.success),
         reservationId: data.reservationId,
+        waitlisted: Boolean(data.waitlisted),
+        waitlistPosition: data.waitlistPosition,
         seatsRemaining: data.seatsRemaining
       };
     } catch (err) {

@@ -57,7 +57,14 @@ export default async function handler(req, res) {
     if (result.error) return fail(res, result.status, result.error);
 
     const { token, expiresAt } = mintToken(applicationId, result.completed);
-    return res.status(200).json({ success: true, applicationId, step: result.completed, token, expiresAt });
+    return res.status(200).json({
+      success: true,
+      applicationId,
+      step: result.completed,
+      token,
+      expiresAt,
+      serverTime: new Date().toISOString()
+    });
   } catch {
     return unavailable(res);
   }

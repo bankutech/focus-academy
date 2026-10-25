@@ -93,7 +93,29 @@ export default async function handler(req, res) {
       const live = holds.filter((d) => isLive(d.data(), now)).length;
       const capacity = Number(batch.capacity) || 12;
       if (capacity - (Number(batch.enrolledCount) || 0) - live <= 0) {
-        return { status: 409, error: 'Batch capacity reached. All 12 seats in this classroom have been allocated.' };
+        if (!body.allowWaitlist && !body.joinWaitlist) {
+          return {
+            status: 409,
+            error: 'Batch capacity reached. All 12 seats in this classroom have been allocated.',
+            canWaitlist: true,
+            batch
+          };
+        }
+        const waitlistDocs = holdSnap.docs.filter((d) => d.data().status === 'waitlist');
+        const waitlistPosition = waitlistDocs.length + 1;
+        const reservationId = newId('WL');
+        tx.set(reservationRef, {
+          reservationId,
+          applicationId: proof.applicationId,
+          batchId,
+          studentName: application.studentName,
+          phone,
+          status: 'waitlist',
+          waitlistPosition,
+          createdAt: new Date(now).toISOString(),
+          expiresAt: new Date(now + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+        return { reservationId, batch, waitlisted: true, waitlistPosition };
       }
 
       mineSnap.docs.filter((d) => d.id !== reservationRef.id && ACTIVE.includes(d.data().status)).forEach((d) => tx.update(d.ref, { status: 'released' }));
@@ -112,7 +134,24 @@ export default async function handler(req, res) {
       return { reservationId, batch, reservedNow: live + 1 };
     });
 
-    if (outcome.error) return fail(res, outcome.status, outcome.error);
+    if (outcome.error) {
+      return fail(res, outcome.status, outcome.error, {
+        canWaitlist: Boolean(outcome.canWaitlist),
+        serverTime: new Date().toISOString()
+      });
+    }
+
+    if (outcome.waitlisted) {
+      return res.status(200).json({
+        success: true,
+        batchId,
+        waitlisted: true,
+        reservationId: outcome.reservationId,
+        waitlistPosition: outcome.waitlistPosition,
+        serverTime: new Date().toISOString(),
+        message: `Registered on Priority Waitlist (#${outcome.waitlistPosition}) for ${outcome.batch.name}. Campus desk will prioritize your admission if a slot opens.`
+      });
+    }
 
     const capacity = Number(outcome.batch.capacity) || 12;
     const seatsRemaining = Math.max(0, capacity - (Number(outcome.batch.enrolledCount) || 0) - outcome.reservedNow);
@@ -123,6 +162,7 @@ export default async function handler(req, res) {
       reservationId: outcome.reservationId,
       seatsRemaining,
       holdMinutes: HOLD_MS / 60000,
+      serverTime: new Date().toISOString(),
       message: 'Seat held for 15 minutes at the Thiripura Complex campus.',
     });
   } catch {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   CreditCard, 
@@ -9,7 +9,11 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  RotateCcw
+  RotateCcw,
+  Banknote,
+  Landmark,
+  ShieldCheck,
+  Check
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
@@ -38,6 +42,15 @@ export default function AdminLedgerPage() {
   const [settings, setSettings] = useState(null);
   const [formSuccess, setFormSuccess] = useState('');
 
+  const [tillModalOpen, setTillModalOpen] = useState(false);
+  const [activeTill, setActiveTill] = useState(null);
+  const [openingFloatInput, setOpeningFloatInput] = useState('1000');
+  const [denominations, setDenominations] = useState({ d500: 0, d200: 0, d100: 0, d50: 0, d20: 0, d10: 0, coins: 0 });
+  const [tillNotes, setTillNotes] = useState('');
+  const [tillError, setTillError] = useState('');
+  const [tillSuccess, setTillSuccess] = useState('');
+  const [isTillSubmitting, setIsTillSubmitting] = useState(false);
+
   const [paymentForm, setPaymentForm] = useState({
     studentId: '',
     obligationId: '',
@@ -50,18 +63,20 @@ export default function AdminLedgerPage() {
 
   const loadData = async () => {
     try {
-      const [p, s, o, m, setts] = await Promise.all([
+      const [p, s, o, m, setts, till] = await Promise.all([
         AdminDataService.getPayments(),
         AdminDataService.getStudents(),
         AdminDataService.getFeeObligations(),
         AdminDataService.getDashboardMetrics(),
-        AdminDataService.getSettings()
+        AdminDataService.getSettings(),
+        AdminDataService.getActiveTillSession().catch(() => null)
       ]);
       setPayments(p);
       setStudents(s);
       setObligations(o);
       setMetrics(m);
       setSettings(setts);
+      setActiveTill(till);
 
       const params = new URLSearchParams(location.search || window.location.search);
       const stuId = params.get('studentId');
@@ -181,6 +196,63 @@ export default function AdminLedgerPage() {
     return true;
   });
 
+  const handleOpenTill = async (e) => {
+    e.preventDefault();
+    setTillError('');
+    setIsTillSubmitting(true);
+    try {
+      const currentAdmin = requireAdminEmail();
+      const session = await AdminDataService.openTillSession(Number(openingFloatInput) || 0, tillNotes, currentAdmin);
+      setActiveTill(session);
+      setTillSuccess(`Till drawer opened successfully with initial float ₹${session.openingFloat}.`);
+    } catch (err) {
+      setTillError(err.message || 'Failed to open till drawer.');
+    } finally {
+      setIsTillSubmitting(false);
+    }
+  };
+
+  const handleCloseTill = async (e) => {
+    e.preventDefault();
+    if (!activeTill) return;
+    setTillError('');
+    setIsTillSubmitting(true);
+    try {
+      const currentAdmin = requireAdminEmail();
+      const closed = await AdminDataService.closeTillSession(activeTill.id, denominations, tillNotes, currentAdmin);
+      setActiveTill(null);
+      setTillSuccess(`Till drawer settled! Counted ₹${closed.countedCash}, Variance: ₹${closed.variance}.`);
+      setTillModalOpen(false);
+      await loadData();
+    } catch (err) {
+      setTillError(err.message || 'Failed to close till drawer.');
+    } finally {
+      setIsTillSubmitting(false);
+    }
+  };
+
+  const sessionCashPayments = useMemo(() => {
+    const startTime = activeTill?.openedAt ? new Date(activeTill.openedAt).getTime() : 0;
+    return payments.filter(p => !p.isReversed && !p.reversed && p.paymentMethod === 'cash' && new Date(p.createdAt || p.paymentDate).getTime() >= startTime);
+  }, [payments, activeTill]);
+
+  const cashReceiptsSum = useMemo(() => {
+    return sessionCashPayments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+  }, [sessionCashPayments]);
+
+  const countedCash = useMemo(() => {
+    return (Number(denominations.d500) || 0) * 500 +
+           (Number(denominations.d200) || 0) * 200 +
+           (Number(denominations.d100) || 0) * 100 +
+           (Number(denominations.d50) || 0) * 50 +
+           (Number(denominations.d20) || 0) * 20 +
+           (Number(denominations.d10) || 0) * 10 +
+           (Number(denominations.coins) || 0);
+  }, [denominations]);
+
+  const expectedCash = (Number(activeTill?.openingFloat) || 0) + cashReceiptsSum;
+  const variance = countedCash - expectedCash;
+
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / pageSize));
   const paginatedPayments = filteredPayments.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -196,30 +268,45 @@ export default function AdminLedgerPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            const firstActive = students.find(s => s.status === 'active') || students[0];
-            const stuId = firstActive?.id || '';
-            const studentObls = obligations.filter(o => o.studentId === stuId && o.balance > 0);
-            const firstUnpaid = studentObls[0];
-            setPaymentForm({
-              studentId: stuId,
-              obligationId: firstUnpaid ? firstUnpaid.id : '',
-              amount: firstUnpaid ? firstUnpaid.balance : '',
-              paymentDate: new Date().toISOString().split('T')[0],
-              paymentMethod: 'cash',
-              referenceNumber: '',
-              notes: ''
-            });
-            setFormError('');
-            setRecordModalOpen(true);
-          }}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
-        >
-          <CreditCard className="w-4 h-4" />
-          <span>Record New Payment</span>
-        </button>
+        <div className="flex items-center space-x-2.5">
+          <button
+            type="button"
+            onClick={() => { setTillError(''); setTillSuccess(''); setTillModalOpen(true); }}
+            className={`inline-flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+              activeTill
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            <Banknote className="w-4 h-4 text-emerald-600" />
+            <span>{activeTill ? 'Active Till Drawer (Open)' : 'Open Cash Till'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const firstActive = students.find(s => s.status === 'active') || students[0];
+              const stuId = firstActive?.id || '';
+              const studentObls = obligations.filter(o => o.studentId === stuId && o.balance > 0);
+              const firstUnpaid = studentObls[0];
+              setPaymentForm({
+                studentId: stuId,
+                obligationId: firstUnpaid ? firstUnpaid.id : '',
+                amount: firstUnpaid ? firstUnpaid.balance : '',
+                paymentDate: new Date().toISOString().split('T')[0],
+                paymentMethod: 'cash',
+                referenceNumber: '',
+                notes: ''
+              });
+              setFormError('');
+              setRecordModalOpen(true);
+            }}
+            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          >
+            <CreditCard className="w-4 h-4" />
+            <span>Record New Payment</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -834,6 +921,200 @@ export default function AdminLedgerPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {tillModalOpen && (
+        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 text-left max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg">
+                  <Banknote className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-[#0F172A]">
+                    {activeTill ? 'Till Drawer Settlement (Cash Closeout)' : 'Open Daily Cash Till Drawer'}
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Physical currency audit & drawer reconciliation for Thiripura Complex campus desk.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTillModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {tillError && (
+              <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 font-semibold flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{tillError}</span>
+              </div>
+            )}
+            {tillSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 font-semibold flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{tillSuccess}</span>
+              </div>
+            )}
+
+            {!activeTill ? (
+              <form onSubmit={handleOpenTill} className="space-y-4 text-xs">
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-slate-600 space-y-1">
+                  <span className="font-bold text-slate-800 block">No Active Till Session</span>
+                  <p>
+                    Open a new cash drawer session at the start of your shift to begin recording cash payments.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Opening Petty Cash / Drawer Float (₹) <span className="text-[#EA580C]">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="50"
+                    required
+                    value={openingFloatInput}
+                    onChange={(e) => setOpeningFloatInput(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-bold text-slate-800 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+                    placeholder="e.g. 1000"
+                  />
+                  <span className="text-[11px] text-slate-400 mt-1 block">
+                    Starting cash kept in the drawer for change.
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Shift Notes</label>
+                  <input
+                    type="text"
+                    value={tillNotes}
+                    onChange={(e) => setTillNotes(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                    placeholder="e.g. Evening shift - Desk Coordinator Sagnik"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setTillModalOpen(false)}
+                    className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg text-xs hover:bg-slate-50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isTillSubmitting}
+                    className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    {isTillSubmitting ? 'Opening Drawer...' : 'Open Till Drawer'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleCloseTill} className="space-y-4 text-xs">
+                <div className="grid grid-cols-3 gap-2.5 p-3 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Opening Float</span>
+                    <span className="font-mono font-bold text-slate-700 text-sm">₹{activeTill.openingFloat}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Cash Received</span>
+                    <span className="font-mono font-bold text-emerald-700 text-sm">+₹{cashReceiptsSum}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">Expected Cash</span>
+                    <span className="font-mono font-extrabold text-[#0F172A] text-sm">₹{expectedCash}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-2">
+                    Counted Physical Denominations
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    {[
+                      { key: 'd500', val: 500, label: '₹500 Notes' },
+                      { key: 'd200', val: 200, label: '₹200 Notes' },
+                      { key: 'd100', val: 100, label: '₹100 Notes' },
+                      { key: 'd50', val: 50, label: '₹50 Notes' },
+                      { key: 'd20', val: 20, label: '₹20 Notes' },
+                      { key: 'd10', val: 10, label: '₹10 Notes' },
+                      { key: 'coins', val: 1, label: 'Coins (₹)' },
+                    ].map(item => (
+                      <div key={item.key} className="flex items-center justify-between space-x-2">
+                        <span className="font-semibold text-slate-600 w-24 text-[11px]">{item.label}:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={denominations[item.key] || ''}
+                          onChange={(e) => setDenominations({ ...denominations, [item.key]: Number(e.target.value) || 0 })}
+                          placeholder="0"
+                          className="w-20 p-1.5 bg-white border border-slate-300 rounded font-mono text-center text-xs font-bold"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-lg border flex items-center justify-between text-xs font-bold bg-white">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Total Counted Cash:</span>
+                    <span className="text-lg font-mono font-extrabold text-[#0F172A]">₹{countedCash.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-slate-500 block text-[11px]">Reconciliation Variance:</span>
+                    <span className={`text-sm font-mono font-bold px-2.5 py-1 rounded inline-block ${
+                      variance === 0
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : variance > 0
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
+                    }`}>
+                      {variance === 0 ? 'Balanced (₹0 Variance)' : variance > 0 ? `+₹${variance} Surplus` : `-₹${Math.abs(variance)} Shortage`}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Settlement & Handover Notes</label>
+                  <textarea
+                    rows="2"
+                    value={tillNotes}
+                    onChange={(e) => setTillNotes(e.target.value)}
+                    placeholder="e.g. End of evening shift drawer closeout, cash verified and handed over."
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setTillModalOpen(false)}
+                    className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg text-xs hover:bg-slate-50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isTillSubmitting}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer disabled:opacity-50 inline-flex items-center space-x-1.5"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{isTillSubmitting ? 'Settling Drawer...' : 'Complete Settlement & Lock Shift'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

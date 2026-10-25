@@ -89,20 +89,41 @@ export default function EnrollPage() {
       return;
     }
 
-    const reservation = await BatchService.reserveSeatWithDetails(selectedBatch.id, {
+    let reservation = await BatchService.reserveSeatWithDetails(selectedBatch.id, {
       studentName: studentName.trim(),
       phone: validation.sanitized,
       grade: studentFlow.grade || selectedBatch.grade,
       board,
       stepToken: session.stepToken
     });
+
     if (!reservation.success) {
-      setIsSubmitting(false);
-      setSubmissionResult({
-        success: false,
-        error: reservation.error || 'This batch is currently at maximum 12-student capacity. Please select an alternate evening slot.',
-      });
-      return;
+      if (reservation.canWaitlist) {
+        const wl = await BatchService.reserveSeatWithDetails(selectedBatch.id, {
+          studentName: studentName.trim(),
+          phone: validation.sanitized,
+          grade: studentFlow.grade || selectedBatch.grade,
+          board,
+          stepToken: session.stepToken,
+          allowWaitlist: true
+        });
+        if (wl.success && wl.waitlisted) {
+          reservation = {
+            success: true,
+            waitlisted: true,
+            reservationId: wl.reservationId,
+            waitlistPosition: wl.waitlistPosition,
+          };
+        }
+      }
+      if (!reservation.success) {
+        setIsSubmitting(false);
+        setSubmissionResult({
+          success: false,
+          error: reservation.error || 'This batch is currently at maximum 12-student capacity. Please select an alternate evening slot.',
+        });
+        return;
+      }
     }
 
     const enrollmentRecord = {
@@ -119,6 +140,8 @@ export default function EnrollPage() {
       startDatePreference,
       studentWeakness: studentWeakness.trim(),
       reservationId: reservation.reservationId,
+      isWaitlisted: Boolean(reservation.waitlisted),
+      waitlistPosition: reservation.waitlistPosition || null,
       createdAt: getNowIsoString(),
     };
 
@@ -135,7 +158,7 @@ export default function EnrollPage() {
       stepToken: session.stepToken,
       timing: selectedBatch.timing,
       subjects: selectedBatch.name,
-      notes: `Admission Slip ID: ${saved.id} | Batch: ${selectedBatch.name} (${selectedBatch.timing}) | School: ${enrollmentRecord.schoolName || 'N/A'} | Start: ${startDatePreference} | Challenges: ${enrollmentRecord.studentWeakness || 'None'}`,
+      notes: `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Admission Slip ID: ${saved.id} | Batch: ${selectedBatch.name} (${selectedBatch.timing}) | School: ${enrollmentRecord.schoolName || 'N/A'} | Start: ${startDatePreference} | Challenges: ${enrollmentRecord.studentWeakness || 'None'}`,
     });
 
     setStudentFlow((prev) => ({
@@ -155,6 +178,8 @@ export default function EnrollPage() {
       success: true,
       data: saved,
       whatsappUrl,
+      waitlisted: Boolean(reservation.waitlisted),
+      waitlistPosition: reservation.waitlistPosition,
     });
   };
 
@@ -192,11 +217,15 @@ export default function EnrollPage() {
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
-              Seat Reserved & Admission Slip Generated!
+              {submissionResult.waitlisted
+                ? `Priority Waitlist Registered (#${submissionResult.waitlistPosition || 1})`
+                : 'Seat Reserved & Admission Slip Generated!'}
             </h1>
 
             <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">
-              Thank you, <strong>{studentName}</strong>. Your seat reservation has been queued for <strong>{selectedBatch.name}</strong>.
+              {submissionResult.waitlisted
+                ? `Thank you, ${studentName}. You have been registered on the Priority Waitlist for ${selectedBatch.name}. Our campus desk will prioritize your admission if a slot opens.`
+                : `Thank you, ${studentName}. Your seat reservation has been queued for ${selectedBatch.name}.`}
             </p>
 
             <div className="mt-6 p-5 bg-slate-50 rounded-md border border-[#E2E8F0] text-xs text-left space-y-2 max-w-md mx-auto">
@@ -524,11 +553,18 @@ export default function EnrollPage() {
                     />
                   </div>
 
-                  <div className="p-3.5 bg-emerald-50 rounded-md border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>
-                      Zero prepayment required online. Tuition fee payable at campus desk after first session.
-                    </span>
+                  <div className="p-3.5 bg-emerald-50 rounded-lg border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
+                    <label className="flex items-start space-x-2.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        required
+                        defaultChecked={true}
+                        className="mt-0.5 rounded text-[#EA580C] focus:ring-[#EA580C] h-4 w-4 border-emerald-300"
+                      />
+                      <span className="leading-snug">
+                        <strong>Verifiable Guardian Declaration (DPDP Act 2023):</strong> I confirm I am the parent or legal guardian of this student and consent to educational admission processing. Zero prepayment required online.
+                      </span>
+                    </label>
                   </div>
 
                   <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between">

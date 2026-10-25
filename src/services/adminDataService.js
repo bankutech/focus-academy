@@ -1292,6 +1292,8 @@ export const AdminDataService = {
         billingFrequency: studentData.billingFrequency || 'monthly',
         amountPerCycle: Number(studentData.amountPerCycle) || targetBatch.monthlyFee,
         discountAdjustment: Number(studentData.discountAdjustment) || 0,
+        discountReason: studentData.discountReason || (Number(studentData.discountAdjustment) > 0 ? 'Authorized fee concession' : ''),
+        discountAuthorizedBy: Number(studentData.discountAdjustment) > 0 ? normalizeActorEmail(actor) : null,
         adjustmentHistory: studentData.adjustmentHistory || [],
         billingStartDate: studentData.enrollmentDate || new Date().toISOString().split('T')[0],
         nextDueDate: studentData.nextDueDate || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
@@ -2338,6 +2340,161 @@ export const AdminDataService = {
       obligations,
       payments
     };
+  },
+
+  async getActiveTillSession(actor = 'admin') {
+    if (isFirebaseConfigured() && db) {
+      try {
+        const q = query(collection(db, 'till_sessions'), where('status', '==', 'open'), limit(1));
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
+        if (snap && !snap.empty) {
+          return { ...snap.docs[0].data(), id: snap.docs[0].id };
+        }
+      } catch (err) {
+        console.warn('Firestore getActiveTillSession error:', err);
+      }
+    }
+    const store = await hydrateStore();
+    return (store.tillSessions || []).find(s => s.status === 'open') || null;
+  },
+
+  async openTillSession(initialFloat = 0, notes = '', actor = 'admin') {
+    this.verifyPermission(actor, 'canRecordPayments', 'opening till cash session');
+    const actorEmail = normalizeActorEmail(actor);
+    const existing = await this.getActiveTillSession(actor);
+    if (existing) {
+      return existing;
+    }
+
+    const session = {
+      id: uid('TILL'),
+      status: 'open',
+      openedAt: new Date().toISOString(),
+      openedBy: actorEmail,
+      openingFloat: Number(initialFloat) || 0,
+      notes: notes.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await setDoc(doc(db, 'till_sessions', session.id), session);
+      } catch (err) {
+        console.error('Firestore openTillSession error:', err);
+      }
+    }
+
+    const store = await hydrateStore();
+    if (!store.tillSessions) store.tillSessions = [];
+    store.tillSessions.unshift(session);
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'TILL_SESSION_OPENED',
+      entityType: 'till_session',
+      entityId: session.id,
+      details: `Opened cash till drawer with float of ₹${session.openingFloat}.`
+    });
+
+    return session;
+  },
+
+  async closeTillSession(sessionId, denominations = {}, notes = '', actor = 'admin') {
+    this.verifyPermission(actor, 'canRecordPayments', 'closing till cash session');
+    const actorEmail = normalizeActorEmail(actor);
+    const store = await hydrateStore();
+    const payments = await this.getPayments();
+
+    let session = (store.tillSessions || []).find(s => s.id === sessionId);
+    if (!session && isFirebaseConfigured() && db) {
+      try {
+        const snap = await getDocs(query(collection(db, 'till_sessions'), where('id', '==', sessionId)));
+        if (!snap.empty) session = snap.docs[0].data();
+      } catch {}
+    }
+    if (!session) {
+      throw new Error(`Till session ${sessionId} not found.`);
+    }
+
+    const d500 = Number(denominations.d500) || 0;
+    const d200 = Number(denominations.d200) || 0;
+    const d100 = Number(denominations.d100) || 0;
+    const d50 = Number(denominations.d50) || 0;
+    const d20 = Number(denominations.d20) || 0;
+    const d10 = Number(denominations.d10) || 0;
+    const coins = Number(denominations.coins) || 0;
+
+    const countedCash = (d500 * 500) + (d200 * 200) + (d100 * 100) + (d50 * 50) + (d20 * 20) + (d10 * 10) + coins;
+
+    const openTime = new Date(session.openedAt).getTime();
+    const cashPaymentsInSession = payments.filter(p => {
+      if (p.isReversed || p.reversed || p.paymentMethod !== 'cash') return false;
+      const pTime = new Date(p.createdAt || p.paymentDate).getTime();
+      return pTime >= openTime;
+    });
+
+    const cashReceiptsSum = cashPaymentsInSession.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const openingFloat = Number(session.openingFloat) || 0;
+    const expectedCash = openingFloat + cashReceiptsSum;
+    const variance = countedCash - expectedCash;
+    const now = new Date().toISOString();
+
+    const updatedSession = {
+      ...session,
+      status: 'closed',
+      closedAt: now,
+      closedBy: actorEmail,
+      closingNotes: notes.trim(),
+      denominations: { d500, d200, d100, d50, d20, d10, coins },
+      countedCash,
+      cashReceiptsSum,
+      openingFloat,
+      expectedCash,
+      variance,
+      cashTransactionsCount: cashPaymentsInSession.length,
+      updatedAt: now
+    };
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await setDoc(doc(db, 'till_sessions', sessionId), updatedSession);
+      } catch (err) {
+        console.error('Firestore closeTillSession error:', err);
+      }
+    }
+
+    if (!store.tillSessions) store.tillSessions = [];
+    const idx = store.tillSessions.findIndex(s => s.id === sessionId);
+    if (idx !== -1) store.tillSessions[idx] = updatedSession;
+    else store.tillSessions.unshift(updatedSession);
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'TILL_SESSION_CLOSED',
+      entityType: 'till_session',
+      entityId: sessionId,
+      details: `Settled till drawer. Counted: ₹${countedCash}, Expected: ₹${expectedCash}, Variance: ₹${variance} (${variance === 0 ? 'Exact' : variance > 0 ? 'Surplus' : 'Deficit'}).`
+    });
+
+    return updatedSession;
+  },
+
+  async getTillSessions() {
+    if (isFirebaseConfigured() && db) {
+      try {
+        const q = query(collection(db, 'till_sessions'), orderBy('openedAt', 'desc'), limit(50));
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        }
+      } catch (err) {
+        console.warn('Firestore getTillSessions error:', err);
+      }
+    }
+    const store = await hydrateStore();
+    return store.tillSessions || [];
   },
 
   async getDashboardMetrics() {
