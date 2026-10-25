@@ -16,6 +16,8 @@ import {
   X
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
+import { paymentMethodSplit, studentsByGrade, outstandingByBatch, monthlyCollections, rupees } from '../../components/admin/chartData';
 
 export default function AdminReportsPage() {
   const [batches, setBatches] = useState([]);
@@ -321,6 +323,21 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 print:hidden">
+        <ChartCard title="Payment Methods" subtitle="Share of verified collections">
+          <DonutChart data={paymentMethodSplit(payments)} centerLabel="Collected" label="Collections by payment method" />
+        </ChartCard>
+        <ChartCard title="Students by Class" subtitle="Active roster">
+          <BarChart data={studentsByGrade(students)} label="Active students per class" />
+        </ChartCard>
+        <ChartCard title="Outstanding by Batch" subtitle="Unpaid balance per classroom">
+          <BarChart data={outstandingByBatch(obligations, batches)} format={rupees} label="Outstanding balance per batch" />
+        </ChartCard>
+        <ChartCard title="Monthly Trend" subtitle="Collections across six months">
+          <BarChart data={monthlyCollections(payments)} format={rupees} label="Collections per month" />
+        </ChartCard>
+      </div>
+
       <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-blue-900 text-xs flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
@@ -556,7 +573,6 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
-      {/* Front-Desk Cash Drawer (Till) Session Tracker & Desk Reconciliation */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
           <div>
@@ -844,7 +860,6 @@ export default function AdminReportsPage() {
           <p className="text-[10px] text-slate-400">Tamper-evident administrative reporting ledger</p>
         </div>
       </div>
-      {/* Open Till Modal */}
       {openTillModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
@@ -911,7 +926,6 @@ export default function AdminReportsPage() {
         </div>
       )}
 
-      {/* Close Till Modal */}
       {closeTillModal && activeTillSession && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
@@ -1013,7 +1027,6 @@ export default function AdminReportsPage() {
         </div>
       )}
 
-      {/* Till Closure Voucher Modal */}
       {tillVoucherModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">

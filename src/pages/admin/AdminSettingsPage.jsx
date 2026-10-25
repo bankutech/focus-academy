@@ -15,6 +15,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { getVerifiedAdminEmail } from '../../services/adminIdentity';
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState(null);
@@ -28,18 +29,7 @@ export default function AdminSettingsPage() {
   const [restoreError, setRestoreError] = useState('');
   const [restoreSuccess, setRestoreSuccess] = useState('');
 
-  const currentAdminEmail = (() => {
-    try {
-      const raw = sessionStorage.getItem('focus_academy_admin_session');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.email) return parsed.email;
-      }
-    } catch {
-      // fallback
-    }
-    return 'admin@focusacademyperambalur.com';
-  })();
+  const currentAdminEmail = getVerifiedAdminEmail() || '';
 
   const currentRole = AdminDataService.getUserRole(currentAdminEmail);
 

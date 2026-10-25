@@ -1,3 +1,4 @@
+import { setVerifiedAdmin } from '../src/services/adminIdentity';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { AdminDataService } from '../src/services/adminDataService';
 
@@ -74,12 +75,12 @@ describe('Section 19: Additional Business Requirements Verification', () => {
         amount: 500,
         paymentMethod: 'upi',
         referenceNumber: 'UPI-REC-9988'
-      }, 'fee_officer_priya');
+      }, 'coordinator@focusacademyperambalur.com');
 
-      expect(payment.recordedBy).toBe('fee_officer_priya');
+      expect(payment.recordedBy).toBe('coordinator@focusacademyperambalur.com');
 
       const logs = await AdminDataService.getAuditLogs();
-      const paymentLog = logs.find(l => l.action === 'PAYMENT_RECORDED' && l.actor === 'fee_officer_priya');
+      const paymentLog = logs.find(l => l.action === 'PAYMENT_RECORDED' && l.actor === 'coordinator@focusacademyperambalur.com');
       expect(paymentLog).toBeDefined();
     });
   });
@@ -89,7 +90,6 @@ describe('Section 19: Additional Business Requirements Verification', () => {
       const students = await AdminDataService.getStudents({ includeArchived: true });
       const student = students[0];
 
-      // Pause student
       const paused = await AdminDataService.updateStudentLifecycleStatus(
         student.id,
         'paused',
@@ -99,7 +99,6 @@ describe('Section 19: Additional Business Requirements Verification', () => {
       expect(paused.status).toBe('paused');
       expect(paused.lifecycleHistory.length).toBeGreaterThanOrEqual(1);
 
-      // Complete course
       const completed = await AdminDataService.updateStudentLifecycleStatus(
         student.id,
         'completed',
@@ -109,7 +108,6 @@ describe('Section 19: Additional Business Requirements Verification', () => {
       expect(completed.status).toBe('completed');
       expect(completed.courseEndDate).toBeDefined();
 
-      // Archive student
       const archived = await AdminDataService.updateStudentLifecycleStatus(
         student.id,
         'archived',
@@ -118,15 +116,12 @@ describe('Section 19: Additional Business Requirements Verification', () => {
       );
       expect(archived.status).toBe('archived');
 
-      // Verify archived students are excluded from active list by default
       const activeList = await AdminDataService.getStudents();
       expect(activeList.some(s => s.id === student.id)).toBe(false);
 
-      // Verify archived students are included when requested
       const fullList = await AdminDataService.getStudents({ includeArchived: true });
       expect(fullList.some(s => s.id === student.id)).toBe(true);
 
-      // Restore student
       const restored = await AdminDataService.updateStudentLifecycleStatus(
         student.id,
         'active',
@@ -151,12 +146,10 @@ describe('Section 19: Additional Business Requirements Verification', () => {
       const batchAfterEnroll = await AdminDataService.getBatchById('batch-10-state-board');
       expect(batchAfterEnroll.enrolledCount).toBe(initialEnrolled + 1);
 
-      // Pausing student should decrement enrolled count
       await AdminDataService.updateStudentLifecycleStatus(newStudent.id, 'paused', 'Temporary pause');
       const batchAfterPause = await AdminDataService.getBatchById('batch-10-state-board');
       expect(batchAfterPause.enrolledCount).toBe(initialEnrolled);
 
-      // Reactivating student should increment enrolled count
       await AdminDataService.updateStudentLifecycleStatus(newStudent.id, 'active', 'Reactivated');
       const batchAfterResume = await AdminDataService.getBatchById('batch-10-state-board');
       expect(batchAfterResume.enrolledCount).toBe(initialEnrolled + 1);
@@ -318,7 +311,6 @@ describe('Section 19: Additional Business Requirements Verification', () => {
       const originalSnapshot = await AdminDataService.createFullBackupSnapshot();
       const studentCount = originalSnapshot.data.students.length;
 
-      // Add a test student
       await AdminDataService.createStudent({
         studentName: 'Temporary Restore Student',
         guardianPhone: '9842477665',
@@ -330,7 +322,6 @@ describe('Section 19: Additional Business Requirements Verification', () => {
       const studentsAfterAdd = await AdminDataService.getStudents();
       expect(studentsAfterAdd.length).toBe(studentCount + 1);
 
-      // Restore from original snapshot
       const restoreResult = await AdminDataService.restoreFromBackupSnapshot(originalSnapshot, 'director');
       expect(restoreResult.success).toBe(true);
 
@@ -387,22 +378,22 @@ CSV Import Test Student,A. Guardian,9842433333,Class 10,TN State Board (Samachee
 
   describe('H. Role & Permission Management (RBAC)', () => {
     it('verifies owner, administrator, and fee_manager permission boundaries', async () => {
-      expect(AdminDataService.hasPermission('owner', 'MANAGE_SETTINGS')).toBe(true);
-      expect(AdminDataService.hasPermission('owner', 'BACKUP_RESTORE')).toBe(true);
-      expect(AdminDataService.hasPermission('administrator', 'MANAGE_SETTINGS')).toBe(true);
-      expect(AdminDataService.hasPermission('administrator', 'BACKUP_RESTORE')).toBe(false);
-      expect(AdminDataService.hasPermission('fee_manager', 'MANAGE_FEES')).toBe(true);
-      expect(AdminDataService.hasPermission('fee_manager', 'DELETE_BATCH')).toBe(false);
-      expect(AdminDataService.hasPermission('fee_manager', 'MANAGE_SETTINGS')).toBe(false);
+      expect(AdminDataService.hasPermission('director@focusacademyperambalur.com', 'MANAGE_SETTINGS')).toBe(true);
+      expect(AdminDataService.hasPermission('director@focusacademyperambalur.com', 'BACKUP_RESTORE')).toBe(true);
+      expect(AdminDataService.hasPermission('principal@focusacademyperambalur.com', 'MANAGE_SETTINGS')).toBe(true);
+      expect(AdminDataService.hasPermission('principal@focusacademyperambalur.com', 'BACKUP_RESTORE')).toBe(false);
+      expect(AdminDataService.hasPermission('coordinator@focusacademyperambalur.com', 'MANAGE_FEES')).toBe(true);
+      expect(AdminDataService.hasPermission('coordinator@focusacademyperambalur.com', 'DELETE_BATCH')).toBe(false);
+      expect(AdminDataService.hasPermission('coordinator@focusacademyperambalur.com', 'MANAGE_SETTINGS')).toBe(false);
     });
 
     it('throws unauthorized error when user lacks required permission', () => {
       expect(() => {
-        AdminDataService.verifyPermission('fee_manager', 'MANAGE_SETTINGS');
+        AdminDataService.verifyPermission('coordinator@focusacademyperambalur.com', 'MANAGE_SETTINGS');
       }).toThrow(/Unauthorized/i);
 
       expect(() => {
-        AdminDataService.verifyPermission('administrator', 'MANAGE_SETTINGS');
+        AdminDataService.verifyPermission('principal@focusacademyperambalur.com', 'MANAGE_SETTINGS');
       }).not.toThrow();
     });
 
@@ -462,7 +453,6 @@ CSV Import Test Student,A. Guardian,9842433333,Class 10,TN State Board (Samachee
       const initialBalance = obl.balance;
       const refNum = 'IDEMPOTENT-REF-001';
 
-      // First payment
       const p1 = await AdminDataService.recordPayment({
         studentId: obl.studentId,
         obligationId: obl.id,
@@ -476,7 +466,6 @@ CSV Import Test Student,A. Guardian,9842433333,Class 10,TN State Board (Samachee
       const oblAfterFirst = (await AdminDataService.getFeeObligations()).find(o => o.id === obl.id);
       expect(oblAfterFirst.balance).toBe(initialBalance - 500);
 
-      // Duplicate submission with same referenceNumber must return existing payment idempotently
       const p2 = await AdminDataService.recordPayment({
         studentId: obl.studentId,
         obligationId: obl.id,
@@ -488,7 +477,6 @@ CSV Import Test Student,A. Guardian,9842433333,Class 10,TN State Board (Samachee
       expect(p2.id).toBe(p1.id);
       expect(p2.receiptNumber).toBe(p1.receiptNumber);
 
-      // Verify balance did NOT decrement a second time
       const oblAfterSecond = (await AdminDataService.getFeeObligations()).find(o => o.id === obl.id);
       expect(oblAfterSecond.balance).toBe(initialBalance - 500);
     });
@@ -543,12 +531,10 @@ CSV Import Test Student,A. Guardian,9842433333,Class 10,TN State Board (Samachee
     });
 
     it('detects cumulative batch 12-seat capacity overflow across multiple CSV rows during preflight', async () => {
-      // Find a batch and inspect remaining seats
       const batch = await AdminDataService.getBatchById('batch-10-cbse');
       const seatsLeft = 12 - batch.enrolledCount;
       expect(seatsLeft).toBeGreaterThan(0);
 
-      // Create CSV with seatsLeft + 1 rows targeting the same batch
       const rows = [];
       rows.push('studentName,guardianName,guardianPhone,grade,board,batchId,amountPerCycle');
       for (let i = 0; i < seatsLeft + 1; i++) {
@@ -606,15 +592,23 @@ Test NonExistent,Parent,9842411999,Class 10,CBSE Board,non-existent-batch-id-xyz
       ).rejects.toThrow(/Unauthorized/i);
     });
 
-    it('attributes actor to active browser session storage when actor is omitted', () => {
+    it('resolves the actor from the verified identity, never from browser storage', () => {
       sessionStorage.setItem('focus_academy_admin_session', JSON.stringify({
         email: 'director@focusacademyperambalur.com'
       }));
+      setVerifiedAdmin(null);
 
-      const role = AdminDataService.getUserRole('admin');
-      expect(role).toBe('owner');
+      expect(() => AdminDataService.getUserRole('admin')).toThrow(/Authentication required/);
+
+      setVerifiedAdmin({ email: 'principal@focusacademyperambalur.com' });
+      expect(AdminDataService.getUserRole('admin')).toBe('administrator');
 
       sessionStorage.removeItem('focus_academy_admin_session');
+    });
+
+    it('never grants a role from words inside an actor string', () => {
+      expect(AdminDataService.getUserRole('super_admin_owner@evil.test')).toBe('viewer');
+      expect(AdminDataService.hasPermission('owner@evil.test', 'MANAGE_SETTINGS')).toBe(false);
     });
   });
 });

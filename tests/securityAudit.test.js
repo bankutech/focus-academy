@@ -1,4 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { createFakeServices } from './helpers/fakeFirestore.js';
+
+const holder = vi.hoisted(() => ({ current: null }));
+vi.mock('../api/_lib/firebaseAdmin.js', () => ({ getServices: () => holder.current?.services || null }));
+
 import sessionHandler from '../api/session.js';
 import leadsHandler from '../api/leads.js';
 import batchesHandler from '../api/batches.js';
@@ -28,7 +33,37 @@ function createMockRes() {
   return res;
 }
 
+let fake;
+
 describe('Security & Authorization Hardening Audit Tests', () => {
+  beforeEach(() => {
+    process.env.SESSION_SECRET = 'k'.repeat(48);
+    fake = createFakeServices();
+    holder.current = fake;
+
+    fake.seed('academy_settings', 'main_config', {
+      authorizedAdmins: [
+        { email: 'coordinator@focusacademyperambalur.com', role: 'fee_manager', active: true },
+      ],
+    });
+    fake.addAccount('admin-token', { uid: 'admin-1', email: 'coordinator@focusacademyperambalur.com', email_verified: true });
+
+    fake.seed('batches', 'batch-10-state-board', {
+      id: 'batch-10-state-board',
+      name: 'Class 10 State Board',
+      grade: 'Class 10',
+      board: 'TN State Board (Samacheer)',
+      capacity: 12,
+      enrolledCount: 8,
+      isArchived: false,
+    });
+  });
+
+  afterEach(() => {
+    delete process.env.SESSION_SECRET;
+    holder.current = null;
+  });
+
   it('enforces nosniff and strict content type headers across serverless endpoints', async () => {
     const res = createMockRes();
     const req = {
@@ -131,66 +166,139 @@ describe('Security & Authorization Hardening Audit Tests', () => {
     const mintReq = {
       method: 'POST',
       headers: { 'x-forwarded-for': '192.168.1.150' },
-      body: { step: 3, phone: '9842451220', studentName: 'S. Kaviya' }
+      body: { step: 2, phone: '9842451220', studentName: 'S. Kaviya', grade: 'Class 10', board: 'TN State Board (Samacheer)' }
     };
     await sessionHandler(mintReq, mintRes);
     expect(mintRes.statusCode).toBe(200);
     const validToken = mintRes.body.token;
 
-    const verifyRes = createMockRes();
-    const verifyReq = {
-      method: 'GET',
+    // Tampered token signature passed to seat reservation endpoint (/api/batches)
+    const tamperedRes = createMockRes();
+    const tamperedReq = {
+      method: 'POST',
       headers: { 'x-forwarded-for': '192.168.1.151' },
-      query: { token: validToken, step: 3, phone: '9842451220', studentName: 'Imposter' }
+      body: {
+        batchId: 'batch-10-state-board',
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        stepToken: `${validToken.slice(0, -4)}0000`
+      }
     };
-    await sessionHandler(verifyReq, verifyRes);
-    expect(verifyRes.statusCode).toBe(401);
-    expect(verifyRes.body.valid).toBe(false);
+    await batchesHandler(tamperedReq, tamperedRes);
+    expect(tamperedRes.statusCode).toBe(401);
+    expect(tamperedRes.body.success).toBe(false);
+
+    // Completely forged step-4 token passed to leads endpoint (/api/leads)
+    const forgedRes = createMockRes();
+    const forgedReq = {
+      method: 'POST',
+      headers: { 'x-forwarded-for': '192.168.1.152' },
+      body: {
+        batchId: 'batch-10-state-board',
+        reservationId: 'RES-123456',
+        studentName: 'Imposter',
+        phone: '9842451220',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        stepToken: 'v2.APP-FORGED.4.9999999999999.deadbeefdeadbeef'
+      }
+    };
+    await leadsHandler(forgedReq, forgedRes);
+    expect(forgedRes.statusCode).toBe(401);
+    expect(forgedRes.body.success).toBe(false);
   });
 
   describe('WhatsApp Serverless Endpoint (/api/whatsapp) Audit', () => {
-    it('returns gateway operational status and security headers via GET', async () => {
+    it('rejects unauthorized callers without admin credentials with HTTP 401', async () => {
+      const anonRes = createMockRes();
+      const anonReq = {
+        method: 'GET',
+        headers: { 'x-forwarded-for': '192.168.1.160' }
+      };
+      await whatsappHandler(anonReq, anonRes);
+      expect(anonRes.statusCode).toBe(401);
+      expect(anonRes.body.success).toBe(false);
+
+      const unverifiedRes = createMockRes();
+      const unverifiedReq = {
+        method: 'GET',
+        headers: {
+          authorization: 'Bearer bad-token',
+          'x-forwarded-for': '192.168.1.160'
+        }
+      };
+      await whatsappHandler(unverifiedReq, unverifiedRes);
+      expect(unverifiedRes.statusCode).toBe(401);
+    });
+
+    it('returns gateway operational status and security headers via authenticated GET', async () => {
       const res = createMockRes();
       const req = {
         method: 'GET',
-        headers: { 'x-forwarded-for': '192.168.1.160' }
+        headers: {
+          authorization: 'Bearer admin-token',
+          'x-forwarded-for': '192.168.1.160'
+        }
       };
       await whatsappHandler(req, res);
       expect(res.statusCode).toBe(200);
       expect(res.headers['X-Content-Type-Options']).toBe('nosniff');
       expect(res.body.success).toBe(true);
-      expect(res.body.service).toContain('WhatsApp');
       expect(res.body.deliveryChannel).toBe('manual_click_to_chat_fallback');
     });
 
-    it('rejects invalid recipient mobile number with HTTP 400', async () => {
-      const res = createMockRes();
-      const req = {
+    it('rejects missing or invalid fee obligations with HTTP 400 and HTTP 404', async () => {
+      const badReqRes = createMockRes();
+      const badReq = {
         method: 'POST',
-        headers: { 'x-forwarded-for': '192.168.1.161' },
-        body: {
-          studentName: 'S. Kaviya',
-          phone: '12345',
-          amount: 3200,
-          dueDate: '2026-11-05'
-        }
+        headers: {
+          authorization: 'Bearer admin-token',
+          'x-forwarded-for': '192.168.1.161'
+        },
+        body: {}
       };
-      await whatsappHandler(req, res);
-      expect(res.statusCode).toBe(400);
-      expect(res.body.success).toBe(false);
-      expect(res.body.error).toContain('10 digits');
+      await whatsappHandler(badReq, badReqRes);
+      expect(badReqRes.statusCode).toBe(400);
+      expect(badReqRes.body.success).toBe(false);
+      expect(badReqRes.body.error).toContain('obligationId is required');
+
+      const notFoundRes = createMockRes();
+      const notFoundReq = {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer admin-token',
+          'x-forwarded-for': '192.168.1.161'
+        },
+        body: { obligationId: 'NONEXISTENT-OBL' }
+      };
+      await whatsappHandler(notFoundReq, notFoundRes);
+      expect(notFoundRes.statusCode).toBe(404);
+      expect(notFoundRes.body.success).toBe(false);
     });
 
     it('returns structured manual fallback with RFC-encoded link when Cloud API unconfigured', async () => {
+      fake.seed('students', 'STU-100', { studentName: 'S. Kaviya', guardianPhone: '9842451220' });
+      fake.seed('fee_obligations', 'OBL-100', {
+        studentId: 'STU-100',
+        studentName: 'S. Kaviya',
+        amountDue: 3200,
+        amountPaid: 0,
+        waivedAmount: 0,
+        dueDate: '2026-11-05',
+        status: 'pending'
+      });
+
       const res = createMockRes();
       const req = {
         method: 'POST',
-        headers: { 'x-forwarded-for': '192.168.1.162' },
+        headers: {
+          authorization: 'Bearer admin-token',
+          'x-forwarded-for': '192.168.1.162'
+        },
         body: {
-          studentName: 'S. Kaviya',
-          phone: '9842451220',
-          amount: 3200,
-          dueDate: '2026-11-05',
+          obligationId: 'OBL-100',
           reminderType: 'upcoming'
         }
       };
@@ -201,23 +309,23 @@ describe('Security & Authorization Hardening Audit Tests', () => {
       expect(res.body.automated).toBe(false);
       expect(res.body.clickToChatUrl).toContain('https://wa.me/919842451220');
       expect(res.body.clickToChatUrl).toContain('Focus%20Academy');
-      expect(res.body.payload.amount).toBe(3200);
+      expect(res.body.message).toContain('₹3200');
     });
 
-    it('enforces rate limiting on WhatsApp endpoint returning HTTP 429 after 20 attempts', async () => {
+    it('enforces rate limiting on WhatsApp endpoint returning HTTP 429 after burst attempts', async () => {
       const burstIp = '10.0.0.77';
       let rateLimited = false;
 
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < 35; i++) {
         const res = createMockRes();
         const req = {
           method: 'POST',
-          headers: { 'x-forwarded-for': burstIp },
+          headers: {
+            authorization: 'Bearer admin-token',
+            'x-forwarded-for': burstIp
+          },
           body: {
-            studentName: `Student ${i}`,
-            phone: '9842451220',
-            amount: 2500,
-            dueDate: '2026-11-05'
+            obligationId: `OBL-${i}`
           }
         };
         await whatsappHandler(req, res);

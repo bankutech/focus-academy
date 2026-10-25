@@ -6,12 +6,17 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function hasVerifiedEmail() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+
     function isOwner() {
       return isAuthenticated() && (
         request.auth.token.role == 'owner' ||
-        (request.auth.token.email != null && request.auth.token.email.lower() in [
+        (hasVerifiedEmail() && request.auth.token.email != null && request.auth.token.email.lower() in [
           'admin@focusacademyperambalur.com',
-          'director@focusacademyperambalur.com'
+          'director@focusacademyperambalur.com',
+          'sagnikmitra1302@gmail.com'
         ])
       );
     }
@@ -21,7 +26,7 @@ service cloud.firestore {
         isAuthenticated() && (
           request.auth.token.admin == true ||
           request.auth.token.role in ['admin', 'administrator'] ||
-          (request.auth.token.email != null && request.auth.token.email.lower() in [
+          (hasVerifiedEmail() && request.auth.token.email != null && request.auth.token.email.lower() in [
             'principal@focusacademyperambalur.com',
             'focusacademy.perambalur@gmail.com'
           ])
@@ -33,7 +38,7 @@ service cloud.firestore {
       return isAdministrator() || (
         isAuthenticated() && (
           request.auth.token.role == 'fee_manager' ||
-          (request.auth.token.email != null && request.auth.token.email.lower() in [
+          (hasVerifiedEmail() && request.auth.token.email != null && request.auth.token.email.lower() in [
             'coordinator@focusacademyperambalur.com'
           ])
         )
@@ -44,61 +49,68 @@ service cloud.firestore {
       return isFeeManager();
     }
 
-    function isValidLead(data) {
-      return data.keys().hasAll(['studentName', 'phone']) &&
-        data.studentName is string &&
-        data.studentName.size() >= 2 &&
-        data.studentName.size() <= 100 &&
-        data.phone is string &&
-        data.phone.size() >= 10 &&
-        data.phone.size() <= 15;
-    }
-
-    // Batches: Public can read curriculum, schedules, and capacity; only admins can modify
     match /batches/{batchId} {
       allow read: if true;
       allow write: if isAdministrator();
     }
 
-    // Students: Private administrative records
     match /students/{studentId} {
-      allow read, write: if isAdministrator();
+      allow read, create, update: if isAdministrator();
+      allow delete: if false;
     }
 
-    // Fee Obligations: Sensitive financial schedules
     match /fee_obligations/{obligationId} {
       allow read, write: if isFeeManager();
     }
 
-    // Payments: Verified receipt & transaction ledger
     match /payments/{paymentId} {
-      allow read, write: if isFeeManager();
+      allow read: if isFeeManager();
+      allow create: if isFeeManager()
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.keys().hasAll(['id', 'receiptNumber', 'obligationId', 'studentId', 'amount', 'recordedBy']);
+      allow update: if isFeeManager()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isReversed', 'reversed', 'reversalReason', 'reversedBy', 'reversedAt']);
+      allow delete: if false;
     }
 
-    // Reminders: Automated and manual WhatsApp log records
     match /reminders/{reminderId} {
       allow read, write: if isFeeManager();
     }
 
-    // Audit Logs: Append-only, immutable tamper-evident log
     match /audit_logs/{logId} {
       allow read: if isAdministrator();
       allow create: if isFeeManager();
       allow update, delete: if false;
     }
 
-    // Leads: Prospective admissions submitted by parents / students
     match /leads/{leadId} {
-      allow create: if isValidLead(request.resource.data);
-      allow read, update, delete: if isAdministrator();
+      allow create: if false;
+      allow read, update: if isAdministrator();
+      allow delete: if false;
     }
 
-    // Academy Settings: System configuration & policies restricted to administrators
+    match /counters/{counterId} {
+      allow read: if isFeeManager();
+      allow create: if isFeeManager() && request.resource.data.value == 1;
+      allow update: if isFeeManager() && request.resource.data.value == resource.data.value + 1;
+      allow delete: if false;
+    }
+
+    match /payment_refs/{refId} {
+      allow read, create, delete: if isFeeManager();
+      allow update: if false;
+    }
+
+    match /till_sessions/{sessionId} {
+      allow read, create, update: if isFeeManager();
+      allow delete: if false;
+    }
+
     match /academy_settings/{settingId} {
       allow read, write: if isAdministrator();
     }
 
-    // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;
     }

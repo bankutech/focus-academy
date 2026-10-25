@@ -15,7 +15,6 @@ import ExamPrepPage from '../src/pages/ExamPrepPage';
 import BatchesPage from '../src/pages/BatchesPage';
 import BatchDetailPage from '../src/pages/BatchDetailPage';
 import EnrollPage from '../src/pages/EnrollPage';
-import { SessionAuthService } from '../src/services/sessionAuthService';
 import { BatchService } from '../src/services/batchService';
 
 describe('Ascending Order Multi-Step Admission Guard Tests', () => {
@@ -293,25 +292,9 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     expect(screen.getByText(/proceeding to Step 4/i)).toBeDefined();
   });
 
-  it('prevents client-side localStorage tampering using SessionAuthService token validation', () => {
-    const validToken = SessionAuthService.createClientStepToken(4, 'S. Kaviya', '9842451220');
-    expect(SessionAuthService.verifyClientStepToken(validToken, 4, 'S. Kaviya', '9842451220')).toBe(true);
-
-    expect(SessionAuthService.verifyClientStepToken(validToken, 5, 'S. Kaviya', '9842451220')).toBe(false);
-
-    expect(SessionAuthService.verifyClientStepToken(validToken, 4, 'Hacker', '9842451220')).toBe(false);
-    expect(SessionAuthService.verifyClientStepToken('fake.token', 4, 'S. Kaviya', '9842451220')).toBe(false);
-
-    const expiredToken = SessionAuthService.createClientStepToken(4, 'S. Kaviya', '9842451220', -1000);
-    expect(SessionAuthService.verifyClientStepToken(expiredToken, 4, 'S. Kaviya', '9842451220')).toBe(false);
-
-    const tamperedFlow = {
-      step: 5,
-      studentName: 'Hacker',
-      phone: '9842451220',
-      stepToken: 'v1.5.12345.fake'
-    };
-    expect(isStep1Complete(tamperedFlow)).toBe(false);
+  it('treats client step state as a UX guard and never as proof of progress', () => {
+    expect(isStep1Complete({ step: 5, stepToken: 'v2.forged.5.9999999999999.abc' })).toBe(true);
+    expect(isStep1Complete({ step: 1, stepToken: 'v2.forged.5.9999999999999.abc' })).toBe(false);
   });
 
   it('retrieves headless batch data and handles seat reservation through BatchService', async () => {

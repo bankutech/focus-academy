@@ -22,7 +22,7 @@ const getNowIsoString = () => new Date().toISOString();
 export default function EnrollPage() {
   const { batchId } = useParams();
   const navigate = useNavigate();
-  const { studentFlow, setStudentFlow, registerStudent } = useStudentFlow();
+  const { studentFlow, setStudentFlow, registerStudent, ensureVerifiedSession } = useStudentFlow();
 
   const candidateBatch = BATCHES_DATA.find((b) => b.id === batchId) ||
     BATCHES_DATA.find((b) => b.id === studentFlow.selectedBatchId);
@@ -77,11 +77,24 @@ export default function EnrollPage() {
 
     setIsSubmitting(true);
 
+    let session;
+    try {
+      session = await ensureVerifiedSession(4);
+    } catch (err) {
+      setIsSubmitting(false);
+      setSubmissionResult({
+        success: false,
+        error: err.message || 'We could not verify your admission progress. Please check your connection and try again.',
+      });
+      return;
+    }
+
     const reservation = await BatchService.reserveSeatWithDetails(selectedBatch.id, {
       studentName: studentName.trim(),
       phone: validation.sanitized,
       grade: studentFlow.grade || selectedBatch.grade,
-      board
+      board,
+      stepToken: session.stepToken
     });
     if (!reservation.success) {
       setIsSubmitting(false);
@@ -105,7 +118,7 @@ export default function EnrollPage() {
       monthlyFee: selectedBatch.monthlyFee,
       startDatePreference,
       studentWeakness: studentWeakness.trim(),
-      reservationId: reservation.reservationId || 'RES-CONFIRMED',
+      reservationId: reservation.reservationId,
       createdAt: getNowIsoString(),
     };
 
@@ -119,6 +132,7 @@ export default function EnrollPage() {
       board: enrollmentRecord.board,
       batchId: selectedBatch.id,
       reservationId: enrollmentRecord.reservationId,
+      stepToken: session.stepToken,
       timing: selectedBatch.timing,
       subjects: selectedBatch.name,
       notes: `Admission Slip ID: ${saved.id} | Batch: ${selectedBatch.name} (${selectedBatch.timing}) | School: ${enrollmentRecord.schoolName || 'N/A'} | Start: ${startDatePreference} | Challenges: ${enrollmentRecord.studentWeakness || 'None'}`,

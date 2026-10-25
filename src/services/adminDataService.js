@@ -1,5 +1,6 @@
 import { isBatchCompatible } from '../types/schemas';
-import { db, isFirebaseConfigured, getAdminAllowlist } from './firebase';
+import { db, isFirebaseConfigured } from './firebase';
+import { getVerifiedAdminEmail, subscribeVerifiedAdmin } from './adminIdentity';
 import { 
   collection, 
   doc, 
@@ -11,6 +12,7 @@ import {
   where, 
   orderBy,
   writeBatch,
+  runTransaction,
   limit 
 } from 'firebase/firestore';
 
@@ -517,94 +519,104 @@ const SEED_AUDIT_LOGS = [
   }
 ];
 
-function getSessionAdminEmail() {
-  if (typeof window !== 'undefined' && window.sessionStorage) {
-    try {
-      const raw = window.sessionStorage.getItem('focus_academy_admin_session');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed?.email) return parsed.email.toLowerCase().trim();
-      }
-    } catch {}
-  }
-  return null;
+function normalizeActorEmail(actor) {
+  const candidate = actor && typeof actor === 'object' ? actor.email : actor;
+  const text = String(candidate || '').toLowerCase().trim();
+  if (!isFirebaseConfigured() && text.includes('@')) return text;
+  const verified = getVerifiedAdminEmail();
+  if (verified) return verified;
+  throw new Error('Authentication required: sign in with an authorized administrator account.');
 }
 
-function normalizeActorEmail(actor) {
-  if (!actor) {
-    const sessionEmail = getSessionAdminEmail();
-    return sessionEmail || 'admin@focusacademyperambalur.com';
-  }
-  if (typeof actor === 'object') {
-    return (actor.email || getSessionAdminEmail() || 'admin@focusacademyperambalur.com').toLowerCase().trim();
-  }
-  const str = String(actor).toLowerCase().trim();
-  if (str === 'admin') {
-    const sessionEmail = getSessionAdminEmail();
-    return sessionEmail || 'admin@focusacademyperambalur.com';
-  }
-  if (str === 'director') return 'director@focusacademyperambalur.com';
-  if (str === 'principal') return 'principal@focusacademyperambalur.com';
-  if (str === 'coordinator') return 'coordinator@focusacademyperambalur.com';
-  if (str === 'owner') return 'director@focusacademyperambalur.com';
-  return str;
-}
+const seedStore = () => ({
+  batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
+  students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
+  obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
+  payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
+  reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
+  auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
+  settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
+  tillSessions: []
+});
+
+const emptyStore = () => ({
+  batches: [],
+  students: [],
+  obligations: [],
+  payments: [],
+  reminders: [],
+  auditLogs: [],
+  settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
+  tillSessions: []
+});
+
+const uid = (prefix) => {
+  const random = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()
+    : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`.toUpperCase();
+  return `${prefix}-${random}`;
+};
+
+const buildAudit = ({ actor, action, entityType, entityId, details }) => ({
+  id: uid('LOG'),
+  timestamp: new Date().toISOString(),
+  actor,
+  action,
+  entityType,
+  entityId,
+  details
+});
+
+const isLive = () => isFirebaseConfigured() && Boolean(db);
+
+let sessionCache = null;
+
+subscribeVerifiedAdmin((admin) => {
+  if (!admin) sessionCache = null;
+});
+
+export const dataUnavailable = (err) => {
+  console.error('Firestore request failed:', err);
+  const error = new Error('The database could not be reached. Nothing was changed. Please check your connection and try again.');
+  error.code = 'data-unavailable';
+  return error;
+};
 
 function loadLocalStore() {
-  if (typeof window === 'undefined') {
-    return {
-      batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
-      students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
-      obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
-      payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
-      reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
-      auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-      settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
-      tillSessions: []
-    };
+  if (isLive()) {
+    if (!sessionCache) sessionCache = typeof window !== 'undefined' && window.__E2E_SEED__ ? seedStore() : emptyStore();
+    return sessionCache;
   }
+  if (typeof window === 'undefined') return seedStore();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const initial = {
-        batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
-        students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
-        obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
-        payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
-        reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
-        auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-        settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
-        tillSessions: []
-      };
+      const initial = seedStore();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
     const parsed = JSON.parse(raw);
+    const seed = seedStore();
     return {
-      batches: parsed.batches || JSON.parse(JSON.stringify(SEED_BATCHES)),
-      students: parsed.students || JSON.parse(JSON.stringify(SEED_STUDENTS)),
-      obligations: parsed.obligations || JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
-      payments: parsed.payments || JSON.parse(JSON.stringify(SEED_PAYMENTS)),
-      reminders: parsed.reminders || JSON.parse(JSON.stringify(SEED_REMINDERS)),
-      auditLogs: parsed.auditLogs || JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-      settings: parsed.settings || JSON.parse(JSON.stringify(SEED_SETTINGS)),
+      batches: parsed.batches || seed.batches,
+      students: parsed.students || seed.students,
+      obligations: parsed.obligations || seed.obligations,
+      payments: parsed.payments || seed.payments,
+      reminders: parsed.reminders || seed.reminders,
+      auditLogs: parsed.auditLogs || seed.auditLogs,
+      settings: parsed.settings || seed.settings,
       tillSessions: parsed.tillSessions || []
     };
   } catch {
-    return {
-      batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
-      students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
-      obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
-      payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
-      reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
-      auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-      settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
-      tillSessions: []
-    };
+    return seedStore();
   }
 }
 
 function saveLocalStore(data) {
+  if (isLive()) {
+    sessionCache = data;
+    return;
+  }
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -613,43 +625,57 @@ function saveLocalStore(data) {
   }
 }
 
+const HYDRATED_COLLECTIONS = {
+  batches: 'batches',
+  students: 'students',
+  obligations: 'fee_obligations',
+  payments: 'payments',
+  reminders: 'reminders',
+  tillSessions: 'till_sessions'
+};
+
+async function hydrateStore() {
+  if (!isLive()) return loadLocalStore();
+  try {
+    const entries = await Promise.all(
+      Object.entries(HYDRATED_COLLECTIONS).map(async ([key, name]) => {
+        const snap = await Promise.race([
+          getDocs(collection(db, name)),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 10000))
+        ]);
+        return [key, snap.docs.map((d) => d.data())];
+      })
+    );
+    const store = loadLocalStore();
+    entries.forEach(([key, rows]) => {
+      if (rows && rows.length > 0) {
+        store[key] = rows;
+      }
+    });
+    saveLocalStore(store);
+    return store;
+  } catch (err) {
+    console.warn('Firestore hydrate unavailable, using verified local store:', err);
+    return loadLocalStore();
+  }
+}
+
 export const AdminDataService = {
   resetToSeedData() {
-    const seed = {
-      batches: JSON.parse(JSON.stringify(SEED_BATCHES)),
-      students: JSON.parse(JSON.stringify(SEED_STUDENTS)),
-      obligations: JSON.parse(JSON.stringify(SEED_OBLIGATIONS)),
-      payments: JSON.parse(JSON.stringify(SEED_PAYMENTS)),
-      reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
-      auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
-      settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
-      tillSessions: []
-    };
+    if (isLive()) {
+      throw new Error('Sample data can only be loaded in a development environment.');
+    }
+    const seed = seedStore();
     saveLocalStore(seed);
     return seed;
   },
 
   getUserRole(actor) {
-    if (['owner', 'administrator', 'fee_manager', 'viewer'].includes(actor)) {
-      return actor;
-    }
     const email = normalizeActorEmail(actor);
     const settings = this.getSettingsSync();
     const admins = settings.authorizedAdmins || SEED_SETTINGS.authorizedAdmins;
-    const match = admins.find(a => a.email.toLowerCase() === email);
-    if (match) return match.role;
-    const allowlist = getAdminAllowlist().map(e => e.toLowerCase());
-    if (allowlist.includes(email)) return 'administrator';
-    if (typeof actor === 'string') {
-      const lower = actor.toLowerCase();
-      if (lower.includes('admin') || lower.includes('director') || lower.includes('principal') || lower.includes('owner')) {
-        return 'administrator';
-      }
-      if (lower.includes('fee') || lower.includes('officer') || lower.includes('billing') || lower.includes('coordinator')) {
-        return 'fee_manager';
-      }
-    }
-    return 'viewer';
+    const match = admins.find((a) => a.active !== false && a.email.toLowerCase() === email);
+    return match ? match.role : 'viewer';
   },
 
   hasPermission(actor, permission) {
@@ -688,7 +714,7 @@ export const AdminDataService = {
     }
   },
 
-  async withFirestoreTimeout(promise, ms = 800) {
+  async withFirestoreTimeout(promise, ms = 8000) {
     let timer;
     const timeoutPromise = new Promise((_, reject) => {
       timer = setTimeout(() => reject(new Error('Firestore timeout')), ms);
@@ -708,23 +734,23 @@ export const AdminDataService = {
   async getSettings() {
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'academy_settings')), 800);
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'academy_settings')), 8000);
         if (snap && !snap.empty) {
           const docData = snap.docs[0].data();
           return { ...SEED_SETTINGS, ...docData };
         }
       } catch (err) {
-        console.warn('Firestore getSettings unavailable, using verified local store:', err.message);
+        console.warn('Firestore getSettings unavailable, using verified local store:', err);
       }
     }
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     return store.settings || { ...SEED_SETTINGS };
   },
 
   async updateSettings(updates, actor = 'admin') {
     this.verifyPermission(actor, 'canManageSettings', 'updating academy institutional settings');
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const current = store.settings || { ...SEED_SETTINGS };
     const updated = {
       ...current,
@@ -769,7 +795,7 @@ export const AdminDataService = {
     }
 
     const cleanEmail = email.toLowerCase().trim();
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const settings = store.settings || { ...SEED_SETTINGS };
     const admins = settings.authorizedAdmins ? [...settings.authorizedAdmins] : [...SEED_SETTINGS.authorizedAdmins];
 
@@ -807,7 +833,7 @@ export const AdminDataService = {
 
   async logAudit({ actor = 'admin', action, entityType, entityId, details }) {
     const entry = {
-      id: `LOG-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+      id: uid('LOG'),
       timestamp: new Date().toISOString(),
       actor: normalizeActorEmail(actor),
       action,
@@ -835,26 +861,26 @@ export const AdminDataService = {
     if (isFirebaseConfigured() && db) {
       try {
         const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(limitCount));
-        const snap = await this.withFirestoreTimeout(getDocs(q), 800);
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
         if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getAuditLogs unavailable, using verified local store:', err.message);
+        console.warn('Firestore getAuditLogs unavailable, using verified local store:', err);
       }
     }
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     return store.auditLogs.slice(0, limitCount);
   },
 
   async getBatches() {
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'batches')), 800);
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'batches')), 8000);
         if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getBatches unavailable, using verified local store:', err.message);
+        console.warn('Firestore getBatches unavailable, using verified local store:', err);
       }
     }
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     return store.batches;
   },
 
@@ -903,7 +929,7 @@ export const AdminDataService = {
       }
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     store.batches.push(newBatch);
     saveLocalStore(store);
 
@@ -920,7 +946,7 @@ export const AdminDataService = {
 
   async updateBatch(batchId, updates, actor = 'admin') {
     this.verifyPermission(actor, 'canManageBatches', 'updating batch');
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const idx = store.batches.findIndex(b => b.id === batchId);
     if (idx === -1) {
       throw new Error(`Batch not found with ID: ${batchId}`);
@@ -997,7 +1023,7 @@ export const AdminDataService = {
       }
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     store.batches = store.batches.filter(b => b.id !== batchId);
     saveLocalStore(store);
 
@@ -1016,14 +1042,14 @@ export const AdminDataService = {
     let list;
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'students')), 800);
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'students')), 8000);
         if (snap && !snap.empty) list = snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getStudents unavailable, using verified local store:', err.message);
+        console.warn('Firestore getStudents unavailable, using verified local store:', err);
       }
     }
     if (!list) {
-      const store = loadLocalStore();
+      const store = await hydrateStore();
       list = store.students;
     }
 
@@ -1131,7 +1157,7 @@ export const AdminDataService = {
       throw new Error('Please enter a valid 10-digit Indian guardian phone number.');
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const nextNum = store.students.length + 1;
     const cleanId = studentData.id || `FA-2026-${String(nextNum).padStart(3, '0')}`;
 
@@ -1209,7 +1235,7 @@ export const AdminDataService = {
 
   async updateStudent(studentId, updates, actor = 'admin') {
     this.verifyPermission(actor, 'canManageStudents', 'updating student record');
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const idx = store.students.findIndex(s => s.id === studentId);
     if (idx === -1) {
       throw new Error(`Student not found with ID: ${studentId}`);
@@ -1269,7 +1295,7 @@ export const AdminDataService = {
       throw new Error(`Invalid lifecycle status '${status}'. Must be one of: ${validStatuses.join(', ')}.`);
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const sIdx = store.students.findIndex(s => s.id === studentId);
     if (sIdx === -1) {
       throw new Error(`Student not found with ID: ${studentId}`);
@@ -1373,7 +1399,7 @@ export const AdminDataService = {
     const oldBatchId = student.batchId;
     const oldBatchName = student.batchName;
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
 
     const oldBIdx = store.batches.findIndex(b => b.id === oldBatchId);
     if (oldBIdx !== -1) {
@@ -1458,7 +1484,7 @@ export const AdminDataService = {
       throw new Error(`Invalid discount type '${discountType}'. Allowed types: ${validTypes.join(', ')}.`);
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const sIdx = store.students.findIndex(s => s.id === studentId);
     if (sIdx === -1) {
       throw new Error(`Student not found: ${studentId}`);
@@ -1536,7 +1562,7 @@ export const AdminDataService = {
 
   async updateNotificationPreferences(studentId, { communicationConsent, preferredChannel, remindersDisabled, reminderDisabledReason, reminderTimingDays }, actor = 'admin') {
     this.verifyPermission(actor, 'canManageStudents', 'updating notification preferences');
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const sIdx = store.students.findIndex(s => s.id === studentId);
     if (sIdx === -1) throw new Error(`Student not found: ${studentId}`);
 
@@ -1572,13 +1598,13 @@ export const AdminDataService = {
         } else {
           q = collection(db, 'fee_obligations');
         }
-        const snap = await this.withFirestoreTimeout(getDocs(q), 800);
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
         if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getFeeObligations unavailable, using verified local store:', err.message);
+        console.warn('Firestore getFeeObligations unavailable, using verified local store:', err);
       }
     }
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const obligations = store.obligations.map(obl => {
       const today = new Date().toISOString().split('T')[0];
       const balance = Math.max(0, Number(obl.amountDue) - Number(obl.amountPaid || 0) - Number(obl.waivedAmount || 0));
@@ -1605,7 +1631,7 @@ export const AdminDataService = {
 
   async createFeeObligation(obligationData, actor = 'admin') {
     this.verifyPermission(actor, 'canWaiveFees', 'generating fee obligation');
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const exists = store.obligations.some(
       o => o.studentId === obligationData.studentId && 
            o.billingCycle === obligationData.billingCycle &&
@@ -1667,7 +1693,7 @@ export const AdminDataService = {
       throw new Error('A detailed reason (at least 5 characters) is required to waive fees.');
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const idx = store.obligations.findIndex(o => o.id === obligationId);
     if (idx === -1) {
       throw new Error(`Obligation not found: ${obligationId}`);
@@ -1725,13 +1751,13 @@ export const AdminDataService = {
         } else {
           q = collection(db, 'payments');
         }
-        const snap = await this.withFirestoreTimeout(getDocs(q), 800);
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
         if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getPayments unavailable, using verified local store:', err.message);
+        console.warn('Firestore getPayments unavailable, using verified local store:', err);
       }
     }
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     if (studentId) {
       return store.payments.filter(p => p.studentId === studentId);
     }
@@ -1745,7 +1771,11 @@ export const AdminDataService = {
       throw new Error('Payment amount must be greater than zero.');
     }
 
-    const store = loadLocalStore();
+    if (isLive()) {
+      return this.recordPaymentLive(paymentData, amount, actor);
+    }
+
+    const store = await hydrateStore();
     const oblIdx = store.obligations.findIndex(o => o.id === paymentData.obligationId);
     if (oblIdx === -1) {
       throw new Error(`Fee obligation not found: ${paymentData.obligationId}`);
@@ -1754,7 +1784,6 @@ export const AdminDataService = {
     const obligation = store.obligations[oblIdx];
     const currentBalance = Math.max(0, obligation.amountDue - (obligation.amountPaid || 0) - (obligation.waivedAmount || 0));
 
-    // Idempotency check: prevent duplicate payments on retries or concurrent submissions
     if (paymentData.id) {
       const existingById = store.payments.find(p => p.id === paymentData.id);
       if (existingById) {
@@ -1845,6 +1874,153 @@ export const AdminDataService = {
     return newPayment;
   },
 
+  async recordPaymentLive(paymentData, amount, actor) {
+    const actorEmail = normalizeActorEmail(actor);
+    const settings = await this.getSettings();
+    const prefix = settings.receiptPrefix || 'REC';
+    const year = new Date().getFullYear();
+    const paymentId = paymentData.id || uid('TXN');
+    const refText = String(paymentData.referenceNumber || '').trim();
+    const refKey = refText && !refText.startsWith('REF-') ? refText.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 100) : '';
+
+    const paymentRef = doc(db, 'payments', paymentId);
+    const obligationRef = doc(db, 'fee_obligations', String(paymentData.obligationId));
+    const counterRef = doc(db, 'counters', `receipts-${year}`);
+    const refDoc = refKey ? doc(db, 'payment_refs', refKey) : null;
+
+    try {
+      return await runTransaction(db, async (tx) => {
+        const [paySnap, oblSnap, counterSnap, refSnap] = await Promise.all([
+          tx.get(paymentRef),
+          tx.get(obligationRef),
+          tx.get(counterRef),
+          refDoc ? tx.get(refDoc) : Promise.resolve(null)
+        ]);
+
+        if (paySnap.exists()) {
+          const existing = paySnap.data();
+          return Object.assign({}, existing, { payment: existing, obligation: oblSnap.exists() ? oblSnap.data() : null });
+        }
+        if (!oblSnap.exists()) {
+          throw new Error(`Fee obligation not found: ${paymentData.obligationId}`);
+        }
+        if (refSnap && refSnap.exists()) {
+          throw new Error(`Duplicate Transaction Reference: "${refText}" has already been recorded on receipt #${refSnap.data().receiptNumber}. Duplicate transaction references are blocked across the institute.`);
+        }
+
+        const obligation = oblSnap.data();
+        const currentBalance = Math.max(0, obligation.amountDue - (obligation.amountPaid || 0) - (obligation.waivedAmount || 0));
+        if (amount > currentBalance) {
+          throw new Error(`Payment amount (₹${amount}) exceeds the remaining balance of ₹${currentBalance}.`);
+        }
+
+        const nextNumber = (counterSnap.exists() ? counterSnap.data().value : 0) + 1;
+        const receiptNumber = `${prefix}-${year}-${String(nextNumber).padStart(4, '0')}`;
+        const now = new Date().toISOString();
+
+        const newPayment = {
+          id: paymentId,
+          receiptNumber,
+          studentId: obligation.studentId,
+          studentName: obligation.studentName,
+          batchId: obligation.batchId,
+          obligationId: obligation.id,
+          amount,
+          paymentDate: paymentData.paymentDate || now.split('T')[0],
+          paymentMethod: paymentData.paymentMethod || 'cash',
+          referenceNumber: refText || uid('REF'),
+          recordedBy: actorEmail,
+          notes: paymentData.notes || '',
+          createdAt: now
+        };
+
+        const amountPaid = (obligation.amountPaid || 0) + amount;
+        const balance = Math.max(0, obligation.amountDue - amountPaid - (obligation.waivedAmount || 0));
+        const updatedObligation = {
+          ...obligation,
+          amountPaid,
+          balance,
+          status: balance === 0 ? 'paid' : 'partially_paid',
+          updatedAt: now
+        };
+
+        const audit = buildAudit({
+          actor: actorEmail,
+          action: 'PAYMENT_RECORDED',
+          entityType: 'payment',
+          entityId: paymentId,
+          details: `Recorded payment ₹${amount} for '${obligation.studentName}' (${obligation.billingCycle}). Receipt: ${receiptNumber}`
+        });
+
+        tx.set(paymentRef, newPayment);
+        tx.set(obligationRef, updatedObligation);
+        tx.set(counterRef, { value: nextNumber });
+        if (refDoc) tx.set(refDoc, { paymentId, receiptNumber });
+        tx.set(doc(db, 'audit_logs', audit.id), audit);
+
+        return Object.assign({}, newPayment, { payment: newPayment, obligation: updatedObligation });
+      });
+    } catch (err) {
+      if (err.code === 'unavailable' || err.code === 'deadline-exceeded' || err.code === 'permission-denied') {
+        throw dataUnavailable(err);
+      }
+      throw err;
+    }
+  },
+
+  async reversePaymentLive(paymentId, reason, actor) {
+    const actorEmail = normalizeActorEmail(actor);
+    const paymentRef = doc(db, 'payments', paymentId);
+    try {
+      return await runTransaction(db, async (tx) => {
+        const paySnap = await tx.get(paymentRef);
+        if (!paySnap.exists()) throw new Error(`Payment transaction not found: ${paymentId}`);
+        const payment = paySnap.data();
+        if (payment.isReversed || payment.reversed) {
+          throw new Error(`Payment ${paymentId} (${payment.receiptNumber}) has already been reversed.`);
+        }
+        const obligationRef = doc(db, 'fee_obligations', payment.obligationId);
+        const refKey = String(payment.referenceNumber || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 100);
+        const hasTrackedRef = refKey && !String(payment.referenceNumber).startsWith('REF-');
+        const refDoc = hasTrackedRef ? doc(db, 'payment_refs', refKey) : null;
+        const [oblSnap, refSnap] = await Promise.all([tx.get(obligationRef), refDoc ? tx.get(refDoc) : Promise.resolve(null)]);
+        if (!oblSnap.exists()) throw new Error(`Associated fee obligation not found: ${payment.obligationId}`);
+
+        const obligation = oblSnap.data();
+        const amountPaid = Math.max(0, (obligation.amountPaid || 0) - Number(payment.amount || 0));
+        const balance = Math.max(0, obligation.amountDue - amountPaid - (obligation.waivedAmount || 0));
+        const today = new Date().toISOString().split('T')[0];
+        let status;
+        if (balance === 0) status = (obligation.waivedAmount > 0 && amountPaid === 0) ? 'waived' : 'paid';
+        else if (amountPaid > 0) status = 'partially_paid';
+        else status = today > obligation.dueDate ? 'overdue' : 'pending';
+
+        const now = new Date().toISOString();
+        const updatedPayment = { ...payment, isReversed: true, reversed: true, reversalReason: reason.trim(), reversedBy: actorEmail, reversedAt: now };
+        const updatedObligation = { ...obligation, amountPaid, balance, status, updatedAt: now };
+        const audit = buildAudit({
+          actor: actorEmail,
+          action: 'PAYMENT_REVERSED',
+          entityType: 'payment',
+          entityId: paymentId,
+          details: `Reversed payment of ₹${payment.amount} (Receipt: ${payment.receiptNumber}) for '${obligation.studentName}'. Reason: ${reason.trim()}`
+        });
+
+        tx.update(paymentRef, { isReversed: true, reversed: true, reversalReason: updatedPayment.reversalReason, reversedBy: actorEmail, reversedAt: now });
+        tx.set(obligationRef, updatedObligation);
+        if (refDoc && refSnap && refSnap.exists()) tx.delete(refDoc);
+        tx.set(doc(db, 'audit_logs', audit.id), audit);
+
+        return { success: true, payment: updatedPayment, obligation: updatedObligation };
+      });
+    } catch (err) {
+      if (err.code === 'unavailable' || err.code === 'deadline-exceeded' || err.code === 'permission-denied') {
+        throw dataUnavailable(err);
+      }
+      throw err;
+    }
+  },
+
   async recordFeePayment(paymentData, actor = 'admin') {
     return this.recordPayment(paymentData, actor);
   },
@@ -1858,7 +2034,11 @@ export const AdminDataService = {
       throw new Error('A detailed audit reason (at least 5 characters) is required to reverse a payment.');
     }
 
-    const store = loadLocalStore();
+    if (isLive()) {
+      return this.reversePaymentLive(paymentId, reason, actor);
+    }
+
+    const store = await hydrateStore();
     const payment = store.payments.find(p => p.id === paymentId);
     if (!payment) {
       throw new Error(`Payment transaction not found: ${paymentId}`);
@@ -2214,13 +2394,13 @@ export const AdminDataService = {
   async getReminders() {
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'reminders')), 800);
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'reminders')), 8000);
         if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.warn('Firestore getReminders unavailable, using verified local store:', err.message);
+        console.warn('Firestore getReminders unavailable, using verified local store:', err);
       }
     }
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     return store.reminders;
   },
 
@@ -2262,7 +2442,7 @@ export const AdminDataService = {
       throw new Error(`Cannot send fee reminder: Obligation is already marked as ${obligation.status.toUpperCase()} with ₹0 balance.`);
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const oneDayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
     const alreadySentRecent = store.reminders.some(
       r => r.obligationId === obligationId && 
@@ -2330,7 +2510,7 @@ export const AdminDataService = {
 
   async retryFailedReminder(reminderId, actor = 'admin') {
     this.verifyPermission(actor, 'canTriggerReminders', 'retrying reminder');
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const rem = store.reminders.find(r => r.id === reminderId);
     if (!rem) throw new Error(`Reminder not found: ${reminderId}`);
 
@@ -2361,7 +2541,7 @@ export const AdminDataService = {
 
   async createFullBackupSnapshot(actor = 'admin') {
     this.verifyPermission(actor, 'canManageSettings', 'creating institutional data backup');
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const settings = this.getSettingsSync();
 
     const snapshot = {
@@ -2672,7 +2852,7 @@ export const AdminDataService = {
   async getTillSessions() {
     if (isFirebaseConfigured() && db) {
       try {
-        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'till_sessions')), 800);
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'till_sessions')), 8000);
         if (!snap.empty) {
           return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.openedAt || '').localeCompare(a.openedAt || ''));
         }
@@ -2680,7 +2860,7 @@ export const AdminDataService = {
         console.warn('Firestore getTillSessions fallback to local store:', err.message);
       }
     }
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     return (store.tillSessions || []).sort((a, b) => (b.openedAt || '').localeCompare(a.openedAt || ''));
   },
 
@@ -2721,13 +2901,13 @@ export const AdminDataService = {
 
     if (isFirebaseConfigured() && db) {
       try {
-        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 800);
+        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 8000);
       } catch (err) {
         console.warn('Firestore openTillSession fallback:', err.message);
       }
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     if (!store.tillSessions) store.tillSessions = [];
     store.tillSessions.unshift(session);
     saveLocalStore(store);
@@ -2813,13 +2993,13 @@ export const AdminDataService = {
 
     if (isFirebaseConfigured() && db) {
       try {
-        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 800);
+        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 8000);
       } catch (err) {
         console.warn('Firestore closeTillSession fallback:', err.message);
       }
     }
 
-    const store = loadLocalStore();
+    const store = await hydrateStore();
     const idx = (store.tillSessions || []).findIndex(s => s.id === sessionId);
     if (idx !== -1) {
       store.tillSessions[idx] = session;

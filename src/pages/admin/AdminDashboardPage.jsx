@@ -15,23 +15,32 @@ import {
   UserPlus
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
+import { feeStatusBreakdown, batchOccupancy, monthlyCollections, rupees } from '../../components/admin/chartData';
 
 export default function AdminDashboardPage() {
   const [metrics, setMetrics] = useState(null);
   const [batches, setBatches] = useState([]);
+  const [obligations, setObligations] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [m, b] = await Promise.all([
+        const [m, b, o, p] = await Promise.all([
           AdminDataService.getDashboardMetrics(),
-          AdminDataService.getBatches()
+          AdminDataService.getBatches(),
+          AdminDataService.getFeeObligations(),
+          AdminDataService.getPayments()
         ]);
         setMetrics(m);
         setBatches(b.filter(item => !item.isArchived));
+        setObligations(o);
+        setPayments(p);
       } catch (err) {
-        console.error('Failed to load dashboard metrics:', err);
+        setLoadError(err.message || 'Campus records could not be loaded.');
       } finally {
         setLoading(false);
       }
@@ -44,6 +53,23 @@ export default function AdminDashboardPage() {
       <div className="p-12 text-center bg-white rounded-xl border border-slate-200">
         <div className="w-8 h-8 border-3 border-[#EA580C] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
         <p className="text-xs font-semibold text-slate-500">Loading Campus Records...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="p-8 text-center bg-white rounded-xl border border-rose-200">
+        <AlertTriangle className="w-6 h-6 text-rose-600 mx-auto mb-2" />
+        <p className="text-sm font-bold text-[#0F172A]">Campus records are unavailable</p>
+        <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-4 px-3.5 py-2 bg-[#0F172A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold cursor-pointer"
+        >
+          Try again
+        </button>
       </div>
     );
   }
@@ -187,6 +213,18 @@ export default function AdminDashboardPage() {
             </Link>
           );
         })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <ChartCard title="Fee Position" subtitle="Where every rupee billed this session stands">
+          <DonutChart data={feeStatusBreakdown(obligations)} centerLabel="Billed" label="Fee position by status" />
+        </ChartCard>
+        <ChartCard title="Collections, Last 6 Months" subtitle="Verified receipts, reversals excluded">
+          <BarChart data={monthlyCollections(payments)} format={rupees} label="Monthly fee collections" />
+        </ChartCard>
+        <ChartCard title="Batch Seat Fill" subtitle="Enrolled against the 12-seat classroom cap">
+          <BarChart data={batchOccupancy(batches)} label="Batch occupancy" showAxisMax={false} />
+        </ChartCard>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

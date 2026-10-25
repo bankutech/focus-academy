@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useCallback, useEffect, useRef, Suspense, lazy } from 'react';
 import { 
   ModalContext, 
   FilterContext, 
@@ -53,12 +53,7 @@ export function AppProvider({ children }) {
     setStudentFlow((prev) => {
       const nextRaw = typeof updaterOrValue === 'function' ? updaterOrValue(prev) : updaterOrValue;
       const nextStep = Math.max(Number(prev?.step) || 1, Number(nextRaw?.step) || 1);
-      const studentName = nextRaw?.studentName || prev?.studentName || '';
-      const phone = nextRaw?.phone || prev?.phone || '';
-      const stepToken = nextStep > 1 
-        ? SessionAuthService.createClientStepToken(nextStep, studentName, phone)
-        : undefined;
-      const next = { ...nextRaw, step: nextStep, ...(stepToken ? { stepToken } : {}) };
+      const next = { ...nextRaw, step: nextStep };
       try {
         localStorage.setItem('focus_academy_student_flow', JSON.stringify(next));
       } catch {
@@ -73,6 +68,45 @@ export function AppProvider({ children }) {
       return next;
     });
   }, [setStudentFlowWithStorage]);
+
+  const flowRef = useRef(studentFlow);
+  useEffect(() => {
+    flowRef.current = studentFlow;
+  }, [studentFlow]);
+  const syncInFlight = useRef(null);
+  const [syncError, setSyncError] = useState('');
+
+  const ensureVerifiedSession = useCallback(async (targetStep = 4) => {
+    if (syncInFlight.current) {
+      await syncInFlight.current.catch(() => {});
+    }
+    const run = (async () => {
+      const result = await SessionAuthService.syncUpTo(targetStep, flowRef.current);
+      setStudentFlowWithStorage((prev) => ({ ...prev, ...result }));
+      return result;
+    })();
+    syncInFlight.current = run;
+    try {
+      const result = await run;
+      setSyncError('');
+      return result;
+    } catch (err) {
+      setSyncError(err.message);
+      throw err;
+    } finally {
+      if (syncInFlight.current === run) syncInFlight.current = null;
+    }
+  }, [setStudentFlowWithStorage]);
+
+  useEffect(() => {
+    const flow = studentFlow;
+    const step = Number(flow.step) || 1;
+    const hasIdentity = Boolean(flow.studentName?.trim() && flow.phone?.trim());
+    const phoneKey = String(flow.phone || '').replace(/\D/g, '').slice(-10);
+    const upToDate = flow.syncedPhone === phoneKey && (Number(flow.syncedStep) || 1) >= Math.min(step, 4);
+    if (step < 2 || !hasIdentity || upToDate || syncInFlight.current) return;
+    ensureVerifiedSession(step).catch(() => {});
+  }, [studentFlow, ensureVerifiedSession]);
 
   const lookupSavedStudent = useCallback((phone, studentName) => {
     try {
@@ -129,7 +163,11 @@ export function AppProvider({ children }) {
       subjects: '',
       monthlyFee: 0,
       stepToken: undefined,
+      applicationId: undefined,
+      syncedStep: undefined,
+      syncedPhone: undefined,
     });
+    setSyncError('');
   }, []);
 
   const [demoModalOpen, setDemoModalOpen] = useState(false);
@@ -196,6 +234,8 @@ export function AppProvider({ children }) {
     lookupSavedStudent,
     registerStudent,
     resetStudentFlow,
+    ensureVerifiedSession,
+    syncError,
   };
 
   return (

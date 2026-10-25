@@ -1,166 +1,100 @@
-const ipHits = new Map();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 20;
-
-function checkRateLimit(ip, limit = MAX_REQUESTS_PER_WINDOW) {
-  const now = Date.now();
-  const history = ipHits.get(ip) || [];
-  const valid = history.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
-  if (valid.length >= limit) {
-    ipHits.set(ip, valid);
-    return false;
-  }
-  valid.push(now);
-  ipHits.set(ip, valid);
-  return true;
-}
+import { getServices } from './_lib/firebaseAdmin.js';
+import { authenticateAdmin } from './_lib/adminAuth.js';
+import { prepare, fail, unavailable, clean, cleanPhone, clientIp, withinRate } from './_lib/http.js';
 
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    return res.status(200).end();
-  }
+  prepare(res, ['GET', 'POST']);
+  const services = getServices();
+  if (!services) return unavailable(res);
+  const { db } = services;
 
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
+  try {
+    const access = await authenticateAdmin(req, services, 'fee_manager');
+    if (!access.ok) return fail(res, access.status, access.error);
 
-  const clientIp = req.headers['x-forwarded-for']
-    ? String(req.headers['x-forwarded-for']).split(',')[0].trim()
-    : (req.socket?.remoteAddress || '127.0.0.1');
+    const cloudApiToken = process.env.WHATSAPP_CLOUD_API_TOKEN;
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    const automated = Boolean(cloudApiToken && phoneNumberId);
 
-  if (!checkRateLimit(clientIp)) {
-    return res.status(429).json({
-      success: false,
-      error: 'Rate limit exceeded. Please wait before attempting further reminder dispatches.'
-    });
-  }
-
-  const cloudApiToken = process.env.WHATSAPP_CLOUD_API_TOKEN;
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const isCloudApiConfigured = Boolean(cloudApiToken && phoneNumberId);
-
-  if (req.method === 'GET') {
-    return res.status(200).json({
-      success: true,
-      service: 'Focus Academy WhatsApp Reminder Gateway',
-      automatedDeliveryAvailable: isCloudApiConfigured,
-      deliveryChannel: isCloudApiConfigured ? 'meta_cloud_api' : 'manual_click_to_chat_fallback',
-      status: 'operational',
-      environment: process.env.NODE_ENV || 'production'
-    });
-  }
-
-  if (req.method === 'POST') {
-    const {
-      studentName = '',
-      phone = '',
-      guardianPhone = '',
-      amount = 0,
-      dueDate = '',
-      reminderType = 'upcoming',
-      obligationId = ''
-    } = req.body || {};
-
-    const rawPhone = guardianPhone || phone;
-    const cleanPhone = String(rawPhone || '').replace(/\D/g, '').slice(-10);
-    if (cleanPhone.length !== 10) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid recipient mobile number. Exactly 10 digits are required.'
-      });
-    }
-
-    const sanitizedName = String(studentName || '').replace(/[<>'"`;]/g, '').trim().slice(0, 80);
-    if (!sanitizedName) {
-      return res.status(400).json({
-        success: false,
-        error: 'Student name is mandatory.'
-      });
-    }
-
-    const numAmount = Number(amount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Amount must be a positive number.'
-      });
-    }
-
-    const message = `Hello, this is Focus Academy. A fee payment of ₹${numAmount} for ${sanitizedName} is due on ${dueDate || 'the scheduled date'}. If you have already paid, please contact the academy so we can verify the payment. Thank you.`;
-    const clickToChatUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
-
-    if (!isCloudApiConfigured) {
+    if (req.method === 'GET') {
       return res.status(200).json({
         success: true,
-        mode: 'manual_fallback',
-        automated: false,
-        notice: 'Meta WhatsApp Cloud API credentials not configured in server environment. Manual click-to-chat fallback link generated.',
-        message,
-        clickToChatUrl,
-        payload: {
-          recipient: `+91${cleanPhone}`,
-          studentName: sanitizedName,
-          amount: numAmount,
-          dueDate,
-          reminderType,
-          obligationId
-        }
+        automatedDeliveryAvailable: automated,
+        deliveryChannel: automated ? 'meta_cloud_api' : 'manual_click_to_chat_fallback',
       });
     }
+    if (req.method !== 'POST') return fail(res, 405, 'Method not allowed');
 
-    try {
-      const metaResponse = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${cloudApiToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: `91${cleanPhone}`,
-          type: 'text',
-          text: {
-            preview_url: false,
-            body: message
-          }
-        })
-      });
-
-      const data = await metaResponse.json();
-
-      if (!metaResponse.ok) {
-        return res.status(502).json({
-          success: false,
-          mode: 'meta_cloud_api_error',
-          error: data.error?.message || 'Meta WhatsApp Cloud API rejected request.',
-          fallbackClickToChatUrl: clickToChatUrl
-        });
-      }
-
-      return res.status(200).json({
-        success: true,
-        mode: 'automated_delivery',
-        automated: true,
-        messageId: data.messages?.[0]?.id,
-        recipient: `+91${cleanPhone}`,
-        providerResponse: data,
-        clickToChatUrl
-      });
-    } catch (err) {
-      return res.status(500).json({
-        success: false,
-        mode: 'server_dispatch_error',
-        error: err.message || 'Failed to dispatch via Meta WhatsApp API.',
-        fallbackClickToChatUrl: clickToChatUrl
-      });
+    if (!(await withinRate(db, 'wa', access.uid, 30, 60 * 1000)) || !(await withinRate(db, 'wa-ip', clientIp(req), 60, 60 * 1000))) {
+      return fail(res, 429, 'Rate limit exceeded. Please wait before sending more reminders.');
     }
+
+    const obligationId = clean(req.body?.obligationId, 80);
+    const reminderType = ['upcoming', 'due', 'overdue'].includes(req.body?.reminderType) ? req.body.reminderType : 'upcoming';
+    if (!obligationId) return fail(res, 400, 'obligationId is required.');
+
+    const obligationSnap = await db.collection('fee_obligations').doc(obligationId).get();
+    if (!obligationSnap.exists) return fail(res, 404, 'Fee obligation not found.');
+    const obligation = obligationSnap.data();
+
+    const balance = Math.max(0, Number(obligation.amountDue || 0) - Number(obligation.amountPaid || 0) - Number(obligation.waivedAmount || 0));
+    if (balance <= 0 || ['paid', 'waived'].includes(obligation.status)) {
+      return fail(res, 409, 'This obligation has no outstanding balance.');
+    }
+
+    const studentSnap = await db.collection('students').doc(String(obligation.studentId)).get();
+    if (!studentSnap.exists) return fail(res, 404, 'Student record not found.');
+    const student = studentSnap.data();
+    if (student.communicationConsent === false || student.remindersDisabled === true) {
+      return fail(res, 403, 'This guardian has opted out of fee reminders.');
+    }
+
+    const recipient = cleanPhone(student.guardianPhone || student.phone);
+    if (recipient.length !== 10) return fail(res, 422, 'The guardian mobile number on file is not valid.');
+
+    const dayKey = new Date().toISOString().slice(0, 10);
+    const reminderRef = db.collection('reminders').doc(`${obligationId}__${reminderType}__${dayKey}`);
+    const existing = await reminderRef.get();
+    if (existing.exists) {
+      return fail(res, 409, 'A reminder for this obligation was already sent today.');
+    }
+
+    const studentName = clean(obligation.studentName || student.studentName, 80);
+    const dueDate = clean(obligation.dueDate, 30) || 'the scheduled date';
+    const message = `Hello, this is Focus Academy. A fee payment of ₹${balance} for ${studentName} is due on ${dueDate}. If you have already paid, please contact the academy so we can verify the payment. Thank you.`;
+    const clickToChatUrl = `https://wa.me/91${recipient}?text=${encodeURIComponent(message)}`;
+
+    const base = {
+      obligationId,
+      studentId: obligation.studentId,
+      studentName,
+      reminderType,
+      amount: balance,
+      recipient: `+91${recipient}`,
+      requestedBy: access.email,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (!automated) {
+      await reminderRef.set({ ...base, channel: 'manual_click_to_chat', status: 'queued' });
+      return res.status(200).json({ success: true, mode: 'manual_fallback', automated: false, message, clickToChatUrl });
+    }
+
+    const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${cloudApiToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', to: `91${recipient}`, type: 'text', text: { preview_url: false, body: message } }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      await reminderRef.set({ ...base, channel: 'meta_cloud_api', status: 'failed' });
+      return res.status(502).json({ success: false, error: 'WhatsApp could not accept this message right now.', fallbackClickToChatUrl: clickToChatUrl });
+    }
+
+    await reminderRef.set({ ...base, channel: 'meta_cloud_api', status: 'accepted', providerMessageId: data.messages?.[0]?.id || null });
+    return res.status(200).json({ success: true, mode: 'automated_delivery', automated: true, status: 'accepted', messageId: data.messages?.[0]?.id });
+  } catch {
+    return unavailable(res);
   }
-
-  return res.status(405).json({
-    success: false,
-    error: 'Method not allowed. Use GET or POST.'
-  });
 }

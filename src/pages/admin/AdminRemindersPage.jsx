@@ -13,6 +13,7 @@ import {
   Eye
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { requireAdminEmail } from '../../services/adminIdentity';
 
 export default function AdminRemindersPage() {
   const [searchParams] = useSearchParams();
@@ -86,14 +87,7 @@ export default function AdminRemindersPage() {
         throw new Error('Student record not found for this obligation.');
       }
 
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       const result = await AdminDataService.sendOrLogWhatsAppReminder({
         studentId: obligation.studentId,
@@ -124,14 +118,7 @@ export default function AdminRemindersPage() {
   const handleRetryReminder = async (reminderId) => {
     setStatusMessage({ type: '', text: '' });
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       const result = await AdminDataService.retryFailedReminder(reminderId, currentAdmin);
       setStatusMessage({

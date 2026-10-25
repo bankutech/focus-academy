@@ -250,7 +250,6 @@ describe('AdminDataService & Institutional Management Tests', () => {
       expect(result.clickToChatUrl).toContain('https://wa.me/919842100003?text=');
       expect(result.reminder.status).toBe('manual_opened');
 
-      // Immediate second dispatch must be rejected by 24h rate limiting
       await expect(
         AdminDataService.sendOrLogWhatsAppReminder({
           studentId: 'FA-2026-004',
@@ -271,7 +270,6 @@ describe('AdminDataService & Institutional Management Tests', () => {
     });
 
     it('rejects WhatsApp reminder when guardian phone is invalid or less than 10 digits', async () => {
-      // Create student with truncated phone simulation
       const store = JSON.parse(localStorage.getItem('focus_academy_admin_data_v1'));
       store.students.push({
         id: 'FA-TEST-BAD-PHONE',
@@ -312,7 +310,6 @@ describe('AdminDataService & Institutional Management Tests', () => {
     });
 
     it('correctly caps successive waivers without exceeding remaining balance', async () => {
-      // OBL-2026-102 has amountDue: 2600, amountPaid: 1300, balance: 1300
       const firstWaiver = await AdminDataService.waiveFeeObligation(
         'OBL-2026-102',
         500,
@@ -321,7 +318,6 @@ describe('AdminDataService & Institutional Management Tests', () => {
       expect(firstWaiver.waivedAmount).toBe(500);
       expect(firstWaiver.balance).toBe(800);
 
-      // Attempt second waiver for 1000 when only 800 balance remains
       const secondWaiver = await AdminDataService.waiveFeeObligation(
         'OBL-2026-102',
         1000,
@@ -331,7 +327,6 @@ describe('AdminDataService & Institutional Management Tests', () => {
       expect(secondWaiver.balance).toBe(0);
       expect(secondWaiver.status).toBe('waived');
 
-      // Third attempt on settled obligation must be rejected
       await expect(
         AdminDataService.waiveFeeObligation('OBL-2026-102', 100, 'Third attempt after zero balance')
       ).rejects.toThrow(/no outstanding balance to waive/i);
@@ -493,7 +488,6 @@ describe('AdminDataService & Institutional Management Tests', () => {
         referenceNumber: customUtr
       });
 
-      // Attempting to use the SAME custom UTR on a different obligation/student must be rejected
       await expect(
         AdminDataService.recordPayment({
           obligationId: secondObl.id,
@@ -509,7 +503,6 @@ describe('AdminDataService & Institutional Management Tests', () => {
       const activeInitial = await AdminDataService.getActiveTillSession();
       expect(activeInitial).toBeNull();
 
-      // 1. Open till session with float 2000
       const session = await AdminDataService.openTillSession({
         openingFloat: 2000,
         notes: 'Thiripura Desk Morning Shift'
@@ -522,17 +515,14 @@ describe('AdminDataService & Institutional Management Tests', () => {
       expect(activeAfterOpen).not.toBeNull();
       expect(activeAfterOpen.id).toBe(session.id);
 
-      // Attempting to open another session while one is active should throw
       await expect(
         AdminDataService.openTillSession({ openingFloat: 1000 })
       ).rejects.toThrow(/already open/i);
 
-      // 2. Summary
       const summary = await AdminDataService.getTillSessionSummary(session.id);
       expect(summary.openingFloat).toBe(2000);
       expect(summary.expectedCashInDrawer).toBeGreaterThanOrEqual(2000);
 
-      // 3. Close till session with exact cash count
       const closed = await AdminDataService.closeTillSession(session.id, {
         closingCashActual: summary.expectedCashInDrawer,
         handedOverTo: 'Managing Director Ramanathan',

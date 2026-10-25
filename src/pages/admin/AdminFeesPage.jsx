@@ -11,6 +11,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { requireAdminEmail } from '../../services/adminIdentity';
 
 export default function AdminFeesPage() {
   const [searchParams] = useSearchParams();
@@ -67,14 +68,7 @@ export default function AdminFeesPage() {
     }
 
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       await AdminDataService.waiveFeeObligation(
         waiveModalObligation.id,
@@ -101,14 +95,7 @@ export default function AdminFeesPage() {
       const cycleName = `${nextMonth.toLocaleString('en-US', { month: 'long' })} ${nextMonth.getFullYear()}`;
       const nextDueDate = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-05`;
 
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       for (const student of activeStudents) {
         const amount = Math.max(0, (student.feeConfig?.amountPerCycle || 2000) - (student.feeConfig?.discountAdjustment || 0));

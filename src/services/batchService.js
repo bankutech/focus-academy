@@ -53,7 +53,8 @@ export const BatchService = {
           studentName: details.studentName,
           phone: details.phone,
           grade: details.grade,
-          board: details.board
+          board: details.board,
+          stepToken: details.stepToken
         })
       });
       const data = await response.json().catch(() => ({}));

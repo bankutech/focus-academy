@@ -18,6 +18,7 @@ import {
   Keyboard
 } from 'lucide-react';
 import { logOutAdmin, isFirebaseConfigured } from '../../services/firebase';
+import { getVerifiedAdmin, setVerifiedAdmin } from '../../services/adminIdentity';
 
 export default function AdminLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -27,28 +28,18 @@ export default function AdminLayout() {
   const location = useLocation();
   const hasFirebase = isFirebaseConfigured();
 
-  const sessionRaw = sessionStorage.getItem('focus_academy_admin_session');
-  let userEmail = 'admin@focusacademyperambalur.com';
-  let displayName = 'Administrator';
-  if (sessionRaw) {
-    try {
-      const parsed = JSON.parse(sessionRaw);
-      if (parsed.email) userEmail = parsed.email;
-      if (parsed.displayName) displayName = parsed.displayName;
-    } catch {
-      // fallback
-    }
-  }
+  const verified = getVerifiedAdmin();
+  const userEmail = verified?.email || '';
+  const displayName = verified?.displayName || 'Administrator';
 
   const handleLogout = async () => {
     try {
       await logOutAdmin();
     } catch {
-      // ignore
+      setVerifiedAdmin(null);
     }
-    sessionStorage.removeItem('focus_academy_admin_session');
-    localStorage.removeItem('focus_academy_admin_session');
-    navigate('/admin-portal/login');
+    setVerifiedAdmin(null);
+    navigate('/admin-portal/login', { replace: true });
   };
 
   React.useEffect(() => {

@@ -6,13 +6,7 @@ const STORAGE_LOGS_KEY = 'focus_academy_submitted_leads_v1';
 
 export const LeadService = {
   getWebhookUrl() {
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_LEAD_WEBHOOK_URL) {
-      return import.meta.env.VITE_LEAD_WEBHOOK_URL;
-    }
-    if (typeof window !== 'undefined' && window.location && window.location.origin) {
-      return `${window.location.origin}/api/leads`;
-    }
-    return CAMPUS_CONFIG.leadWebhookUrl || '/api/leads';
+    return '/api/leads';
   },
 
   async submitLead(rawLeadData) {
@@ -24,7 +18,9 @@ export const LeadService = {
       };
     }
 
+    const stepToken = rawLeadData.stepToken;
     const payload = validation.sanitized;
+    delete payload.stepToken;
     const existing = this.getAllSubmissions();
     const recentDuplicate = existing.find(
       (sub) => sub.phone === payload.phone && sub.studentName === payload.studentName && Date.now() - new Date(sub.submittedAt).getTime() < 30000
@@ -68,7 +64,7 @@ export const LeadService = {
         const response = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ ...payload, stepToken }),
           signal: controller.signal,
         });
 

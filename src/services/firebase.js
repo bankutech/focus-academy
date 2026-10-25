@@ -5,7 +5,11 @@ import {
   GoogleAuthProvider, 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   sendPasswordResetEmail,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
   signOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
@@ -78,80 +82,70 @@ export const isUserAdmin = (user, customClaims = {}) => {
   }
   const email = (user.email || '').trim().toLowerCase();
   if (!email) return false;
+  if (user.emailVerified === false) return false;
   const allowlist = getAdminAllowlist();
   return allowlist.includes(email);
 };
 
-export const signInWithGoogle = async () => {
+const applyPersistence = async (remember) => {
+  if (!auth) return;
+  await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+};
+
+export const signInWithGoogle = async (remember = false) => {
   if (!auth) {
     throw new Error('Firebase Authentication is not configured. Please supply valid VITE_FIREBASE_* credentials in your environment.');
   }
+  await applyPersistence(remember);
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   const result = await signInWithPopup(auth, provider);
   return result.user;
 };
 
-export const signInWithEmail = async (email, password) => {
+export const signInWithEmail = async (email, password, remember = false) => {
   if (!auth) {
     throw new Error('Firebase Authentication is not configured. Please supply valid VITE_FIREBASE_* credentials in your environment.');
   }
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    return result.user;
-  } catch (err) {
-    if (
-      (err.code === 'auth/configuration-not-found' || 
-       err.code === 'auth/operation-not-allowed' || 
-       err.code === 'auth/user-not-found' || 
-       err.code === 'auth/invalid-credential' || 
-       err.code === 'auth/invalid-login-credentials') &&
-      isUserAdmin({ email })
-    ) {
-      if (password && password.length >= 6) {
-        try {
-          const createResult = await createUserWithEmailAndPassword(auth, email, password);
-          return createResult.user;
-        } catch {
-          // If creation fails due to uninitialized provider, allow allowlisted admin
-        }
-      }
-      return {
-        email,
-        displayName: email.split('@')[0].toUpperCase(),
-        uid: `admin-${email.replace(/[^a-z0-9]/g, '')}`
-      };
-    }
+  await applyPersistence(remember);
+  const result = await signInWithEmailAndPassword(auth, email, password);
+  if (!result.user.emailVerified) {
+    await signOut(auth);
+    const err = new Error('This email address is not verified yet. Open the verification link we emailed you, then sign in again.');
+    err.code = 'auth/email-not-verified';
     throw err;
   }
+  return result.user;
 };
 
 export const createAdminUserWithEmail = async (email, password) => {
   if (!auth) {
     throw new Error('Firebase Authentication is not configured. Please supply valid VITE_FIREBASE_* credentials in your environment.');
   }
-  try {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    return result.user;
-  } catch (err) {
-    if ((err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed') && isUserAdmin({ email })) {
-      return {
-        email,
-        displayName: email.split('@')[0].toUpperCase(),
-        uid: `admin-${email.replace(/[^a-z0-9]/g, '')}`
-      };
-    }
-    throw err;
+  const result = await createUserWithEmailAndPassword(auth, email, password);
+  await sendEmailVerification(result.user);
+  await signOut(auth);
+  return { email: result.user.email, verificationSent: true };
+};
+
+export const resendAdminVerification = async (email, password) => {
+  if (!auth) {
+    throw new Error('Firebase Authentication is not configured. Please supply valid VITE_FIREBASE_* credentials in your environment.');
   }
+  const result = await signInWithEmailAndPassword(auth, email, password);
+  try {
+    if (!result.user.emailVerified) {
+      await sendEmailVerification(result.user);
+    }
+  } finally {
+    await signOut(auth);
+  }
+  return { alreadyVerified: result.user.emailVerified };
 };
 
 export const logOutAdmin = async () => {
   if (auth) {
-    try {
-      await signOut(auth);
-    } catch {
-      // ignore
-    }
+    await signOut(auth);
   }
 };
 
@@ -162,7 +156,7 @@ export const sendAdminPasswordReset = async (email) => {
   try {
     await sendPasswordResetEmail(auth, email);
   } catch (err) {
-    if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed' || err.code === 'auth/user-not-found') {
+    if (err.code === 'auth/user-not-found') {
       return;
     }
     throw err;

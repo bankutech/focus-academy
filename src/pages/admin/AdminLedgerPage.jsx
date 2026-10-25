@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
   CreditCard, 
   Search, 
@@ -11,6 +12,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { requireAdminEmail } from '../../services/adminIdentity';
 
 export default function AdminLedgerPage() {
   const [payments, setPayments] = useState([]);
@@ -23,6 +25,7 @@ export default function AdminLedgerPage() {
   const [adminFilter, setAdminFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+  const location = useLocation();
 
   const [recordModalOpen, setRecordModalOpen] = useState(false);
   const [receiptModalPayment, setReceiptModalPayment] = useState(null);
@@ -60,7 +63,7 @@ export default function AdminLedgerPage() {
       setMetrics(m);
       setSettings(setts);
 
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(location.search || window.location.search);
       const stuId = params.get('studentId');
       const oblId = params.get('obligationId');
       if (stuId) {
@@ -122,14 +125,7 @@ export default function AdminLedgerPage() {
     }
 
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       const result = await AdminDataService.recordPayment({
         ...paymentForm,
@@ -153,14 +149,7 @@ export default function AdminLedgerPage() {
       return;
     }
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
       await AdminDataService.reversePayment(reverseModalPayment.id, reverseReason, currentAdmin);
       setFormSuccess(`Reversed payment ₹${reverseModalPayment.amount} for ${reverseModalPayment.studentName}.`);
       setReverseModalPayment(null);

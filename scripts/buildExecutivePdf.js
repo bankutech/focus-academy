@@ -569,7 +569,7 @@ export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
           <tr>
             <td><strong>Classroom Oversubscription</strong></td>
             <td>Simultaneous parents reserving the 12th desk in a high-demand evening batch.</td>
-            <td>Atomic Seat Leases: Batch service verifies available capacity ($12 - \text{enrolled} - \text{active\_locks} > 0$) before granting 15-minute checkout locks.</td>
+            <td>Atomic Seat Leases: Batch service verifies available capacity ($12 - \text{enrolled} - \text{active_locks} > 0$) before granting 15-minute checkout locks.</td>
           </tr>
           <tr>
             <td><strong>Student Duplicate Records</strong></td>

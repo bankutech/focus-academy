@@ -20,6 +20,7 @@ import {
   Download
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { requireAdminEmail } from '../../services/adminIdentity';
 import { validateIndianMobile, isBatchCompatible } from '../../types/schemas';
 
 function getTodayStr() {
@@ -236,14 +237,7 @@ export default function AdminStudentsPage() {
     }
 
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       if (editStudent) {
         await AdminDataService.updateStudent(editStudent.id, {
@@ -320,14 +314,7 @@ export default function AdminStudentsPage() {
     }
 
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       await AdminDataService.transferStudentBatch(
         transferStudent.id,
@@ -368,14 +355,7 @@ export default function AdminStudentsPage() {
     e.preventDefault();
     setFormError('');
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       await AdminDataService.applyFeeDiscount({
         studentId: discountModalStudent.id,
@@ -406,14 +386,7 @@ export default function AdminStudentsPage() {
     e.preventDefault();
     setFormError('');
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       await AdminDataService.updateStudentLifecycleStatus(
         lifecycleModalStudent.id,
@@ -434,14 +407,7 @@ export default function AdminStudentsPage() {
 
   const handleArchiveToggle = async (student) => {
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       if (student.status === 'archived') {
         await AdminDataService.restoreStudent(student.id, currentAdmin);
@@ -465,14 +431,7 @@ export default function AdminStudentsPage() {
   const handleExecuteCsvImport = async () => {
     if (!csvPreview || csvPreview.validRows.length === 0) return;
     try {
-      const rawSession = sessionStorage.getItem('focus_academy_admin_session');
-      let currentAdmin = 'admin@focusacademyperambalur.com';
-      if (rawSession) {
-        try {
-          const parsed = JSON.parse(rawSession);
-          if (parsed?.email) currentAdmin = parsed.email;
-        } catch {}
-      }
+      const currentAdmin = requireAdminEmail();
 
       const res = await AdminDataService.importStudentsFromCSV(csvPreview.validRows, currentAdmin);
       setCsvImportResult(res);

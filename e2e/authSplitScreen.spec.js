@@ -17,10 +17,10 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
       await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
       await expect(page.getByText('Sign in to continue your learning journey.')).toBeVisible();
 
-      // Check login mode scroll
       const loginScroll = await page.evaluate(() => {
         const doc = document.documentElement;
         const rightPanel = document.querySelector('[data-testid="auth-right-panel"]');
+        console.log(`1280x720 Reg Panel: scrollHeight=${rightPanel?.scrollHeight}, clientHeight=${rightPanel?.clientHeight}`);
         return {
           hasVerticalScroll: doc.scrollHeight > window.innerHeight,
           hasHorizontalScroll: doc.scrollWidth > window.innerWidth,
@@ -32,7 +32,6 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
       expect(loginScroll.hasHorizontalScroll).toBe(false);
       expect(loginScroll.rightPanelHasScroll).toBe(false);
 
-      // Check registration mode scroll
       await page.getByRole('button', { name: 'Create account' }).click();
       await expect(page.getByRole('heading', { name: 'Create account' })).toBeVisible();
 
@@ -43,6 +42,8 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
           hasVerticalScroll: doc.scrollHeight > window.innerHeight,
           hasHorizontalScroll: doc.scrollWidth > window.innerWidth,
           rightPanelHasScroll: rightPanel ? rightPanel.scrollHeight > rightPanel.clientHeight : false,
+          scrollHeight: rightPanel?.scrollHeight,
+          clientHeight: rightPanel?.clientHeight,
         };
       });
 
@@ -50,7 +51,6 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
       expect(regScroll.hasHorizontalScroll).toBe(false);
       expect(regScroll.rightPanelHasScroll).toBe(false);
 
-      // Check forgot password mode scroll
       await page.getByRole('button', { name: 'Sign in' }).first().click();
       await page.getByRole('button', { name: 'Forgot password?' }).click();
       await expect(page.getByRole('heading', { name: 'Reset password' })).toBeVisible();
@@ -58,6 +58,7 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
       const forgotScroll = await page.evaluate(() => {
         const doc = document.documentElement;
         const rightPanel = document.querySelector('[data-testid="auth-right-panel"]');
+        console.log(`1280x720 Reg Panel: scrollHeight=${rightPanel?.scrollHeight}, clientHeight=${rightPanel?.clientHeight}`);
         return {
           hasVerticalScroll: doc.scrollHeight > window.innerHeight,
           hasHorizontalScroll: doc.scrollWidth > window.innerWidth,
@@ -88,13 +89,11 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
     const divPos = await divider.boundingBox();
     const googlePos = await googleBtn.boundingBox();
 
-    // Verify vertical order in login mode: email < password < submit < divider < google
     expect(emailPos.y).toBeLessThan(passPos.y);
     expect(passPos.y).toBeLessThan(submitPos.y);
     expect(submitPos.y).toBeLessThan(divPos.y);
     expect(divPos.y).toBeLessThan(googlePos.y);
 
-    // Switch to register mode
     await page.getByRole('button', { name: 'Create account' }).click();
     const regEmailBox = formBox.locator('#reg-email');
     const regPassBox = formBox.locator('#reg-password');
@@ -108,7 +107,6 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
     const regDivPos = await regDivider.boundingBox();
     const regGooglePos = await regGoogleBtn.boundingBox();
 
-    // Verify vertical order in register mode: email < password < submit < divider < google
     expect(regEmailPos.y).toBeLessThan(regPassPos.y);
     expect(regPassPos.y).toBeLessThan(regSubmitPos.y);
     expect(regSubmitPos.y).toBeLessThan(regDivPos.y);
@@ -131,7 +129,6 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
     await hideBtn.click();
     await expect(passwordInput).toHaveAttribute('type', 'password');
 
-    // Test in register mode
     await page.getByRole('button', { name: 'Create account' }).click();
     const regPassInput = page.locator('#reg-password');
     await regPassInput.fill('AnotherSecret456');
@@ -178,7 +175,7 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
     await page.locator('#reset-email').fill('admin@focusacademyperambalur.com');
     await page.getByRole('button', { name: 'Send reset instructions' }).click();
 
-    await expect(page.getByText(/instructions dispatched|Password reset instructions sent/i)).toBeVisible();
+    await expect(page.getByText(/instructions dispatched|Password reset instructions sent|reset link is on its way/i)).toBeVisible();
   });
 
   test('validates registration form requires terms acceptance and allowlist', async ({ page }) => {
@@ -192,11 +189,11 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
     await page.locator('#reg-password').fill('SafePassword123');
 
     await page.getByRole('button', { name: 'Create account' }).click();
-    await expect(page.getByText(/Please accept the Terms of Service/i)).toBeVisible();
+    await expect(page.getByText(/Please accept the Terms/i)).toBeVisible();
 
     await page.getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Create account' }).click();
-    await expect(page.getByText(/Access Denied.*not on the Focus Academy administrator allowlist/i)).toBeVisible();
+    await expect(page.getByText(/Registration is limited to invited administrators|Access Denied.*allowlist/i)).toBeVisible();
   });
 
   test('navigates back to public website via Back to website link', async ({ page }) => {
@@ -212,7 +209,6 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
       await page.setViewportSize(mobileSize);
       await page.goto('/admin-portal/login');
 
-      // Verify essential branding and navigation
       await expect(page.getByRole('link', { name: /Back to website/i })).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
       await expect(page.locator('#admin-email')).toBeVisible();
