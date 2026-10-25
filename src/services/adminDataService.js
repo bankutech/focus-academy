@@ -1100,7 +1100,12 @@ export const AdminDataService = {
             status: item.status || 'new',
             source: item.reservationId ? 'enrollment' : 'inquiry',
             subjects: item.subjects || '',
-            notes: item.notes || ''
+            notes: item.notes || '',
+            schoolShift: item.schoolShift || null,
+            schoolDismissalTime: item.schoolDismissalTime || null,
+            travelDurationMinutes: item.travelDurationMinutes !== undefined && item.travelDurationMinutes !== null ? item.travelDurationMinutes : null,
+            scheduleClashWarning: item.scheduleClashWarning || null,
+            timing: item.timing || null
           });
         }
       });
@@ -1154,7 +1159,11 @@ export const AdminDataService = {
       discountAdjustment: overrideData.discountAdjustment || 0,
       billingFrequency: overrideData.billingFrequency || 'monthly',
       status: 'active',
-      reservationId: lead.reservationId
+      reservationId: lead.reservationId,
+      schoolShift: lead.schoolShift || null,
+      schoolDismissalTime: lead.schoolDismissalTime || null,
+      travelDurationMinutes: lead.travelDurationMinutes ? Number(lead.travelDurationMinutes) : null,
+      scheduleClashWarning: lead.scheduleClashWarning || null
     };
 
     const newStudent = await this.createStudent(studentPayload, actor);
@@ -1281,6 +1290,10 @@ export const AdminDataService = {
       secondaryPhone: cleanSecondaryPhone && cleanSecondaryPhone.length === 10 ? cleanSecondaryPhone : null,
       emergencyContactName: studentData.emergencyContactName ? studentData.emergencyContactName.trim() : null,
       medicalAlert: studentData.medicalAlert ? studentData.medicalAlert.trim() : null,
+      schoolShift: studentData.schoolShift || null,
+      schoolDismissalTime: studentData.schoolDismissalTime || null,
+      travelDurationMinutes: studentData.travelDurationMinutes ? Number(studentData.travelDurationMinutes) : null,
+      scheduleClashWarning: studentData.scheduleClashWarning || null,
       grade: studentData.grade,
       board: studentData.board,
       academicSession: studentData.academicSession || '2025-2026',

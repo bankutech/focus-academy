@@ -499,4 +499,117 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     expect(screen.queryByRole('link', { name: /Step 3: Batches →/i })).toBeNull();
     expect(screen.queryByRole('link', { name: /Step 5: Enroll →/i })).toBeNull();
   });
+
+  it('renders school shift timing dropdown with 3 options and optional dismissal and transit duration inputs', async () => {
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        parentName: 'S. Sundaram',
+        board: 'TN State Board (Samacheer)',
+        grade: 'Class 10',
+        examPrep: '10th Board Exam Mastery',
+        selectedBatchId: 'batch-10-state-board',
+        step: 5
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/enroll/batch-10-state-board']}>
+        <AppProvider>
+          <Routes>
+            <Route path="/enroll/:batchId" element={<EnrollPage />} />
+          </Routes>
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    const shiftSelect = screen.getByLabelText(/What is your child's school timing/i);
+    expect(shiftSelect).toBeDefined();
+    expect(screen.getByRole('option', { name: /^Morning shift$/i })).toBeDefined();
+    expect(screen.getByRole('option', { name: /^Day\/Afternoon shift$/i })).toBeDefined();
+    expect(screen.getByRole('option', { name: /^Other \/ Varies$/i })).toBeDefined();
+
+    expect(screen.getByLabelText(/School usually finishes at/i)).toBeDefined();
+    expect(screen.getByLabelText(/Approximate travel time from school to the academy/i)).toBeDefined();
+    expect(screen.getByText(/This information helps the academy understand your student's schedule and recommend a suitable batch/i)).toBeDefined();
+  });
+
+  it('renders intelligent scheduling advisory warning and recommended alternative batch when school dismissal causes delay', async () => {
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        parentName: 'S. Sundaram',
+        board: 'TN State Board (Samacheer)',
+        grade: 'Class 10',
+        examPrep: '10th Board Exam Mastery',
+        selectedBatchId: 'batch-remedial-maths',
+        step: 5
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/enroll/batch-remedial-maths']}>
+        <AppProvider>
+          <Routes>
+            <Route path="/enroll/:batchId" element={<EnrollPage />} />
+          </Routes>
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    const dismissalInput = screen.getByLabelText(/School usually finishes at/i);
+    const travelInput = screen.getByLabelText(/Approximate travel time from school to the academy/i);
+
+    fireEvent.change(dismissalInput, { target: { value: '16:15' } });
+    fireEvent.change(travelInput, { target: { value: '30' } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Scheduling Advisory/i)).toBeDefined();
+      expect(screen.getByText(/Your school schedule may make this batch difficult to reach on time\. Please review the timing or contact the academy for assistance\./i)).toBeDefined();
+    });
+
+    expect(screen.getByText(/Suggested Alternative:/i)).toBeDefined();
+    const switchBtn = screen.getByRole('button', { name: /Switch to .* Batch/i });
+    expect(switchBtn).toBeDefined();
+  });
+
+  it('renders comfortable timing notification when student arrival is well before batch start', async () => {
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        parentName: 'S. Sundaram',
+        board: 'TN State Board (Samacheer)',
+        grade: 'Class 10',
+        examPrep: '10th Board Exam Mastery',
+        selectedBatchId: 'batch-10-state-board',
+        step: 5
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/enroll/batch-10-state-board']}>
+        <AppProvider>
+          <Routes>
+            <Route path="/enroll/:batchId" element={<EnrollPage />} />
+          </Routes>
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    const dismissalInput = screen.getByLabelText(/School usually finishes at/i);
+    const travelInput = screen.getByLabelText(/Approximate travel time from school to the academy/i);
+
+    fireEvent.change(dismissalInput, { target: { value: '15:00' } });
+    fireEvent.change(travelInput, { target: { value: '30' } });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Comfortable Schedule:/i)).toBeDefined();
+    });
+  });
 });

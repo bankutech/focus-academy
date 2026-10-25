@@ -14,10 +14,12 @@ import {
   Layers,
   ChevronLeft,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
+import { formatTime12 } from '../../types/schemas';
 import { CAMPUS_CONFIG } from '../../config/campusConfig';
 
 export default function AdminLeadsPage() {
@@ -335,6 +337,18 @@ export default function AdminLeadsPage() {
                           {lead.grade}
                         </span>
                         <div className="text-slate-500 text-[11px] mt-1">{lead.board || 'State Board'}</div>
+                        {lead.schoolShift && (
+                          <div className="text-[11px] text-slate-600 font-semibold mt-1">
+                            Shift: {lead.schoolShift}
+                          </div>
+                        )}
+                        {(lead.schoolDismissalTime || (lead.travelDurationMinutes !== null && lead.travelDurationMinutes !== undefined)) && (
+                          <div className="text-[10px] text-slate-500">
+                            {lead.schoolDismissalTime ? `Finishes: ${formatTime12(lead.schoolDismissalTime)}` : ''}
+                            {lead.schoolDismissalTime && (lead.travelDurationMinutes !== null && lead.travelDurationMinutes !== undefined) ? ' • ' : ''}
+                            {lead.travelDurationMinutes !== null && lead.travelDurationMinutes !== undefined ? `Travel: ${lead.travelDurationMinutes}m` : ''}
+                          </div>
+                        )}
                       </td>
 
                       <td className="py-3.5 px-4 max-w-xs">
@@ -345,6 +359,12 @@ export default function AdminLeadsPage() {
                           <div className="flex items-center space-x-1 text-slate-500 text-[11px] mt-0.5">
                             <Clock className="w-3 h-3" />
                             <span>{lead.timing}</span>
+                          </div>
+                        )}
+                        {lead.scheduleClashWarning && (
+                          <div className="mt-1 inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
+                            <span title={lead.scheduleClashWarning}>Timing Risk</span>
                           </div>
                         )}
                         {lead.reservationId && (

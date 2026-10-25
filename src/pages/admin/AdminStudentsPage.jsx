@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
-import { validateIndianMobile, isBatchCompatible } from '../../types/schemas';
+import { validateIndianMobile, isBatchCompatible, formatTime12 } from '../../types/schemas';
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
@@ -667,6 +667,24 @@ export default function AdminStudentsPage() {
                       <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-[#EA580C] border border-orange-200 truncate max-w-[200px]">
                         {s.batchName || s.batchId}
                       </span>
+                      {s.schoolShift && (
+                        <div className="text-[10px] text-slate-600 font-semibold mt-1">
+                          Shift: {s.schoolShift}
+                        </div>
+                      )}
+                      {(s.schoolDismissalTime || (s.travelDurationMinutes !== null && s.travelDurationMinutes !== undefined)) && (
+                        <div className="text-[10px] text-slate-500">
+                          {s.schoolDismissalTime ? `Finishes: ${formatTime12(s.schoolDismissalTime)}` : ''}
+                          {s.schoolDismissalTime && (s.travelDurationMinutes !== null && s.travelDurationMinutes !== undefined) ? ' • ' : ''}
+                          {s.travelDurationMinutes !== null && s.travelDurationMinutes !== undefined ? `Travel: ${s.travelDurationMinutes}m` : ''}
+                        </div>
+                      )}
+                      {s.scheduleClashWarning && (
+                        <div className="mt-1 inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span title={s.scheduleClashWarning}>Timing Risk</span>
+                        </div>
+                      )}
                     </td>
 
                     <td className="py-3.5 px-4">

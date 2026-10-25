@@ -48,6 +48,135 @@ export const validateGSTIN = (gstin) => {
   return { valid: true, sanitized: cleanGST };
 };
 
+export const parseTimeMinutes = (timeStr) => {
+  if (!timeStr || typeof timeStr !== 'string') return null;
+  const trimmed = timeStr.trim();
+  const match12 = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!match12) return null;
+  let hours = parseInt(match12[1], 10);
+  const minutes = parseInt(match12[2], 10);
+  const modifier = match12[3] ? match12[3].toUpperCase() : null;
+
+  if (minutes < 0 || minutes > 59) return null;
+
+  if (modifier) {
+    if (hours < 1 || hours > 12) return null;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+    if (modifier === 'PM' && hours < 12) hours += 12;
+  } else {
+    if (hours < 0 || hours > 23) return null;
+  }
+
+  return hours * 60 + minutes;
+};
+
+export const parseBatchStartMinutes = (timingStr) => {
+  if (!timingStr || typeof timingStr !== 'string') return null;
+  const firstToken = timingStr.split(/[–\-]/)[0].trim();
+  return parseTimeMinutes(firstToken);
+};
+
+export const formatTime12 = (timeInput) => {
+  let minutes = null;
+  if (typeof timeInput === 'number') {
+    minutes = ((timeInput % 1440) + 1440) % 1440;
+  } else if (typeof timeInput === 'string') {
+    minutes = parseTimeMinutes(timeInput);
+  }
+  if (minutes === null) return '';
+  const hours24 = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  const modifier = hours24 >= 12 ? 'PM' : 'AM';
+  let hours12 = hours24 % 12;
+  if (hours12 === 0) hours12 = 12;
+  const paddedMins = mins < 10 ? `0${mins}` : mins;
+  return `${hours12}:${paddedMins} ${modifier}`;
+};
+
+export const calculateEstimatedArrival = (dismissalTime, travelMinutes) => {
+  if (!dismissalTime) return null;
+  const dismissalMins = parseTimeMinutes(dismissalTime);
+  if (dismissalMins === null) return null;
+  if (travelMinutes === null || travelMinutes === undefined || travelMinutes === '' || isNaN(travelMinutes)) {
+    return null;
+  }
+  const travel = parseInt(travelMinutes, 10);
+  if (travel < 0) return null;
+
+  const rawArrival = dismissalMins + travel;
+  const arrivalMinutes = ((rawArrival % 1440) + 1440) % 1440;
+  const formattedTime = formatTime12(arrivalMinutes);
+  return { arrivalMinutes, formattedTime };
+};
+
+export const evaluateBatchTimingCompatibility = (selectedBatch, dismissalTime, travelMinutes, availableBatches = [], options = {}) => {
+  const arrival = calculateEstimatedArrival(dismissalTime, travelMinutes);
+  if (!arrival) {
+    return {
+      status: 'no_data',
+      estimatedArrivalTime: null,
+      delayMinutes: 0,
+      bufferMinutes: 0,
+      warning: null,
+      recommendedBatch: null
+    };
+  }
+
+  const batchStart = parseBatchStartMinutes(selectedBatch?.timing);
+  if (batchStart === null) {
+    return {
+      status: 'no_data',
+      estimatedArrivalTime: arrival.formattedTime,
+      delayMinutes: 0,
+      bufferMinutes: 0,
+      warning: null,
+      recommendedBatch: null
+    };
+  }
+
+  const diff = batchStart - arrival.arrivalMinutes;
+
+  if (diff < 0) {
+    const delayMinutes = Math.abs(diff);
+    let recommendedBatch = null;
+    const targetGrade = options.studentGrade || selectedBatch?.grade;
+    const targetBoard = options.studentBoard || selectedBatch?.board;
+
+    if (Array.isArray(availableBatches) && availableBatches.length > 0) {
+      const candidates = availableBatches
+        .filter((b) => b.id !== selectedBatch?.id && (!targetGrade || isBatchCompatible(b, targetGrade, targetBoard)))
+        .map((b) => ({
+          batch: b,
+          startMins: parseBatchStartMinutes(b.timing)
+        }))
+        .filter((item) => item.startMins !== null && item.startMins >= arrival.arrivalMinutes + 5)
+        .sort((a, b) => a.startMins - b.startMins);
+
+      if (candidates.length > 0) {
+        recommendedBatch = candidates[0].batch;
+      }
+    }
+
+    return {
+      status: 'warning',
+      estimatedArrivalTime: arrival.formattedTime,
+      delayMinutes,
+      bufferMinutes: 0,
+      warning: 'Your school schedule may make this batch difficult to reach on time. Please review the timing or contact the academy for assistance.',
+      recommendedBatch
+    };
+  }
+
+  return {
+    status: 'comfortable',
+    estimatedArrivalTime: arrival.formattedTime,
+    delayMinutes: 0,
+    bufferMinutes: diff,
+    warning: null,
+    recommendedBatch: null
+  };
+};
+
 export const validateEnrollmentPayload = (payload, options = {}) => {
   const { includesPrintedMaterials = false, isOffline = true } = options;
   const errors = {};
@@ -77,6 +206,20 @@ export const validateEnrollmentPayload = (payload, options = {}) => {
 
   if (!payload.schoolShift) {
     errors.schoolShift = 'Please select school / college shift timing.';
+  }
+
+  if (payload.schoolDismissalTime) {
+    const dismissalMins = parseTimeMinutes(payload.schoolDismissalTime);
+    if (dismissalMins === null) {
+      errors.schoolDismissalTime = 'Please enter a valid school dismissal time.';
+    }
+  }
+
+  if (payload.travelDurationMinutes !== undefined && payload.travelDurationMinutes !== null && payload.travelDurationMinutes !== '') {
+    const parsedTravel = Number(payload.travelDurationMinutes);
+    if (isNaN(parsedTravel) || parsedTravel < 0 || parsedTravel > 300) {
+      errors.travelDurationMinutes = 'Please enter a valid travel duration (0 to 300 minutes).';
+    }
   }
 
   const whatsappInput = payload.whatsappNumber || payload.phone;
@@ -148,7 +291,10 @@ export const validateEnrollmentPayload = (payload, options = {}) => {
       educationBoard: sanitizeText(payload.educationBoard || payload.board),
       targetYear: sanitizeText(String(payload.targetYear), 10),
       previousScore: payload.previousScore ? sanitizeText(payload.previousScore, 30) : null,
-      schoolShift: sanitizeText(payload.schoolShift, 40),
+      schoolShift: sanitizeText(payload.schoolShift, 60),
+      schoolDismissalTime: payload.schoolDismissalTime ? sanitizeText(payload.schoolDismissalTime, 10) : null,
+      travelDurationMinutes: payload.travelDurationMinutes !== undefined && payload.travelDurationMinutes !== null && payload.travelDurationMinutes !== '' && !isNaN(payload.travelDurationMinutes) ? Math.min(Math.max(0, parseInt(payload.travelDurationMinutes, 10)), 300) : null,
+      scheduleClashWarning: payload.scheduleClashWarning ? sanitizeText(payload.scheduleClashWarning, 250) : null,
       mediumOfInstruction: sanitizeText(payload.mediumOfInstruction, 40),
       emergencyContactName: sanitizeText(payload.emergencyContactName),
       emergencyRelationship: sanitizeText(payload.emergencyRelationship, 40),
@@ -216,7 +362,10 @@ export const validateLeadInquiry = (lead) => {
       educationBoard: lead.educationBoard ? sanitizeText(lead.educationBoard, 60) : undefined,
       targetYear: lead.targetYear ? sanitizeText(String(lead.targetYear), 10) : undefined,
       previousScore: lead.previousScore ? sanitizeText(lead.previousScore, 30) : undefined,
-      schoolShift: lead.schoolShift ? sanitizeText(lead.schoolShift, 40) : undefined,
+      schoolShift: lead.schoolShift ? sanitizeText(lead.schoolShift, 60) : undefined,
+      schoolDismissalTime: lead.schoolDismissalTime ? sanitizeText(lead.schoolDismissalTime, 10) : undefined,
+      travelDurationMinutes: lead.travelDurationMinutes !== undefined && lead.travelDurationMinutes !== null && lead.travelDurationMinutes !== '' && !isNaN(lead.travelDurationMinutes) ? Math.min(Math.max(0, parseInt(lead.travelDurationMinutes, 10)), 300) : undefined,
+      scheduleClashWarning: lead.scheduleClashWarning ? sanitizeText(lead.scheduleClashWarning, 250) : undefined,
       mediumOfInstruction: lead.mediumOfInstruction ? sanitizeText(lead.mediumOfInstruction, 40) : undefined,
       emergencyContactName: lead.emergencyContactName ? sanitizeText(lead.emergencyContactName, 80) : undefined,
       emergencyRelationship: lead.emergencyRelationship ? sanitizeText(lead.emergencyRelationship, 40) : undefined,
@@ -241,16 +390,12 @@ export const isBatchCompatible = (batch, grade, board) => {
 
   let gradeMatch = false;
   if (g.includes('6') || g.includes('7') || g.includes('8') || g.includes('middle')) {
-    gradeMatch = bGrade.includes('6') || bGrade.includes('7') || bGrade.includes('8') || bGrade.includes('middle');
-  } else if (g.includes('9')) {
-    gradeMatch = bGrade.includes('9');
-  } else if (g.includes('10')) {
-    gradeMatch = bGrade.includes('10');
-  } else if (g.includes('11')) {
-    gradeMatch = bGrade.includes('11');
-  } else if (g.includes('12')) {
-    gradeMatch = bGrade.includes('12');
+    if (bGrade.includes('6') || bGrade.includes('7') || bGrade.includes('8') || bGrade.includes('middle')) gradeMatch = true;
   }
+  if (g.includes('9') && bGrade.includes('9')) gradeMatch = true;
+  if (g.includes('10') && bGrade.includes('10')) gradeMatch = true;
+  if (g.includes('11') && bGrade.includes('11')) gradeMatch = true;
+  if (g.includes('12') && bGrade.includes('12')) gradeMatch = true;
 
   if (!gradeMatch) return false;
 

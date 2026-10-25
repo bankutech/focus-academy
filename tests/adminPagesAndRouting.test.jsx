@@ -10,6 +10,7 @@ import AdminLayout from '../src/pages/admin/AdminLayout';
 import AdminDashboardPage from '../src/pages/admin/AdminDashboardPage';
 import AdminBatchesPage from '../src/pages/admin/AdminBatchesPage';
 import AdminStudentsPage from '../src/pages/admin/AdminStudentsPage';
+import AdminLeadsPage from '../src/pages/admin/AdminLeadsPage';
 import AdminFeesPage from '../src/pages/admin/AdminFeesPage';
 import AdminLedgerPage from '../src/pages/admin/AdminLedgerPage';
 import AdminRemindersPage from '../src/pages/admin/AdminRemindersPage';
@@ -190,6 +191,74 @@ describe('Admin Portal Pages & Routing Integrity', () => {
       expect(screen.getByText('Financial Ledger & Payments')).toBeDefined();
       expect(screen.getByText('Record New Payment')).toBeDefined();
       expect(screen.getByText('REC-2026-0001')).toBeDefined();
+    });
+  });
+
+  it('renders AdminStudentsPage with school shift, dismissal, travel duration and timing warning badge', async () => {
+    const studentWithTiming = {
+      studentName: 'P. Rahul',
+      guardianName: 'P. Perumal',
+      guardianPhone: '9842451220',
+      grade: 'Class 10',
+      board: 'TN State Board (Samacheer)',
+      batchId: 'batch-10-state-board',
+      schoolShift: 'Morning shift',
+      schoolDismissalTime: '15:30',
+      travelDurationMinutes: 25,
+      scheduleClashWarning: 'Timing risk advisory',
+      status: 'active'
+    };
+    await AdminDataService.createStudent(studentWithTiming, 'admin@focusacademyperambalur.com');
+
+    render(
+      <MemoryRouter>
+        <AdminStudentsPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('P. Rahul')).toBeDefined();
+      expect(screen.getByText(/Shift: Morning shift/i)).toBeDefined();
+      expect(screen.getByText(/Finishes: 3:30 PM/i)).toBeDefined();
+      expect(screen.getByText(/Travel: 25m/i)).toBeDefined();
+      expect(screen.getByText(/Timing Risk/i)).toBeDefined();
+    });
+  });
+
+  it('renders AdminLeadsPage with lead school shift, dismissal, travel duration and timing warning badge', async () => {
+    localStorage.setItem(
+      'focus_academy_submitted_leads_v1',
+      JSON.stringify([
+        {
+          id: 'FA-LEAD-991',
+          studentName: 'M. Harish',
+          parentName: 'M. Mohan',
+          phone: '9842451220',
+          grade: 'Class 10',
+          board: 'CBSE',
+          batchId: 'batch-10-cbse',
+          schoolShift: 'Day/Afternoon shift',
+          schoolDismissalTime: '16:00',
+          travelDurationMinutes: 30,
+          scheduleClashWarning: 'Your school schedule may make this batch difficult to reach on time.',
+          status: 'new',
+          timestamp: new Date().toISOString()
+        }
+      ])
+    );
+
+    render(
+      <MemoryRouter>
+        <AdminLeadsPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('M. Harish')).toBeDefined();
+      expect(screen.getByText(/Shift: Day\/Afternoon shift/i)).toBeDefined();
+      expect(screen.getByText(/Finishes: 4:00 PM/i)).toBeDefined();
+      expect(screen.getByText(/Travel: 30m/i)).toBeDefined();
+      expect(screen.getByText(/Timing Risk/i)).toBeDefined();
     });
   });
 });

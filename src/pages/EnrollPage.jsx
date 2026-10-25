@@ -27,7 +27,10 @@ import {
   validateIndianMobile, 
   validateIndianPincode, 
   validateGSTIN, 
-  isBatchCompatible 
+  isBatchCompatible,
+  parseTimeMinutes,
+  formatTime12,
+  evaluateBatchTimingCompatibility
 } from '../types/schemas';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
@@ -75,7 +78,13 @@ export default function EnrollPage() {
   );
   const [targetYear, setTargetYear] = useState('2027');
   const [previousScore, setPreviousScore] = useState('');
-  const [schoolShift, setSchoolShift] = useState('Morning Shift (e.g. 7:30 AM – 1:30 PM)');
+  const [schoolShift, setSchoolShift] = useState(studentFlow?.schoolShift || 'Morning shift');
+  const [schoolDismissalTime, setSchoolDismissalTime] = useState(studentFlow?.schoolDismissalTime || '');
+  const [travelDurationMinutes, setTravelDurationMinutes] = useState(
+    studentFlow?.travelDurationMinutes !== undefined && studentFlow?.travelDurationMinutes !== null
+      ? String(studentFlow.travelDurationMinutes)
+      : ''
+  );
 
   const [mediumOfInstruction, setMediumOfInstruction] = useState('English');
   const [emergencyContactName, setEmergencyContactName] = useState('');
@@ -103,6 +112,25 @@ export default function EnrollPage() {
   if (redirectPath) {
     return <Navigate to={redirectPath} state={{ redirectedFrom: 5 }} replace />;
   }
+
+  const timingEval = evaluateBatchTimingCompatibility(
+    selectedBatch,
+    schoolDismissalTime,
+    travelDurationMinutes,
+    BATCHES_DATA,
+    { studentGrade: studentFlow?.grade, studentBoard: studentFlow?.board }
+  );
+
+  const handleSwitchBatch = (newBatch) => {
+    navigate(`/enroll/${newBatch.id}`, { replace: true });
+    setStudentFlow((prev) => ({
+      ...prev,
+      selectedBatchId: newBatch.id,
+      selectedBatchName: newBatch.name,
+      timing: newBatch.timing,
+      monthlyFee: newBatch.monthlyFee,
+    }));
+  };
 
   const toggleSection = (sectionKey) => {
     setOpenSections((prev) => ({
@@ -153,6 +181,14 @@ export default function EnrollPage() {
 
     if (!schoolShift) {
       errors.schoolShift = 'Please select school / college shift timing.';
+    }
+
+    if (schoolDismissalTime && !parseTimeMinutes(schoolDismissalTime)) {
+      errors.schoolDismissalTime = 'Please enter a valid dismissal time (e.g. 15:30 or 3:30 PM).';
+    }
+
+    if (travelDurationMinutes && (isNaN(travelDurationMinutes) || Number(travelDurationMinutes) < 0 || Number(travelDurationMinutes) > 300)) {
+      errors.travelDurationMinutes = 'Please enter valid travel minutes (0 to 300).';
     }
 
     if (!mediumOfInstruction) {
@@ -308,6 +344,9 @@ export default function EnrollPage() {
       targetYear,
       previousScore: previousScore.trim() || null,
       schoolShift,
+      schoolDismissalTime: schoolDismissalTime ? schoolDismissalTime.trim() : null,
+      travelDurationMinutes: travelDurationMinutes && !isNaN(travelDurationMinutes) ? Number(travelDurationMinutes) : null,
+      scheduleClashWarning: timingEval.status === 'warning' ? timingEval.warning : null,
       mediumOfInstruction,
       emergencyContactName: emergencyContactName.trim(),
       emergencyRelationship,
@@ -336,7 +375,7 @@ export default function EnrollPage() {
 
     const saved = registerStudent(enrollmentRecord);
 
-    const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
+    const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift}${enrollmentRecord.schoolDismissalTime ? ` (Finish: ${formatTime12(enrollmentRecord.schoolDismissalTime)}, Travel: ${enrollmentRecord.travelDurationMinutes || 0}m)` : ''} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
 
     await LeadService.submitLead({
       studentName: enrollmentRecord.studentName,
@@ -348,6 +387,9 @@ export default function EnrollPage() {
       targetYear: enrollmentRecord.targetYear,
       previousScore: enrollmentRecord.previousScore,
       schoolShift: enrollmentRecord.schoolShift,
+      schoolDismissalTime: enrollmentRecord.schoolDismissalTime,
+      travelDurationMinutes: enrollmentRecord.travelDurationMinutes,
+      scheduleClashWarning: enrollmentRecord.scheduleClashWarning,
       mediumOfInstruction: enrollmentRecord.mediumOfInstruction,
       emergencyContactName: enrollmentRecord.emergencyContactName,
       emergencyRelationship: enrollmentRecord.emergencyRelationship,
@@ -458,6 +500,15 @@ export default function EnrollPage() {
               <div className="flex justify-between">
                 <span className="text-slate-500 font-medium">Board & Target Cycle:</span>
                 <span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.educationBoard} (Target: {submissionResult.enrollmentRecord?.targetYear})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-medium">School Timing:</span>
+                <span className="font-semibold text-slate-800">
+                  {submissionResult.enrollmentRecord?.schoolShift}
+                  {submissionResult.enrollmentRecord?.schoolDismissalTime
+                    ? ` (Finishes ${formatTime12(submissionResult.enrollmentRecord.schoolDismissalTime)})`
+                    : ''}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-medium">WhatsApp Updates:</span>
@@ -800,10 +851,11 @@ export default function EnrollPage() {
 
                           <div>
                             <label htmlFor="enroll-school-shift" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                              School / College Shift Timing *
+                              What is your child&apos;s school timing? *
                             </label>
                             <select
                               id="enroll-school-shift"
+                              aria-label="What is your child's school timing? (School / College Shift Timing)"
                               value={schoolShift}
                               onChange={(e) => {
                                 setSchoolShift(e.target.value);
@@ -812,15 +864,112 @@ export default function EnrollPage() {
                               className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                               required
                             >
-                              <option value="Morning Shift (e.g. 7:30 AM – 1:30 PM)">Morning Shift (e.g. 7:30 AM – 1:30 PM)</option>
-                              <option value="Day/Afternoon Shift (e.g. 9:00 AM – 3:30 PM)">Day/Afternoon Shift (e.g. 9:00 AM – 3:30 PM)</option>
+                              <option value="Morning shift">Morning shift</option>
+                              <option value="Day/Afternoon shift">Day/Afternoon shift</option>
+                              <option value="Other / Varies">Other / Varies</option>
                             </select>
-                            <p className="text-[11px] text-slate-500 mt-1">Ensures zero overlap with 4:00 PM – 9:00 PM batch slots.</p>
+                            <p className="text-[11px] text-slate-500 mt-1">This information helps the academy understand your student&apos;s schedule and recommend a suitable batch.</p>
                             {formErrors.schoolShift && (
                               <p className="text-xs text-rose-600 mt-1">{formErrors.schoolShift}</p>
                             )}
                           </div>
                         </div>
+
+                        <div className="grid sm:grid-cols-2 gap-4 pt-1">
+                          <div>
+                            <label htmlFor="enroll-dismissal-time" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              School usually finishes at (Optional)
+                            </label>
+                            <input
+                              id="enroll-dismissal-time"
+                              type="time"
+                              value={schoolDismissalTime}
+                              onChange={(e) => {
+                                setSchoolDismissalTime(e.target.value);
+                                if (formErrors.schoolDismissalTime) setFormErrors((prev) => ({ ...prev, schoolDismissalTime: '' }));
+                              }}
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                            />
+                            <p className="text-[11px] text-slate-500 mt-1">Typical school bell or dismissal time.</p>
+                            {formErrors.schoolDismissalTime && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.schoolDismissalTime}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label htmlFor="enroll-travel-duration" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Approximate travel time from school to the academy (Optional)
+                            </label>
+                            <div className="relative">
+                              <input
+                                id="enroll-travel-duration"
+                                type="number"
+                                min="0"
+                                max="300"
+                                step="5"
+                                placeholder="e.g. 25"
+                                value={travelDurationMinutes}
+                                onChange={(e) => {
+                                  setTravelDurationMinutes(e.target.value);
+                                  if (formErrors.travelDurationMinutes) setFormErrors((prev) => ({ ...prev, travelDurationMinutes: '' }));
+                                }}
+                                className="w-full px-3.5 py-2.5 pr-16 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              />
+                              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
+                                minutes
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-1">Estimated transit time via bus, van, bicycle, or walking.</p>
+                            {formErrors.travelDurationMinutes && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.travelDurationMinutes}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {timingEval.status === 'warning' && (
+                          <div className="p-3.5 sm:p-4 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-2">
+                            <div className="flex items-start space-x-2.5">
+                              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                              <div className="space-y-1">
+                                <p className="font-bold text-amber-950">
+                                  Scheduling Advisory (Estimated Arrival: ~{timingEval.estimatedArrivalTime})
+                                </p>
+                                <p className="leading-relaxed">
+                                  Your school schedule may make this batch difficult to reach on time. Please review the timing or contact the academy for assistance.
+                                </p>
+                                <p className="text-[11px] text-amber-800">
+                                  This is a recommendation based on your declared transit time, not an admission restriction. You may still enroll in this slot if your schedule permits.
+                                </p>
+                              </div>
+                            </div>
+                            {timingEval.recommendedBatch && (
+                              <div className="pt-2 border-t border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="text-[11px]">
+                                  <span className="font-bold text-amber-950">Suggested Alternative: </span>
+                                  <span className="font-semibold text-slate-800">{timingEval.recommendedBatch.name}</span>
+                                  <span className="text-slate-600"> ({timingEval.recommendedBatch.timing})</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSwitchBatch(timingEval.recommendedBatch)}
+                                  className="px-3 py-1.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded text-xs transition-colors shadow-2xs inline-flex items-center space-x-1 cursor-pointer self-start sm:self-auto"
+                                >
+                                  <span>Switch to {timingEval.recommendedBatch.name.split(' ')[0]} Batch</span>
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {timingEval.status === 'comfortable' && (
+                          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-900 flex items-center space-x-2.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span>
+                              <strong className="font-bold">Comfortable Schedule:</strong> Estimated arrival at ~{timingEval.estimatedArrivalTime} ({timingEval.bufferMinutes} min buffer before batch starts at {selectedBatch?.timing?.split(/[–\-]/)[0]?.trim() || selectedBatch?.timing}).
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

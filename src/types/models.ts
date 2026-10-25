@@ -59,6 +59,9 @@ export interface LeadInquiry {
   targetYear?: string;
   previousScore?: string | null;
   schoolShift?: string;
+  schoolDismissalTime?: string | null;
+  travelDurationMinutes?: number | null;
+  scheduleClashWarning?: string | null;
   mediumOfInstruction?: string;
   emergencyContactName?: string;
   emergencyRelationship?: string;
@@ -91,7 +94,10 @@ export interface EnrollmentRecord {
   educationBoard: 'CBSE' | 'ICSE' | 'State Board' | 'Other' | string;
   targetYear: string;
   previousScore?: string | null;
-  schoolShift: 'Morning Shift' | 'Day/Afternoon Shift' | string;
+  schoolShift: 'Morning shift' | 'Day/Afternoon shift' | 'Other / Varies' | string;
+  schoolDismissalTime?: string | null;
+  travelDurationMinutes?: number | null;
+  scheduleClashWarning?: string | null;
   mediumOfInstruction: 'English' | 'Hindi' | 'Bilingual / Hinglish' | 'Tamil / English (Bilingual)' | string;
   emergencyContactName: string;
   emergencyRelationship: 'Father' | 'Mother' | 'Guardian' | 'Other' | string;

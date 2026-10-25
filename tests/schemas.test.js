@@ -4,7 +4,12 @@ import {
   validateIndianPincode, 
   validateGSTIN, 
   validateEnrollmentPayload, 
-  validateLeadInquiry 
+  validateLeadInquiry,
+  parseTimeMinutes,
+  parseBatchStartMinutes,
+  formatTime12,
+  calculateEstimatedArrival,
+  evaluateBatchTimingCompatibility
 } from '../src/types/schemas';
 
 describe('validateIndianMobile', () => {
@@ -194,5 +199,174 @@ describe('validateLeadInquiry', () => {
     expect(result.isValid).toBe(true);
     expect(result.sanitized.secondaryPhone).toBe('9842451221');
     expect(result.sanitized.medicalAlert).toBe('Severe peanut allergy, carries EpiPen needs inhaler urgent');
+  });
+});
+
+describe('Intelligent Scheduling and Shift Timing Utilities', () => {
+  it('parses 24h and 12h time strings into minutes from midnight', () => {
+    expect(parseTimeMinutes('15:30')).toBe(930);
+    expect(parseTimeMinutes('07:15')).toBe(435);
+    expect(parseTimeMinutes('3:30 PM')).toBe(930);
+    expect(parseTimeMinutes('7:30 AM')).toBe(450);
+    expect(parseTimeMinutes('12:00 PM')).toBe(720);
+    expect(parseTimeMinutes('12:00 AM')).toBe(0);
+    expect(parseTimeMinutes('11:59 PM')).toBe(1439);
+    expect(parseTimeMinutes('')).toBeNull();
+    expect(parseTimeMinutes(null)).toBeNull();
+    expect(parseTimeMinutes('25:00')).toBeNull();
+    expect(parseTimeMinutes('14:75')).toBeNull();
+    expect(parseTimeMinutes('invalid')).toBeNull();
+  });
+
+  it('parses batch start minutes from batch timing strings', () => {
+    expect(parseBatchStartMinutes('4:30 PM – 6:00 PM (Mon – Sat)')).toBe(990);
+    expect(parseBatchStartMinutes('6:00 PM – 7:30 PM (Mon – Sat)')).toBe(1080);
+    expect(parseBatchStartMinutes('7:30 PM – 9:00 PM (Mon – Sat)')).toBe(1170);
+    expect(parseBatchStartMinutes('')).toBeNull();
+    expect(parseBatchStartMinutes(null)).toBeNull();
+  });
+
+  it('formats minutes into standard 12-hour AM/PM string', () => {
+    expect(formatTime12(930)).toBe('3:30 PM');
+    expect(formatTime12(990)).toBe('4:30 PM');
+    expect(formatTime12(0)).toBe('12:00 AM');
+    expect(formatTime12(720)).toBe('12:00 PM');
+    expect(formatTime12(1080)).toBe('6:00 PM');
+    expect(formatTime12(1170)).toBe('7:30 PM');
+    expect(formatTime12(null)).toBe('');
+  });
+
+  it('calculates estimated arrival without inventing estimates when values are missing', () => {
+    const res1 = calculateEstimatedArrival('15:30', '30');
+    expect(res1).not.toBeNull();
+    expect(res1.arrivalMinutes).toBe(960);
+    expect(res1.formattedTime).toBe('4:00 PM');
+
+    expect(calculateEstimatedArrival('', '30')).toBeNull();
+    expect(calculateEstimatedArrival('15:30', '')).toBeNull();
+    expect(calculateEstimatedArrival('15:30', null)).toBeNull();
+    expect(calculateEstimatedArrival('invalid', '30')).toBeNull();
+    expect(calculateEstimatedArrival('15:30', -10)).toBeNull();
+  });
+
+  it('handles midnight boundary arithmetic correctly', () => {
+    const res = calculateEstimatedArrival('23:45', '30');
+    expect(res).not.toBeNull();
+    expect(res.arrivalMinutes).toBe(15);
+    expect(res.formattedTime).toBe('12:15 AM');
+  });
+
+  it('evaluates comfortable arrival when student reaches before batch start', () => {
+    const selectedBatch = {
+      id: 'batch-10-cbse',
+      name: 'Class 10 CBSE Board',
+      timing: '4:30 PM – 6:00 PM',
+      grade: 'Class 10',
+      board: 'CBSE'
+    };
+    const evalResult = evaluateBatchTimingCompatibility(selectedBatch, '15:30', '30', []);
+    expect(evalResult.status).toBe('comfortable');
+    expect(evalResult.estimatedArrivalTime).toBe('4:00 PM');
+    expect(evalResult.bufferMinutes).toBe(30);
+    expect(evalResult.delayMinutes).toBe(0);
+    expect(evalResult.warning).toBeNull();
+  });
+
+  it('evaluates timing clash warning and suggests alternative batch when student arrives late', () => {
+    const selectedBatch = {
+      id: 'batch-10-cbse-b1',
+      name: 'Class 10 CBSE Batch 1',
+      timing: '4:30 PM – 6:00 PM',
+      grade: 'Class 10',
+      board: 'CBSE'
+    };
+    const batches = [
+      selectedBatch,
+      {
+        id: 'batch-10-cbse-b2',
+        name: 'Class 10 CBSE Batch 2',
+        timing: '6:00 PM – 7:30 PM',
+        grade: 'Class 10',
+        board: 'CBSE',
+        seatsRemaining: 6
+      },
+      {
+        id: 'batch-10-cbse-b3',
+        name: 'Class 10 CBSE Batch 3',
+        timing: '7:30 PM – 9:00 PM',
+        grade: 'Class 10',
+        board: 'CBSE',
+        seatsRemaining: 8
+      }
+    ];
+
+    const evalResult = evaluateBatchTimingCompatibility(selectedBatch, '16:15', '30', batches);
+    expect(evalResult.status).toBe('warning');
+    expect(evalResult.estimatedArrivalTime).toBe('4:45 PM');
+    expect(evalResult.delayMinutes).toBe(15);
+    expect(evalResult.warning).toContain('Your school schedule may make this batch difficult to reach on time');
+    expect(evalResult.recommendedBatch).not.toBeNull();
+    expect(evalResult.recommendedBatch.id).toBe('batch-10-cbse-b2');
+  });
+
+  it('returns no_data status without warning when timing information is omitted', () => {
+    const selectedBatch = {
+      id: 'batch-10-cbse',
+      name: 'Class 10 CBSE Board',
+      timing: '4:30 PM – 6:00 PM'
+    };
+    const evalResult = evaluateBatchTimingCompatibility(selectedBatch, '', '', []);
+    expect(evalResult.status).toBe('no_data');
+    expect(evalResult.warning).toBeNull();
+    expect(evalResult.recommendedBatch).toBeNull();
+  });
+
+  it('validates enrollment payload with new school shift options and sanitized travel time', () => {
+    const payload = {
+      studentName: 'R. Deepika',
+      phone: '9842451220',
+      whatsappNumber: '9842451220',
+      schoolName: 'Perambalur Higher Secondary School',
+      educationBoard: 'State Board',
+      targetYear: '2028',
+      schoolShift: 'Day/Afternoon shift',
+      schoolDismissalTime: '15:45',
+      travelDurationMinutes: 20,
+      scheduleClashWarning: null,
+      mediumOfInstruction: 'English',
+      emergencyContactName: 'R. Rajesh',
+      emergencyRelationship: 'Father',
+      emergencyPhone: '9842451221',
+      studentIdNumber: 'SCH-98124'
+    };
+
+    const res = validateEnrollmentPayload(payload, { isOffline: true });
+    expect(res.isValid).toBe(true);
+    expect(res.sanitized.schoolShift).toBe('Day/Afternoon shift');
+    expect(res.sanitized.schoolDismissalTime).toBe('15:45');
+    expect(res.sanitized.travelDurationMinutes).toBe(20);
+  });
+
+  it('accepts Other / Varies shift and validates travel duration boundary values', () => {
+    const payload = {
+      studentName: 'R. Deepika',
+      phone: '9842451220',
+      whatsappNumber: '9842451220',
+      schoolName: 'Perambalur Higher Secondary School',
+      educationBoard: 'State Board',
+      targetYear: '2028',
+      schoolShift: 'Other / Varies',
+      schoolDismissalTime: '16:00',
+      travelDurationMinutes: 350,
+      mediumOfInstruction: 'English',
+      emergencyContactName: 'R. Rajesh',
+      emergencyRelationship: 'Father',
+      emergencyPhone: '9842451221',
+      studentIdNumber: 'SCH-98124'
+    };
+
+    const res = validateEnrollmentPayload(payload, { isOffline: true });
+    expect(res.isValid).toBe(false);
+    expect(res.errors.travelDurationMinutes).toBeDefined();
   });
 });
