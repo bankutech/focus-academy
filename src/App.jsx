@@ -24,6 +24,7 @@ const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminProtectedRoute = lazy(() => import('./pages/admin/AdminProtectedRoute'));
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminLeadsPage = lazy(() => import('./pages/admin/AdminLeadsPage'));
 const AdminBatchesPage = lazy(() => import('./pages/admin/AdminBatchesPage'));
 const AdminStudentsPage = lazy(() => import('./pages/admin/AdminStudentsPage'));
 const AdminFeesPage = lazy(() => import('./pages/admin/AdminFeesPage'));
@@ -80,6 +81,7 @@ export default function App() {
                 }
               >
                 <Route index element={<AdminDashboardPage />} />
+                <Route path="leads" element={<AdminLeadsPage />} />
                 <Route path="batches" element={<AdminBatchesPage />} />
                 <Route path="students" element={<AdminStudentsPage />} />
                 <Route path="fees" element={<AdminFeesPage />} />

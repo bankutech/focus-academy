@@ -1062,6 +1062,114 @@ export const AdminDataService = {
     return list;
   },
 
+  async getLeads() {
+    if (isFirebaseConfigured() && db) {
+      try {
+        const q = query(collection(db, 'leads'), orderBy('timestamp', 'desc'));
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        }
+      } catch (err) {
+        console.warn('Firestore getLeads query error, attempting local fallback:', err);
+      }
+    }
+
+    const local = [];
+    try {
+      const logs = JSON.parse(
+        (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('focus_academy_submitted_leads_v1')) ||
+        localStorage.getItem('focus_academy_submitted_leads_v1') || '[]'
+      );
+      const queue = JSON.parse(localStorage.getItem('focus_academy_pending_leads_v1') || '[]');
+      const seen = new Set();
+      [...queue, ...logs].forEach(item => {
+        const id = item.id || `lead-${item.phone}-${item.studentName}`;
+        if (!seen.has(id)) {
+          seen.add(id);
+          local.push({
+            id,
+            timestamp: item.submittedAt || item.queuedAt || new Date().toISOString(),
+            studentName: item.studentName,
+            parentName: item.parentName || 'Parent',
+            phone: item.phone,
+            grade: item.grade || 'Class 10',
+            board: item.board || 'State Board',
+            batchId: item.batchId || null,
+            status: item.status || 'new',
+            source: item.reservationId ? 'enrollment' : 'inquiry',
+            subjects: item.subjects || '',
+            notes: item.notes || ''
+          });
+        }
+      });
+    } catch {
+    }
+    return local;
+  },
+
+  async updateLeadStatus(leadId, status, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'updating lead status');
+    const actorEmail = normalizeActorEmail(actor);
+    const now = new Date().toISOString();
+
+    if (isFirebaseConfigured() && db) {
+      try {
+        await updateDoc(doc(db, 'leads', leadId), {
+          status,
+          updatedAt: now,
+          updatedBy: actorEmail
+        });
+      } catch (err) {
+        console.warn('Firestore updateLeadStatus error:', err);
+      }
+    }
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'LEAD_STATUS_UPDATED',
+      entityType: 'lead',
+      entityId: leadId,
+      details: `Updated lead ${leadId} status to '${status}'.`
+    });
+
+    return { success: true, leadId, status };
+  },
+
+  async convertLeadToStudent(lead, overrideData = {}, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'converting lead to student');
+    const actorEmail = normalizeActorEmail(actor);
+
+    const studentPayload = {
+      studentName: lead.studentName,
+      guardianName: lead.parentName || lead.guardianName || 'Parent / Guardian',
+      guardianPhone: lead.phone,
+      grade: overrideData.grade || lead.grade,
+      board: overrideData.board || lead.board,
+      batchId: overrideData.batchId || lead.batchId,
+      academicSession: overrideData.academicSession || '2025-2026',
+      enrollmentDate: overrideData.enrollmentDate || new Date().toISOString().split('T')[0],
+      amountPerCycle: overrideData.amountPerCycle,
+      discountAdjustment: overrideData.discountAdjustment || 0,
+      billingFrequency: overrideData.billingFrequency || 'monthly',
+      status: 'active',
+      reservationId: lead.reservationId
+    };
+
+    const newStudent = await this.createStudent(studentPayload, actor);
+    await this.updateLeadStatus(lead.id, 'converted', actor);
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'LEAD_CONVERTED_TO_STUDENT',
+      entityType: 'lead',
+      entityId: lead.id,
+      details: `Converted lead '${lead.studentName}' into registered student ${newStudent.id} (${newStudent.grade}).`
+    });
+
+    return newStudent;
+  },
+
   async getStudentById(studentId) {
     const students = await this.getStudents();
     return students.find(s => s.id === studentId) || null;
@@ -1196,6 +1304,22 @@ export const AdminDataService = {
     if (isFirebaseConfigured() && db) {
       try {
         await setDoc(doc(db, 'students', newStudent.id), newStudent);
+        try {
+          const resQuery = query(
+            collection(db, 'reservations'),
+            where('batchId', '==', targetBatch.id),
+            where('phone', '==', cleanPhone)
+          );
+          const resSnap = await getDocs(resQuery);
+          for (const rDoc of resSnap.docs) {
+            const rData = rDoc.data();
+            if (rData.status === 'held' || rData.status === 'confirmed') {
+              await updateDoc(rDoc.ref, { status: 'enrolled', enrolledAt: new Date().toISOString() });
+            }
+          }
+        } catch (resErr) {
+          console.warn('Could not update matching reservation status:', resErr);
+        }
       } catch (err) {
         console.error('Firestore createStudent error:', err);
         throw new Error(`Production Database Error: Failed to save student to Cloud Firestore: ${err.message}`);
@@ -1685,6 +1809,78 @@ export const AdminDataService = {
     });
 
     return newObligation;
+  },
+
+  async generateMonthlyFeeCycle(activeStudents, cycleName, nextDueDate, actor = 'admin') {
+    this.verifyPermission(actor, 'canWaiveFees', 'generating bulk monthly fee cycle');
+    const store = await hydrateStore();
+    const existingObligations = await this.getFeeObligations();
+    const existingStudentIds = new Set(
+      existingObligations
+        .filter(o => o.billingCycle === cycleName && o.status !== 'cancelled')
+        .map(o => o.studentId)
+    );
+
+    const eligibleStudents = activeStudents.filter(s => !existingStudentIds.has(s.id));
+    if (eligibleStudents.length === 0) {
+      return { createdCount: 0, skippedCount: activeStudents.length };
+    }
+
+    const createdObligations = [];
+    const now = new Date().toISOString();
+    const today = now.split('T')[0];
+    let nextNum = store.obligations.length + 101;
+
+    for (const student of eligibleStudents) {
+      const amount = Math.max(0, (student.feeConfig?.amountPerCycle || 2000) - (student.feeConfig?.discountAdjustment || 0));
+      const cleanId = `OBL-2026-${nextNum++}`;
+      createdObligations.push({
+        id: cleanId,
+        studentId: student.id,
+        studentName: student.studentName,
+        batchId: student.batchId,
+        billingCycle: cycleName,
+        dueDate: nextDueDate,
+        amountDue: amount,
+        amountPaid: 0,
+        waivedAmount: 0,
+        balance: amount,
+        status: today > nextDueDate ? 'overdue' : 'pending',
+        notes: `Bulk cycle generation for ${cycleName}`,
+        createdAt: now,
+        updatedAt: now
+      });
+    }
+
+    if (isFirebaseConfigured() && db && createdObligations.length > 0) {
+      try {
+        const chunkSize = 400;
+        for (let i = 0; i < createdObligations.length; i += chunkSize) {
+          const chunk = createdObligations.slice(i, i + chunkSize);
+          const batch = writeBatch(db);
+          chunk.forEach(obl => {
+            batch.set(doc(db, 'fee_obligations', obl.id), obl);
+          });
+          await batch.commit();
+        }
+      } catch (err) {
+        console.error('Firestore batch cycle generation error:', err);
+        throw new Error(`Failed to commit batch fee obligations: ${err.message}`);
+      }
+    }
+
+    store.obligations.push(...createdObligations);
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'FEE_CYCLE_GENERATED',
+      entityType: 'fee_obligation',
+      entityId: `CYCLE-${cycleName.replace(/\s+/g, '-')}`,
+      details: `Generated ${createdObligations.length} monthly fee obligations for '${cycleName}'.`
+    });
+
+    return { createdCount: createdObligations.length, skippedCount: activeStudents.length - eligibleStudents.length };
   },
 
   async waiveFeeObligation(obligationId, waiveAmount, reason, actor = 'admin') {

@@ -97,20 +97,14 @@ export default function AdminFeesPage() {
 
       const currentAdmin = requireAdminEmail();
 
-      for (const student of activeStudents) {
-        const amount = Math.max(0, (student.feeConfig?.amountPerCycle || 2000) - (student.feeConfig?.discountAdjustment || 0));
-        await AdminDataService.createFeeObligation({
-          studentId: student.id,
-          studentName: student.studentName,
-          batchId: student.batchId,
-          billingCycle: cycleName,
-          dueDate: nextDueDate,
-          amountDue: amount
-        }, currentAdmin);
-        createdCount++;
-      }
+      const result = await AdminDataService.generateMonthlyFeeCycle(
+        activeStudents,
+        cycleName,
+        nextDueDate,
+        currentAdmin
+      );
 
-      setFormSuccess(`Generated ${createdCount} obligations for ${cycleName}. Duplicate checks applied.`);
+      setFormSuccess(`Generated ${result.createdCount} obligations for ${cycleName} (${result.skippedCount} already existed/skipped). Atomic duplicate checks applied.`);
       await loadData();
     } catch (err) {
       setFormError(err.message || 'Generation failed.');

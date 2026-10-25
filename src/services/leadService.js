@@ -101,7 +101,7 @@ export const LeadService = {
   generateWhatsAppUrl(lead) {
     const phone = CAMPUS_CONFIG.contact.whatsappNumber;
     const text = encodeURIComponent(
-      `Hello Focus Academy, Thoramangalam! 👋\n\nI want to enroll in Evening Batches.\n\n• Student: ${lead.studentName}\n• Parent: ${lead.parentName || 'Parent'}\n• Class: ${lead.grade} (${lead.board})\n• Contact: +91 ${lead.phone}\n• Needing help in: ${lead.subjects || 'Core Subjects'}\n\nPlease share admission details.`
+      `Hello Focus Academy, Thoramangalam! 👋\n\nI want to enroll in Evening Batches.\n\n• Student: ${lead.studentName}\n• Parent: ${lead.parentName || 'Parent'}\n• Class: ${lead.grade} (${lead.board})\n• Contact: +91 ${lead.phone}\n• Selected Batch/Subjects: ${lead.subjects || 'Core Subjects'}\n\nPlease share admission details.`
     );
     return `https://wa.me/${phone}?text=${text}`;
   },
@@ -118,14 +118,19 @@ export const LeadService = {
   _recordSubmission(lead) {
     try {
       const logs = JSON.parse(localStorage.getItem(STORAGE_LOGS_KEY) || '[]');
-      const existingIdx = logs.findIndex((item) => (item.id && item.id === lead.id) || (item.phone === lead.phone && item.studentName === lead.studentName));
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      const activeLogs = logs.filter(item => {
+        const t = item.submittedAt ? new Date(item.submittedAt).getTime() : 0;
+        return t > oneHourAgo;
+      });
+      const existingIdx = activeLogs.findIndex((item) => (item.id && item.id === lead.id) || (item.phone === lead.phone && item.studentName === lead.studentName));
       if (existingIdx >= 0) {
-        logs[existingIdx] = lead;
+        activeLogs[existingIdx] = lead;
       } else {
-        logs.unshift(lead);
+        activeLogs.unshift(lead);
       }
-      if (logs.length > 50) logs.pop();
-      localStorage.setItem(STORAGE_LOGS_KEY, JSON.stringify(logs));
+      if (activeLogs.length > 20) activeLogs.pop();
+      localStorage.setItem(STORAGE_LOGS_KEY, JSON.stringify(activeLogs));
     } catch {
     }
   },

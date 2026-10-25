@@ -15,7 +15,8 @@ import {
   ExternalLink,
   Database,
   Settings as SettingsIcon,
-  Keyboard
+  Keyboard,
+  UserPlus
 } from 'lucide-react';
 import { logOutAdmin, isFirebaseConfigured } from '../../services/firebase';
 import { getVerifiedAdmin, setVerifiedAdmin } from '../../services/adminIdentity';
@@ -58,6 +59,9 @@ export default function AdminLayout() {
       if (e.altKey && (e.key === 'p' || e.key === 'P')) {
         e.preventDefault();
         navigate('/admin-portal/ledger');
+      } else if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        navigate('/admin-portal/leads');
       } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         navigate('/admin-portal/students');
@@ -82,6 +86,7 @@ export default function AdminLayout() {
   }, [navigate]);
   const navItems = [
     { name: 'Dashboard', path: '/admin-portal', icon: LayoutDashboard, end: true },
+    { name: 'Inquiries & Leads', path: '/admin-portal/leads', icon: UserPlus },
     { name: 'Batches', path: '/admin-portal/batches', icon: Layers },
     { name: 'Students', path: '/admin-portal/students', icon: Users },
     { name: 'Fee Schedules', path: '/admin-portal/fees', icon: CreditCard },

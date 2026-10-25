@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 
 export const clientIp = (req) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (forwarded) return String(forwarded).split(',')[0].trim();
+  const ip = req.headers['x-real-ip'] || req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'];
+  if (ip) return String(ip).split(',')[0].trim();
   return req.socket?.remoteAddress || 'unknown';
 };
 

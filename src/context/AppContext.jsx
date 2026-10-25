@@ -11,7 +11,8 @@ const BookDemoModal = lazy(() => import('../components/Modals/BookDemoModal'));
 export function AppProvider({ children }) {
   const [studentFlow, setStudentFlow] = useState(() => {
     try {
-      const saved = localStorage.getItem('focus_academy_student_flow');
+      const saved = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('focus_academy_student_flow')) ||
+                    localStorage.getItem('focus_academy_student_flow');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (typeof parsed === 'object' && parsed !== null) {
@@ -35,26 +36,15 @@ export function AppProvider({ children }) {
     };
   });
 
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'focus_academy_student_flow' && e.newValue) {
-        try {
-          const parsed = JSON.parse(e.newValue);
-          setStudentFlow(parsed);
-        } catch {
-        }
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
   const setStudentFlowWithStorage = useCallback((updaterOrValue) => {
     setStudentFlow((prev) => {
       const nextRaw = typeof updaterOrValue === 'function' ? updaterOrValue(prev) : updaterOrValue;
       const nextStep = Math.max(Number(prev?.step) || 1, Number(nextRaw?.step) || 1);
       const next = { ...nextRaw, step: nextStep };
       try {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('focus_academy_student_flow', JSON.stringify(next));
+        }
         localStorage.setItem('focus_academy_student_flow', JSON.stringify(next));
       } catch {
       }
@@ -134,10 +124,14 @@ export function AppProvider({ children }) {
     const id = `FA-${Date.now().toString().slice(-6)}`;
     const savedRecord = { ...record, id };
     try {
-      const list = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+      const storage = typeof sessionStorage !== 'undefined' ? sessionStorage : localStorage;
+      const list = JSON.parse(storage.getItem('focus_academy_students') || '[]');
       const filtered = list.filter((s) => !(s.phone === record.phone && s.studentName?.toLowerCase().trim() === record.studentName?.toLowerCase().trim()));
       filtered.unshift(savedRecord);
-      localStorage.setItem('focus_academy_students', JSON.stringify(filtered));
+      storage.setItem('focus_academy_students', JSON.stringify(filtered));
+      if (storage !== localStorage && typeof localStorage !== 'undefined') {
+        localStorage.setItem('focus_academy_students', JSON.stringify(filtered));
+      }
     } catch {
     }
     return savedRecord;
@@ -145,6 +139,9 @@ export function AppProvider({ children }) {
 
   const resetStudentFlow = useCallback(() => {
     try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem('focus_academy_student_flow');
+      }
       localStorage.removeItem('focus_academy_student_flow');
     } catch {
     }
