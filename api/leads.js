@@ -21,6 +21,10 @@ export default async function handler(req, res) {
     const body = req.body && typeof req.body === 'object' ? req.body : null;
     if (!body || JSON.stringify(body).length > 8192) return fail(res, 413, 'Payload size exceeds limit');
 
+    if (body.website_url || body.faxNumber || body.company_fax) {
+      return fail(res, 400, 'Automated submission rejected.');
+    }
+
     const studentName = clean(body.studentName, 80);
     const phone = cleanPhone(body.phone);
     if (studentName.length < 2) return fail(res, 400, 'Valid student name is required');
@@ -32,6 +36,8 @@ export default async function handler(req, res) {
       studentName,
       parentName: clean(body.parentName, 80),
       phone,
+      secondaryPhone: body.secondaryPhone ? cleanPhone(body.secondaryPhone) : null,
+      medicalAlert: clean(body.medicalAlert, 150) || null,
       grade: clean(body.grade, 50),
       board: clean(body.board, 60),
       batchId: clean(body.batchId, 60) || null,

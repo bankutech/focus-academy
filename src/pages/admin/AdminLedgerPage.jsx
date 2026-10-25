@@ -681,62 +681,62 @@ export default function AdminLedgerPage() {
             </div>
 
             {receiptFormat === 'thermal_80mm' ? (
-              <div id="printable-receipt" className="p-4 border border-dashed border-slate-400 rounded-sm bg-white font-mono text-[11px] leading-tight text-slate-900 max-w-[340px] mx-auto shadow-xs select-text">
-                <div className="text-center pb-2 border-b border-dashed border-slate-400">
-                  <div className="font-extrabold text-sm tracking-wider uppercase">{settings?.academyName || 'FOCUS ACADEMY'}</div>
-                  <div className="text-[10px] text-slate-700 font-bold">Thiripura Complex, Thoramangalam</div>
-                  <div className="text-[9px] text-slate-600">Perambalur - 621220 | Ph: +91 98424 51220</div>
-                  <div className="text-[10px] font-bold text-slate-900 mt-1 uppercase">*** TUITION FEE RECEIPT ***</div>
+              <div id="printable-receipt" className="p-4 border border-dashed border-black rounded-sm bg-white font-mono text-xs leading-normal text-black max-w-[340px] mx-auto shadow-xs select-text">
+                <div className="text-center pb-2 border-b-2 border-dashed border-black">
+                  <div className="font-extrabold text-base tracking-wider uppercase text-black">{settings?.academyName || 'FOCUS ACADEMY'}</div>
+                  <div className="text-xs text-black font-bold">Thiripura Complex, Thoramangalam</div>
+                  <div className="text-[11px] text-black">Perambalur - 621220 | Ph: +91 98424 51220</div>
+                  <div className="text-xs font-black text-black mt-1 uppercase tracking-wider">*** TUITION FEE RECEIPT ***</div>
                 </div>
 
-                <div className="py-2 border-b border-dashed border-slate-400 space-y-0.5 text-[10px]">
+                <div className="py-2 border-b border-dashed border-black space-y-1 text-xs text-black">
                   <div className="flex justify-between">
-                    <span>RCP NO:</span>
-                    <span className="font-bold">{receiptModalPayment.receiptNumber}</span>
+                    <span className="font-bold">RCP NO:</span>
+                    <span className="font-black text-sm">{receiptModalPayment.receiptNumber}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>DATE/TIME:</span>
-                    <span>{receiptModalPayment.paymentDate}</span>
+                    <span className="font-bold">{receiptModalPayment.paymentDate}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>CASHIER:</span>
-                    <span className="truncate max-w-[140px]">{receiptModalPayment.recordedBy || 'admin'}</span>
+                    <span className="truncate max-w-[160px] font-bold">{receiptModalPayment.recordedBy || 'admin'}</span>
                   </div>
                 </div>
 
-                <div className="py-2 border-b border-dashed border-slate-400 space-y-0.5 text-[10px]">
+                <div className="py-2 border-b border-dashed border-black space-y-1 text-xs text-black">
                   <div className="flex justify-between">
                     <span>STUDENT:</span>
-                    <span className="font-bold">{receiptModalPayment.studentName}</span>
+                    <span className="font-black text-sm">{receiptModalPayment.studentName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>ROLL ID:</span>
-                    <span>{receiptModalPayment.studentId}</span>
+                    <span className="font-bold">{receiptModalPayment.studentId}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>PAY METHOD:</span>
-                    <span className="uppercase font-bold">{receiptModalPayment.paymentMethod.replace('_', ' ')}</span>
+                    <span className="uppercase font-black">{receiptModalPayment.paymentMethod.replace('_', ' ')}</span>
                   </div>
                   {receiptModalPayment.referenceNumber && (
-                    <div className="flex justify-between text-[9px]">
+                    <div className="flex justify-between text-[11px]">
                       <span>UTR/REF:</span>
-                      <span className="font-mono">{receiptModalPayment.referenceNumber}</span>
+                      <span className="font-bold">{receiptModalPayment.referenceNumber}</span>
                     </div>
                   )}
                 </div>
 
-                <div className="py-2.5 border-b-2 border-dashed border-slate-900 flex justify-between items-center text-xs">
-                  <span className="font-extrabold uppercase">AMOUNT PAID:</span>
-                  <span className="font-extrabold text-base">
+                <div className="py-3 border-b-2 border-dashed border-black flex justify-between items-center text-xs text-black">
+                  <span className="font-black text-sm uppercase">AMOUNT PAID:</span>
+                  <span className="font-black text-lg">
                     {settings?.currencySymbol || '₹'}{Number(receiptModalPayment.amount).toLocaleString('en-IN')}
                   </span>
                 </div>
 
-                <div className="pt-2 text-[9px] text-slate-600 text-center space-y-0.5">
-                  <p className="font-bold text-slate-800 uppercase">STATUTORY NOTICE (TN Coaching Acts)</p>
-                  <p>1. Tuition fees once paid are non-refundable and non-transferable.</p>
+                <div className="pt-2 text-[10px] text-black text-center space-y-0.5 leading-snug">
+                  <p className="font-black uppercase">STATUTORY NOTICE (TN Coaching Acts)</p>
+                  <p>1. Tuition fees once paid are non-refundable &amp; non-transferable.</p>
                   <p>2. Computer verified receipt. Valid across Focus Academy records.</p>
-                  <p className="font-extrabold pt-1 text-slate-900">Learn Today. Lead Tomorrow.</p>
+                  <p className="font-black pt-1 text-xs text-black">Learn Today. Lead Tomorrow.</p>
                 </div>
               </div>
             ) : (
@@ -813,16 +813,31 @@ export default function AdminLedgerPage() {
 
             <style dangerouslySetInnerHTML={{ __html: `
               @media print {
+                @page {
+                  size: ${receiptFormat === 'thermal_80mm' ? '80mm auto' : 'auto'};
+                  margin: ${receiptFormat === 'thermal_80mm' ? '2mm' : '8mm'};
+                }
+                body {
+                  background: #ffffff !important;
+                  color: #000000 !important;
+                }
                 body * { visibility: hidden !important; }
-                #printable-receipt, #printable-receipt * { visibility: visible !important; }
+                #printable-receipt, #printable-receipt * { 
+                  visibility: visible !important; 
+                  color: #000000 !important;
+                  text-shadow: none !important;
+                }
                 #printable-receipt { 
                   position: absolute !important; 
                   left: 0 !important; 
                   top: 0 !important; 
-                  width: ${receiptFormat === 'thermal_80mm' ? '80mm' : '100%'} !important; 
+                  width: ${receiptFormat === 'thermal_80mm' ? '76mm' : '100%'} !important; 
                   margin: 0 !important;
-                  padding: 8px !important;
+                  padding: ${receiptFormat === 'thermal_80mm' ? '4mm' : '8px'} !important;
                   border: none !important;
+                  font-family: 'Courier New', Courier, monospace !important;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
                 }
               }
             `}} />

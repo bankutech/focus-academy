@@ -36,10 +36,13 @@ export default function EnrollPage() {
   const [studentName, setStudentName] = useState(studentFlow.studentName || '');
   const [parentName, setParentName] = useState(studentFlow.parentName || '');
   const [phone, setPhone] = useState(studentFlow.phone || '');
+  const [secondaryPhone, setSecondaryPhone] = useState(studentFlow.secondaryPhone || '');
+  const [medicalAlert, setMedicalAlert] = useState(studentFlow.medicalAlert || '');
   const [schoolName, setSchoolName] = useState('');
   const [board, setBoard] = useState(studentFlow.board || selectedBatch.board);
   const [startDatePreference, setStartDatePreference] = useState('Immediate (This Week)');
   const [studentWeakness, setStudentWeakness] = useState('');
+  const [honeypot, setHoneypot] = useState('');
 
   const [phoneError, setPhoneError] = useState('');
   const [nameError, setNameError] = useState('');
@@ -126,10 +129,13 @@ export default function EnrollPage() {
       }
     }
 
+    const cleanSecondary = secondaryPhone.trim() ? secondaryPhone.trim().replace(/\D/g, '').slice(-10) : null;
     const enrollmentRecord = {
       studentName: studentName.trim(),
       parentName: parentName.trim(),
       phone: validation.sanitized,
+      secondaryPhone: cleanSecondary && cleanSecondary.length === 10 ? cleanSecondary : null,
+      medicalAlert: medicalAlert.trim() || null,
       schoolName: schoolName.trim(),
       board,
       grade: studentFlow.grade || selectedBatch.grade,
@@ -151,6 +157,8 @@ export default function EnrollPage() {
       studentName: enrollmentRecord.studentName,
       parentName: enrollmentRecord.parentName,
       phone: enrollmentRecord.phone,
+      secondaryPhone: enrollmentRecord.secondaryPhone,
+      medicalAlert: enrollmentRecord.medicalAlert,
       grade: enrollmentRecord.grade,
       board: enrollmentRecord.board,
       batchId: selectedBatch.id,
@@ -166,6 +174,8 @@ export default function EnrollPage() {
       studentName: enrollmentRecord.studentName,
       parentName: enrollmentRecord.parentName,
       phone: enrollmentRecord.phone,
+      secondaryPhone: enrollmentRecord.secondaryPhone,
+      medicalAlert: enrollmentRecord.medicalAlert,
       selectedBatchId: selectedBatch.id,
       step: 5,
     }));
@@ -427,10 +437,21 @@ export default function EnrollPage() {
                     )}
                   </div>
 
+                  <input
+                    type="text"
+                    name="website_url"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    tabIndex="-1"
+                    autoComplete="off"
+                    aria-hidden="true"
+                    style={{ display: 'none', position: 'absolute', left: '-9999px' }}
+                  />
+
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="enroll-student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Student Full Name *
+                        Student Full Name <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர் *</span>
                       </label>
                       <input
                         id="enroll-student-name"
@@ -453,7 +474,7 @@ export default function EnrollPage() {
 
                     <div>
                       <label htmlFor="enroll-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Mobile Number *
+                        Mobile Number <span className="text-[11px] font-normal text-slate-500">/ பெற்றோர் கைபேசி எண் *</span>
                       </label>
                       <input
                         id="enroll-phone"
@@ -478,7 +499,7 @@ export default function EnrollPage() {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="enroll-parent-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Parent / Guardian Name
+                        Parent / Guardian Name <span className="text-[11px] font-normal text-slate-500">/ பெற்றோர் / பாதுகாவலர் பெயர்</span>
                       </label>
                       <input
                         id="enroll-parent-name"
@@ -492,7 +513,7 @@ export default function EnrollPage() {
 
                     <div>
                       <label htmlFor="enroll-school-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Current School (In Perambalur / Thoramangalam)
+                        Current School <span className="text-[11px] font-normal text-slate-500">/ பயிலும் பள்ளி</span>
                       </label>
                       <input
                         id="enroll-school-name"
@@ -500,6 +521,36 @@ export default function EnrollPage() {
                         value={schoolName}
                         onChange={(e) => setSchoolName(e.target.value)}
                         placeholder="e.g. Thanthai Hans Roever, DS..."
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="enroll-sec-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                        Secondary Emergency Phone <span className="text-[11px] font-normal text-slate-500">/ மாற்று அவசர எண்</span>
+                      </label>
+                      <input
+                        id="enroll-sec-phone"
+                        type="tel"
+                        value={secondaryPhone}
+                        onChange={(e) => setSecondaryPhone(e.target.value)}
+                        placeholder="e.g. 98424 51221 (Optional)"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="enroll-medical-alert" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                        Medical / Health Alert <span className="text-[11px] font-normal text-slate-500">/ மருத்துவக் குறிப்பு</span>
+                      </label>
+                      <input
+                        id="enroll-medical-alert"
+                        type="text"
+                        value={medicalAlert}
+                        onChange={(e) => setMedicalAlert(e.target.value)}
+                        placeholder="e.g. Inhaler, dust allergy, specs (Optional)"
                         className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
                       />
                     </div>

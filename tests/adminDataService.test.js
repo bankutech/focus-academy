@@ -101,6 +101,74 @@ describe('AdminDataService & Institutional Management Tests', () => {
       ).rejects.toThrow(/valid 10-digit/i);
     });
 
+    it('creates a batch with configurable capacity and rejects enrollment beyond configured limit', async () => {
+      const smallBatch = await AdminDataService.createBatch({
+        id: 'batch-small-cohort',
+        name: 'Class 10 Intensive Micro-Batch',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        capacity: 2,
+        monthlyFee: 2500
+      });
+
+      expect(smallBatch.capacity).toBe(2);
+      expect(smallBatch.seatsRemaining).toBe(2);
+
+      await AdminDataService.createStudent({
+        studentName: 'Student One',
+        guardianPhone: '9842411111',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        batchId: smallBatch.id
+      });
+
+      await AdminDataService.createStudent({
+        studentName: 'Student Two',
+        guardianPhone: '9842422222',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        batchId: smallBatch.id
+      });
+
+      await expect(
+        AdminDataService.createStudent({
+          studentName: 'Student Three',
+          guardianPhone: '9842433333',
+          grade: 'Class 10',
+          board: 'TN State Board (Samacheer)',
+          batchId: smallBatch.id
+        })
+      ).rejects.toThrow(/reached maximum physical capacity of 2 students/i);
+    });
+
+    it('stores child safeguarding secondary phone, medical alert, and logs churn attribution', async () => {
+      const student = await AdminDataService.createStudent({
+        studentName: 'Safeguarded Student',
+        guardianName: 'Guardian Name',
+        guardianPhone: '9842498765',
+        secondaryPhone: '+91 98424 98766',
+        medicalAlert: 'Carries rescue inhaler',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        batchId: 'batch-10-state-board'
+      });
+
+      expect(student.secondaryPhone).toBe('9842498766');
+      expect(student.medicalAlert).toBe('Carries rescue inhaler');
+
+      const updated = await AdminDataService.updateStudentLifecycleStatus(
+        student.id,
+        {
+          status: 'archived',
+          reason: 'Shifted School / Relocated'
+        },
+        'director@focusacademyperambalur.com'
+      );
+
+      expect(updated.status).toBe('archived');
+      expect(updated.dropoutReason).toBe('Shifted School / Relocated');
+    });
+
     it('successfully transfers a student between compatible batches and adjusts counts', async () => {
       const b1 = await AdminDataService.createBatch({
         id: 'batch-comp-1',

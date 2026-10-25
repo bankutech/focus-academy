@@ -71,6 +71,7 @@ export default function AdminBatchesPage() {
       timing: '6:00 PM – 7:30 PM',
       days: 'Monday – Saturday',
       monthlyFee: 2200,
+      capacity: 12,
       classroom: 'Lecture Hall 101, First Floor, Thiripura Complex',
       description: ''
     });
@@ -89,6 +90,7 @@ export default function AdminBatchesPage() {
       timing: batch.timing,
       days: batch.days,
       monthlyFee: batch.monthlyFee,
+      capacity: batch.capacity || 12,
       classroom: batch.classroom,
       description: batch.description || ''
     });
@@ -116,7 +118,7 @@ export default function AdminBatchesPage() {
         setEditBatch(null);
       } else {
         await AdminDataService.createBatch(formData);
-        setFormSuccess(`Batch '${formData.name}' created successfully with 12-seat capacity.`);
+        setFormSuccess(`Batch '${formData.name}' created successfully with ${formData.capacity || 12}-seat capacity.`);
         setCreateModalOpen(false);
       }
       await loadData();
@@ -157,7 +159,7 @@ export default function AdminBatchesPage() {
     }
     if (statusFilter === 'archived' && !b.isArchived) return false;
     if (statusFilter === 'active' && b.isArchived) return false;
-    if (statusFilter === 'full' && b.enrolledCount < 12) return false;
+    if (statusFilter === 'full' && b.enrolledCount < (Number(b.capacity) || 12)) return false;
 
     if (search) {
       const q = search.toLowerCase();
@@ -269,9 +271,10 @@ export default function AdminBatchesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         {filteredBatches.map((batch) => {
-          const isFull = batch.enrolledCount >= 12;
+          const batchCap = Number(batch.capacity) || 12;
+          const isFull = batch.enrolledCount >= batchCap;
           const assignedStudents = students.filter(s => s.batchId === batch.id && s.status !== 'archived');
-          const pct = Math.round((batch.enrolledCount / 12) * 100);
+          const pct = Math.round((batch.enrolledCount / batchCap) * 100);
 
           return (
             <div
@@ -300,7 +303,7 @@ export default function AdminBatchesPage() {
                         : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                     }`}
                   >
-                    {batch.isArchived ? 'Archived' : isFull ? 'Batch Full' : `${12 - batch.enrolledCount} Seats Left`}
+                    {batch.isArchived ? 'Archived' : isFull ? 'Batch Full' : `${batchCap - batch.enrolledCount} Seats Left`}
                   </span>
                 </div>
 
@@ -326,7 +329,7 @@ export default function AdminBatchesPage() {
                       <span>Classroom Capacity</span>
                     </span>
                     <span className="font-mono font-bold text-slate-900">
-                      {batch.enrolledCount} / 12 Seats ({pct}%)
+                      {batch.enrolledCount} / {batchCap} Seats ({pct}%)
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -470,19 +473,34 @@ export default function AdminBatchesPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Classroom Location</label>
-                <input
-                  type="text"
-                  value={formData.classroom}
-                  onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
-                  placeholder="Lecture Hall 101, First Floor, Thiripura Complex"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Max Capacity (Seats)</label>
+                  <input
+                    type="number"
+                    min="6"
+                    max="30"
+                    value={formData.capacity ?? 12}
+                    onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) || 12 })}
+                    required
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Classroom Location</label>
+                  <input
+                    type="text"
+                    value={formData.classroom}
+                    onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
+                    placeholder="Lecture Hall 101, First Floor, Thiripura Complex"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  />
+                </div>
               </div>
 
               <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg text-orange-900 text-[11px] leading-snug">
-                <span className="font-bold">Campus Policy Guard:</span> Max capacity is permanently fixed at 12 seats to maintain personalized attention at Thiripura Complex.
+                <span className="font-bold">Campus Policy Guard:</span> Default capacity is 12 seats to maintain personalized attention at Thiripura Complex (configurable between 6 and 30).
               </div>
 
               <div className="pt-3 border-t border-slate-200 flex justify-end space-x-2">
@@ -514,7 +532,7 @@ export default function AdminBatchesPage() {
                   Enrolled Students: {viewStudentsBatch.name}
                 </h2>
                 <p className="text-[11px] text-slate-400">
-                  {students.filter(s => s.batchId === viewStudentsBatch.id && s.status !== 'archived').length} / 12 Seats Occupied
+                  {students.filter(s => s.batchId === viewStudentsBatch.id && s.status !== 'archived').length} / {viewStudentsBatch.capacity || 12} Seats Occupied
                 </p>
               </div>
               <button onClick={() => setViewStudentsBatch(null)} className="text-slate-400 hover:text-slate-700">

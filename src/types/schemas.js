@@ -51,6 +51,8 @@ export const validateLeadInquiry = (lead) => {
       studentName: cleanName,
       parentName: sanitizeText(lead.parentName),
       phone: phoneValidation.sanitized,
+      secondaryPhone: lead.secondaryPhone ? sanitizeText(lead.secondaryPhone).replace(/\D/g, '').slice(-10) : undefined,
+      medicalAlert: lead.medicalAlert ? sanitizeText(lead.medicalAlert, 150) : undefined,
       timestamp: new Date().toISOString(),
       locality: 'Thoramangalam / Perambalur',
     } : null,

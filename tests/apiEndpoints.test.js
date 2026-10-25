@@ -158,6 +158,24 @@ describe('Lead API', () => {
     expect((await call(leadsHandler, inquiry({ phone: '123' }), { ip: '10.2.0.3' })).statusCode).toBe(400);
   });
 
+  it('rejects automated spambots populating honeypot fields', async () => {
+    const res = await call(leadsHandler, inquiry({ website_url: 'http://spam.ru' }), { ip: '10.2.0.7' });
+    expect(res.statusCode).toBe(400);
+    expect(res.body.error).toMatch(/Automated submission rejected/i);
+  });
+
+  it('safeguards child secondary phone and medical alert fields', async () => {
+    const res = await call(leadsHandler, inquiry({
+      secondaryPhone: '+91 98424 51221',
+      medicalAlert: 'Asthma inhaler in backpack'
+    }), { ip: '10.2.0.8' });
+    expect(res.statusCode).toBe(200);
+    const stored = fake.all('leads').find(l => l.secondaryPhone === '9842451221');
+    expect(stored).toBeDefined();
+    expect(stored.secondaryPhone).toBe('9842451221');
+    expect(stored.medicalAlert).toBe('Asthma inhaler in backpack');
+  });
+
   it('rate limits bursts per client', async () => {
     let last;
     for (let i = 0; i < 11; i += 1) last = await call(leadsHandler, inquiry(), { ip: '10.2.0.9' });

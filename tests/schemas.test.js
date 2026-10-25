@@ -85,4 +85,21 @@ describe('validateLeadInquiry', () => {
     expect(result.errors.grade).toBeDefined();
     expect(result.errors.board).toBeDefined();
   });
+
+  it('preserves and sanitizes child safeguarding secondary phone and medical alert', () => {
+    const lead = {
+      studentName: 'Ananya S',
+      parentName: 'Suresh Kumar',
+      phone: '+91 98424 51220',
+      secondaryPhone: '+91 98424 51221',
+      medicalAlert: 'Severe peanut allergy, carries "EpiPen"; needs inhaler <urgent>',
+      grade: 'Class 10',
+      board: 'CBSE',
+    };
+
+    const result = validateLeadInquiry(lead);
+    expect(result.isValid).toBe(true);
+    expect(result.sanitized.secondaryPhone).toBe('9842451221');
+    expect(result.sanitized.medicalAlert).toBe('Severe peanut allergy, carries EpiPen needs inhaler urgent');
+  });
 });

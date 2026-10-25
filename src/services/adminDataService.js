@@ -898,6 +898,7 @@ export const AdminDataService = {
       throw new Error(`Batch ID '${cleanId}' already exists. Please choose a unique identifier.`);
     }
 
+    const capacity = Math.max(1, Number(batchData.capacity) || 12);
     const newBatch = {
       id: cleanId,
       name: batchData.name.trim(),
@@ -907,10 +908,10 @@ export const AdminDataService = {
       slotId: batchData.slotId || 'slot-1',
       timing: batchData.timing || '4:30 PM – 6:00 PM',
       days: batchData.days || 'Monday – Saturday',
-      capacity: 12,
+      capacity,
       enrolledCount: 0,
-      seatsRemaining: 12,
-      status: 'Admissions Open (12 Seats Left)',
+      seatsRemaining: capacity,
+      status: `Admissions Open (${capacity} Seats Left)`,
       monthlyFee: Number(batchData.monthlyFee) || 2000,
       classroom: batchData.classroom || 'Lecture Hall 101, First Floor, Thiripura Complex',
       subjects: Array.isArray(batchData.subjects) ? batchData.subjects : [batchData.subjects || 'General Subjects'],
@@ -938,7 +939,7 @@ export const AdminDataService = {
       action: 'BATCH_CREATED',
       entityType: 'batch',
       entityId: newBatch.id,
-      details: `Created batch '${newBatch.name}' (${newBatch.grade}, ${newBatch.board}) with 12 seats cap.`
+      details: `Created batch '${newBatch.name}' (${newBatch.grade}, ${newBatch.board}) with ${newBatch.capacity} seats cap.`
     });
 
     return newBatch;
@@ -953,7 +954,7 @@ export const AdminDataService = {
     }
 
     const existing = store.batches[idx];
-    const capacity = 12;
+    const capacity = Math.max(1, Number(updates.capacity !== undefined ? updates.capacity : existing.capacity) || 12);
     const enrolledCount = updates.enrolledCount !== undefined ? Number(updates.enrolledCount) : existing.enrolledCount;
     const seatsRemaining = Math.max(0, capacity - enrolledCount);
 
@@ -1256,14 +1257,17 @@ export const AdminDataService = {
       );
     }
 
-    if (targetBatch.enrolledCount >= 12) {
-      throw new Error(`Batch '${targetBatch.name}' has reached maximum physical capacity of 12 students.`);
+    const batchCapacity = Math.max(1, Number(targetBatch.capacity) || 12);
+    if (targetBatch.enrolledCount >= batchCapacity) {
+      throw new Error(`Batch '${targetBatch.name}' has reached maximum physical capacity of ${batchCapacity} students.`);
     }
 
     const cleanPhone = String(studentData.guardianPhone || studentData.phone || '').replace(/\D/g, '').slice(-10);
     if (cleanPhone.length !== 10) {
       throw new Error('Please enter a valid 10-digit Indian guardian phone number.');
     }
+
+    const cleanSecondaryPhone = studentData.secondaryPhone ? String(studentData.secondaryPhone).replace(/\D/g, '').slice(-10) : null;
 
     const store = await hydrateStore();
     const nextNum = store.students.length + 1;
@@ -1274,6 +1278,9 @@ export const AdminDataService = {
       studentName: studentData.studentName.trim(),
       guardianName: (studentData.guardianName || studentData.parentName || 'Parent / Guardian').trim(),
       guardianPhone: cleanPhone,
+      secondaryPhone: cleanSecondaryPhone && cleanSecondaryPhone.length === 10 ? cleanSecondaryPhone : null,
+      emergencyContactName: studentData.emergencyContactName ? studentData.emergencyContactName.trim() : null,
+      medicalAlert: studentData.medicalAlert ? studentData.medicalAlert.trim() : null,
       grade: studentData.grade,
       board: studentData.board,
       academicSession: studentData.academicSession || '2025-2026',
@@ -1333,7 +1340,8 @@ export const AdminDataService = {
     const bIdx = store.batches.findIndex(b => b.id === targetBatch.id);
     if (bIdx !== -1) {
       store.batches[bIdx].enrolledCount += 1;
-      store.batches[bIdx].seatsRemaining = Math.max(0, 12 - store.batches[bIdx].enrolledCount);
+      const bCap = Math.max(1, Number(store.batches[bIdx].capacity) || 12);
+      store.batches[bIdx].seatsRemaining = Math.max(0, bCap - store.batches[bIdx].enrolledCount);
     }
 
     saveLocalStore(store);
@@ -1436,15 +1444,16 @@ export const AdminDataService = {
     const isNewAttending = status === 'active' || status === 'new_enrollment';
 
     if (bIdx !== -1) {
+      const bCap = Math.max(1, Number(store.batches[bIdx].capacity) || 12);
       if (isPrevAttending && !isNewAttending) {
         store.batches[bIdx].enrolledCount = Math.max(0, store.batches[bIdx].enrolledCount - 1);
-        store.batches[bIdx].seatsRemaining = Math.max(0, 12 - store.batches[bIdx].enrolledCount);
+        store.batches[bIdx].seatsRemaining = Math.max(0, bCap - store.batches[bIdx].enrolledCount);
       } else if (!isPrevAttending && isNewAttending) {
-        if (store.batches[bIdx].enrolledCount >= 12) {
-          throw new Error(`Cannot reactivate student: Batch '${store.batches[bIdx].name}' has reached physical capacity of 12 students.`);
+        if (store.batches[bIdx].enrolledCount >= bCap) {
+          throw new Error(`Cannot reactivate student: Batch '${store.batches[bIdx].name}' has reached physical capacity of ${bCap} students.`);
         }
         store.batches[bIdx].enrolledCount += 1;
-        store.batches[bIdx].seatsRemaining = Math.max(0, 12 - store.batches[bIdx].enrolledCount);
+        store.batches[bIdx].seatsRemaining = Math.max(0, bCap - store.batches[bIdx].enrolledCount);
       }
     }
 
@@ -1459,6 +1468,7 @@ export const AdminDataService = {
     student.status = status;
     student.courseEndDate = courseEndDate !== undefined ? courseEndDate : (status === 'completed' || status === 'archived' ? new Date().toISOString().split('T')[0] : null);
     student.statusReason = reason || '';
+    student.dropoutReason = (status === 'archived' || status === 'paused') ? (reason || 'Not specified') : null;
     student.statusUpdatedAt = new Date().toISOString();
     student.lifecycleHistory = [...(student.lifecycleHistory || []), historyEntry];
     student.updatedAt = new Date().toISOString();
@@ -1518,8 +1528,9 @@ export const AdminDataService = {
       );
     }
 
-    if (targetBatch.enrolledCount >= 12) {
-      throw new Error(`Target batch '${targetBatch.name}' is already at full capacity (12/12 seats).`);
+    const targetCapacity = Math.max(1, Number(targetBatch.capacity) || 12);
+    if (targetBatch.enrolledCount >= targetCapacity) {
+      throw new Error(`Target batch '${targetBatch.name}' is already at full capacity (${targetCapacity}/${targetCapacity} seats).`);
     }
 
     const oldBatchId = student.batchId;
@@ -1530,13 +1541,15 @@ export const AdminDataService = {
     const oldBIdx = store.batches.findIndex(b => b.id === oldBatchId);
     if (oldBIdx !== -1) {
       store.batches[oldBIdx].enrolledCount = Math.max(0, store.batches[oldBIdx].enrolledCount - 1);
-      store.batches[oldBIdx].seatsRemaining = Math.max(0, 12 - store.batches[oldBIdx].enrolledCount);
+      const oldCap = Math.max(1, Number(store.batches[oldBIdx].capacity) || 12);
+      store.batches[oldBIdx].seatsRemaining = Math.max(0, oldCap - store.batches[oldBIdx].enrolledCount);
     }
 
     const newBIdx = store.batches.findIndex(b => b.id === newBatchId);
     if (newBIdx !== -1) {
       store.batches[newBIdx].enrolledCount += 1;
-      store.batches[newBIdx].seatsRemaining = Math.max(0, 12 - store.batches[newBIdx].enrolledCount);
+      const newCap = Math.max(1, Number(store.batches[newBIdx].capacity) || 12);
+      store.batches[newBIdx].seatsRemaining = Math.max(0, newCap - store.batches[newBIdx].enrolledCount);
     }
 
     const sIdx = store.students.findIndex(s => s.id === studentId);
@@ -3104,7 +3117,7 @@ export const AdminDataService = {
           continue;
         }
       } else {
-        matchedBatch = batches.find(b => !b.isArchived && isBatchCompatible(b, grade, board) && (batchAllocations.get(b.id) || 0) < 12);
+        matchedBatch = batches.find(b => !b.isArchived && isBatchCompatible(b, grade, board) && (batchAllocations.get(b.id) || 0) < (Number(b.capacity) || 12));
       }
 
       if (!matchedBatch) {
@@ -3117,12 +3130,13 @@ export const AdminDataService = {
         continue;
       }
 
+      const batchCap = Number(matchedBatch.capacity) || 12;
       const currentAllocated = batchAllocations.get(matchedBatch.id) || 0;
-      if (currentAllocated >= 12) {
+      if (currentAllocated >= batchCap) {
         invalidRows.push({
           line: i + 1,
-          reason: `Batch '${matchedBatch.name}' capacity of 12 seats exceeded (already has ${matchedBatch.enrolledCount} enrolled + preceding CSV rows).`,
-          error: `Batch '${matchedBatch.name}' capacity of 12 seats exceeded.`
+          reason: `Batch '${matchedBatch.name}' capacity of ${batchCap} seats exceeded (already has ${matchedBatch.enrolledCount} enrolled + preceding CSV rows).`,
+          error: `Batch '${matchedBatch.name}' capacity of ${batchCap} seats exceeded.`
         });
         continue;
       }

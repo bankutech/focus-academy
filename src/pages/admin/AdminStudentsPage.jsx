@@ -76,6 +76,8 @@ export default function AdminStudentsPage() {
     studentName: '',
     guardianName: '',
     guardianPhone: '',
+    secondaryPhone: '',
+    medicalAlert: '',
     grade: 'Class 10',
     board: 'TN State Board (Samacheer)',
     academicSession: '2025-2026',
@@ -166,6 +168,8 @@ export default function AdminStudentsPage() {
       studentName: '',
       guardianName: '',
       guardianPhone: '',
+      secondaryPhone: '',
+      medicalAlert: '',
       grade: 'Class 10',
       board: 'TN State Board (Samacheer)',
       academicSession: '2025-2026',
@@ -194,6 +198,8 @@ export default function AdminStudentsPage() {
       studentName: student.studentName,
       guardianName: student.guardianName || '',
       guardianPhone: student.guardianPhone || '',
+      secondaryPhone: student.secondaryPhone || '',
+      medicalAlert: student.medicalAlert || '',
       grade: student.grade,
       board: student.board,
       academicSession: student.academicSession || '2025-2026',
@@ -238,12 +244,15 @@ export default function AdminStudentsPage() {
 
     try {
       const currentAdmin = requireAdminEmail();
+      const cleanSecPhone = formData.secondaryPhone ? formData.secondaryPhone.replace(/\D/g, '').slice(-10) : '';
 
       if (editStudent) {
         await AdminDataService.updateStudent(editStudent.id, {
           studentName: formData.studentName.trim(),
           guardianName: formData.guardianName.trim(),
           guardianPhone: phoneVal.sanitized,
+          secondaryPhone: cleanSecPhone.length === 10 ? cleanSecPhone : null,
+          medicalAlert: formData.medicalAlert ? formData.medicalAlert.trim() : null,
           grade: formData.grade,
           board: formData.board,
           academicSession: formData.academicSession,
@@ -268,7 +277,9 @@ export default function AdminStudentsPage() {
       } else {
         await AdminDataService.createStudent({
           ...formData,
-          guardianPhone: phoneVal.sanitized
+          guardianPhone: phoneVal.sanitized,
+          secondaryPhone: cleanSecPhone.length === 10 ? cleanSecPhone : null,
+          medicalAlert: formData.medicalAlert ? formData.medicalAlert.trim() : null
         }, currentAdmin);
         setFormSuccess(`Successfully enrolled '${formData.studentName}' into batch.`);
       }
@@ -632,6 +643,11 @@ export default function AdminStudentsPage() {
                           <span className="text-slate-300">•</span>
                           <span className="text-[10px] text-slate-500">{s.academicSession}</span>
                         </div>
+                        {s.medicalAlert && (
+                          <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            🏥 {s.medicalAlert}
+                          </span>
+                        )}
                       </div>
                     </td>
 
@@ -659,6 +675,9 @@ export default function AdminStudentsPage() {
                         <span>+91 {s.guardianPhone}</span>
                       </div>
                       <p className="text-[11px] text-slate-400 truncate">{s.guardianName}</p>
+                      {s.secondaryPhone && (
+                        <p className="text-[10px] text-slate-500 font-mono">Alt: +91 {s.secondaryPhone}</p>
+                      )}
                     </td>
 
                     <td className="py-3.5 px-4">
@@ -853,6 +872,28 @@ export default function AdminStudentsPage() {
                     value={formData.enrollmentDate}
                     onChange={(e) => setFormData({ ...formData, enrollmentDate: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Secondary Emergency Phone (Optional)</label>
+                  <input
+                    type="tel"
+                    value={formData.secondaryPhone}
+                    onChange={(e) => setFormData({ ...formData, secondaryPhone: e.target.value })}
+                    placeholder="10-digit mobile (e.g. 9842451221)"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Medical / Allergy Alert (Optional)</label>
+                  <input
+                    type="text"
+                    value={formData.medicalAlert}
+                    onChange={(e) => setFormData({ ...formData, medicalAlert: e.target.value })}
+                    placeholder="e.g. Inhaler, dust allergy, specs"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
                   />
                 </div>
               </div>
@@ -1263,8 +1304,34 @@ export default function AdminStudentsPage() {
                 />
               </div>
 
+              {(lifecycleForm.status === 'archived' || lifecycleForm.status === 'paused') && (
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Dropout / Churn Reason (Audit Attribution)</label>
+                  <select
+                    value={['Shifted School / Relocated', 'Timings Clash with School / Extracurriculars', 'Fee / Financial Constraint', 'Course Completed / Board Exams Over', 'Health / Medical Leave', 'Switched to Private Home Tutor'].includes(lifecycleForm.reason) ? lifecycleForm.reason : (lifecycleForm.reason ? 'Other' : '')}
+                    onChange={(e) => {
+                      if (e.target.value !== 'Other') {
+                        setLifecycleForm({ ...lifecycleForm, reason: e.target.value });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white mb-2"
+                  >
+                    <option value="">-- Select Churn Category --</option>
+                    <option value="Shifted School / Relocated">Shifted School / Relocated</option>
+                    <option value="Timings Clash with School / Extracurriculars">Timings Clash with School / Extracurriculars</option>
+                    <option value="Fee / Financial Constraint">Fee / Financial Constraint</option>
+                    <option value="Course Completed / Board Exams Over">Course Completed / Board Exams Over</option>
+                    <option value="Health / Medical Leave">Health / Medical Leave</option>
+                    <option value="Switched to Private Home Tutor">Switched to Private Home Tutor</option>
+                    <option value="Other">Other Reason (Specify below)</option>
+                  </select>
+                </div>
+              )}
+
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Reason for Status Change</label>
+                <label className="block font-bold text-slate-700 mb-1">
+                  {(lifecycleForm.status === 'archived' || lifecycleForm.status === 'paused') ? 'Detailed Reason / Notes' : 'Reason for Status Change'}
+                </label>
                 <input
                   type="text"
                   value={lifecycleForm.reason}
@@ -1446,7 +1513,23 @@ export default function AdminStudentsPage() {
                 <p className="text-xs text-slate-500 mt-0.5">
                   {profileStudent.grade} • {profileStudent.board} • {profileStudent.batchName}
                 </p>
-                <p className="text-[10px] text-slate-400 mt-0.5">
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600 mt-1">
+                  <span>Guardian: <strong className="text-slate-800">{profileStudent.guardianName}</strong> (+91 {profileStudent.guardianPhone})</span>
+                  {profileStudent.secondaryPhone && (
+                    <span>• Alt Emergency: <strong className="text-slate-800">+91 {profileStudent.secondaryPhone}</strong></span>
+                  )}
+                  {profileStudent.dropoutReason && (
+                    <span className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      Churn Reason: {profileStudent.dropoutReason}
+                    </span>
+                  )}
+                </div>
+                {profileStudent.medicalAlert && (
+                  <div className="mt-1.5 p-1.5 bg-rose-50 border border-rose-200 rounded text-rose-800 text-[11px] font-semibold">
+                    🏥 Child Safeguard Alert: {profileStudent.medicalAlert}
+                  </div>
+                )}
+                <p className="text-[10px] text-slate-400 mt-1">
                   Enrolled: {profileStudent.enrollmentDate} {profileStudent.courseEndDate ? `• Course End: ${profileStudent.courseEndDate}` : ''}
                 </p>
               </div>

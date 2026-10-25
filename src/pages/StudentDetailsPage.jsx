@@ -298,7 +298,7 @@ export default function StudentDetailsPage() {
 
                 <div>
                   <label htmlFor="login-student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                    Student Full Name
+                    Student Full Name <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர்</span>
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -315,10 +315,18 @@ export default function StudentDetailsPage() {
               </div>
             ) : (
               <div className="space-y-4">
+                <input
+                  type="text"
+                  name="website_url"
+                  tabIndex="-1"
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ display: 'none', position: 'absolute', left: '-9999px' }}
+                />
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="signup-student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                      Student Full Name (Optional)
+                      Student Full Name <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர் (Optional)</span>
                     </label>
                     <div className="relative">
                       <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -343,7 +351,7 @@ export default function StudentDetailsPage() {
 
                   <div>
                     <label htmlFor="signup-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                      Mobile Number (Optional at this step)
+                      Mobile Number <span className="text-[11px] font-normal text-slate-500">/ கைபேசி எண் (Optional)</span>
                     </label>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -369,7 +377,7 @@ export default function StudentDetailsPage() {
 
                 <div>
                   <label htmlFor="signup-parent-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                    Parent / Guardian Name (Optional)
+                    Parent / Guardian Name <span className="text-[11px] font-normal text-slate-500">/ பெற்றோர் பெயர் (Optional)</span>
                   </label>
                   <input
                     id="signup-parent-name"
