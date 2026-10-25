@@ -36,6 +36,7 @@ export default function StudentDetailsPage() {
   const [nameError, setNameError] = useState('');
   const [loginFeedback, setLoginFeedback] = useState('');
   const [dismissNotice, setDismissNotice] = useState(false);
+  const [honeypot, setHoneypot] = useState('');
 
   const redirectedFrom = location.state?.redirectedFrom || searchParams.get('from');
 
@@ -101,6 +102,7 @@ export default function StudentDetailsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (honeypot && honeypot.trim()) return;
     setPhoneError('');
     setNameError('');
 
@@ -327,6 +329,8 @@ export default function StudentDetailsPage() {
                   tabIndex="-1"
                   autoComplete="off"
                   aria-hidden="true"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
                   style={{ display: 'none', position: 'absolute', left: '-9999px' }}
                 />
                 <div className="grid sm:grid-cols-2 gap-4">

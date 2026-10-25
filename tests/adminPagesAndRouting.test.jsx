@@ -60,6 +60,7 @@ describe('Admin Portal Pages & Routing Integrity', () => {
     expect(rulesContent).toContain('match /payments/{paymentId}');
     expect(rulesContent).toContain('match /reminders/{reminderId}');
     expect(rulesContent).toContain('match /audit_logs/{logId}');
+    expect(rulesContent).toContain('match /reservations/{reservationId}');
     expect(rulesContent).toContain('allow update, delete: if false;');
   });
 

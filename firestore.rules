@@ -90,6 +90,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /reservations/{reservationId} {
+      allow create: if false;
+      allow read, update: if isAdministrator();
+      allow delete: if false;
+    }
+
     match /counters/{counterId} {
       allow read: if isFeeManager();
       allow create: if isFeeManager() && request.resource.data.value == 1;

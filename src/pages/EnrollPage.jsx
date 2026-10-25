@@ -242,7 +242,7 @@ export default function EnrollPage() {
     }
 
     if (Object.keys(errors).length > 0) {
-      if (errors.schoolName || errors.educationBoard || errors.targetYear || errors.schoolShift) {
+      if (errors.schoolName || errors.educationBoard || errors.targetYear || errors.schoolShift || errors.schoolDismissalTime || errors.travelDurationMinutes) {
         setOpenSections((prev) => ({ ...prev, academic: true }));
       }
       if (errors.studentName || errors.phone || errors.whatsappNumber || errors.mediumOfInstruction || errors.emergencyContactName || errors.emergencyPhone) {
@@ -266,6 +266,10 @@ export default function EnrollPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (honeypot && honeypot.trim()) {
+      setIsSubmitting(false);
+      return;
+    }
     setFormErrors({});
 
     const validation = validateForm();
@@ -378,6 +382,7 @@ export default function EnrollPage() {
     const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift}${enrollmentRecord.schoolDismissalTime ? ` (Finish: ${formatTime12(enrollmentRecord.schoolDismissalTime)}, Travel: ${enrollmentRecord.travelDurationMinutes || 0}m)` : ''} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
 
     await LeadService.submitLead({
+      website_url: honeypot || undefined,
       studentName: enrollmentRecord.studentName,
       parentName: enrollmentRecord.parentName,
       phone: enrollmentRecord.phone,
@@ -448,7 +453,7 @@ export default function EnrollPage() {
           <div className="mb-6 bg-rose-50 border border-rose-200 rounded-lg p-5 text-left max-w-2xl mx-auto animate-in fade-in">
             <h3 className="text-sm font-bold text-rose-900">Seat Reservation Notice</h3>
             <p className="text-xs text-rose-700 mt-1">{submissionResult.error}</p>
-            <div className="mt-3 flex items-center space-x-3">
+            <div className="mt-3 flex flex-wrap items-center gap-3">
               <button 
                 type="button" 
                 onClick={() => setSubmissionResult(null)} 
@@ -462,6 +467,20 @@ export default function EnrollPage() {
               >
                 Browse Alternative Batches →
               </Link>
+              <a
+                href="https://wa.me/919842451220?text=Hello%20Focus%20Academy,%20I%20need%20help%20with%20enrollment"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-200 hover:bg-emerald-100"
+              >
+                WhatsApp Desk Support
+              </a>
+              <a
+                href="tel:+919842451220"
+                className="text-xs font-bold text-slate-700 hover:underline"
+              >
+                Call Desk: +91 98424 51220
+              </a>
             </div>
           </div>
         )}

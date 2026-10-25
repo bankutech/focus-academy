@@ -93,7 +93,9 @@ export function AppProvider({ children }) {
     const step = Number(flow.step) || 1;
     const hasIdentity = Boolean(flow.studentName?.trim() && flow.phone?.trim());
     const phoneKey = String(flow.phone || '').replace(/\D/g, '').slice(-10);
-    const upToDate = flow.syncedPhone === phoneKey && (Number(flow.syncedStep) || 1) >= Math.min(step, 4);
+    const nameKey = String(flow.studentName || '').toLowerCase().trim();
+    const identityKey = `${phoneKey}::${nameKey}`;
+    const upToDate = (flow.syncedIdentity === identityKey || (flow.syncedPhone === phoneKey && flow.syncedName === nameKey)) && (Number(flow.syncedStep) || 1) >= Math.min(step, 4);
     if (step < 2 || !hasIdentity || upToDate || syncInFlight.current) return;
     ensureVerifiedSession(step).catch(() => {});
   }, [studentFlow, ensureVerifiedSession]);

@@ -90,8 +90,10 @@ export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
     return '/batches';
   }
   if (targetStep >= 5 && !isStep4Complete(studentFlow)) {
-    const fallbackBatchId = studentFlow?.selectedBatchId || 'batch-10-state-board';
-    return `/batch/${fallbackBatchId}`;
+    if (studentFlow?.selectedBatchId) {
+      return `/batch/${studentFlow.selectedBatchId}`;
+    }
+    return '/batches';
   }
   return null;
 }
