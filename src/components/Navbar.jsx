@@ -156,7 +156,7 @@ export default function Navbar() {
               </Link>
             </div>
 
-            <div className="hidden lg:flex items-center space-x-1 font-medium text-xs">
+            <div className="hidden lg:flex items-center space-x-1.5 xl:space-x-3">
               {navLinks.map((link) => {
                 const active = isNavActive(link.path);
 
@@ -167,10 +167,10 @@ export default function Navbar() {
                     end={link.path === '/'}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`px-3 py-1.5 rounded-md transition-all cursor-pointer font-semibold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] ${
+                    className={`px-3.5 xl:px-4 py-2 rounded-lg transition-all cursor-pointer text-base xl:text-lg font-bold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] ${
                       active
                         ? 'bg-[#0F172A] text-white shadow-xs'
-                        : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
+                        : 'text-slate-700 hover:text-[#0F172A] hover:bg-slate-100'
                     }`}
                   >
                     {link.name}
@@ -182,10 +182,10 @@ export default function Navbar() {
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Link
                 to="/student-details"
-                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-semibold rounded-md shadow-xs hover:bg-[#C2410C] transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-6 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm sm:text-base font-bold rounded-md shadow-xs hover:bg-[#C2410C] transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
               >
                 <span>Check Batch Seats</span>
-                <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
+                <ArrowRight className="w-4 h-4 text-orange-200" />
               </Link>
 
               <button
@@ -241,7 +241,7 @@ export default function Navbar() {
                         : 'bg-white hover:bg-slate-50 text-[#0F172A] border-[#E2E8F0]'
                     } focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]`}
                   >
-                    <span className="text-sm font-bold">{link.name}</span>
+                    <span className="text-base font-bold">{link.name}</span>
                     <ArrowRight className={`w-4 h-4 ${active ? 'text-orange-200' : 'text-[#EA580C]'}`} />
                   </NavLink>
                 );
