@@ -392,10 +392,10 @@ export default function HomePage() {
 
                 <div className="mt-5 pt-3.5 border-t border-slate-800">
                   <Link
-                    to={Number(st.num) > 1 && !step1Done ? '/student-details' : st.link}
+                    to="/student-details"
                     className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-orange-300 hover:text-orange-200"
                   >
-                    <span>{Number(st.num) > 1 && !step1Done ? 'Start at Step 1 →' : `${st.linkText} →`}</span>
+                    <span>{Number(st.num) === 1 ? 'Step 1: Details →' : 'Start at Step 1 →'}</span>
                   </Link>
                 </div>
               </div>

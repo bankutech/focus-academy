@@ -15,6 +15,7 @@ import ExamPrepPage from '../src/pages/ExamPrepPage';
 import BatchesPage from '../src/pages/BatchesPage';
 import BatchDetailPage from '../src/pages/BatchDetailPage';
 import EnrollPage from '../src/pages/EnrollPage';
+import HomePage from '../src/pages/HomePage';
 import Navbar from '../src/components/Navbar';
 import { BatchService } from '../src/services/batchService';
 
@@ -446,5 +447,56 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     expect(screen.getByLabelText(/Contact Person Name/i)).toBeDefined();
     expect(screen.getByLabelText(/Emergency Phone/i)).toBeDefined();
     expect(screen.getByLabelText(/Identity Proof \/ Student ID Number/i)).toBeDefined();
+  });
+
+  it('renders EnrollPage with horizontal selected batch summary and removes campus desk address block', async () => {
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        parentName: 'S. Sundaram',
+        board: 'TN State Board (Samacheer)',
+        grade: 'Class 10',
+        examPrep: '10th Board Exam Mastery',
+        selectedBatchId: 'batch-10-state-board',
+        step: 5
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/enroll/batch-10-state-board']}>
+        <AppProvider>
+          <Routes>
+            <Route path="/enroll/:batchId" element={<EnrollPage />} />
+          </Routes>
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Selected Evening Batch/i)).toBeDefined();
+    expect(screen.getByRole('link', { name: /Change Batch/i })).toBeDefined();
+    expect(screen.getByText(/Zero Reg\. Fee/i)).toBeDefined();
+    expect(screen.queryByText(/Focus Academy Campus Desk:/i)).toBeNull();
+  });
+
+  it('ensures all HomePage admission step cards enforce sequential entry to Step 1', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <AppProvider>
+          <HomePage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Step 1: Details →/i)).toBeDefined();
+    const startStep1Links = screen.getAllByRole('link', { name: /Start at Step 1 →/i });
+    expect(startStep1Links.length).toBe(4);
+    for (const link of startStep1Links) {
+      expect(link.getAttribute('href')).toBe('/student-details');
+    }
+    expect(screen.queryByRole('link', { name: /Step 2: Goals →/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Step 3: Batches →/i })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Step 5: Enroll →/i })).toBeNull();
   });
 });

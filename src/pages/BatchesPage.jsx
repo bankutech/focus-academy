@@ -684,7 +684,7 @@ export default function BatchesPage() {
                           onClick={() => handleSelectBatch(batch)}
                           className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                         >
-                          <span>Select Batch & Details (Step 4)</span>
+                          <span>{isTimingsView && !isStep1Complete(studentFlow) ? 'Enroll (Start at Step 1)' : 'Select Batch & Details (Step 4)'}</span>
                           <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
                         </Link>
                       </div>

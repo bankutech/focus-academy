@@ -17,7 +17,8 @@ import {
   Calendar,
   Building,
   CreditCard,
-  UserCheck
+  UserCheck,
+  ArrowRight
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
@@ -400,7 +401,7 @@ export default function EnrollPage() {
     <div className="bg-[#F8FAFC] min-h-screen text-left">
       <StepProgress currentStep={5} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-14">
         {submissionResult && !submissionResult.success && (
           <div className="mb-6 bg-rose-50 border border-rose-200 rounded-lg p-5 text-left max-w-2xl mx-auto animate-in fade-in">
             <h3 className="text-sm font-bold text-rose-900">Seat Reservation Notice</h3>
@@ -511,10 +512,42 @@ export default function EnrollPage() {
 
               <button
                 type="button"
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  setStudentFlow({
+                    studentName: '',
+                    phone: '',
+                    parentName: '',
+                    board: 'TN State Board (Samacheer)',
+                    grade: 'Class 10',
+                    examPrep: '',
+                    selectedBatchId: '',
+                    step: 1
+                  });
+                  navigate('/');
+                }}
                 className="w-full py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-semibold text-xs rounded-md shadow-xs transition-colors cursor-pointer"
               >
                 Return to Focus Academy Home
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStudentFlow({
+                    studentName: '',
+                    phone: '',
+                    parentName: '',
+                    board: 'TN State Board (Samacheer)',
+                    grade: 'Class 10',
+                    examPrep: '',
+                    selectedBatchId: '',
+                    step: 1
+                  });
+                  navigate('/student-details');
+                }}
+                className="w-full py-3 bg-white border border-[#E2E8F0] hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-md shadow-xs transition-colors cursor-pointer"
+              >
+                Register Another Student (Step 1)
               </button>
             </div>
           </div>
@@ -547,44 +580,52 @@ export default function EnrollPage() {
               </Link>
             </div>
 
-            <div className="grid lg:grid-cols-5 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-lg p-6 border border-[#E2E8F0] shadow-xs space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <span className="text-xs uppercase font-bold text-slate-500">
-                      Selected Evening Batch
-                    </span>
-                    <Link
-                      to="/batches"
-                      className="text-xs text-[#EA580C] hover:underline"
-                    >
-                      Change Batch
-                    </Link>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-[#0F172A] leading-snug">
+            <div className="bg-white rounded-xl p-5 sm:p-6 border border-[#E2E8F0] shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 text-[#EA580C] text-xs font-bold uppercase tracking-wider">
+                    Selected Evening Batch
+                  </span>
+                  <h2 className="text-lg sm:text-xl font-extrabold text-[#0F172A] tracking-tight">
                     {selectedBatch.name}
-                  </h3>
+                  </h2>
+                </div>
 
-                  <div className="space-y-2.5 text-xs text-slate-600">
-                    <div className="flex items-center space-x-2">
-                      <Clock className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
-                      <span>{selectedBatch.timing} (Mon – Sat)</span>
-                    </div>
+                <Link
+                  to="/batches"
+                  className="inline-flex items-center space-x-1 text-xs font-bold text-[#EA580C] hover:text-[#C2410C] hover:underline shrink-0"
+                >
+                  <span>Change Batch</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Users className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
-                      <span>Max 12 Students ({selectedBatch.seatsRemaining} Seats Left)</span>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
-                      <span className="truncate">{selectedBatch.classroom}</span>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 pt-4 text-xs">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-slate-700">
+                    <Clock className="w-4 h-4 text-[#EA580C] shrink-0" />
+                    <span className="font-semibold">{selectedBatch.timing} (Mon – Sat)</span>
                   </div>
+                  <div className="flex items-center space-x-2 text-slate-600">
+                    <MapPin className="w-4 h-4 text-[#EA580C] shrink-0" />
+                    <span className="truncate">{selectedBatch.classroom}</span>
+                  </div>
+                </div>
 
-                  <div className="pt-3 border-t border-slate-100">
-                    <span className="text-xs uppercase text-slate-500 block mb-1">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 text-slate-700">
+                    <Users className="w-4 h-4 text-[#EA580C] shrink-0" />
+                    <span className="font-semibold">Max 12 Students ({selectedBatch.seatsRemaining} Seats Left)</span>
+                  </div>
+                  <div className="text-slate-600 flex items-center space-x-2">
+                    <span className="text-slate-500">Batch Format:</span>
+                    <strong className="text-[#0F172A]">Offline Classroom (1:12 Cap)</strong>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-slate-500 block text-[11px] uppercase font-bold tracking-wider mb-1">
                       Subjects Included:
                     </span>
                     <div className="flex flex-wrap gap-1">
@@ -598,46 +639,34 @@ export default function EnrollPage() {
                       ))}
                     </div>
                   </div>
-
-                  <div className="pt-2 text-xs text-slate-500 flex items-center justify-between">
-                    <span>Batch Format:</span>
-                    <strong className="text-[#0F172A]">Offline Classroom (1:12 Cap)</strong>
-                  </div>
-
-                  <div className="pt-2 text-xs text-slate-500 flex items-center justify-between">
-                    <span>Study Material:</span>
+                  <div className="text-slate-600 flex items-center space-x-2 pt-0.5">
+                    <span className="text-slate-500">Study Material:</span>
                     <strong className={includesPrintedMaterials ? 'text-[#EA580C] font-bold' : 'text-slate-700'}>
                       {includesPrintedMaterials ? 'Printed Books & Worksheets Included' : 'Digital Classroom Materials'}
                     </strong>
                   </div>
+                </div>
 
-                  <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-between">
-                    <div>
-                      <span className="text-xs uppercase text-slate-500 block">
-                        Monthly Tuition Fee
-                      </span>
-                      <span className="text-2xl font-extrabold text-[#0F172A]">
-                        ₹{selectedBatch.monthlyFee.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                    <span className="text-xs text-emerald-700 font-bold">
-                      Zero Reg. Fee
+                <div className="flex md:flex-col justify-between md:justify-center items-center md:items-end p-3 sm:p-3.5 bg-slate-50 rounded-lg border border-[#E2E8F0]">
+                  <div className="text-left md:text-right">
+                    <span className="text-[11px] uppercase font-bold text-slate-500 block">
+                      Monthly Tuition Fee
+                    </span>
+                    <span className="text-2xl font-extrabold text-[#0F172A]">
+                      ₹{selectedBatch.monthlyFee.toLocaleString('en-IN')}
                     </span>
                   </div>
-                </div>
-
-                <div className="p-4 bg-white rounded-md border border-[#E2E8F0] text-xs text-slate-600 space-y-1.5">
-                  <span className="font-bold text-[#0F172A] block">Focus Academy Campus Desk:</span>
-                  <p>{CAMPUS_CONFIG.location.fullAddress}</p>
-                  <p className="text-[#EA580C] font-semibold">Phone: {CAMPUS_CONFIG.contact.primaryPhone}</p>
+                  <span className="text-xs text-emerald-700 font-bold md:mt-1">
+                    Zero Reg. Fee
+                  </span>
                 </div>
               </div>
+            </div>
 
-              <div className="lg:col-span-3">
-                <form
-                  onSubmit={handleSubmit}
-                  className="space-y-6"
-                >
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6"
+            >
                   <input
                     type="text"
                     name="website_url"
@@ -1339,9 +1368,7 @@ export default function EnrollPage() {
                   </div>
                 </form>
               </div>
-            </div>
-          </div>
-        )}
+            )}
       </div>
     </div>
   );
