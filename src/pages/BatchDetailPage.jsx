@@ -66,10 +66,10 @@ export default function BatchDetailPage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
           <Link
-            to="/timings"
+            to="/batches"
             className="inline-flex items-center space-x-1.5 text-xs text-slate-500 hover:text-[#0F172A]"
           >
-            <span>← Back to All Batches</span>
+            <span>← Back to Batch Selection (Step 3)</span>
           </Link>
 
           <span className="text-xs text-slate-500">

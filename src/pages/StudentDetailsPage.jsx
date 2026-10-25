@@ -104,29 +104,25 @@ export default function StudentDetailsPage() {
     setPhoneError('');
     setNameError('');
 
-    if (authMode === 'login') {
-      const validation = validateIndianMobile(phone);
-      if (!validation.valid) {
-        setPhoneError(validation.error || validation.message);
-        return;
-      }
-    } else {
-      if (phone.trim()) {
-        const validation = validateIndianMobile(phone);
-        if (!validation.valid) {
-          setPhoneError(validation.error || validation.message);
-          return;
-        }
-      }
+    const trimmedName = studentName.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      setNameError('Please enter the student\'s full name (minimum 2 characters).');
+      return;
+    }
+
+    const validation = validateIndianMobile(phone);
+    if (!validation.valid) {
+      setPhoneError(validation.error || validation.message || 'Please enter a valid 10-digit mobile number.');
+      return;
     }
 
     setStudentFlow((prev) => {
       const gradeChanged = prev.grade !== grade || prev.board !== board;
       return {
         ...prev,
-        studentName: studentName.trim() || 'Focus Student',
+        studentName: trimmedName,
         parentName: parentName.trim(),
-        phone: phone.trim(),
+        phone: validation.sanitized || phone.trim(),
         board,
         grade,
         step: 2,
@@ -243,7 +239,7 @@ export default function StudentDetailsPage() {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form data-testid="student-details-form" onSubmit={handleSubmit} className="space-y-8">
           <div className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h2 className="text-base font-bold text-[#0F172A]">
@@ -258,13 +254,14 @@ export default function StudentDetailsPage() {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="login-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                    Registered Mobile Number
+                    Registered Mobile Number * <span className="text-[11px] font-normal text-slate-500">/ பதிவு செய்யப்பட்ட கைபேசி எண் *</span>
                   </label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
                         id="login-phone"
+                        required
                         type="tel"
                         value={phone}
                         onChange={(e) => {
@@ -298,19 +295,28 @@ export default function StudentDetailsPage() {
 
                 <div>
                   <label htmlFor="login-student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                    Student Full Name <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர்</span>
+                    Student Full Name * <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர் *</span>
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                     <input
                       id="login-student-name"
+                      required
                       type="text"
                       value={studentName}
-                      onChange={(e) => setStudentName(e.target.value)}
+                      onChange={(e) => {
+                        setStudentName(e.target.value);
+                        if (nameError) setNameError('');
+                      }}
                       placeholder="e.g. K. Vignesh"
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className={`w-full pl-9 pr-3.5 py-2.5 bg-white border ${
+                        nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
+                      } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
                     />
                   </div>
+                  {nameError && (
+                    <p className="text-xs text-rose-600 mt-1 font-medium">{nameError}</p>
+                  )}
                 </div>
               </div>
             ) : (
@@ -326,12 +332,13 @@ export default function StudentDetailsPage() {
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="signup-student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                      Student Full Name <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர் (Optional)</span>
+                      Student Full Name * <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர் *</span>
                     </label>
                     <div className="relative">
                       <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
                         id="signup-student-name"
+                        required
                         type="text"
                         value={studentName}
                         onChange={(e) => {
@@ -351,12 +358,13 @@ export default function StudentDetailsPage() {
 
                   <div>
                     <label htmlFor="signup-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                      Mobile Number <span className="text-[11px] font-normal text-slate-500">/ கைபேசி எண் (Optional)</span>
+                      Mobile Number * <span className="text-[11px] font-normal text-slate-500">/ கைபேசி எண் *</span>
                     </label>
                     <div className="relative">
                       <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
                       <input
                         id="signup-phone"
+                        required
                         type="tel"
                         value={phone}
                         onChange={(e) => {

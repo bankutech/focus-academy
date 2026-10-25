@@ -315,14 +315,7 @@ export default function EnrollPage() {
                 </span>
               </div>
             )}
-            {!studentFlow.studentName && (
-              <div className="p-4 bg-orange-50 border border-orange-200 rounded-md flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-700">
-                <span>Navigated directly? You can enter details here, or start from Step 1 for personalized board recommendations.</span>
-                <Link to="/student-details" className="text-[#EA580C] font-bold hover:underline shrink-0">
-                  Start at Step 1 →
-                </Link>
-              </div>
-            )}
+
 
             <div className="flex items-center justify-between">
               <div>

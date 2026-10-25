@@ -15,11 +15,13 @@ import ExamPrepPage from '../src/pages/ExamPrepPage';
 import BatchesPage from '../src/pages/BatchesPage';
 import BatchDetailPage from '../src/pages/BatchDetailPage';
 import EnrollPage from '../src/pages/EnrollPage';
+import Navbar from '../src/components/Navbar';
 import { BatchService } from '../src/services/batchService';
 
 describe('Ascending Order Multi-Step Admission Guard Tests', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
   });
 
   it('evaluates step completion predicates accurately across stages', () => {
@@ -346,5 +348,60 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     expect(screen.getByText(/Step 3 of 5/i)).toBeDefined();
     expect(screen.getByRole('heading', { name: /Available Evening Batches/i })).toBeDefined();
     expect(screen.getByText(/Back to Exam Preparation Goals/i)).toBeDefined();
+  });
+
+  it('strictly validates student name and mobile number on StudentDetailsPage to prevent step 1 bypass', async () => {
+    render(
+      <MemoryRouter initialEntries={['/student-details']}>
+        <AppProvider>
+          <StudentDetailsPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    const form = screen.getByTestId('student-details-form');
+    fireEvent.submit(form);
+
+    expect(screen.getByText(/Please enter the student's full name/i)).toBeDefined();
+
+    const nameInput = screen.getByLabelText(/Student Full Name/i);
+    fireEvent.change(nameInput, { target: { value: 'K. Vignesh' } });
+    fireEvent.submit(form);
+
+    expect(screen.getAllByText(/Phone number is required/i).length).toBeGreaterThanOrEqual(1);
+
+    const phoneInput = screen.getByLabelText(/Mobile Number/i);
+    fireEvent.change(phoneInput, { target: { value: '123' } });
+    fireEvent.submit(form);
+    expect(screen.getAllByText(/Please enter a valid 10-digit/i).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('ensures Navbar Timings link is active strictly on /timings and NOT on /batches admission step', () => {
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/timings']}>
+        <AppProvider>
+          <Navbar />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    const timingLinks = screen.getAllByRole('link', { name: /^Timings$/i });
+    expect(timingLinks.length).toBeGreaterThanOrEqual(1);
+    expect(timingLinks[0].getAttribute('aria-current')).toBe('page');
+
+    unmount();
+
+    render(
+      <MemoryRouter initialEntries={['/batches']}>
+        <AppProvider>
+          <Navbar />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    const batchesTimingLinks = screen.getAllByRole('link', { name: /^Timings$/i });
+    for (const link of batchesTimingLinks) {
+      expect(link.getAttribute('aria-current')).toBeNull();
+    }
   });
 });

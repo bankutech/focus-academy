@@ -63,7 +63,7 @@ export default function Navbar() {
       return current === '/';
     }
     if (path === '/timings') {
-      return current === '/timings' || current === '/batches' || current.startsWith('/batch/');
+      return current === '/timings';
     }
     if (path === '/courses') {
       return current === '/courses' || current === '/classes';

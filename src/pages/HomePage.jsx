@@ -18,8 +18,11 @@ import {
   HOME_ADMISSION_STEPS, 
   HOME_FEATURES 
 } from '../data/homeData';
+import { useStudentFlow, isStep1Complete } from '../context/useAppContext';
 
 export default function HomePage() {
+  const { studentFlow } = useStudentFlow();
+  const step1Done = isStep1Complete(studentFlow);
   const whatsappInquiryUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(
     'Hello Focus Academy! I would like to inquire about evening batch timings and trial admissions at Thiripura Complex, Thoramangalam.'
   )}`;
@@ -389,10 +392,10 @@ export default function HomePage() {
 
                 <div className="mt-5 pt-3.5 border-t border-slate-800">
                   <Link
-                    to={st.link}
+                    to={Number(st.num) > 1 && !step1Done ? '/student-details' : st.link}
                     className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-orange-300 hover:text-orange-200"
                   >
-                    <span>{st.linkText} →</span>
+                    <span>{Number(st.num) > 1 && !step1Done ? 'Start at Step 1 →' : `${st.linkText} →`}</span>
                   </Link>
                 </div>
               </div>
