@@ -26,8 +26,8 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#F8FAFC] text-[#0F172A] text-left">
-      <section id="hero" aria-labelledby="hero-heading" className="pt-8 pb-14 sm:pt-14 sm:pb-20 lg:pt-18 lg:pb-24 border-b border-[#E2E8F0]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="hero" aria-labelledby="hero-heading" className="pt-6 pb-10 sm:pt-8 sm:pb-14 lg:pt-10 lg:pb-14 border-b border-[#E2E8F0]">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
             <div className="lg:col-span-7">
               <div className="flex items-center space-x-2.5 mb-3.5">
@@ -37,8 +37,8 @@ export default function HomePage() {
                 </p>
               </div>
 
-              <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-[1.14]">
-                Disciplined Evening Coaching for Classes 6 to 12
+              <h1 id="hero-heading" className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-[3.25rem] font-extrabold text-[#0F172A] tracking-tight leading-[1.15]">
+                Disciplined Evening Coaching for <span className="whitespace-nowrap">Classes 6 to 12</span>
               </h1>
 
               <p className="mt-4 sm:mt-5 text-base sm:text-lg lg:text-xl text-slate-600 leading-relaxed max-w-2xl font-normal">
@@ -193,7 +193,7 @@ export default function HomePage() {
       </section>
 
       <section id="courses" aria-labelledby="courses-heading" className="py-16 sm:py-20 lg:py-24 bg-white border-b border-[#E2E8F0]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200 pb-8">
             <div>
               <h2 id="courses-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">
@@ -275,7 +275,7 @@ export default function HomePage() {
       </section>
 
       <section id="timings" aria-labelledby="timings-heading" className="py-16 sm:py-20 lg:py-24 bg-[#F8FAFC] border-b border-[#E2E8F0]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="max-w-3xl mb-10">
             <h2 id="timings-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">
               Class Timetable & Daily Schedule
@@ -359,7 +359,7 @@ export default function HomePage() {
       </section>
 
       <section id="steps" aria-labelledby="steps-heading" className="py-16 sm:py-20 lg:py-24 bg-[#0F172A] text-white border-b border-[#1E293B]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="max-w-2xl mb-12 text-left">
             <h2 id="steps-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight">
               How Admission Works in 5 Simple Steps
@@ -412,7 +412,7 @@ export default function HomePage() {
 
       <section id="about" aria-labelledby="about-heading" className="py-16 sm:py-20 lg:py-24 bg-white border-b border-[#E2E8F0] relative">
         <span id="features" className="absolute -top-24 left-0 pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200 pb-8">
             <div>
               <h2 id="about-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">

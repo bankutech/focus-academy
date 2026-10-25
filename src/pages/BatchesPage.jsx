@@ -135,7 +135,7 @@ export default function BatchesPage() {
     <div className="bg-[#F8FAFC] min-h-screen text-left">
       {!isTimingsView && <StepProgress currentStep={3} />}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-14">
         {isTimingsView ? (
           <div>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">

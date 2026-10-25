@@ -81,7 +81,7 @@ export default function Navbar() {
   return (
     <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'shadow-md' : ''}`}>
       <div className="bg-[#0F172A] text-slate-200 text-xs py-2 px-4 border-b border-[#1E293B] tracking-wide">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 flex items-center justify-between">
           <div className="flex items-center space-x-3 overflow-hidden text-ellipsis whitespace-nowrap">
             <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-200 text-xs uppercase font-bold border border-orange-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-[#EA580C] animate-pulse"></span>
@@ -132,7 +132,7 @@ export default function Navbar() {
           ? 'border-[#E2E8F0] shadow-xs py-3' 
           : 'border-[#E2E8F0]/80 py-3.5 sm:py-4'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           <div className="flex items-center justify-between gap-6">
             <div className="flex items-center space-x-4">
               <Link 

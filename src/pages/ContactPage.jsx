@@ -6,7 +6,7 @@ import { Clock } from 'lucide-react';
 export default function ContactPage() {
   return (
     <div className="py-8 sm:py-12 bg-[#F8FAFC] min-h-screen text-left">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="mb-8">
           <div className="flex items-center space-x-2 text-xs text-slate-500 mb-2">
             <Link to="/" className="hover:text-[#EA580C]">Home</Link>

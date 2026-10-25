@@ -72,7 +72,7 @@ export default function AboutPage() {
 
   return (
     <div className="py-10 sm:py-14 bg-[#F8FAFC] min-h-screen text-left">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex items-center space-x-2 text-xs text-slate-500 mb-4">
           <Link to="/" className="hover:text-[#EA580C]">Home</Link>
           <span>/</span>

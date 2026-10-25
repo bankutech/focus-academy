@@ -25,7 +25,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-[#0F172A] text-slate-300 text-left pt-12 pb-24 md:pb-10 border-t border-[#1E293B]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 pb-10 border-b border-[#1E293B]">
           <div className="md:col-span-5">
             <Link to="/" onClick={handleBackToTop} className="flex items-center space-x-3 group">

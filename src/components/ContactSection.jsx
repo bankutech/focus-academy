@@ -65,7 +65,7 @@ export default function ContactSection({ isPage = false }) {
   return (
     <section id="contact" aria-labelledby="contact-heading" className={`text-left relative ${isPage ? 'pt-2 pb-8' : 'py-16 sm:py-20 bg-white border-b border-[#E2E8F0]'}`}>
       <span id="enroll" className="absolute -top-24 left-0 pointer-events-none" />
-      <div className={isPage ? '' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}>
+      <div className={isPage ? '' : 'max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10'}>
         {!isPage && (
           <div className="max-w-2xl mb-12">
             <h2 id="contact-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">
