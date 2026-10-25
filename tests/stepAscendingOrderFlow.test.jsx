@@ -404,4 +404,47 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
       expect(link.getAttribute('aria-current')).toBeNull();
     }
   });
+
+  it('renders EnrollPage with 3 structured sections and excludes marketing questions', async () => {
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        parentName: 'S. Sundaram',
+        board: 'TN State Board (Samacheer)',
+        grade: 'Class 10',
+        examPrep: '10th Board Exam Mastery',
+        selectedBatchId: 'batch-10-state-board',
+        step: 5
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/enroll/batch-10-state-board']}>
+        <AppProvider>
+          <Routes>
+            <Route path="/enroll/:batchId" element={<EnrollPage />} />
+          </Routes>
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Academic Background & School Identity/i)).toBeDefined();
+    expect(screen.getByText(/Operational & Contact Details/i)).toBeDefined();
+    expect(screen.getByText(/Logistics, Verification & Invoicing/i)).toBeDefined();
+
+    expect(screen.queryByText(/How did you hear about us/i)).toBeNull();
+    expect(screen.queryByText(/Referral Source/i)).toBeNull();
+
+    expect(screen.getByLabelText(/School \/ College Name/i)).toBeDefined();
+    expect(screen.getByLabelText(/Education Board \/ University/i)).toBeDefined();
+    expect(screen.getByLabelText(/Target Year \/ Exam Cycle/i)).toBeDefined();
+    expect(screen.getByLabelText(/School \/ College Shift Timing/i)).toBeDefined();
+    expect(screen.getByText(/WhatsApp number is same as calling phone number/i)).toBeDefined();
+    expect(screen.getByLabelText(/Medium \/ Language of Instruction/i)).toBeDefined();
+    expect(screen.getByLabelText(/Contact Person Name/i)).toBeDefined();
+    expect(screen.getByLabelText(/Emergency Phone/i)).toBeDefined();
+    expect(screen.getByLabelText(/Identity Proof \/ Student ID Number/i)).toBeDefined();
+  });
 });

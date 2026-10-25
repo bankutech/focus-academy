@@ -31,14 +31,46 @@ export interface Batch {
   classroom: string;
   subjects: string[];
   description: string;
+  includesPrintedMaterials?: boolean;
+}
+
+export interface EmergencyContact {
+  emergencyContactName: string;
+  emergencyRelationship: 'Father' | 'Mother' | 'Guardian' | 'Other' | string;
+  emergencyPhone: string;
+}
+
+export interface ShippingAddress {
+  addressStreet: string;
+  addressLandmark?: string | null;
+  addressCityState: string;
+  addressPincode: string;
 }
 
 export interface LeadInquiry {
   studentName: string;
   parentName?: string;
   phone: string;
+  whatsappNumber?: string;
   grade: string;
   board: string;
+  educationBoard?: string;
+  schoolName?: string;
+  targetYear?: string;
+  previousScore?: string | null;
+  schoolShift?: string;
+  mediumOfInstruction?: string;
+  emergencyContactName?: string;
+  emergencyRelationship?: string;
+  emergencyPhone?: string;
+  secondaryPhone?: string | null;
+  medicalAlert?: string | null;
+  studentIdNumber?: string;
+  gstin?: string | null;
+  addressStreet?: string | null;
+  addressLandmark?: string | null;
+  addressCityState?: string | null;
+  addressPincode?: string | null;
   subjects?: string;
   notes?: string;
 }
@@ -54,7 +86,24 @@ export interface EnrollmentRecord {
   studentName: string;
   parentName: string;
   phone: string;
+  whatsappNumber: string;
   schoolName: string;
+  educationBoard: 'CBSE' | 'ICSE' | 'State Board' | 'Other' | string;
+  targetYear: string;
+  previousScore?: string | null;
+  schoolShift: 'Morning Shift' | 'Day/Afternoon Shift' | string;
+  mediumOfInstruction: 'English' | 'Hindi' | 'Bilingual / Hinglish' | 'Tamil / English (Bilingual)' | string;
+  emergencyContactName: string;
+  emergencyRelationship: 'Father' | 'Mother' | 'Guardian' | 'Other' | string;
+  emergencyPhone: string;
+  secondaryPhone?: string | null;
+  medicalAlert?: string | null;
+  studentIdNumber: string;
+  gstin?: string | null;
+  addressStreet?: string | null;
+  addressLandmark?: string | null;
+  addressCityState?: string | null;
+  addressPincode?: string | null;
   board: string;
   grade: string;
   selectedBatchId: string;
@@ -63,6 +112,9 @@ export interface EnrollmentRecord {
   monthlyFee: number;
   startDatePreference: string;
   studentWeakness: string;
+  reservationId?: string | null;
+  isWaitlisted?: boolean;
+  waitlistPosition?: number | null;
   createdAt: string;
 }
 

@@ -4,6 +4,8 @@ import { readToken } from './_lib/stepToken.js';
 import { isBatchCompatible } from '../src/types/schemas.js';
 
 const VALID_PHONE = /^[6-9]\d{9}$/;
+const VALID_PINCODE = /^[1-9]\d{5}$/;
+const VALID_GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
 
 export default async function handler(req, res) {
   prepare(res, ['POST']);
@@ -30,21 +32,63 @@ export default async function handler(req, res) {
     if (studentName.length < 2) return fail(res, 400, 'Valid student name is required');
     if (!VALID_PHONE.test(phone)) return fail(res, 400, 'Valid 10-digit Indian mobile number is required');
 
+    const whatsappNumber = body.whatsappNumber ? cleanPhone(body.whatsappNumber) : phone;
+    if (body.whatsappNumber && !VALID_PHONE.test(whatsappNumber)) {
+      return fail(res, 400, 'Valid 10-digit WhatsApp number is required');
+    }
+
+    const emergencyPhone = body.emergencyPhone ? cleanPhone(body.emergencyPhone) : null;
+    if (body.emergencyPhone && !VALID_PHONE.test(emergencyPhone)) {
+      return fail(res, 400, 'Valid 10-digit emergency contact phone is required');
+    }
+
+    const cleanPin = body.addressPincode ? clean(body.addressPincode, 10).replace(/\s+/g, '') : null;
+    if (cleanPin && !VALID_PINCODE.test(cleanPin)) {
+      return fail(res, 400, 'Valid 6-digit Indian PIN code is required');
+    }
+
+    const cleanGst = body.gstin ? clean(body.gstin, 20).toUpperCase() : null;
+    if (cleanGst && !VALID_GSTIN.test(cleanGst)) {
+      return fail(res, 400, 'Invalid GSTIN format');
+    }
+
+    if (body.reservationId) {
+      if (body.schoolName && clean(body.schoolName, 120).length < 2) {
+        return fail(res, 400, 'Valid school or college name is required');
+      }
+    }
+
     const record = {
       id: newId('FA'),
       timestamp: new Date().toISOString(),
       studentName,
       parentName: clean(body.parentName, 80),
       phone,
+      whatsappNumber,
       secondaryPhone: body.secondaryPhone ? cleanPhone(body.secondaryPhone) : null,
       medicalAlert: clean(body.medicalAlert, 150) || null,
+      schoolName: clean(body.schoolName, 120) || null,
+      educationBoard: clean(body.educationBoard || body.board, 60) || null,
+      targetYear: clean(body.targetYear, 10) || null,
+      previousScore: clean(body.previousScore, 30) || null,
+      schoolShift: clean(body.schoolShift, 40) || null,
+      mediumOfInstruction: clean(body.mediumOfInstruction, 40) || null,
+      emergencyContactName: clean(body.emergencyContactName, 80) || null,
+      emergencyRelationship: clean(body.emergencyRelationship, 40) || null,
+      emergencyPhone,
+      studentIdNumber: clean(body.studentIdNumber, 50) || null,
+      gstin: cleanGst,
+      addressStreet: clean(body.addressStreet, 150) || null,
+      addressLandmark: clean(body.addressLandmark, 100) || null,
+      addressCityState: clean(body.addressCityState, 100) || null,
+      addressPincode: cleanPin,
       grade: clean(body.grade, 50),
       board: clean(body.board, 60),
       batchId: clean(body.batchId, 60) || null,
       reservationId: null,
       timing: clean(body.timing, 50) || null,
       subjects: clean(body.subjects, 150),
-      notes: clean(body.notes, 300),
+      notes: clean(body.notes, 500),
       source: body.reservationId ? 'enrollment' : 'inquiry',
       status: 'new',
       campus: 'Thoramangalam, Perambalur',
@@ -98,10 +142,13 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       data: record,
-      deliveryStatus,
-      message: 'Admission inquiry registered successfully at Focus Academy campus desk.',
+      meta: {
+        id: record.id,
+        receivedAt: record.timestamp,
+        delivery: deliveryStatus,
+      },
     });
   } catch {
-    return unavailable(res);
+    return fail(res, 500, 'Unable to record inquiry. Please call the campus desk directly.');
   }
 }

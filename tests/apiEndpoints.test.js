@@ -191,6 +191,58 @@ describe('Lead API', () => {
     expect(fake.all('reservations')[0].status).toBe('confirmed');
   });
 
+  it('stores and validates operational, academic, emergency contact, dispatch, and verification details', async () => {
+    const p = person(5);
+    const { token } = await reachStep4(p);
+    const hold = await call(batchesHandler, { batchId: 'batch-10-state-board', ...p, stepToken: token });
+    const payload = {
+      ...p,
+      batchId: 'batch-10-state-board',
+      reservationId: hold.body.reservationId,
+      stepToken: token,
+      schoolName: 'Roever Matric Higher Secondary School',
+      educationBoard: 'State Board',
+      targetYear: '2027',
+      previousScore: '91%',
+      schoolShift: 'Morning Shift',
+      whatsappNumber: '9842451220',
+      mediumOfInstruction: 'English',
+      emergencyContactName: 'Mr. S. Kannan',
+      emergencyRelationship: 'Father',
+      emergencyPhone: '9842451222',
+      studentIdNumber: 'SCH-ROEVER-2026',
+      gstin: '33AAAAA0000A1Z5',
+      addressStreet: 'Door 10, Trichy Main Road',
+      addressCityState: 'Perambalur, Tamil Nadu',
+      addressPincode: '621212',
+    };
+    const res = await call(leadsHandler, payload, { ip: '10.3.0.4' });
+    expect(res.statusCode).toBe(200);
+    const stored = fake.all('leads').find(l => l.studentIdNumber === 'SCH-ROEVER-2026');
+    expect(stored).toBeDefined();
+    expect(stored.schoolName).toBe('Roever Matric Higher Secondary School');
+    expect(stored.educationBoard).toBe('State Board');
+    expect(stored.targetYear).toBe('2027');
+    expect(stored.previousScore).toBe('91%');
+    expect(stored.schoolShift).toBe('Morning Shift');
+    expect(stored.whatsappNumber).toBe('9842451220');
+    expect(stored.mediumOfInstruction).toBe('English');
+    expect(stored.emergencyContactName).toBe('Mr. S. Kannan');
+    expect(stored.emergencyRelationship).toBe('Father');
+    expect(stored.emergencyPhone).toBe('9842451222');
+    expect(stored.gstin).toBe('33AAAAA0000A1Z5');
+    expect(stored.addressStreet).toBe('Door 10, Trichy Main Road');
+    expect(stored.addressPincode).toBe('621212');
+  });
+
+  it('rejects malformed GSTIN or invalid pincode in lead submissions', async () => {
+    const invalidGst = await call(leadsHandler, inquiry({ gstin: 'INVALID_GSTIN_123' }), { ip: '10.2.0.12' });
+    expect(invalidGst.statusCode).toBe(400);
+
+    const invalidPin = await call(leadsHandler, inquiry({ addressPincode: '01234' }), { ip: '10.2.0.13' });
+    expect(invalidPin.statusCode).toBe(400);
+  });
+
   it('rejects an enrollment lead without a valid hold', async () => {
     const p = person(4);
     const { token } = await reachStep4(p);

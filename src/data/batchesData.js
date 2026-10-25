@@ -16,6 +16,7 @@ export const batchesData = [
     subjects: ['Mathematics', 'Science (Physics, Chemistry, Biology)', 'Social Science'],
     focusGoal: 'Complete SSLC Board Exam Preparation & 95%+ Target',
     monthlyFee: 2200,
+    includesPrintedMaterials: true,
     description: 'Intensive evening batch focused on Samacheer Kalvi textbooks, exemplar problems, theorem derivations, and past 10-year question paper drills. Includes weekly Saturday mock exams with evaluated answer sheets shared with parents.',
     features: [
       'Strictly capped at 12 students per batch',
@@ -67,6 +68,7 @@ export const batchesData = [
     subjects: ['Physics (Derivations & Numericals)', 'Chemistry (Organic & Physical)', 'Higher Mathematics (Calculus & Vectors)', 'Biology'],
     focusGoal: 'Board Exam 95%+ & NEET/JEE Foundation',
     monthlyFee: 2800,
+    includesPrintedMaterials: true,
     description: 'Advanced late-evening batch for 12th board candidates. Designed for students who need sharp numerical problem solving, step-marked derivations, organic mechanism flowcharts, and calculus speed drills.',
     features: [
       'Derivations master book & formula flashcards',

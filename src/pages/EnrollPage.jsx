@@ -6,13 +6,28 @@ import {
   MapPin, 
   Users, 
   ShieldCheck, 
-  MessageSquare, 
-  Send 
+  Send,
+  GraduationCap,
+  PhoneCall,
+  Truck,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  FileText,
+  Calendar,
+  Building,
+  CreditCard,
+  UserCheck
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow, getStepRedirect } from '../context/useAppContext';
-import { validateIndianMobile, isBatchCompatible } from '../types/schemas';
+import { 
+  validateIndianMobile, 
+  validateIndianPincode, 
+  validateGSTIN, 
+  isBatchCompatible 
+} from '../types/schemas';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
 import { BatchService } from '../services/batchService';
@@ -33,19 +48,53 @@ export default function EnrollPage() {
     ? candidateBatch
     : BATCHES_DATA.find((b) => isBatchCompatible(b, studentFlow.grade, studentFlow.board)) || candidateBatch || BATCHES_DATA[0];
 
+  const includesPrintedMaterials = Boolean(
+    selectedBatch.includesPrintedMaterials ||
+    selectedBatch.includesBooks ||
+    selectedBatch.features?.some((f) => /printed|book|formula master|materials/i.test(f))
+  );
+
   const [studentName, setStudentName] = useState(studentFlow.studentName || '');
   const [parentName, setParentName] = useState(studentFlow.parentName || '');
   const [phone, setPhone] = useState(studentFlow.phone || '');
+  const [sameAsPhone, setSameAsPhone] = useState(true);
+  const [whatsappNumber, setWhatsappNumber] = useState(studentFlow.phone || '');
   const [secondaryPhone, setSecondaryPhone] = useState(studentFlow.secondaryPhone || '');
   const [medicalAlert, setMedicalAlert] = useState(studentFlow.medicalAlert || '');
-  const [schoolName, setSchoolName] = useState('');
   const [board, setBoard] = useState(studentFlow.board || selectedBatch.board);
   const [startDatePreference, setStartDatePreference] = useState('Immediate (This Week)');
   const [studentWeakness, setStudentWeakness] = useState('');
   const [honeypot, setHoneypot] = useState('');
 
-  const [phoneError, setPhoneError] = useState('');
-  const [nameError, setNameError] = useState('');
+  const [schoolName, setSchoolName] = useState(studentFlow.schoolName || '');
+  const [educationBoard, setEducationBoard] = useState(
+    studentFlow.board?.includes('CBSE') ? 'CBSE' :
+    studentFlow.board?.includes('ICSE') ? 'ICSE' :
+    studentFlow.board?.includes('State') ? 'State Board' : 'State Board'
+  );
+  const [targetYear, setTargetYear] = useState('2027');
+  const [previousScore, setPreviousScore] = useState('');
+  const [schoolShift, setSchoolShift] = useState('Morning Shift (e.g. 7:30 AM – 1:30 PM)');
+
+  const [mediumOfInstruction, setMediumOfInstruction] = useState('English');
+  const [emergencyContactName, setEmergencyContactName] = useState('');
+  const [emergencyRelationship, setEmergencyRelationship] = useState('Father');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
+
+  const [addressStreet, setAddressStreet] = useState('');
+  const [addressLandmark, setAddressLandmark] = useState('');
+  const [addressCityState, setAddressCityState] = useState('Perambalur, Tamil Nadu');
+  const [addressPincode, setAddressPincode] = useState('');
+  const [studentIdNumber, setStudentIdNumber] = useState('');
+  const [gstin, setGstin] = useState('');
+
+  const [openSections, setOpenSections] = useState({
+    academic: true,
+    operational: true,
+    logistics: true
+  });
+
+  const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
 
@@ -54,19 +103,137 @@ export default function EnrollPage() {
     return <Navigate to={redirectPath} state={{ redirectedFrom: 5 }} replace />;
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setPhoneError('');
-    setNameError('');
+  const toggleSection = (sectionKey) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  };
 
-    if (!studentName.trim()) {
-      setNameError('Student name is required');
-      return;
+  const handlePhoneChange = (val) => {
+    setPhone(val);
+    if (sameAsPhone) {
+      setWhatsappNumber(val);
+    }
+    if (formErrors.phone) {
+      setFormErrors((prev) => ({ ...prev, phone: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!studentName.trim() || studentName.trim().length < 2) {
+      errors.studentName = 'Student name must be at least 2 characters.';
     }
 
-    const validation = validateIndianMobile(phone);
-    if (!validation.valid) {
-      setPhoneError(validation.error || validation.message);
+    const phoneValidation = validateIndianMobile(phone);
+    if (!phoneValidation.valid) {
+      errors.phone = phoneValidation.error;
+    }
+
+    const effectiveWhatsapp = sameAsPhone ? phone : whatsappNumber;
+    const whatsappValidation = validateIndianMobile(effectiveWhatsapp);
+    if (!whatsappValidation.valid) {
+      errors.whatsappNumber = whatsappValidation.error;
+    }
+
+    if (!schoolName.trim() || schoolName.trim().length < 2) {
+      errors.schoolName = 'School / college name is required.';
+    }
+
+    if (!educationBoard) {
+      errors.educationBoard = 'Please select education board / university.';
+    }
+
+    if (!targetYear) {
+      errors.targetYear = 'Please select target exam year / cycle.';
+    }
+
+    if (!schoolShift) {
+      errors.schoolShift = 'Please select school / college shift timing.';
+    }
+
+    if (!mediumOfInstruction) {
+      errors.mediumOfInstruction = 'Please select medium / language of instruction.';
+    }
+
+    if (!emergencyContactName.trim() || emergencyContactName.trim().length < 2) {
+      errors.emergencyContactName = 'Emergency contact person name is required.';
+    }
+
+    if (!emergencyRelationship) {
+      errors.emergencyRelationship = 'Please select relationship to student.';
+    }
+
+    const emergencyValidation = validateIndianMobile(emergencyPhone);
+    if (!emergencyValidation.valid) {
+      errors.emergencyPhone = emergencyValidation.error;
+    }
+
+    if (secondaryPhone.trim()) {
+      const secondaryValidation = validateIndianMobile(secondaryPhone);
+      if (!secondaryValidation.valid) {
+        errors.secondaryPhone = secondaryValidation.error;
+      }
+    }
+
+    if (!studentIdNumber.trim() || studentIdNumber.trim().length < 2) {
+      errors.studentIdNumber = 'Student ID or Govt ID verification number is required.';
+    }
+
+    if (gstin.trim()) {
+      const gstinValidation = validateGSTIN(gstin);
+      if (!gstinValidation.valid) {
+        errors.gstin = gstinValidation.error;
+      }
+    }
+
+    if (includesPrintedMaterials) {
+      if (!addressStreet.trim() || addressStreet.trim().length < 3) {
+        errors.addressStreet = 'Physical street address / house number is required.';
+      }
+
+      if (!addressCityState.trim() || addressCityState.trim().length < 2) {
+        errors.addressCityState = 'City & State are required for book shipment.';
+      }
+
+      const pinValidation = validateIndianPincode(addressPincode);
+      if (!pinValidation.valid) {
+        errors.addressPincode = pinValidation.error;
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      if (errors.schoolName || errors.educationBoard || errors.targetYear || errors.schoolShift) {
+        setOpenSections((prev) => ({ ...prev, academic: true }));
+      }
+      if (errors.studentName || errors.phone || errors.whatsappNumber || errors.mediumOfInstruction || errors.emergencyContactName || errors.emergencyPhone) {
+        setOpenSections((prev) => ({ ...prev, operational: true }));
+      }
+      if (errors.studentIdNumber || errors.gstin || errors.addressStreet || errors.addressCityState || errors.addressPincode) {
+        setOpenSections((prev) => ({ ...prev, logistics: true }));
+      }
+    }
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+      sanitizedPhone: phoneValidation.valid ? phoneValidation.sanitized : phone,
+      sanitizedWhatsapp: whatsappValidation.valid ? whatsappValidation.sanitized : whatsappNumber,
+      sanitizedEmergencyPhone: emergencyValidation.valid ? emergencyValidation.sanitized : emergencyPhone,
+      sanitizedGstin: gstin.trim().toUpperCase() || null,
+      sanitizedPincode: addressPincode.trim().replace(/\s+/g, '') || null
+    };
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormErrors({});
+
+    const validation = validateForm();
+    if (!validation.isValid) {
+      setFormErrors(validation.errors);
       return;
     }
 
@@ -94,7 +261,7 @@ export default function EnrollPage() {
 
     let reservation = await BatchService.reserveSeatWithDetails(selectedBatch.id, {
       studentName: studentName.trim(),
-      phone: validation.sanitized,
+      phone: validation.sanitizedPhone,
       grade: studentFlow.grade || selectedBatch.grade,
       board,
       stepToken: session.stepToken
@@ -104,7 +271,7 @@ export default function EnrollPage() {
       if (reservation.canWaitlist) {
         const wl = await BatchService.reserveSeatWithDetails(selectedBatch.id, {
           studentName: studentName.trim(),
-          phone: validation.sanitized,
+          phone: validation.sanitizedPhone,
           grade: studentFlow.grade || selectedBatch.grade,
           board,
           stepToken: session.stepToken,
@@ -133,10 +300,25 @@ export default function EnrollPage() {
     const enrollmentRecord = {
       studentName: studentName.trim(),
       parentName: parentName.trim(),
-      phone: validation.sanitized,
+      phone: validation.sanitizedPhone,
+      whatsappNumber: validation.sanitizedWhatsapp,
+      schoolName: schoolName.trim(),
+      educationBoard,
+      targetYear,
+      previousScore: previousScore.trim() || null,
+      schoolShift,
+      mediumOfInstruction,
+      emergencyContactName: emergencyContactName.trim(),
+      emergencyRelationship,
+      emergencyPhone: validation.sanitizedEmergencyPhone,
       secondaryPhone: cleanSecondary && cleanSecondary.length === 10 ? cleanSecondary : null,
       medicalAlert: medicalAlert.trim() || null,
-      schoolName: schoolName.trim(),
+      studentIdNumber: studentIdNumber.trim(),
+      gstin: validation.sanitizedGstin,
+      addressStreet: includesPrintedMaterials ? addressStreet.trim() : null,
+      addressLandmark: includesPrintedMaterials && addressLandmark.trim() ? addressLandmark.trim() : null,
+      addressCityState: includesPrintedMaterials ? addressCityState.trim() : null,
+      addressPincode: includesPrintedMaterials ? validation.sanitizedPincode : null,
       board,
       grade: studentFlow.grade || selectedBatch.grade,
       selectedBatchId: selectedBatch.id,
@@ -153,12 +335,30 @@ export default function EnrollPage() {
 
     const saved = registerStudent(enrollmentRecord);
 
+    const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
+
     await LeadService.submitLead({
       studentName: enrollmentRecord.studentName,
       parentName: enrollmentRecord.parentName,
       phone: enrollmentRecord.phone,
+      whatsappNumber: enrollmentRecord.whatsappNumber,
+      schoolName: enrollmentRecord.schoolName,
+      educationBoard: enrollmentRecord.educationBoard,
+      targetYear: enrollmentRecord.targetYear,
+      previousScore: enrollmentRecord.previousScore,
+      schoolShift: enrollmentRecord.schoolShift,
+      mediumOfInstruction: enrollmentRecord.mediumOfInstruction,
+      emergencyContactName: enrollmentRecord.emergencyContactName,
+      emergencyRelationship: enrollmentRecord.emergencyRelationship,
+      emergencyPhone: enrollmentRecord.emergencyPhone,
       secondaryPhone: enrollmentRecord.secondaryPhone,
       medicalAlert: enrollmentRecord.medicalAlert,
+      studentIdNumber: enrollmentRecord.studentIdNumber,
+      gstin: enrollmentRecord.gstin,
+      addressStreet: enrollmentRecord.addressStreet,
+      addressLandmark: enrollmentRecord.addressLandmark,
+      addressCityState: enrollmentRecord.addressCityState,
+      addressPincode: enrollmentRecord.addressPincode,
       grade: enrollmentRecord.grade,
       board: enrollmentRecord.board,
       batchId: selectedBatch.id,
@@ -166,7 +366,7 @@ export default function EnrollPage() {
       stepToken: session.stepToken,
       timing: selectedBatch.timing,
       subjects: selectedBatch.name,
-      notes: `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Admission Slip ID: ${saved.id} | Batch: ${selectedBatch.name} (${selectedBatch.timing}) | School: ${enrollmentRecord.schoolName || 'N/A'} | Start: ${startDatePreference} | Challenges: ${enrollmentRecord.studentWeakness || 'None'}`,
+      notes: notesSummary,
     });
 
     setStudentFlow((prev) => ({
@@ -174,19 +374,22 @@ export default function EnrollPage() {
       studentName: enrollmentRecord.studentName,
       parentName: enrollmentRecord.parentName,
       phone: enrollmentRecord.phone,
+      whatsappNumber: enrollmentRecord.whatsappNumber,
+      schoolName: enrollmentRecord.schoolName,
       secondaryPhone: enrollmentRecord.secondaryPhone,
       medicalAlert: enrollmentRecord.medicalAlert,
       selectedBatchId: selectedBatch.id,
       step: 5,
     }));
 
-    const prefilledText = `Hello Focus Academy! I have completed admission registration for student: ${enrollmentRecord.studentName} (${enrollmentRecord.grade}, ${enrollmentRecord.board}). Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Slip ID: ${saved.id}.`;
+    const prefilledText = `Hello Focus Academy! I have completed admission registration for student: ${enrollmentRecord.studentName} (${enrollmentRecord.grade}, ${enrollmentRecord.board}). School: ${enrollmentRecord.schoolName}. Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Slip ID: ${saved.id}.`;
     const whatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(prefilledText)}`;
 
     setIsSubmitting(false);
     setSubmissionResult({
       success: true,
       data: saved,
+      enrollmentRecord,
       whatsappUrl,
       waitlisted: Boolean(reservation.waitlisted),
       waitlistPosition: reservation.waitlistPosition,
@@ -238,62 +441,72 @@ export default function EnrollPage() {
                 : `Thank you, ${studentName}. Your seat reservation has been queued for ${selectedBatch.name}.`}
             </p>
 
-            <div className="mt-6 p-5 bg-slate-50 rounded-md border border-[#E2E8F0] text-xs text-left space-y-2 max-w-md mx-auto">
+            <div className="mt-6 p-5 bg-slate-50 rounded-md border border-[#E2E8F0] text-xs text-left space-y-2.5 max-w-md mx-auto">
               <div className="flex justify-between pb-2 border-b border-[#E2E8F0]">
-                <span className="text-slate-500">Admission Slip No:</span>
+                <span className="text-slate-500 font-medium">Admission Slip No:</span>
                 <span className="font-bold text-[#0F172A]">{submissionResult.data?.id || 'FA-2026-ENR'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Batch:</span>
+                <span className="text-slate-500 font-medium">Batch:</span>
                 <span className="font-bold text-[#EA580C] text-right truncate max-w-[200px]">{selectedBatch.shortTitle}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Schedule:</span>
-                <span className="font-bold text-[#0F172A]">{selectedBatch.timing} (Mon-Sat)</span>
+                <span className="text-slate-500 font-medium">School / College:</span>
+                <span className="font-bold text-[#0F172A] text-right truncate max-w-[200px]">{submissionResult.enrollmentRecord?.schoolName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Classroom:</span>
-                <span className="font-bold text-[#0F172A]">Thiripura Complex, 1st Floor</span>
+                <span className="text-slate-500 font-medium">Board & Target Cycle:</span>
+                <span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.educationBoard} (Target: {submissionResult.enrollmentRecord?.targetYear})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-medium">WhatsApp Updates:</span>
+                <span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.whatsappNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-medium">Emergency Contact:</span>
+                <span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.emergencyContactName} ({submissionResult.enrollmentRecord?.emergencyRelationship})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-medium">Verification ID:</span>
+                <span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.studentIdNumber}</span>
+              </div>
+              {submissionResult.enrollmentRecord?.gstin && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">GSTIN Invoice:</span>
+                  <span className="font-mono text-slate-800 font-semibold">{submissionResult.enrollmentRecord.gstin}</span>
+                </div>
+              )}
+              {submissionResult.enrollmentRecord?.addressStreet && (
+                <div className="pt-2 border-t border-[#E2E8F0]">
+                  <span className="text-slate-500 font-medium block">Dispatch Address for Books:</span>
+                  <span className="text-slate-800 mt-0.5 block">
+                    {submissionResult.enrollmentRecord.addressStreet}, {submissionResult.enrollmentRecord.addressCityState} - {submissionResult.enrollmentRecord.addressPincode}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between pt-2 border-t border-[#E2E8F0]">
+                <span className="text-slate-500 font-medium">Timing:</span>
+                <span className="font-semibold text-slate-700">{selectedBatch.timing} (Mon – Sat)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-medium">Classroom:</span>
+                <span className="text-slate-700">{selectedBatch.classroom}</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-[#E2E8F0]">
-                <span className="text-slate-500">Monthly Fee:</span>
-                <span className="font-bold text-emerald-700">₹{selectedBatch.monthlyFee.toLocaleString('en-IN')} / month</span>
+                <span className="text-slate-500 font-medium">Monthly Tuition Fee:</span>
+                <span className="font-extrabold text-[#0F172A] text-sm">₹{selectedBatch.monthlyFee.toLocaleString('en-IN')}/mo</span>
               </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-emerald-50 rounded-md border border-emerald-200 text-xs text-emerald-900 flex items-center space-x-2.5 max-w-md mx-auto">
-              <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0" />
-              <span>
-                Protected by 100% No-Questions-Asked Rematch Guarantee after Session 1.
-              </span>
             </div>
 
             <div className="mt-8 space-y-3 max-w-md mx-auto">
-              {submissionResult.whatsappUrl && (
-                <a
-                  href={submissionResult.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-sm rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2"
-                >
-                  <MessageSquare className="w-4 h-4 fill-white" />
-                  <span>Send Confirmation via WhatsApp →</span>
-                </a>
-              )}
-
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="w-full py-3 bg-white hover:bg-slate-50 text-[#0F172A] font-bold text-xs rounded-md border border-[#E2E8F0] shadow-xs transition-colors cursor-pointer flex items-center justify-center space-x-2"
-              >
-                <span>Save / Print Admission Slip (PDF)</span>
-              </button>
-
               <a
-                href={`upi://pay?pa=9842451220@upi&pn=Focus%20Academy&am=${selectedBatch.monthlyFee}&cu=INR&tn=Focus%20Academy%20Admission`}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-[#0F172A] font-bold text-xs rounded-md border border-[#CBD5E1] transition-all cursor-pointer flex items-center justify-center space-x-2"
+                href={submissionResult.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-xs rounded-md shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-98"
               >
-                <span>Pay ₹{selectedBatch.monthlyFee.toLocaleString('en-IN')} via UPI (GPay / PhonePe)</span>
+                <MessageSquare className="w-4 h-4" />
+                <span>Notify Campus Desk on WhatsApp</span>
               </a>
 
               <button
@@ -316,14 +529,13 @@ export default function EnrollPage() {
               </div>
             )}
 
-
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
-                  Confirm Enrollment & Reserve Seat
+                  Student Enrollment & Verification
                 </h1>
                 <p className="text-sm text-slate-600 mt-1">
-                  Review the selected batch details and submit to complete your registration.
+                  Complete the operational, academic, and verification details below to finalize your seat reservation.
                 </p>
               </div>
 
@@ -388,8 +600,15 @@ export default function EnrollPage() {
                   </div>
 
                   <div className="pt-2 text-xs text-slate-500 flex items-center justify-between">
-                    <span>Batch Setup:</span>
-                    <strong className="text-[#0F172A]">Small Batch (Max 12 Seats)</strong>
+                    <span>Batch Format:</span>
+                    <strong className="text-[#0F172A]">Offline Classroom (1:12 Cap)</strong>
+                  </div>
+
+                  <div className="pt-2 text-xs text-slate-500 flex items-center justify-between">
+                    <span>Study Material:</span>
+                    <strong className={includesPrintedMaterials ? 'text-[#EA580C] font-bold' : 'text-slate-700'}>
+                      {includesPrintedMaterials ? 'Printed Books & Worksheets Included' : 'Digital Classroom Materials'}
+                    </strong>
                   </div>
 
                   <div className="pt-4 border-t border-[#E2E8F0] flex items-center justify-between">
@@ -417,19 +636,8 @@ export default function EnrollPage() {
               <div className="lg:col-span-3">
                 <form
                   onSubmit={handleSubmit}
-                  className="bg-white p-6 sm:p-8 rounded-lg border border-[#E2E8F0] shadow-xs space-y-5"
+                  className="space-y-6"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-1.5">
-                    <h2 className="text-base font-bold text-[#0F172A]">
-                      Student & Admission Details
-                    </h2>
-                    {studentFlow.studentName && (
-                      <span className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-semibold self-start sm:self-auto">
-                        ✓ Verified from Step 1
-                      </span>
-                    )}
-                  </div>
-
                   <input
                     type="text"
                     name="website_url"
@@ -441,160 +649,660 @@ export default function EnrollPage() {
                     style={{ display: 'none', position: 'absolute', left: '-9999px' }}
                   />
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="enroll-student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Student Full Name <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர் *</span>
-                      </label>
-                      <input
-                        id="enroll-student-name"
-                        type="text"
-                        value={studentName}
-                        onChange={(e) => {
-                          setStudentName(e.target.value);
-                          if (nameError) setNameError('');
-                        }}
-                        placeholder="e.g. K. Vignesh"
-                        className={`w-full px-3.5 py-2.5 bg-white border ${
-                          nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
-                        required
-                      />
-                      {nameError && (
-                        <p className="text-xs text-rose-600 mt-1">{nameError}</p>
-                      )}
-                    </div>
+                  <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xs overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('academic')}
+                      className="w-full p-4 sm:p-5 flex items-center justify-between bg-slate-50/70 hover:bg-slate-50 transition-colors border-b border-[#E2E8F0] text-left cursor-pointer"
+                      aria-expanded={openSections.academic}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-[#EA580C]/10 text-[#EA580C] flex items-center justify-center shrink-0">
+                          <GraduationCap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs uppercase font-bold text-[#EA580C]">Section 1</span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs text-slate-500 font-semibold">Required</span>
+                          </div>
+                          <h2 className="text-base font-bold text-[#0F172A]">
+                            Academic Background & School Identity
+                          </h2>
+                        </div>
+                      </div>
+                      <div className="text-slate-400">
+                        {openSections.academic ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </div>
+                    </button>
 
-                    <div>
-                      <label htmlFor="enroll-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Mobile Number <span className="text-[11px] font-normal text-slate-500">/ பெற்றோர் கைபேசி எண் *</span>
-                      </label>
-                      <input
-                        id="enroll-phone"
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => {
-                          setPhone(e.target.value);
-                          if (phoneError) setPhoneError('');
-                        }}
-                        placeholder="e.g. 98424 51220"
-                        className={`w-full px-3.5 py-2.5 bg-white border ${
-                          phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
-                        required
-                      />
-                      {phoneError && (
-                        <p className="text-xs text-rose-600 mt-1">{phoneError}</p>
-                      )}
-                    </div>
+                    {openSections.academic && (
+                      <div className="p-5 sm:p-6 space-y-4">
+                        <div>
+                          <label htmlFor="enroll-school-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                            School / College Name * <span className="text-[11px] font-normal text-slate-500">/ பள்ளி / கல்லூரி பெயர்</span>
+                          </label>
+                          <input
+                            id="enroll-school-name"
+                            type="text"
+                            value={schoolName}
+                            onChange={(e) => {
+                              setSchoolName(e.target.value);
+                              if (formErrors.schoolName) setFormErrors((prev) => ({ ...prev, schoolName: '' }));
+                            }}
+                            placeholder="e.g. Thanthai Hans Roever, Kendriya Vidyalaya, DS Matriculation..."
+                            className={`w-full px-3.5 py-2.5 bg-white border ${
+                              formErrors.schoolName ? 'border-rose-500' : 'border-[#E2E8F0]'
+                            } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                            required
+                          />
+                          {formErrors.schoolName && (
+                            <p className="text-xs text-rose-600 mt-1">{formErrors.schoolName}</p>
+                          )}
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="enroll-education-board" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Education Board / University *
+                            </label>
+                            <select
+                              id="enroll-education-board"
+                              value={educationBoard}
+                              onChange={(e) => {
+                                setEducationBoard(e.target.value);
+                                setBoard(e.target.value === 'State Board' ? 'TN State Board (Samacheer)' : `${e.target.value} Board`);
+                                if (formErrors.educationBoard) setFormErrors((prev) => ({ ...prev, educationBoard: '' }));
+                              }}
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              required
+                            >
+                              <option value="CBSE">CBSE (Central Board)</option>
+                              <option value="ICSE">ICSE / ISC (Council)</option>
+                              <option value="State Board">State Board (Samacheer Kalvi)</option>
+                              <option value="Other">Other / University</option>
+                            </select>
+                            {formErrors.educationBoard && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.educationBoard}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label htmlFor="enroll-target-year" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Target Year / Exam Cycle *
+                            </label>
+                            <select
+                              id="enroll-target-year"
+                              value={targetYear}
+                              onChange={(e) => {
+                                setTargetYear(e.target.value);
+                                if (formErrors.targetYear) setFormErrors((prev) => ({ ...prev, targetYear: '' }));
+                              }}
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              required
+                            >
+                              <option value="2026">2026 Exam Cycle</option>
+                              <option value="2027">2027 Exam Cycle</option>
+                              <option value="2028">2028 Exam Cycle</option>
+                              <option value="2029">2029 Exam Cycle</option>
+                              <option value="2030">2030 Exam Cycle</option>
+                            </select>
+                            {formErrors.targetYear && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.targetYear}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="enroll-prev-score" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Previous Year Score / Percentage (Optional)
+                            </label>
+                            <input
+                              id="enroll-prev-score"
+                              type="text"
+                              value={previousScore}
+                              onChange={(e) => setPreviousScore(e.target.value)}
+                              placeholder='e.g. "88%" or "9.2 CGPA"'
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                            />
+                            <p className="text-[11px] text-slate-500 mt-1">Helps teachers gauge baseline conceptual strengths.</p>
+                          </div>
+
+                          <div>
+                            <label htmlFor="enroll-school-shift" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              School / College Shift Timing *
+                            </label>
+                            <select
+                              id="enroll-school-shift"
+                              value={schoolShift}
+                              onChange={(e) => {
+                                setSchoolShift(e.target.value);
+                                if (formErrors.schoolShift) setFormErrors((prev) => ({ ...prev, schoolShift: '' }));
+                              }}
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              required
+                            >
+                              <option value="Morning Shift (e.g. 7:30 AM – 1:30 PM)">Morning Shift (e.g. 7:30 AM – 1:30 PM)</option>
+                              <option value="Day/Afternoon Shift (e.g. 9:00 AM – 3:30 PM)">Day/Afternoon Shift (e.g. 9:00 AM – 3:30 PM)</option>
+                            </select>
+                            <p className="text-[11px] text-slate-500 mt-1">Ensures zero overlap with 4:00 PM – 9:00 PM batch slots.</p>
+                            {formErrors.schoolShift && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.schoolShift}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="enroll-parent-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Parent / Guardian Name <span className="text-[11px] font-normal text-slate-500">/ பெற்றோர் / பாதுகாவலர் பெயர்</span>
-                      </label>
-                      <input
-                        id="enroll-parent-name"
-                        type="text"
-                        value={parentName}
-                        onChange={(e) => setParentName(e.target.value)}
-                        placeholder="e.g. Mr. S. Kannan (Father)"
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
-                      />
-                    </div>
+                  <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xs overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('operational')}
+                      className="w-full p-4 sm:p-5 flex items-center justify-between bg-slate-50/70 hover:bg-slate-50 transition-colors border-b border-[#E2E8F0] text-left cursor-pointer"
+                      aria-expanded={openSections.operational}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                          <PhoneCall className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs uppercase font-bold text-emerald-600">Section 2</span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs text-slate-500 font-semibold">Contact & Emergency Safety</span>
+                          </div>
+                          <h2 className="text-base font-bold text-[#0F172A]">
+                            Operational & Contact Details
+                          </h2>
+                        </div>
+                      </div>
+                      <div className="text-slate-400">
+                        {openSections.operational ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </div>
+                    </button>
 
-                    <div>
-                      <label htmlFor="enroll-school-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Current School <span className="text-[11px] font-normal text-slate-500">/ பயிலும் பள்ளி</span>
-                      </label>
-                      <input
-                        id="enroll-school-name"
-                        type="text"
-                        value={schoolName}
-                        onChange={(e) => setSchoolName(e.target.value)}
-                        placeholder="e.g. Thanthai Hans Roever, DS..."
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
-                      />
-                    </div>
+                    {openSections.operational && (
+                      <div className="p-5 sm:p-6 space-y-4">
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="enroll-student-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Student Full Name * <span className="text-[11px] font-normal text-slate-500">/ மாணவர் பெயர் *</span>
+                            </label>
+                            <input
+                              id="enroll-student-name"
+                              type="text"
+                              value={studentName}
+                              onChange={(e) => {
+                                setStudentName(e.target.value);
+                                if (formErrors.studentName) setFormErrors((prev) => ({ ...prev, studentName: '' }));
+                              }}
+                              placeholder="e.g. K. Vignesh"
+                              className={`w-full px-3.5 py-2.5 bg-white border ${
+                                formErrors.studentName ? 'border-rose-500' : 'border-[#E2E8F0]'
+                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                              required
+                            />
+                            {formErrors.studentName && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.studentName}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label htmlFor="enroll-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Calling Mobile Number * <span className="text-[11px] font-normal text-slate-500">/ அழைப்பு கைபேசி எண் *</span>
+                            </label>
+                            <input
+                              id="enroll-phone"
+                              type="tel"
+                              value={phone}
+                              onChange={(e) => handlePhoneChange(e.target.value)}
+                              placeholder="e.g. 98424 51220"
+                              className={`w-full px-3.5 py-2.5 bg-white border ${
+                                formErrors.phone ? 'border-rose-500' : 'border-[#E2E8F0]'
+                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                              required
+                            />
+                            {formErrors.phone && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.phone}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="enroll-parent-name" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Parent / Guardian Name <span className="text-[11px] font-normal text-slate-500">/ பெற்றோர் பெயர்</span>
+                            </label>
+                            <input
+                              id="enroll-parent-name"
+                              type="text"
+                              value={parentName}
+                              onChange={(e) => setParentName(e.target.value)}
+                              placeholder="e.g. Mr. S. Kannan (Father)"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                            />
+                          </div>
+
+                          <div>
+                            <label htmlFor="enroll-medium" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Medium / Language of Instruction *
+                            </label>
+                            <select
+                              id="enroll-medium"
+                              value={mediumOfInstruction}
+                              onChange={(e) => {
+                                setMediumOfInstruction(e.target.value);
+                                if (formErrors.mediumOfInstruction) setFormErrors((prev) => ({ ...prev, mediumOfInstruction: '' }));
+                              }}
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              required
+                            >
+                              <option value="English">English</option>
+                              <option value="Hindi">Hindi</option>
+                              <option value="Bilingual / Hinglish">Bilingual / Hinglish</option>
+                              <option value="Tamil / English (Bilingual)">Tamil / English (Bilingual)</option>
+                            </select>
+                            {formErrors.mediumOfInstruction && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.mediumOfInstruction}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 rounded-md border border-[#E2E8F0] space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs uppercase font-bold text-[#0F172A] block">
+                              WhatsApp Notifications Number *
+                            </span>
+                          </div>
+
+                          <label className="flex items-center space-x-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={sameAsPhone}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setSameAsPhone(checked);
+                                if (checked) {
+                                  setWhatsappNumber(phone);
+                                  if (formErrors.whatsappNumber) setFormErrors((prev) => ({ ...prev, whatsappNumber: '' }));
+                                }
+                              }}
+                              className="rounded text-[#EA580C] focus:ring-[#EA580C] h-4 w-4 border-slate-300"
+                            />
+                            <span>WhatsApp number is same as calling phone number{phone ? ` (${phone})` : ''}</span>
+                          </label>
+
+                          {!sameAsPhone && (
+                            <div>
+                              <input
+                                id="enroll-whatsapp-number"
+                                type="tel"
+                                value={whatsappNumber}
+                                onChange={(e) => {
+                                  setWhatsappNumber(e.target.value);
+                                  if (formErrors.whatsappNumber) setFormErrors((prev) => ({ ...prev, whatsappNumber: '' }));
+                                }}
+                                placeholder="e.g. 98424 51220 (Dedicated WhatsApp)"
+                                className={`w-full px-3.5 py-2.5 bg-white border ${
+                                  formErrors.whatsappNumber ? 'border-rose-500' : 'border-[#E2E8F0]'
+                                } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                required={!sameAsPhone}
+                              />
+                              {formErrors.whatsappNumber && (
+                                <p className="text-xs text-rose-600 mt-1">{formErrors.whatsappNumber}</p>
+                              )}
+                            </div>
+                          )}
+                          <p className="text-[11px] text-slate-500">Used for mock test report cards, attendance alerts, and homework logs.</p>
+                        </div>
+
+                        <div className="p-4 bg-amber-50/60 rounded-md border border-amber-200/80 space-y-3">
+                          <div className="flex items-center space-x-2">
+                            <ShieldCheck className="w-4 h-4 text-[#EA580C]" />
+                            <span className="text-xs uppercase font-bold text-[#0F172A]">
+                              Emergency Contact (Mandatory for Offline Batches & Safety) *
+                            </span>
+                          </div>
+
+                          <div className="grid sm:grid-cols-3 gap-3">
+                            <div>
+                              <label htmlFor="enroll-emergency-name" className="block text-xs uppercase font-bold text-slate-600 mb-1">
+                                Contact Person Name *
+                              </label>
+                              <input
+                                id="enroll-emergency-name"
+                                type="text"
+                                value={emergencyContactName}
+                                onChange={(e) => {
+                                  setEmergencyContactName(e.target.value);
+                                  if (formErrors.emergencyContactName) setFormErrors((prev) => ({ ...prev, emergencyContactName: '' }));
+                                }}
+                                placeholder="e.g. Mrs. Lakshmi Kannan"
+                                className={`w-full px-3.5 py-2 bg-white border ${
+                                  formErrors.emergencyContactName ? 'border-rose-500' : 'border-[#E2E8F0]'
+                                } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                required
+                              />
+                              {formErrors.emergencyContactName && (
+                                <p className="text-xs text-rose-600 mt-1">{formErrors.emergencyContactName}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label htmlFor="enroll-emergency-rel" className="block text-xs uppercase font-bold text-slate-600 mb-1">
+                                Relationship to Student *
+                              </label>
+                              <select
+                                id="enroll-emergency-rel"
+                                value={emergencyRelationship}
+                                onChange={(e) => {
+                                  setEmergencyRelationship(e.target.value);
+                                  if (formErrors.emergencyRelationship) setFormErrors((prev) => ({ ...prev, emergencyRelationship: '' }));
+                                }}
+                                className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                                required
+                              >
+                                <option value="Father">Father</option>
+                                <option value="Mother">Mother</option>
+                                <option value="Guardian">Guardian</option>
+                                <option value="Other">Other Family Member</option>
+                              </select>
+                              {formErrors.emergencyRelationship && (
+                                <p className="text-xs text-rose-600 mt-1">{formErrors.emergencyRelationship}</p>
+                              )}
+                            </div>
+
+                            <div>
+                              <label htmlFor="enroll-emergency-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1">
+                                Emergency Phone *
+                              </label>
+                              <input
+                                id="enroll-emergency-phone"
+                                type="tel"
+                                value={emergencyPhone}
+                                onChange={(e) => {
+                                  setEmergencyPhone(e.target.value);
+                                  if (formErrors.emergencyPhone) setFormErrors((prev) => ({ ...prev, emergencyPhone: '' }));
+                                }}
+                                placeholder="e.g. 98424 51222"
+                                className={`w-full px-3.5 py-2 bg-white border ${
+                                  formErrors.emergencyPhone ? 'border-rose-500' : 'border-[#E2E8F0]'
+                                } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                required
+                              />
+                              {formErrors.emergencyPhone && (
+                                <p className="text-xs text-rose-600 mt-1">{formErrors.emergencyPhone}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="enroll-sec-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Secondary Landline / Alternate Mobile (Optional)
+                            </label>
+                            <input
+                              id="enroll-sec-phone"
+                              type="tel"
+                              value={secondaryPhone}
+                              onChange={(e) => {
+                                setSecondaryPhone(e.target.value);
+                                if (formErrors.secondaryPhone) setFormErrors((prev) => ({ ...prev, secondaryPhone: '' }));
+                              }}
+                              placeholder="e.g. 04328 221234 or 98424 51223"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                            />
+                            {formErrors.secondaryPhone && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.secondaryPhone}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label htmlFor="enroll-medical-alert" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Medical / Health Alert (Optional)
+                            </label>
+                            <input
+                              id="enroll-medical-alert"
+                              type="text"
+                              value={medicalAlert}
+                              onChange={(e) => setMedicalAlert(e.target.value)}
+                              placeholder="e.g. Inhaler, dust allergy, specs (Optional)"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="enroll-start-date" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Preferred Batch Start Date
+                            </label>
+                            <select
+                              id="enroll-start-date"
+                              value={startDatePreference}
+                              onChange={(e) => setStartDatePreference(e.target.value)}
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A]"
+                            >
+                              <option value="Immediate (This Week)">Immediate (This Week)</option>
+                              <option value="Next Monday">From Next Monday</option>
+                              <option value="First of Next Month">From 1st of Next Month</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label htmlFor="enroll-weakness" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Learning Challenge or Doubts (Optional)
+                            </label>
+                            <input
+                              id="enroll-weakness"
+                              type="text"
+                              value={studentWeakness}
+                              onChange={(e) => setStudentWeakness(e.target.value)}
+                              placeholder="e.g. Hesitant in algebra proofs, physics numericals"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="enroll-sec-phone" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Secondary Emergency Phone <span className="text-[11px] font-normal text-slate-500">/ மாற்று அவசர எண்</span>
-                      </label>
-                      <input
-                        id="enroll-sec-phone"
-                        type="tel"
-                        value={secondaryPhone}
-                        onChange={(e) => setSecondaryPhone(e.target.value)}
-                        placeholder="e.g. 98424 51221 (Optional)"
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
-                      />
-                    </div>
+                  <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xs overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection('logistics')}
+                      className="w-full p-4 sm:p-5 flex items-center justify-between bg-slate-50/70 hover:bg-slate-50 transition-colors border-b border-[#E2E8F0] text-left cursor-pointer"
+                      aria-expanded={openSections.logistics}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
+                          <Truck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs uppercase font-bold text-blue-600">Section 3</span>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs text-slate-500 font-semibold">Verification & Logistics</span>
+                          </div>
+                          <h2 className="text-base font-bold text-[#0F172A]">
+                            Logistics, Verification & Invoicing
+                          </h2>
+                        </div>
+                      </div>
+                      <div className="text-slate-400">
+                        {openSections.logistics ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </div>
+                    </button>
 
-                    <div>
-                      <label htmlFor="enroll-medical-alert" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Medical / Health Alert <span className="text-[11px] font-normal text-slate-500">/ மருத்துவக் குறிப்பு</span>
-                      </label>
-                      <input
-                        id="enroll-medical-alert"
-                        type="text"
-                        value={medicalAlert}
-                        onChange={(e) => setMedicalAlert(e.target.value)}
-                        placeholder="e.g. Inhaler, dust allergy, specs (Optional)"
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
-                      />
-                    </div>
-                  </div>
+                    {openSections.logistics && (
+                      <div className="p-5 sm:p-6 space-y-5">
+                        {includesPrintedMaterials ? (
+                          <div className="p-4 bg-orange-50/60 rounded-md border border-orange-200/80 space-y-3">
+                            <div className="flex items-center space-x-2">
+                              <Truck className="w-4 h-4 text-[#EA580C]" />
+                              <span className="text-xs uppercase font-bold text-[#0F172A]">
+                                Physical Shipping / Book Dispatch Address (Printed Materials Included) *
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-600">
+                              This batch includes printed formula books, chapter worksheets, and board question archives dispatched to your home.
+                            </p>
 
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="enroll-board" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Education Board
-                      </label>
-                      <select
-                        id="enroll-board"
-                        value={board}
-                        onChange={(e) => setBoard(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A]"
-                      >
-                        <option value="TN State Board (Samacheer)">TN State Board (Samacheer)</option>
-                        <option value="CBSE Board">CBSE Board (NCERT)</option>
-                        <option value="ICSE Board">ICSE Board</option>
-                      </select>
-                    </div>
+                            <div className="space-y-3 pt-1">
+                              <div>
+                                <label htmlFor="enroll-address-street" className="block text-xs uppercase font-bold text-slate-600 mb-1">
+                                  Street Address / House No. *
+                                </label>
+                                <input
+                                  id="enroll-address-street"
+                                  type="text"
+                                  value={addressStreet}
+                                  onChange={(e) => {
+                                    setAddressStreet(e.target.value);
+                                    if (formErrors.addressStreet) setFormErrors((prev) => ({ ...prev, addressStreet: '' }));
+                                  }}
+                                  placeholder="e.g. Door No. 24, Bharathi Nagar 2nd Cross, Thoramangalam"
+                                  className={`w-full px-3.5 py-2.5 bg-white border ${
+                                    formErrors.addressStreet ? 'border-rose-500' : 'border-[#E2E8F0]'
+                                  } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                  required={includesPrintedMaterials}
+                                />
+                                {formErrors.addressStreet && (
+                                  <p className="text-xs text-rose-600 mt-1">{formErrors.addressStreet}</p>
+                                )}
+                              </div>
 
-                    <div>
-                      <label htmlFor="enroll-start-date" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                        Preferred Start Date
-                      </label>
-                      <select
-                        id="enroll-start-date"
-                        value={startDatePreference}
-                        onChange={(e) => setStartDatePreference(e.target.value)}
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A]"
-                      >
-                        <option value="Immediate (This Week)">Immediate (This Week)</option>
-                        <option value="Next Monday">From Next Monday</option>
-                        <option value="First of Next Month">From 1st of Next Month</option>
-                      </select>
-                    </div>
-                  </div>
+                              <div className="grid sm:grid-cols-3 gap-3">
+                                <div>
+                                  <label htmlFor="enroll-address-landmark" className="block text-xs uppercase font-bold text-slate-600 mb-1">
+                                    Landmark (Optional)
+                                  </label>
+                                  <input
+                                    id="enroll-address-landmark"
+                                    type="text"
+                                    value={addressLandmark}
+                                    onChange={(e) => setAddressLandmark(e.target.value)}
+                                    placeholder="e.g. Near New Bus Stand"
+                                    className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                                  />
+                                </div>
 
-                  <div>
-                    <label htmlFor="enroll-weakness" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                      Specific Learning Challenge or Doubts (Optional)
-                    </label>
-                    <textarea
-                      id="enroll-weakness"
-                      rows="2"
-                      value={studentWeakness}
-                      onChange={(e) => setStudentWeakness(e.target.value)}
-                      placeholder="e.g. Hesitant to ask doubts in school, weak in geometry proofs, needs physics derivations practice..."
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
-                    />
+                                <div>
+                                  <label htmlFor="enroll-address-city" className="block text-xs uppercase font-bold text-slate-600 mb-1">
+                                    City & State *
+                                  </label>
+                                  <input
+                                    id="enroll-address-city"
+                                    type="text"
+                                    value={addressCityState}
+                                    onChange={(e) => {
+                                      setAddressCityState(e.target.value);
+                                      if (formErrors.addressCityState) setFormErrors((prev) => ({ ...prev, addressCityState: '' }));
+                                    }}
+                                    placeholder="e.g. Perambalur, Tamil Nadu"
+                                    className={`w-full px-3.5 py-2 bg-white border ${
+                                      formErrors.addressCityState ? 'border-rose-500' : 'border-[#E2E8F0]'
+                                    } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                    required={includesPrintedMaterials}
+                                  />
+                                  {formErrors.addressCityState && (
+                                    <p className="text-xs text-rose-600 mt-1">{formErrors.addressCityState}</p>
+                                  )}
+                                </div>
+
+                                <div>
+                                  <label htmlFor="enroll-address-pin" className="block text-xs uppercase font-bold text-slate-600 mb-1">
+                                    Pincode (6-Digit) *
+                                  </label>
+                                  <input
+                                    id="enroll-address-pin"
+                                    type="text"
+                                    maxLength={6}
+                                    value={addressPincode}
+                                    onChange={(e) => {
+                                      setAddressPincode(e.target.value);
+                                      if (formErrors.addressPincode) setFormErrors((prev) => ({ ...prev, addressPincode: '' }));
+                                    }}
+                                    placeholder="e.g. 621212"
+                                    className={`w-full px-3.5 py-2 bg-white border ${
+                                      formErrors.addressPincode ? 'border-rose-500' : 'border-[#E2E8F0]'
+                                    } rounded-md text-xs sm:text-sm font-mono font-bold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                    required={includesPrintedMaterials}
+                                  />
+                                  {formErrors.addressPincode && (
+                                    <p className="text-xs text-rose-600 mt-1">{formErrors.addressPincode}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3.5 bg-slate-50 rounded-md border border-[#E2E8F0] text-xs text-slate-600 flex items-start space-x-2.5">
+                            <FileText className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                            <span>
+                              <strong>Digital Classroom Curriculum:</strong> All worksheets, problem banks, and formula cheat sheets for this batch are provided directly during classroom sessions. Physical postal delivery is not required.
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div>
+                            <label htmlFor="enroll-id-number" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              Identity Proof / Student ID Number *
+                            </label>
+                            <input
+                              id="enroll-id-number"
+                              type="text"
+                              value={studentIdNumber}
+                              onChange={(e) => {
+                                setStudentIdNumber(e.target.value);
+                                if (formErrors.studentIdNumber) setFormErrors((prev) => ({ ...prev, studentIdNumber: '' }));
+                              }}
+                              placeholder="e.g. School ID Card No., Aadhaar or Govt ID No."
+                              className={`w-full px-3.5 py-2.5 bg-white border ${
+                                formErrors.studentIdNumber ? 'border-rose-500' : 'border-[#E2E8F0]'
+                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                              required
+                            />
+                            <p className="text-[11px] text-slate-500 mt-1">
+                              Mandatory for institutional verification, test series hall tickets, and campus entry badge.
+                            </p>
+                            {formErrors.studentIdNumber && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.studentIdNumber}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label htmlFor="enroll-gstin" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
+                              GSTIN for Tax Invoice (Optional)
+                            </label>
+                            <input
+                              id="enroll-gstin"
+                              type="text"
+                              maxLength={15}
+                              value={gstin}
+                              onChange={(e) => {
+                                setGstin(e.target.value.toUpperCase());
+                                if (formErrors.gstin) setFormErrors((prev) => ({ ...prev, gstin: '' }));
+                              }}
+                              placeholder="e.g. 33AAAAA0000A1Z5 (15 Chars)"
+                              className={`w-full px-3.5 py-2.5 bg-white border ${
+                                formErrors.gstin ? 'border-rose-500' : 'border-[#E2E8F0]'
+                              } rounded-md text-sm font-mono font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C] uppercase`}
+                            />
+                            <p className="text-[11px] text-slate-500 mt-1">
+                              Provide business GSTIN if claiming GST tax credit on official fee receipts.
+                            </p>
+                            {formErrors.gstin && (
+                              <p className="text-xs text-rose-600 mt-1">{formErrors.gstin}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3.5 bg-emerald-50 rounded-lg border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
@@ -606,7 +1314,7 @@ export default function EnrollPage() {
                         className="mt-0.5 rounded text-[#EA580C] focus:ring-[#EA580C] h-4 w-4 border-emerald-300"
                       />
                       <span className="leading-snug">
-                        <strong>Verifiable Guardian Declaration (DPDP Act 2023):</strong> I confirm I am the parent or legal guardian of this student and consent to educational admission processing. Zero prepayment required online.
+                        <strong>Verifiable Guardian Declaration (DPDP Act 2023):</strong> I confirm I am the parent or legal guardian of this student and consent to educational admission processing and emergency protocol activation. Zero online prepayment required.
                       </span>
                     </label>
                   </div>
@@ -615,7 +1323,7 @@ export default function EnrollPage() {
                     <button
                       type="button"
                       onClick={() => navigate(`/batch/${selectedBatch.id}`)}
-                      className="text-xs font-semibold text-slate-500 hover:text-[#0F172A]"
+                      className="text-xs font-semibold text-slate-500 hover:text-[#0F172A] cursor-pointer"
                     >
                       ← Back to Batch Details
                     </button>
@@ -625,7 +1333,7 @@ export default function EnrollPage() {
                       disabled={isSubmitting}
                       className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-98"
                     >
-                      <span>{isSubmitting ? 'Submitting...' : 'Complete Batch Enrollment'}</span>
+                      <span>{isSubmitting ? 'Verifying & Reserving...' : 'Complete Batch Enrollment'}</span>
                       <Send className="w-4 h-4 text-orange-200" />
                     </button>
                   </div>
