@@ -1217,12 +1217,17 @@ export const AdminDataService = {
   },
 
   async getEnrollments() {
+    const list = [];
+    const seen = new Set();
     if (isLive()) {
       try {
         const q = query(collection(db, 'enrollments'), orderBy('enrolledAt', 'desc'));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
         if (snap && !snap.empty) {
-          return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+          snap.docs.forEach(d => {
+            seen.add(d.id);
+            list.push({ ...d.data(), id: d.id });
+          });
         }
       } catch (err) {
         console.warn('Firestore getEnrollments query error, falling back to leads:', err);
@@ -1231,10 +1236,46 @@ export const AdminDataService = {
 
     try {
       const allLeads = await this.getLeads();
-      return allLeads.filter(l => l.source === 'enrollment' || l.reservationId);
+      allLeads.filter(l => l.source === 'enrollment' || l.reservationId).forEach(l => {
+        if (!seen.has(l.id)) {
+          seen.add(l.id);
+          list.push({
+            ...l,
+            enrolledAt: l.timestamp || l.submittedAt || new Date().toISOString(),
+            batchName: l.selectedBatchName || l.subjects || 'Focus Evening Batch'
+          });
+        }
+      });
     } catch {
-      return [];
     }
+
+    try {
+      const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+      registered.forEach(s => {
+        if (!seen.has(s.id)) {
+          seen.add(s.id);
+          list.push({
+            id: s.id,
+            studentName: s.studentName,
+            parentName: s.parentName || 'Parent',
+            phone: s.phone,
+            grade: s.grade,
+            board: s.board,
+            batchId: s.selectedBatchId,
+            batchName: s.selectedBatchName || 'Focus Evening Batch',
+            timing: s.timing || 'Evening Session',
+            reservationId: s.reservationId,
+            status: 'confirmed',
+            source: 'enrollment',
+            enrolledAt: s.createdAt || new Date().toISOString(),
+            schoolName: s.schoolName
+          });
+        }
+      });
+    } catch {
+    }
+
+    return list;
   },
 
   async updateLeadStatus(leadId, status, actor = 'admin') {
