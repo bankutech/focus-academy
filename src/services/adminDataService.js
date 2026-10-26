@@ -1210,6 +1210,51 @@ export const AdminDataService = {
     return list;
   },
 
+  async getEnrollments() {
+    let list = [];
+
+    if (isLive()) {
+      try {
+        const q = query(collection(db, 'enrollments'), orderBy('enrolledAt', 'desc'));
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
+        if (snap && !snap.empty) {
+          list = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        }
+      } catch (err) {
+        console.warn('Firestore getEnrollments unavailable, using local store:', err);
+      }
+    }
+
+    try {
+      const localRaw = localStorage.getItem('focus_academy_students') || '[]';
+      const localRecords = JSON.parse(localRaw);
+      const existingIds = new Set(list.map(e => e.id));
+      localRecords.forEach(r => {
+        if (!existingIds.has(r.id)) {
+          existingIds.add(r.id);
+          list.push({
+            id: r.id,
+            studentName: r.studentName,
+            parentName: r.parentName || '',
+            phone: r.phone,
+            grade: r.grade,
+            board: r.board,
+            batchId: r.selectedBatchId,
+            batchName: r.selectedBatchName || 'Focus Evening Batch',
+            timing: r.timing || '',
+            reservationId: r.reservationId || '',
+            status: r.isWaitlisted ? 'waitlisted' : 'confirmed',
+            enrolledAt: r.createdAt || new Date().toISOString(),
+          });
+        }
+      });
+    } catch {
+    }
+
+    list.sort((a, b) => new Date(b.enrolledAt || 0) - new Date(a.enrolledAt || 0));
+    return list;
+  },
+
   async getLeads() {
     if (isLive()) {
       try {
