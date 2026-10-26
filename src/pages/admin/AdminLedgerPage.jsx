@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   CreditCard, 
@@ -6,14 +6,12 @@ import {
   Printer, 
   AlertCircle, 
   CheckCircle2, 
-  X,
-  ChevronLeft,
-  ChevronRight,
-  RotateCcw,
-  Banknote,
-  Landmark,
-  ShieldCheck,
-  Check
+  X, 
+  ChevronLeft, 
+  ChevronRight, 
+  RotateCcw, 
+  Banknote, 
+  Check 
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
@@ -61,7 +59,7 @@ export default function AdminLedgerPage() {
     notes: ''
   });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [p, s, o, m, setts, till] = await Promise.all([
         AdminDataService.getPayments(),
@@ -95,11 +93,11 @@ export default function AdminLedgerPage() {
     } catch (err) {
       console.error('Error loading ledger data:', err);
     }
-  };
+  }, [location.search]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleStudentSelect = (studentId) => {
     const studentObligations = obligations.filter(o => o.studentId === studentId && o.balance > 0);

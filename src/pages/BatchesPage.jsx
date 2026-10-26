@@ -6,12 +6,11 @@ import {
   MapPin, 
   BookOpen, 
   ArrowRight, 
-  Edit2,
-  Filter,
-  CheckCircle2,
-  Bus,
-  ShieldCheck,
-  Calendar
+  Edit2, 
+  Filter, 
+  Bus, 
+  ShieldCheck, 
+  Calendar 
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import { BatchService } from '../services/batchService';

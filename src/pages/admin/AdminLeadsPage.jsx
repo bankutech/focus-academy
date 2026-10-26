@@ -6,21 +6,16 @@ import {
   UserPlus, 
   CheckCircle2, 
   Clock, 
-  AlertCircle, 
   X, 
   Archive, 
-  GraduationCap, 
-  Calendar,
-  Layers,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-  AlertTriangle
+  ChevronLeft, 
+  ChevronRight, 
+  RefreshCw, 
+  AlertTriangle 
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
 import { formatTime12 } from '../../types/schemas';
-import { CAMPUS_CONFIG } from '../../config/campusConfig';
 
 export default function AdminLeadsPage() {
   const [leads, setLeads] = useState([]);

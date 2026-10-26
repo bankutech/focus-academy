@@ -57,16 +57,21 @@ export default function CoursesPage() {
 
   const filteredCourses = useMemo(() => {
     return allCourses.filter(course => {
+      const textToSearch = `${course.title} ${course.category} ${course.description} ${(course.popularSubjects || []).join(' ')}`.toLowerCase();
+
       if (selectedBoard === 'state') {
-        if (!course.category.toLowerCase().includes('state board') && !course.title.toLowerCase().includes('state')) {
+        const matchesState = textToSearch.includes('state') || textToSearch.includes('samacheer') || textToSearch.includes('sslc') || textToSearch.includes('hsc') || course.categoryId === 'high-school' || course.categoryId === 'middle-school';
+        if (!matchesState) {
           return false;
         }
       } else if (selectedBoard === 'cbse') {
-        if (!course.category.toLowerCase().includes('cbse') && !course.title.toLowerCase().includes('cbse')) {
+        const matchesCbse = textToSearch.includes('cbse') || textToSearch.includes('ncert') || course.categoryId === 'high-school' || course.categoryId === 'middle-school';
+        if (!matchesCbse) {
           return false;
         }
       } else if (selectedBoard === 'foundation') {
-        if (!course.category.toLowerCase().includes('foundation') && !course.title.toLowerCase().includes('foundation') && !course.title.toLowerCase().includes('competitive')) {
+        const matchesFoundation = textToSearch.includes('foundation') || textToSearch.includes('competitive') || textToSearch.includes('neet') || textToSearch.includes('jee') || course.categoryId === 'skill-test-prep';
+        if (!matchesFoundation) {
           return false;
         }
       }
@@ -96,10 +101,10 @@ export default function CoursesPage() {
         if (selectedGoal === 'concept-clarity' && !course.description.toLowerCase().includes('concept') && !course.description.toLowerCase().includes('fundamental') && !course.description.toLowerCase().includes('coverage')) {
           return false;
         }
-        if (selectedGoal === 'competitive' && !course.category.toLowerCase().includes('foundation') && !course.title.toLowerCase().includes('foundation') && !course.description.toLowerCase().includes('foundation')) {
+        if (selectedGoal === 'competitive' && !course.category.toLowerCase().includes('foundation') && !course.title.toLowerCase().includes('foundation') && !course.description.toLowerCase().includes('foundation') && !course.title.toLowerCase().includes('neet') && !course.title.toLowerCase().includes('jee')) {
           return false;
         }
-        if (selectedGoal === 'doubt-clearing' && !course.description.toLowerCase().includes('test') && !course.description.toLowerCase().includes('support') && !course.description.toLowerCase().includes('comprehensive')) {
+        if (selectedGoal === 'doubt-clearing' && !course.description.toLowerCase().includes('test') && !course.description.toLowerCase().includes('support') && !course.description.toLowerCase().includes('comprehensive') && !course.title.toLowerCase().includes('doubt')) {
           return false;
         }
       }
@@ -108,8 +113,9 @@ export default function CoursesPage() {
         const query = initialSearch.toLowerCase();
         const matchesTitle = course.title.toLowerCase().includes(query);
         const matchesCat = course.category.toLowerCase().includes(query);
-        const matchesSubj = course.popularSubjects.some(s => s.toLowerCase().includes(query));
-        if (!matchesTitle && !matchesCat && !matchesSubj) {
+        const matchesDesc = course.description.toLowerCase().includes(query);
+        const matchesSubj = (course.popularSubjects || []).some(s => s.toLowerCase().includes(query));
+        if (!matchesTitle && !matchesCat && !matchesDesc && !matchesSubj) {
           return false;
         }
       }

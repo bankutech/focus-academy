@@ -213,8 +213,8 @@ Tutor Center/
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/your-org/focus-academy-portal.git
-   cd focus-academy-portal
+   git clone https://github.com/bankutech/focus-academy.git
+   cd focus-academy
    ```
 
 2. **Install Dependencies:**
@@ -236,19 +236,43 @@ Tutor Center/
 
 5. **Execute Linter & Static Analysis:**
    ```bash
-   npx oxlint
+   npm run lint
+   npm run typecheck
    ```
 
-6. **Compile Production Build:**
+6. **Execute Unit & Integration Tests:**
+   ```bash
+   npm run test
+   ```
+
+7. **Execute Browser End-to-End Tests:**
+   ```bash
+   npx playwright test --project=msedge
+   ```
+
+8. **Compile Production Build:**
    ```bash
    npm run build
    ```
    Compiled distribution files will be generated in `/dist`.
 
-7. **Preview Production Build Locally:**
+9. **Preview Production Build Locally:**
    ```bash
    npm run preview
    ```
+
+---
+
+## 📚 Technical Documentation Suite
+
+Detailed architectural runbooks, security audits, and deployment specifications are maintained in the `/docs` directory:
+- [Audit Report](docs/audit-report.md) — Comprehensive pre- and post-remediation system audit.
+- [Product Requirements](docs/requirements.md) — Core admissions, academic coverage, and batch rules.
+- [Architecture & Data Flow](docs/architecture.md) — Jamstack model, state persistence, and collections.
+- [Testing Runbook](docs/testing.md) — Execution logs across static, unit, accessibility, and E2E tiers.
+- [Security Review](docs/security-review.md) — Cloud Firestore security rules, rate limiters, and tokens.
+- [Known Limitations](docs/known-limitations.md) — Disclosed operational and architectural boundaries.
+- [Deployment Guide](docs/deployment.md) — Vercel release runbook and environment variables.
 
 ---
 

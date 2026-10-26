@@ -89,7 +89,6 @@ export default function AdminFeesPage() {
     setFormSuccess('');
     try {
       const activeStudents = students.filter(s => s.status === 'active' || s.status === 'new_enrollment');
-      let createdCount = 0;
       const now = new Date();
       const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
       const cycleName = `${nextMonth.toLocaleString('en-US', { month: 'long' })} ${nextMonth.getFullYear()}`;

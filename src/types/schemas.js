@@ -72,7 +72,7 @@ export const parseTimeMinutes = (timeStr) => {
 
 export const parseBatchStartMinutes = (timingStr) => {
   if (!timingStr || typeof timingStr !== 'string') return null;
-  const firstToken = timingStr.split(/[–\-]/)[0].trim();
+  const firstToken = timingStr.split(/[–-]/)[0].trim();
   return parseTimeMinutes(firstToken);
 };
 

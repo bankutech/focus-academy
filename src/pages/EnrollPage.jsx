@@ -6,19 +6,16 @@ import {
   MapPin, 
   Users, 
   ShieldCheck, 
-  Send,
-  GraduationCap,
-  PhoneCall,
-  Truck,
-  ChevronDown,
-  ChevronUp,
-  AlertCircle,
-  FileText,
-  Calendar,
-  Building,
-  CreditCard,
-  UserCheck,
-  ArrowRight
+  Send, 
+  GraduationCap, 
+  PhoneCall, 
+  Truck, 
+  ChevronDown, 
+  ChevronUp, 
+  AlertCircle, 
+  FileText, 
+  ArrowRight, 
+  MessageSquare 
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
@@ -985,7 +982,7 @@ export default function EnrollPage() {
                           <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-900 flex items-center space-x-2.5">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                             <span>
-                              <strong className="font-bold">Comfortable Schedule:</strong> Estimated arrival at ~{timingEval.estimatedArrivalTime} ({timingEval.bufferMinutes} min buffer before batch starts at {selectedBatch?.timing?.split(/[–\-]/)[0]?.trim() || selectedBatch?.timing}).
+                              <strong className="font-bold">Comfortable Schedule:</strong> Estimated arrival at ~{timingEval.estimatedArrivalTime} ({timingEval.bufferMinutes} min buffer before batch starts at {selectedBatch?.timing?.split(/[–-]/)[0]?.trim() || selectedBatch?.timing}).
                             </span>
                           </div>
                         )}

@@ -18,11 +18,10 @@ import {
   HOME_ADMISSION_STEPS, 
   HOME_FEATURES 
 } from '../data/homeData';
-import { useStudentFlow, isStep1Complete } from '../context/useAppContext';
+import { useStudentFlow } from '../context/useAppContext';
 
 export default function HomePage() {
-  const { studentFlow } = useStudentFlow();
-  const step1Done = isStep1Complete(studentFlow);
+  const { studentFlow: _studentFlow } = useStudentFlow();
   const whatsappInquiryUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(
     'Hello Focus Academy! I would like to inquire about evening batch timings and trial admissions at Thiripura Complex, Thoramangalam.'
   )}`;
@@ -261,7 +260,7 @@ export default function HomePage() {
                     )}`}
                     className="w-full sm:w-auto lg:w-full min-h-[46px] inline-flex items-center justify-center space-x-1.5 px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md transition-colors shadow-xs"
                   >
-                    <span>Enroll in {program.grade.split(',')[0]} →</span>
+                    <span>Enroll in {program.id === 'middle-school' ? 'Class 6' : 'Class 10'} →</span>
                   </Link>
 
                   <Link

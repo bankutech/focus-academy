@@ -226,22 +226,22 @@ const SEED_BATCHES = [
     createdAt: '2025-06-01T00:00:00.000Z'
   },
   {
-    id: 'batch-special-maths',
-    name: 'Advanced Board Mathematics Mastery (Class 10 & 12)',
-    grade: 'Class 10',
-    board: 'TN State Board, CBSE & ICSE',
+    id: 'batch-remedial-maths',
+    name: 'Special Secondary Math Intensive & Doubt Clinic Batch',
+    grade: 'Classes 9 & 10',
+    board: 'Samacheer, CBSE & ICSE',
     academicSession: '2025-2026',
-    slotId: 'slot-4',
-    timing: '5:30 AM – 7:00 AM (Weekend Intensive)',
-    days: 'Saturday & Sunday',
+    slotId: 'slot-1',
+    timing: '4:30 PM – 6:00 PM',
+    days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 11,
-    seatsRemaining: 1,
-    status: 'Almost Full (1 Seat Left)',
-    monthlyFee: 2100,
-    classroom: 'Lecture Hall 102, First Floor, Thiripura Complex',
-    subjects: ['Advanced Board Mathematics', 'Formula Derivations', '10-Year Question Bank Analysis'],
-    description: 'Early morning weekend drill on high-weightage math problems.',
+    enrolledCount: 8,
+    seatsRemaining: 4,
+    status: 'Admissions Open (4 Seats Left)',
+    monthlyFee: 1800,
+    classroom: 'Problem Solving Clinic 105, First Floor, Thiripura Complex',
+    subjects: ['Algebra Factoring', 'Geometry Theorems', 'Trigonometry Basics', 'Arithmetic Speed'],
+    description: 'Designed specifically for students who feel hesitant or left behind in school math classes. Patient whiteboard problem-solving with 1-on-1 teacher guidance and zero embarrassment.',
     isArchived: false,
     createdAt: '2025-06-01T00:00:00.000Z'
   }
@@ -522,7 +522,7 @@ const SEED_AUDIT_LOGS = [
 function normalizeActorEmail(actor) {
   const candidate = actor && typeof actor === 'object' ? actor.email : actor;
   const text = String(candidate || '').toLowerCase().trim();
-  if (!isFirebaseConfigured() && text.includes('@')) return text;
+  if ((!isFirebaseConfigured() || (typeof window !== 'undefined' && window.__E2E_SEED__)) && text.includes('@')) return text;
   const verified = getVerifiedAdminEmail();
   if (verified) return verified;
   throw new Error('Authentication required: sign in with an authorized administrator account.');
@@ -567,7 +567,7 @@ const buildAudit = ({ actor, action, entityType, entityId, details }) => ({
   details
 });
 
-const isLive = () => isFirebaseConfigured() && Boolean(db);
+const isLive = () => isFirebaseConfigured() && Boolean(db) && !(typeof window !== 'undefined' && window.__E2E_SEED__);
 
 let sessionCache = null;
 
@@ -732,7 +732,7 @@ export const AdminDataService = {
   },
 
   async getSettings() {
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'academy_settings')), 8000);
         if (snap && !snap.empty) {
@@ -762,7 +762,7 @@ export const AdminDataService = {
     store.settings = updated;
     saveLocalStore(store);
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await setDoc(doc(db, 'academy_settings', 'main_config'), updated);
       } catch (err) {
@@ -842,7 +842,7 @@ export const AdminDataService = {
       details
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await setDoc(doc(db, 'audit_logs', entry.id), entry);
       } catch (err) {
@@ -858,7 +858,7 @@ export const AdminDataService = {
   },
 
   async getAuditLogs(limitCount = 50) {
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(limitCount));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
@@ -872,7 +872,7 @@ export const AdminDataService = {
   },
 
   async getBatches() {
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'batches')), 8000);
         if (snap && !snap.empty) return snap.docs.map(d => d.data());
@@ -921,7 +921,7 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await setDoc(doc(db, 'batches', newBatch.id), newBatch);
       } catch (err) {
@@ -968,7 +968,7 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await updateDoc(doc(db, 'batches', batchId), updated);
       } catch (err) {
@@ -1015,7 +1015,7 @@ export const AdminDataService = {
       );
     }
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await deleteDoc(doc(db, 'batches', batchId));
       } catch (err) {
@@ -1041,7 +1041,7 @@ export const AdminDataService = {
 
   async getStudents(options = {}) {
     let list;
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'students')), 8000);
         if (snap && !snap.empty) list = snap.docs.map(d => d.data());
@@ -1064,7 +1064,7 @@ export const AdminDataService = {
   },
 
   async getLeads() {
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const q = query(collection(db, 'leads'), orderBy('timestamp', 'desc'));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
@@ -1119,7 +1119,7 @@ export const AdminDataService = {
     const actorEmail = normalizeActorEmail(actor);
     const now = new Date().toISOString();
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await updateDoc(doc(db, 'leads', leadId), {
           status,
@@ -1323,7 +1323,7 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await setDoc(doc(db, 'students', newStudent.id), newStudent);
         try {
@@ -1396,7 +1396,7 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await updateDoc(doc(db, 'students', studentId), updated);
       } catch (err) {
@@ -1486,7 +1486,7 @@ export const AdminDataService = {
     student.lifecycleHistory = [...(student.lifecycleHistory || []), historyEntry];
     student.updatedAt = new Date().toISOString();
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await updateDoc(doc(db, 'students', studentId), student);
         if (bIdx !== -1) {
@@ -1574,7 +1574,7 @@ export const AdminDataService = {
 
     saveLocalStore(store);
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await updateDoc(doc(db, 'students', studentId), {
           batchId: targetBatch.id,
@@ -1691,7 +1691,7 @@ export const AdminDataService = {
 
     saveLocalStore(store);
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await updateDoc(doc(db, 'students', studentId), student);
       } catch (err) {
@@ -1742,7 +1742,7 @@ export const AdminDataService = {
   },
 
   async getFeeObligations(studentId = null) {
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         let q;
         if (studentId) {
@@ -1816,7 +1816,7 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await setDoc(doc(db, 'fee_obligations', newObligation.id), newObligation);
       } catch (err) {
@@ -1880,7 +1880,7 @@ export const AdminDataService = {
       });
     }
 
-    if (isFirebaseConfigured() && db && createdObligations.length > 0) {
+    if (isLive() && createdObligations.length > 0) {
       try {
         const chunkSize = 400;
         for (let i = 0; i < createdObligations.length; i += chunkSize) {
@@ -1944,7 +1944,7 @@ export const AdminDataService = {
     obl.waivedAt = new Date().toISOString();
     obl.updatedAt = new Date().toISOString();
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await updateDoc(doc(db, 'fee_obligations', obligationId), obl);
       } catch (err) {
@@ -1967,7 +1967,7 @@ export const AdminDataService = {
   },
 
   async getPayments(studentId = null) {
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         let q;
         if (studentId) {
@@ -2071,7 +2071,7 @@ export const AdminDataService = {
     obligation.status = obligation.balance === 0 ? 'paid' : 'partially_paid';
     obligation.updatedAt = new Date().toISOString();
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const batch = writeBatch(db);
         batch.set(doc(db, 'payments', newPayment.id), newPayment);
@@ -2300,7 +2300,7 @@ export const AdminDataService = {
     payment.reversedBy = actorEmail;
     payment.reversedAt = timestamp;
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const batch = writeBatch(db);
         batch.update(doc(db, 'payments', payment.id), payment);
@@ -2368,8 +2368,8 @@ export const AdminDataService = {
     };
   },
 
-  async getActiveTillSession(actor = 'admin') {
-    if (isFirebaseConfigured() && db) {
+  async getActiveTillSession(_actor = 'admin') {
+    if (isLive()) {
       try {
         const q = query(collection(db, 'till_sessions'), where('status', '==', 'open'), limit(1));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
@@ -2384,29 +2384,49 @@ export const AdminDataService = {
     return (store.tillSessions || []).find(s => s.status === 'open') || null;
   },
 
-  async openTillSession(initialFloat = 0, notes = '', actor = 'admin') {
-    this.verifyPermission(actor, 'canRecordPayments', 'opening till cash session');
-    const actorEmail = normalizeActorEmail(actor);
-    const existing = await this.getActiveTillSession(actor);
-    if (existing) {
-      return existing;
+  async openTillSession(initialFloatOrOptions = 0, notesOrActor = '', maybeActor = 'admin') {
+    let initialFloat = 0;
+    let notes = '';
+    let actor = maybeActor;
+
+    if (typeof initialFloatOrOptions === 'object' && initialFloatOrOptions !== null) {
+      initialFloat = initialFloatOrOptions.openingFloat;
+      notes = initialFloatOrOptions.notes || '';
+      actor = notesOrActor || maybeActor || 'admin';
+    } else {
+      initialFloat = initialFloatOrOptions;
+      notes = typeof notesOrActor === 'string' ? notesOrActor : '';
+      actor = maybeActor || 'admin';
     }
 
+    this.verifyPermission(actor, 'canRecordPayments', 'opening till cash session');
+    const floatAmount = Number(initialFloat);
+    if (isNaN(floatAmount) || floatAmount < 0) {
+      throw new Error('Opening cash float must be a non-negative amount.');
+    }
+
+    const existing = await this.getActiveTillSession(actor);
+    if (existing) {
+      throw new Error(`A cash drawer session is already open (Opened by ${existing.openedBy} at ${existing.openedAt}). Please close the active session before opening a new one.`);
+    }
+
+    const actorEmail = normalizeActorEmail(actor);
     const session = {
-      id: uid('TILL'),
+      id: `TILL-${Date.now().toString(36).toUpperCase()}`,
       status: 'open',
+      date: new Date().toISOString().split('T')[0],
       openedAt: new Date().toISOString(),
       openedBy: actorEmail,
-      openingFloat: Number(initialFloat) || 0,
+      openingFloat: floatAmount,
       notes: notes.trim(),
       createdAt: new Date().toISOString()
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
-        await setDoc(doc(db, 'till_sessions', session.id), session);
+        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 8000);
       } catch (err) {
-        console.error('Firestore openTillSession error:', err);
+        console.warn('Firestore openTillSession fallback:', err);
       }
     }
 
@@ -2426,14 +2446,80 @@ export const AdminDataService = {
     return session;
   },
 
-  async closeTillSession(sessionId, denominations = {}, notes = '', actor = 'admin') {
-    this.verifyPermission(actor, 'canRecordPayments', 'closing till cash session');
+  async getTillSessionSummary(sessionId) {
+    const sessions = await this.getTillSessions();
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) {
+      throw new Error(`Till session not found: ${sessionId}`);
+    }
+
+    const payments = await this.getPayments();
+    const sessionPayments = payments.filter(p => {
+      if (p.createdAt < session.openedAt) return false;
+      if (session.closedAt && p.createdAt > session.closedAt) return false;
+      return true;
+    });
+
+    const activePayments = sessionPayments.filter(p => !p.isReversed && !p.reversed);
+    const reversedPayments = sessionPayments.filter(p => p.isReversed || p.reversed);
+
+    const cashCollected = activePayments.filter(p => p.paymentMethod === 'cash').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const upiCollected = activePayments.filter(p => p.paymentMethod === 'upi' || p.paymentMethod === 'upi_online').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const bankCollected = activePayments.filter(p => p.paymentMethod === 'bank_transfer').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const totalCollected = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const reversedCash = reversedPayments.filter(p => p.paymentMethod === 'cash').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const expectedCashInDrawer = Math.max(0, session.openingFloat + cashCollected - reversedCash);
+
+    return {
+      session,
+      openingFloat: session.openingFloat,
+      cashCollected,
+      upiCollected,
+      bankCollected,
+      totalCollected,
+      reversedCash,
+      expectedCashInDrawer,
+      transactionCount: activePayments.length,
+      cashTransactionCount: activePayments.filter(p => p.paymentMethod === 'cash').length,
+      payments: activePayments
+    };
+  },
+
+  async closeTillSession(sessionId, detailsOrDenominations = {}, notesOrOptions = '', maybeActor = 'admin') {
+    let closingCashActual;
+    let denominations = null;
+    let notes = '';
+    let handedOverTo = 'Managing Director';
+    let actor = maybeActor;
+
+    if (typeof detailsOrDenominations === 'object' && detailsOrDenominations !== null && detailsOrDenominations.closingCashActual !== undefined) {
+      closingCashActual = Number(detailsOrDenominations.closingCashActual);
+      handedOverTo = detailsOrDenominations.handedOverTo || 'Managing Director';
+      notes = detailsOrDenominations.closingNotes || '';
+      denominations = detailsOrDenominations.denominations || null;
+      actor = notesOrOptions || maybeActor || 'admin';
+    } else {
+      denominations = detailsOrDenominations || {};
+      notes = typeof notesOrOptions === 'string' ? notesOrOptions : '';
+      actor = maybeActor || 'admin';
+      const d500 = Number(denominations.d500) || 0;
+      const d200 = Number(denominations.d200) || 0;
+      const d100 = Number(denominations.d100) || 0;
+      const d50 = Number(denominations.d50) || 0;
+      const d20 = Number(denominations.d20) || 0;
+      const d10 = Number(denominations.d10) || 0;
+      const coins = Number(denominations.coins) || 0;
+      closingCashActual = (d500 * 500) + (d200 * 200) + (d100 * 100) + (d50 * 50) + (d20 * 20) + (d10 * 10) + coins;
+    }
+
+    this.verifyPermission(actor, 'canRecordPayments', 'closing cash drawer till session');
     const actorEmail = normalizeActorEmail(actor);
     const store = await hydrateStore();
     const payments = await this.getPayments();
 
     let session = (store.tillSessions || []).find(s => s.id === sessionId);
-    if (!session && isFirebaseConfigured() && db) {
+    if (!session && isLive()) {
       try {
         const snap = await getDocs(query(collection(db, 'till_sessions'), where('id', '==', sessionId)));
         if (!snap.empty) session = snap.docs[0].data();
@@ -2442,16 +2528,14 @@ export const AdminDataService = {
     if (!session) {
       throw new Error(`Till session ${sessionId} not found.`);
     }
+    if (session.status !== 'open') {
+      throw new Error(`Till session ${sessionId} is already closed.`);
+    }
 
-    const d500 = Number(denominations.d500) || 0;
-    const d200 = Number(denominations.d200) || 0;
-    const d100 = Number(denominations.d100) || 0;
-    const d50 = Number(denominations.d50) || 0;
-    const d20 = Number(denominations.d20) || 0;
-    const d10 = Number(denominations.d10) || 0;
-    const coins = Number(denominations.coins) || 0;
-
-    const countedCash = (d500 * 500) + (d200 * 200) + (d100 * 100) + (d50 * 50) + (d20 * 20) + (d10 * 10) + coins;
+    const actual = Number(closingCashActual);
+    if (isNaN(actual) || actual < 0) {
+      throw new Error('Closing cash actual count must be a non-negative amount.');
+    }
 
     const openTime = new Date(session.openedAt).getTime();
     const cashPaymentsInSession = payments.filter(p => {
@@ -2463,7 +2547,7 @@ export const AdminDataService = {
     const cashReceiptsSum = cashPaymentsInSession.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
     const openingFloat = Number(session.openingFloat) || 0;
     const expectedCash = openingFloat + cashReceiptsSum;
-    const variance = countedCash - expectedCash;
+    const variance = actual - expectedCash;
     const now = new Date().toISOString();
 
     const updatedSession = {
@@ -2472,19 +2556,23 @@ export const AdminDataService = {
       closedAt: now,
       closedBy: actorEmail,
       closingNotes: notes.trim(),
-      denominations: { d500, d200, d100, d50, d20, d10, coins },
-      countedCash,
+      handedOverTo,
+      denominations,
+      closingCashActual: actual,
+      countedCash: actual,
       cashReceiptsSum,
       openingFloat,
       expectedCash,
+      expectedDrawerCash: expectedCash,
       variance,
+      difference: variance,
       cashTransactionsCount: cashPaymentsInSession.length,
       updatedAt: now
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
-        await setDoc(doc(db, 'till_sessions', sessionId), updatedSession);
+        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', sessionId), updatedSession), 8000);
       } catch (err) {
         console.error('Firestore closeTillSession error:', err);
       }
@@ -2501,14 +2589,14 @@ export const AdminDataService = {
       action: 'TILL_SESSION_CLOSED',
       entityType: 'till_session',
       entityId: sessionId,
-      details: `Settled till drawer. Counted: ₹${countedCash}, Expected: ₹${expectedCash}, Variance: ₹${variance} (${variance === 0 ? 'Exact' : variance > 0 ? 'Surplus' : 'Deficit'}).`
+      details: `Settled till drawer. Counted: ₹${actual}, Expected: ₹${expectedCash}, Variance: ₹${variance} (${variance === 0 ? 'Exact' : variance > 0 ? 'Surplus' : 'Deficit'}).`
     });
 
     return updatedSession;
   },
 
   async getTillSessions() {
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const q = query(collection(db, 'till_sessions'), orderBy('openedAt', 'desc'), limit(50));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
@@ -2520,7 +2608,7 @@ export const AdminDataService = {
       }
     }
     const store = await hydrateStore();
-    return store.tillSessions || [];
+    return (store.tillSessions || []).sort((a, b) => (b.openedAt || '').localeCompare(a.openedAt || ''));
   },
 
   async getDashboardMetrics() {
@@ -2771,7 +2859,7 @@ export const AdminDataService = {
   },
 
   async getReminders() {
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'reminders')), 8000);
         if (snap && !snap.empty) return snap.docs.map(d => d.data());
@@ -2861,7 +2949,7 @@ export const AdminDataService = {
       retryCount: 0
     };
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         await setDoc(doc(db, 'reminders', reminderEntry.id), reminderEntry);
       } catch (err) {
@@ -2984,7 +3072,7 @@ export const AdminDataService = {
 
     saveLocalStore(restoredStore);
 
-    if (isFirebaseConfigured() && db) {
+    if (isLive()) {
       try {
         for (const b of batches) await setDoc(doc(db, 'batches', b.id), b);
         for (const s of students) await setDoc(doc(db, 'students', s.id), s);
@@ -3227,175 +3315,5 @@ export const AdminDataService = {
       students: importedStudents,
       errors
     };
-  },
-
-  async getTillSessions() {
-    if (isFirebaseConfigured() && db) {
-      try {
-        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'till_sessions')), 8000);
-        if (!snap.empty) {
-          return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.openedAt || '').localeCompare(a.openedAt || ''));
-        }
-      } catch (err) {
-        console.warn('Firestore getTillSessions fallback to local store:', err.message);
-      }
-    }
-    const store = await hydrateStore();
-    return (store.tillSessions || []).sort((a, b) => (b.openedAt || '').localeCompare(a.openedAt || ''));
-  },
-
-  async getActiveTillSession(_actor = 'admin') {
-    const sessions = await this.getTillSessions();
-    return sessions.find(s => s.status === 'open') || null;
-  },
-
-  async openTillSession({ openingFloat = 0, notes = '' }, actor = 'admin') {
-    this.verifyPermission(actor, 'canRecordPayments', 'opening cash drawer till session');
-    const floatAmount = Number(openingFloat);
-    if (isNaN(floatAmount) || floatAmount < 0) {
-      throw new Error('Opening cash float must be a non-negative amount.');
-    }
-
-    const active = await this.getActiveTillSession(actor);
-    if (active) {
-      throw new Error(`A cash drawer session is already open (Opened by ${active.openedBy} at ${active.openedAt}). Please close the active session before opening a new one.`);
-    }
-
-    const session = {
-      id: `TILL-${Date.now().toString(36).toUpperCase()}`,
-      date: new Date().toISOString().split('T')[0],
-      openedAt: new Date().toISOString(),
-      openedBy: normalizeActorEmail(actor),
-      openingFloat: floatAmount,
-      notes: notes || '',
-      status: 'open',
-      closedAt: null,
-      closedBy: null,
-      closingCashActual: null,
-      expectedDrawerCash: null,
-      difference: null,
-      closingNotes: null,
-      handedOverTo: null,
-      denominations: null
-    };
-
-    if (isFirebaseConfigured() && db) {
-      try {
-        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 8000);
-      } catch (err) {
-        console.warn('Firestore openTillSession fallback:', err.message);
-      }
-    }
-
-    const store = await hydrateStore();
-    if (!store.tillSessions) store.tillSessions = [];
-    store.tillSessions.unshift(session);
-    saveLocalStore(store);
-
-    await this.logAudit('TILL_SESSION_OPENED', session.id, actor, {
-      openingFloat: floatAmount,
-      date: session.date
-    });
-
-    return session;
-  },
-
-  async getTillSessionSummary(sessionId) {
-    const sessions = await this.getTillSessions();
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) {
-      throw new Error(`Till session not found: ${sessionId}`);
-    }
-
-    const payments = await this.getPayments();
-    const sessionPayments = payments.filter(p => {
-      if (p.createdAt < session.openedAt) return false;
-      if (session.closedAt && p.createdAt > session.closedAt) return false;
-      return true;
-    });
-
-    const activePayments = sessionPayments.filter(p => !p.isReversed && !p.reversed);
-    const reversedPayments = sessionPayments.filter(p => p.isReversed || p.reversed);
-
-    const cashCollected = activePayments.filter(p => p.paymentMethod === 'cash').reduce((sum, p) => sum + Number(p.amount || 0), 0);
-    const upiCollected = activePayments.filter(p => p.paymentMethod === 'upi' || p.paymentMethod === 'upi_online').reduce((sum, p) => sum + Number(p.amount || 0), 0);
-    const bankCollected = activePayments.filter(p => p.paymentMethod === 'bank_transfer').reduce((sum, p) => sum + Number(p.amount || 0), 0);
-    const totalCollected = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-    const reversedCash = reversedPayments.filter(p => p.paymentMethod === 'cash').reduce((sum, p) => sum + Number(p.amount || 0), 0);
-
-    const expectedCashInDrawer = Math.max(0, session.openingFloat + cashCollected - reversedCash);
-
-    return {
-      session,
-      openingFloat: session.openingFloat,
-      cashCollected,
-      upiCollected,
-      bankCollected,
-      totalCollected,
-      reversedCash,
-      expectedCashInDrawer,
-      transactionCount: activePayments.length,
-      cashTransactionCount: activePayments.filter(p => p.paymentMethod === 'cash').length,
-      payments: activePayments
-    };
-  },
-
-  async closeTillSession(sessionId, { closingCashActual, handedOverTo = '', closingNotes = '', denominations = null }, actor = 'admin') {
-    this.verifyPermission(actor, 'canRecordPayments', 'closing cash drawer till session');
-    const sessions = await this.getTillSessions();
-    const session = sessions.find(s => s.id === sessionId);
-    if (!session) {
-      throw new Error(`Till session not found: ${sessionId}`);
-    }
-    if (session.status !== 'open') {
-      throw new Error(`Till session ${sessionId} is already closed.`);
-    }
-
-    const actual = Number(closingCashActual);
-    if (isNaN(actual) || actual < 0) {
-      throw new Error('Closing cash actual count must be a non-negative amount.');
-    }
-
-    const summary = await this.getTillSessionSummary(sessionId);
-    const difference = actual - summary.expectedCashInDrawer;
-
-    session.status = 'closed';
-    session.closedAt = new Date().toISOString();
-    session.closedBy = normalizeActorEmail(actor);
-    session.closingCashActual = actual;
-    session.expectedDrawerCash = summary.expectedCashInDrawer;
-    session.difference = difference;
-    session.handedOverTo = handedOverTo || 'Managing Director';
-    session.closingNotes = closingNotes || '';
-    session.denominations = denominations;
-    session.cashCollected = summary.cashCollected;
-    session.upiCollected = summary.upiCollected;
-
-    if (isFirebaseConfigured() && db) {
-      try {
-        await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 8000);
-      } catch (err) {
-        console.warn('Firestore closeTillSession fallback:', err.message);
-      }
-    }
-
-    const store = await hydrateStore();
-    const idx = (store.tillSessions || []).findIndex(s => s.id === sessionId);
-    if (idx !== -1) {
-      store.tillSessions[idx] = session;
-    } else {
-      if (!store.tillSessions) store.tillSessions = [];
-      store.tillSessions.unshift(session);
-    }
-    saveLocalStore(store);
-
-    await this.logAudit('TILL_SESSION_CLOSED', session.id, actor, {
-      expectedDrawerCash: summary.expectedCashInDrawer,
-      closingCashActual: actual,
-      difference,
-      handedOverTo: session.handedOverTo
-    });
-
-    return session;
   }
 };
