@@ -1153,7 +1153,52 @@ export const AdminDataService = {
     }
     if (!list) {
       const store = await hydrateStore();
-      list = store.students;
+      list = [...store.students];
+    } else {
+      list = [...list];
+    }
+
+    try {
+      const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+      const existingIds = new Set(list.map(s => s.id));
+      const existingPhones = new Set(list.map(s => s.guardianPhone || s.phone));
+      registered.forEach(r => {
+        if (!existingIds.has(r.id) && !existingPhones.has(r.phone)) {
+          existingIds.add(r.id);
+          list.push({
+            id: r.id,
+            studentName: r.studentName,
+            guardianName: r.parentName || 'Parent / Guardian',
+            guardianPhone: r.phone,
+            secondaryPhone: r.secondaryPhone || null,
+            grade: r.grade,
+            board: r.board,
+            academicSession: '2025-2026',
+            batchId: r.selectedBatchId,
+            batchName: r.selectedBatchName || 'Focus Evening Batch',
+            enrollmentDate: (r.createdAt || new Date().toISOString()).split('T')[0],
+            courseEndDate: null,
+            status: 'active',
+            notificationPreferences: {
+              communicationConsent: true,
+              preferredChannel: 'whatsapp',
+              remindersDisabled: false,
+              reminderDisabledReason: ''
+            },
+            feeConfig: {
+              billingFrequency: 'monthly',
+              amountPerCycle: r.monthlyFee || 2800,
+              discountAdjustment: 0,
+              adjustmentHistory: [],
+              billingStartDate: (r.createdAt || new Date().toISOString()).split('T')[0],
+              nextDueDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+              status: 'active'
+            },
+            createdAt: r.createdAt || new Date().toISOString()
+          });
+        }
+      });
+    } catch {
     }
 
     if (!options.includeArchived) {

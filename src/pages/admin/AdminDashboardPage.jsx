@@ -24,22 +24,25 @@ export default function AdminDashboardPage() {
   const [batches, setBatches] = useState([]);
   const [obligations, setObligations] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [m, b, o, p] = await Promise.all([
+        const [m, b, o, p, enr] = await Promise.all([
           AdminDataService.getDashboardMetrics(),
           AdminDataService.getBatches(),
           AdminDataService.getFeeObligations(),
-          AdminDataService.getPayments()
+          AdminDataService.getPayments(),
+          AdminDataService.getEnrollments().catch(() => [])
         ]);
         setMetrics(m);
         setBatches(b.filter(item => !item.isArchived));
         setObligations(o);
         setPayments(p);
+        setEnrollments(enr || []);
       } catch (err) {
         setLoadError(err.message || 'Campus records could not be loaded.');
       } finally {
@@ -244,6 +247,95 @@ export default function AdminDashboardPage() {
         <ChartCard title="Batch Seat Fill" subtitle="Enrolled against the 12-seat classroom cap">
           <BarChart data={batchOccupancy(batches)} label="Batch occupancy" showAxisMax={false} />
         </ChartCard>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 pb-3 border-b border-slate-100 gap-2">
+          <div>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-sm font-extrabold text-[#0F172A]">
+                Recent Batch Admissions & Registrations
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800">
+                {enrollments.length} Total
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Live student registrations received through the Focus Academy admission portal
+            </p>
+          </div>
+          <Link
+            to="/admin-portal/leads?source=enrollment"
+            className="text-xs font-bold text-[#EA580C] hover:underline flex items-center space-x-1"
+          >
+            <span>View All Admissions</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        {enrollments && enrollments.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-400 uppercase text-[10px] tracking-wider">
+                  <th className="py-2.5 font-bold">Slip No</th>
+                  <th className="py-2.5 font-bold">Student Name</th>
+                  <th className="py-2.5 font-bold">Grade & Board</th>
+                  <th className="py-2.5 font-bold">Selected Batch</th>
+                  <th className="py-2.5 font-bold">Contact Mobile</th>
+                  <th className="py-2.5 font-bold">Date</th>
+                  <th className="py-2.5 font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {enrollments.slice(0, 6).map((enrItem) => (
+                  <tr key={enrItem.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 font-mono font-bold text-[#EA580C]">
+                      {enrItem.id}
+                    </td>
+                    <td className="py-3 font-semibold text-[#0F172A]">
+                      <div className="font-bold text-[#0F172A]">{enrItem.studentName}</div>
+                      {enrItem.parentName && (
+                        <div className="text-[11px] text-slate-400 font-normal">Guardian: {enrItem.parentName}</div>
+                      )}
+                    </td>
+                    <td className="py-3 text-slate-700">
+                      <span className="font-medium block">{enrItem.grade}</span>
+                      <span className="text-[11px] text-slate-500">{enrItem.board}</span>
+                    </td>
+                    <td className="py-3">
+                      <span className="font-semibold text-slate-800 block truncate max-w-[220px]">
+                        {enrItem.batchName || enrItem.selectedBatchName || 'Focus Evening Batch'}
+                      </span>
+                      {enrItem.timing && (
+                        <span className="text-[11px] text-slate-500 font-mono">{enrItem.timing}</span>
+                      )}
+                    </td>
+                    <td className="py-3 font-mono text-[11px] text-slate-700">
+                      +91 {enrItem.phone}
+                    </td>
+                    <td className="py-3 text-slate-500 font-mono text-[11px]">
+                      {enrItem.enrolledAt ? String(enrItem.enrolledAt).split('T')[0] : 'Today'}
+                    </td>
+                    <td className="py-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        enrItem.status === 'confirmed'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}>
+                        {enrItem.status === 'confirmed' ? 'Confirmed' : 'Pending Review'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400 py-6 text-center">
+            No online admissions recorded yet. Once a student submits their enrollment, their details will display here immediately.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
