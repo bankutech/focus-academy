@@ -10,9 +10,11 @@ import {
   Filter, 
   Bus, 
   ShieldCheck, 
-  Calendar 
+  Calendar,
+  AlertTriangle 
 } from 'lucide-react';
 import { BATCHES_DATA, isBatchRecommendedForTrack } from '../data/batchesData';
+import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { BatchService } from '../services/batchService';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow, getStepRedirect, isStep1Complete, isStep2Complete } from '../context/useAppContext';
@@ -136,12 +138,19 @@ export default function BatchesPage() {
   );
   const [selectedSlot, setSelectedSlot] = useState(urlSlot);
   const [batchesList, setBatchesList] = useState(BATCHES_DATA);
+  const [availability, setAvailability] = useState({ status: 'loading', stale: false, error: null });
 
   useEffect(() => {
     let mounted = true;
-    BatchService.getBatches().then((data) => {
-      if (mounted && Array.isArray(data) && data.length > 0) {
-        setBatchesList(data);
+    BatchService.getBatches().then((result) => {
+      if (!mounted) return;
+      if (result.status === 'live' && result.batches.length > 0) {
+        setBatchesList(result.batches);
+        setAvailability({ status: 'live', stale: false, error: null });
+      } else if (result.status === 'live') {
+        setAvailability({ status: 'live', stale: false, error: null });
+      } else {
+        setAvailability({ status: 'unavailable', stale: true, error: result.error });
       }
     });
     return () => {
@@ -253,6 +262,33 @@ export default function BatchesPage() {
       {!isTimingsView && <StepProgress currentStep={3} />}
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-14">
+        {availability.status === 'unavailable' && (
+          <div
+            role="status"
+            className="mb-8 bg-amber-50 border border-amber-200 rounded-lg p-4 text-left flex items-start space-x-3"
+          >
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-bold text-amber-900">Live seat availability is unavailable right now</p>
+              <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                {availability.error} The timetable below shows our standard schedule and batch sizes — it is not a live seat count.
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                <a href="tel:+919842451220" className="font-bold text-amber-900 underline underline-offset-2">
+                  Call the campus desk
+                </a>
+                <a
+                  href={CAMPUS_CONFIG.contact.whatsappNumber ? `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent('Hello Focus Academy! Please confirm which evening batches still have seats open.')}` : '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-amber-900 underline underline-offset-2"
+                >
+                  Ask on WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
         {isTimingsView ? (
           <div className="space-y-10">
             <div>

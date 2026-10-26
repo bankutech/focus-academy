@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { 
   User, 
   Phone, 
@@ -9,10 +9,12 @@ import {
   LogIn, 
   UserPlus,
   Info,
-  X
+  X,
+  GraduationCap
 } from 'lucide-react';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow } from '../context/useAppContext';
+import { useStudentAuth } from '../context/StudentAuthContext';
 import { validateIndianMobile } from '../types/schemas';
 
 export default function StudentDetailsPage() {
@@ -24,13 +26,24 @@ export default function StudentDetailsPage() {
   const initialMode = searchParams.get('mode') || 'signup';
 
   const { studentFlow, setStudentFlow, lookupSavedStudent } = useStudentFlow();
+  const { user: studentAuthUser, profile: studentProfile, isAuthenticated: isStudentAuth } = useStudentAuth();
 
   const [authMode, setAuthMode] = useState(initialMode === 'login' ? 'login' : 'signup');
-  const [studentName, setStudentName] = useState(studentFlow.studentName || '');
-  const [parentName, setParentName] = useState(studentFlow.parentName || '');
-  const [phone, setPhone] = useState(studentFlow.phone || '');
-  const [board, setBoard] = useState(initialBoard || studentFlow.board || 'TN State Board (Samacheer)');
-  const [grade, setGrade] = useState(initialGrade || studentFlow.grade || 'Class 10');
+  const [studentName, setStudentName] = useState(studentFlow.studentName || studentProfile?.studentName || '');
+  const [parentName, setParentName] = useState(studentFlow.parentName || studentProfile?.parentName || '');
+  const [phone, setPhone] = useState(studentFlow.phone || studentProfile?.mobile || '');
+  const [board, setBoard] = useState(initialBoard || studentFlow.board || studentProfile?.board || 'TN State Board (Samacheer)');
+  const [grade, setGrade] = useState(initialGrade || studentFlow.grade || studentProfile?.grade || 'Class 10');
+
+  useEffect(() => {
+    if (studentProfile) {
+      if (!studentName && studentProfile.studentName) setStudentName(studentProfile.studentName);
+      if (!phone && studentProfile.mobile) setPhone(studentProfile.mobile);
+      if (!parentName && studentProfile.parentName) setParentName(studentProfile.parentName);
+      if (studentProfile.grade) setGrade(studentProfile.grade);
+      if (studentProfile.board) setBoard(studentProfile.board);
+    }
+  }, [studentProfile]);
 
   const [phoneError, setPhoneError] = useState('');
   const [nameError, setNameError] = useState('');
@@ -212,6 +225,30 @@ export default function StudentDetailsPage() {
               : 'Enter your basic details, select your education board, and choose your class to view tailored batches.'}
           </p>
         </div>
+
+        {isStudentAuth ? (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-950">
+            <div className="flex items-center space-x-2.5">
+              <GraduationCap className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>
+                Signed in as <strong>{studentProfile?.studentName || studentAuthUser?.displayName || studentAuthUser?.email}</strong>. Academic preferences pre-filled.
+              </span>
+            </div>
+            <Link to="/student-dashboard" className="font-bold text-emerald-700 hover:underline shrink-0 cursor-pointer">
+              Go to Portal &rarr;
+            </Link>
+          </div>
+        ) : (
+          <div className="mb-6 p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center justify-between gap-3 text-xs text-slate-700">
+            <div className="flex items-center space-x-2">
+              <LogIn className="w-4 h-4 text-[#EA580C] shrink-0" />
+              <span>Already created a Student Account?</span>
+            </div>
+            <Link to="/login" className="font-bold text-[#EA580C] hover:underline shrink-0 cursor-pointer">
+              Sign In to Student Portal &rarr;
+            </Link>
+          </div>
+        )}
 
         <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-md border border-[#E2E8F0] mb-8 max-w-md">
           <button

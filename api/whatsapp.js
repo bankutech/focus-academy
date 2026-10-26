@@ -1,10 +1,10 @@
 import { getServices } from './_lib/firebaseAdmin.js';
 import { authenticateAdmin } from './_lib/adminAuth.js';
-import { prepare, fail, unavailable, clean, cleanPhone, clientIp, withinRate } from './_lib/http.js';
+import { prepare, fail, unavailable, crashed, clean, cleanPhone, clientIp, withinRate } from './_lib/http.js';
 
 export default async function handler(req, res) {
   prepare(res, ['GET', 'POST']);
-  const services = getServices();
+  const services = await getServices();
   if (!services) return unavailable(res);
   const { db } = services;
 
@@ -94,7 +94,7 @@ export default async function handler(req, res) {
 
     await reminderRef.set({ ...base, channel: 'meta_cloud_api', status: 'accepted', providerMessageId: data.messages?.[0]?.id || null });
     return res.status(200).json({ success: true, mode: 'automated_delivery', automated: true, status: 'accepted', messageId: data.messages?.[0]?.id });
-  } catch {
-    return unavailable(res);
+  } catch (err) {
+    return crashed(res, 'whatsapp', err);
   }
 }

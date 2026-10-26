@@ -25,6 +25,7 @@ export default function ContactSection({ isPage = false }) {
   
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
 
   const handleSubmit = async (e) => {
@@ -45,7 +46,7 @@ export default function ContactSection({ isPage = false }) {
     const result = await LeadService.submitLead(leadPayload);
     setIsSubmitting(false);
 
-    if (!result.success) {
+    if (!result.success && result.status === 'invalid') {
       setValidationErrors(result.errors || {});
       return;
     }
@@ -176,22 +177,45 @@ export default function ContactSection({ isPage = false }) {
             </div>
 
             {submissionResult ? (
-              <div className="text-center py-6 space-y-4 animate-in fade-in">
-                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              <div
+                role={submissionResult.success ? undefined : 'alert'}
+                className="text-center py-6 space-y-4 animate-in fade-in"
+              >
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto ${
+                  submissionResult.success ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                }`}>
+                  {submissionResult.success
+                    ? <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                    : <AlertCircle className="w-8 h-8 text-amber-600" />}
                 </div>
-                
-                <h4 className="text-xl font-bold text-[#0F172A]">Enrollment Inquiry Received</h4>
-                
+
+                <h4 className="text-xl font-bold text-[#0F172A]">
+                  {submissionResult.success ? 'Enrollment Inquiry Received' : 'Your details are saved, but not yet sent'}
+                </h4>
+
                 <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                  Thank you, <strong>{submissionResult.data.parentName || submissionResult.data.studentName}</strong>. Our academic counselor at the Thoramangalam campus will contact you within 2 business hours regarding evening batch availability for <strong>{submissionResult.data.studentName} ({submissionResult.data.grade})</strong>.
+                  {submissionResult.success ? (
+                    <>Thank you, <strong>{submissionResult.data.parentName || submissionResult.data.studentName}</strong>. Our academic counselor at the Thoramangalam campus will contact you within 2 business hours regarding evening batch availability for <strong>{submissionResult.data.studentName} ({submissionResult.data.grade})</strong>.</>
+                  ) : (
+                    <>{submissionResult.message} You can retry below, or send your details directly on WhatsApp so the campus receives them right away.</>
+                  )}
                 </p>
 
-                {submissionResult.offlineQueued && (
-                  <div className="p-3 bg-amber-50 text-amber-800 rounded-md border border-amber-200 text-xs max-w-sm mx-auto flex items-center space-x-2">
-                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Inquiry saved in offline queue. Auto-syncing upon reconnection.</span>
-                  </div>
+                {!submissionResult.success && submissionResult.retryable && (
+                  <button
+                    type="button"
+                    disabled={isRetrying}
+                    onClick={async () => {
+                      setIsRetrying(true);
+                      const retry = await LeadService.retryLastAttempt(submissionResult.data);
+                      setIsRetrying(false);
+                      setSubmissionResult(retry);
+                    }}
+                    className="inline-flex items-center space-x-2 px-5 py-3 bg-[#0F172A] hover:bg-slate-800 text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer disabled:opacity-60"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{isRetrying ? 'Sending…' : 'Retry Sending My Inquiry'}</span>
+                  </button>
                 )}
 
                 <div className="pt-2">

@@ -1,5 +1,5 @@
 import { getServices } from './_lib/firebaseAdmin.js';
-import { prepare, fail, unavailable, clean, cleanPhone, clientIp, newId, withinRate } from './_lib/http.js';
+import { prepare, fail, unavailable, crashed, clean, cleanPhone, clientIp, newId, withinRate } from './_lib/http.js';
 import { readToken } from './_lib/stepToken.js';
 import { isBatchCompatible } from '../src/types/schemas.js';
 
@@ -16,7 +16,7 @@ const isLive = (reservation, now) => reservation.status === 'confirmed' || Date.
 
 export default async function handler(req, res) {
   prepare(res, ['GET', 'POST']);
-  const services = getServices();
+  const services = await getServices();
   if (!services) return unavailable(res);
   const { db } = services;
 
@@ -165,7 +165,7 @@ export default async function handler(req, res) {
       serverTime: new Date().toISOString(),
       message: 'Seat held for 15 minutes at the Thiripura Complex campus.',
     });
-  } catch {
-    return unavailable(res);
+  } catch (err) {
+    return crashed(res, 'batches', err);
   }
 }

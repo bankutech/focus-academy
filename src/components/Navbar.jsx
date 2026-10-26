@@ -7,11 +7,16 @@ import {
   Phone,
   Clock,
   ArrowRight,
-  MessageSquare
+  MessageSquare,
+  GraduationCap,
+  LogIn,
+  User
 } from 'lucide-react';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
+import { useStudentAuth } from '../context/StudentAuthContext';
 
 export default function Navbar() {
+  const { user, profile, isAuthenticated } = useStudentAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -180,6 +185,24 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center space-x-2 sm:space-x-3">
+              {isAuthenticated ? (
+                <Link
+                  to="/student-dashboard"
+                  className="inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-colors cursor-pointer"
+                >
+                  <GraduationCap className="w-4 h-4 text-[#EA580C]" />
+                  <span>{profile?.studentName?.split(' ')[0] || 'My Portal'}</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="hidden md:inline-flex items-center space-x-1.5 px-3 py-2 text-slate-700 hover:text-[#0F172A] hover:bg-slate-100 text-xs sm:text-sm font-bold rounded-md transition-colors cursor-pointer"
+                >
+                  <LogIn className="w-4 h-4 text-[#EA580C]" />
+                  <span>Student Login</span>
+                </Link>
+              )}
+
               <Link
                 to="/student-details"
                 className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-6 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm sm:text-base font-bold rounded-md shadow-xs hover:bg-[#C2410C] transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
@@ -249,6 +272,26 @@ export default function Navbar() {
             </div>
 
             <div className="pt-2 border-t border-[#E2E8F0] space-y-2">
+              {isAuthenticated ? (
+                <Link
+                  to="/student-dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-[#0F172A] text-white font-bold rounded-md text-xs sm:text-sm shadow-xs cursor-pointer"
+                >
+                  <GraduationCap className="w-4 h-4 text-[#EA580C]" />
+                  <span>My Student Portal ({profile?.studentName?.split(' ')[0] || 'Dashboard'})</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-white hover:bg-slate-50 text-[#0F172A] font-bold rounded-md text-xs sm:text-sm border border-[#E2E8F0] shadow-xs cursor-pointer"
+                >
+                  <LogIn className="w-4 h-4 text-[#EA580C]" />
+                  <span>Student Sign In / Register</span>
+                </Link>
+              )}
+
               <a
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
                 aria-label={`Call Campus Desk at ${CAMPUS_CONFIG.contact.primaryPhone}`}

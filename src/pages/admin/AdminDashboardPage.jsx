@@ -12,7 +12,8 @@ import {
   MessageSquare,
   CheckCircle2,
   ShieldCheck,
-  UserPlus
+  UserPlus,
+  ClipboardCheck
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
@@ -94,6 +95,15 @@ export default function AdminDashboardPage() {
       link: '/admin-portal/batches'
     },
     {
+      title: 'Admissions & Enrollments',
+      value: metrics?.totalEnrollments ?? 0,
+      sub: 'Confirmed batch registrations',
+      icon: ClipboardCheck,
+      badge: 'Enrollment Desk',
+      badgeClass: 'bg-orange-50 text-orange-800 border-orange-200',
+      link: '/admin-portal/leads?source=enrollment'
+    },
+    {
       title: 'Collected This Month',
       value: `₹${(metrics?.feesCollectedThisMonth ?? 0).toLocaleString('en-IN')}`,
       sub: 'Verified ledger receipts',
@@ -128,6 +138,15 @@ export default function AdminDashboardPage() {
       badge: 'Daily Schedule',
       badgeClass: 'bg-orange-50 text-orange-800 border-orange-200',
       link: '/admin-portal/reminders?tab=today'
+    },
+    {
+      title: 'Counseling Inquiries',
+      value: metrics?.totalInquiries ?? 0,
+      sub: 'Prospects requesting campus callback',
+      icon: UserPlus,
+      badge: 'CRM Pipeline',
+      badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
+      link: '/admin-portal/leads?source=inquiry'
     }
   ];
 

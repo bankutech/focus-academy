@@ -837,40 +837,99 @@ export const AdminDataService = {
       throw new Error(`Invalid role '${newRole}'. Allowed roles: ${validRoles.join(', ')}.`);
     }
 
-    const cleanEmail = email.toLowerCase().trim();
-    const store = await hydrateStore();
-    const settings = store.settings || { ...SEED_SETTINGS };
-    const admins = settings.authorizedAdmins ? [...settings.authorizedAdmins] : [...SEED_SETTINGS.authorizedAdmins];
-
-    const targetIdx = admins.findIndex(a => a.email.toLowerCase() === cleanEmail);
-    const oldRole = targetIdx !== -1 ? admins[targetIdx].role : 'none';
-
-    if (targetIdx !== -1) {
-      admins[targetIdx].role = newRole;
-      admins[targetIdx].updatedAt = new Date().toISOString();
-    } else {
-      admins.push({
-        email: cleanEmail,
-        name: cleanEmail.split('@')[0],
-        role: newRole,
-        active: true,
-        addedAt: new Date().toISOString()
-      });
+    const cleanEmail = String(email || '').toLowerCase().trim();
+    if (!cleanEmail.includes('@')) {
+      throw new Error('A valid administrator email address is required.');
     }
 
-    settings.authorizedAdmins = admins;
-    store.settings = settings;
-    saveLocalStore(store);
+    const actorEmail = String(normalizeActorEmail(actor) || '').toLowerCase().trim();
+    const actorRole = this.getUserRole(actor);
+    const ROLE_RANK = { viewer: 0, fee_manager: 1, administrator: 2, owner: 3 };
 
-    await this.logAudit({
-      actor: normalizeActorEmail(actor),
+    if (cleanEmail === actorEmail) {
+      throw new Error('You cannot change your own permission role. Ask another owner to do this.');
+    }
+    if ((ROLE_RANK[newRole] || 0) > (ROLE_RANK[actorRole] || 0)) {
+      throw new Error(`Unauthorized: your role '${actorRole}' cannot grant the higher role '${newRole}'.`);
+    }
+
+    const applyRoleChange = (settings) => {
+      const admins = settings.authorizedAdmins ? [...settings.authorizedAdmins] : [...SEED_SETTINGS.authorizedAdmins];
+      const targetIdx = admins.findIndex((a) => String(a.email).toLowerCase() === cleanEmail);
+      const oldRole = targetIdx !== -1 ? admins[targetIdx].role : 'none';
+
+      if (targetIdx !== -1) {
+        admins[targetIdx].role = newRole;
+        admins[targetIdx].updatedAt = new Date().toISOString();
+        admins[targetIdx].updatedBy = actorEmail;
+      } else {
+        admins.push({
+          email: cleanEmail,
+          name: cleanEmail.split('@')[0],
+          role: newRole,
+          active: true,
+          addedAt: new Date().toISOString(),
+          addedBy: actorEmail
+        });
+      }
+      settings.authorizedAdmins = admins;
+      return { admins, oldRole };
+    };
+
+    const auditEntry = {
+      id: uid('LOG'),
+      timestamp: new Date().toISOString(),
+      actor: actorEmail,
       action: 'ADMIN_ROLE_UPDATED',
       entityType: 'admin_user',
       entityId: cleanEmail,
-      details: `Changed permission role for '${cleanEmail}' from '${oldRole}' to '${newRole}'.`
+      details: ''
+    };
+
+    if (isLive()) {
+      const settingsRef = doc(db, 'academy_settings', 'main_config');
+      let persistedAdmins;
+      try {
+        await runTransaction(db, async (tx) => {
+          const snap = await tx.get(settingsRef);
+          const current = snap.exists
+            ? snap.data()
+            : { ...SEED_SETTINGS, authorizedAdmins: [...SEED_SETTINGS.authorizedAdmins] };
+          const { admins, oldRole } = applyRoleChange(current);
+          auditEntry.details = `Changed permission role for '${cleanEmail}' from '${oldRole}' to '${newRole}'.`;
+          tx.set(settingsRef, { ...current, updatedAt: auditEntry.timestamp, updatedBy: actorEmail }, { merge: true });
+          tx.set(doc(db, 'audit_logs', auditEntry.id), auditEntry);
+          persistedAdmins = admins;
+        });
+      } catch (err) {
+        console.error('Firestore updateAdminRole error code:', err?.code || 'unknown');
+        throw new Error('Failed to save the role change to the database. Nothing was changed. Please try again.');
+      }
+
+      const verify = await this.withFirestoreTimeout(getDocs(collection(db, 'academy_settings')), 8000);
+      const confirmed = verify && !verify.empty ? verify.docs[0].data().authorizedAdmins : null;
+      const confirmedMatch = confirmed && confirmed.find((a) => String(a.email).toLowerCase() === cleanEmail && a.role === newRole);
+      if (!confirmedMatch) {
+        throw new Error('The role change could not be confirmed in the database. Please reload and try again.');
+      }
+      return persistedAdmins || confirmed;
+    }
+
+    const store = await hydrateStore();
+    const settings = store.settings || { ...SEED_SETTINGS };
+    const { admins } = applyRoleChange(settings);
+    store.settings = settings;
+    saveLocalStore(store);
+
+    auditEntry.details = `Changed permission role for '${cleanEmail}' from 'n/a' to '${newRole}'.`;
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'ADMIN_ROLE_UPDATED',
+      entityType: 'admin_user',
+      entityId: cleanEmail,
+      details: auditEntry.details
     });
 
-    Object.assign(admins, { email: cleanEmail, role: newRole });
     return admins;
   },
 
@@ -1155,6 +1214,27 @@ export const AdminDataService = {
     } catch {
     }
     return local;
+  },
+
+  async getEnrollments() {
+    if (isLive()) {
+      try {
+        const q = query(collection(db, 'enrollments'), orderBy('enrolledAt', 'desc'));
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        }
+      } catch (err) {
+        console.warn('Firestore getEnrollments query error, falling back to leads:', err);
+      }
+    }
+
+    try {
+      const allLeads = await this.getLeads();
+      return allLeads.filter(l => l.source === 'enrollment' || l.reservationId);
+    } catch {
+      return [];
+    }
   },
 
   async updateLeadStatus(leadId, status, actor = 'admin') {
@@ -2655,11 +2735,13 @@ export const AdminDataService = {
   },
 
   async getDashboardMetrics() {
-    const [batches, students, obligations, payments] = await Promise.all([
+    const [batches, students, obligations, payments, leads, enrollments] = await Promise.all([
       this.getBatches(),
       this.getStudents(),
       this.getFeeObligations(),
-      this.getPayments()
+      this.getPayments(),
+      this.getLeads().catch(() => []),
+      this.getEnrollments().catch(() => [])
     ]);
     const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
 
@@ -2689,6 +2771,12 @@ export const AdminDataService = {
       .sort((a, b) => (b.paymentDate || '').localeCompare(a.paymentDate || ''))
       .slice(0, 10);
 
+    const totalEnrollments = (enrollments && enrollments.length > 0)
+      ? enrollments.length
+      : (leads || []).filter(l => l.source === 'enrollment' || l.reservationId).length;
+    const totalInquiries = (leads || []).filter(l => l.source !== 'enrollment' && !l.reservationId).length;
+    const pendingAdmissions = (leads || []).filter(l => l.status === 'new' || l.status === 'contacted').length;
+
     return {
       totalActiveStudents: activeStudents.length,
       totalActiveBatches: activeBatches.length,
@@ -2697,7 +2785,10 @@ export const AdminDataService = {
       totalOverdueFees,
       paymentsDueTodayCount: paymentsDueToday.length,
       upcomingPaymentsCount: upcomingPayments.length,
-      recentPayments
+      recentPayments,
+      totalEnrollments,
+      totalInquiries,
+      pendingAdmissions
     };
   },
 

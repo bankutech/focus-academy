@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Search, 
   Phone, 
@@ -18,14 +19,24 @@ import { requireAdminEmail } from '../../services/adminIdentity';
 import { formatTime12 } from '../../types/schemas';
 
 export default function AdminLeadsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSource = searchParams.get('source') || 'all';
+
   const [leads, setLeads] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [sourceFilter, setSourceFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState(urlSource);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+
+  useEffect(() => {
+    const s = searchParams.get('source');
+    if (s && s !== sourceFilter) {
+      setSourceFilter(s);
+    }
+  }, [searchParams]);
 
   const [convertModalLead, setConvertModalLead] = useState(null);
   const [convertBatchId, setConvertBatchId] = useState('');

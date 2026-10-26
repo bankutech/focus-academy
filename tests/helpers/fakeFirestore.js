@@ -25,14 +25,18 @@ export const createFakeServices = () => {
     },
   });
 
-  const query = (name, filters = []) => ({
+  const query = (name, filters = [], max = null) => ({
     where(field, op, value) {
-      return query(name, [...filters, { field, op, value }]);
+      return query(name, [...filters, { field, op, value }], max);
+    },
+    limit(count) {
+      return query(name, filters, count);
     },
     async get() {
-      const docs = [...table(name).entries()]
+      let docs = [...table(name).entries()]
         .filter(([, row]) => filters.every(({ field, op, value }) => (op === 'in' ? value.includes(row[field]) : row[field] === value)))
         .map(([id, row]) => ({ id, ref: docRef(name, id), exists: true, data: () => clone(row) }));
+      if (max !== null) docs = docs.slice(0, max);
       return { docs, empty: docs.length === 0 };
     },
     doc: (id) => docRef(name, id),

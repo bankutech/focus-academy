@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { CAMPUS_CONFIG } from '../src/config/campusConfig';
@@ -86,11 +86,47 @@ describe('Navigation, Triggers and Form Validation Audit', () => {
       board: 'State Board',
       subjects: 'Physics',
     };
-    const res = await LeadService.submitLead(lead);
-    expect(res.success).toBe(true);
-    expect(res.whatsappUrl).toContain('https://wa.me/919842451220');
-    expect(res.whatsappUrl).toContain(encodeURIComponent('R. Rajesh'));
-    expect(res.whatsappUrl).toContain(encodeURIComponent('Class 12'));
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true, data: {} }),
+    });
+
+    try {
+      const res = await LeadService.submitLead(lead);
+      expect(res.success).toBe(true);
+      expect(res.status).toBe('delivered');
+      expect(res.whatsappUrl).toContain('https://wa.me/919842451220');
+      expect(res.whatsappUrl).toContain(encodeURIComponent('R. Rajesh'));
+      expect(res.whatsappUrl).toContain(encodeURIComponent('Class 12'));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('still returns a WhatsApp fallback when the campus server is unreachable', async () => {
+    const lead = {
+      studentName: 'S. Devi',
+      phone: '9842451221',
+      grade: 'Class 10',
+      board: 'CBSE',
+      subjects: 'Maths',
+    };
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+
+    try {
+      const res = await LeadService.submitLead(lead);
+      expect(res.success).toBe(false);
+      expect(res.status).toBe('queued_locally');
+      expect(res.whatsappUrl).toContain('https://wa.me/919842451220');
+      expect(res.whatsappUrl).toContain(encodeURIComponent('S. Devi'));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('ensures section anchor IDs exist in HomePage and ContactSection components without duplicate IDs', () => {

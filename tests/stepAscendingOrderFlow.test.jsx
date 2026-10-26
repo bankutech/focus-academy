@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -362,12 +362,86 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     expect(isStep1Complete({ step: 1, stepToken: 'v2.forged.5.9999999999999.abc' })).toBe(false);
   });
 
-  it('retrieves headless batch data and handles seat reservation through BatchService', async () => {
-    const batches = await BatchService.getBatches();
-    expect(batches.length).toBeGreaterThanOrEqual(6);
+  it('never presents static seed data as live availability when the API is unreachable', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    BatchService.clearCache();
 
-    const reserved = await BatchService.reserveSeat('batch-10-state-board');
-    expect(typeof reserved).toBe('boolean');
+    try {
+      const result = await BatchService.getBatches();
+      expect(result.status).toBe('unavailable');
+      expect(result.batches).toEqual([]);
+      expect(result.error).toBeTruthy();
+    } finally {
+      globalThis.fetch = originalFetch;
+      BatchService.clearCache();
+    }
+  });
+
+  it('reports unavailable (not seed data) when the API answers with a server error', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
+    BatchService.clearCache();
+
+    try {
+      const result = await BatchService.getBatches();
+      expect(result.status).toBe('unavailable');
+      expect(result.batches).toEqual([]);
+    } finally {
+      globalThis.fetch = originalFetch;
+      BatchService.clearCache();
+    }
+  });
+
+  it('returns live batches when the API responds successfully', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true, batches: [{ id: 'batch-live', grade: 'Class 10', board: 'CBSE Board', capacity: 12, enrolledCount: 3 }] }),
+    });
+    BatchService.clearCache();
+
+    try {
+      const result = await BatchService.getBatches();
+      expect(result.status).toBe('live');
+      expect(result.batches).toHaveLength(1);
+      expect(result.batches[0].id).toBe('batch-live');
+    } finally {
+      globalThis.fetch = originalFetch;
+      BatchService.clearCache();
+    }
+  });
+
+  it('returns parent-friendly reservation errors instead of raw HTTP status codes', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    });
+
+    try {
+      const result = await BatchService.reserveSeatWithDetails('batch-10-state-board', { stepToken: 'x' });
+      expect(result.success).toBe(false);
+      expect(result.error).not.toMatch(/HTTP \d{3}/);
+      expect(result.error).toMatch(/campus desk|connection/i);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('reports a reservation failure as a failure, never as a success', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ success: false, error: 'Academic mismatch' }) });
+
+    try {
+      const result = await BatchService.reserveSeatWithDetails('batch-10-state-board', { stepToken: 'x' });
+      expect(result.success).toBe(false);
+      expect(result.error).toBeTruthy();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it('distinguishes public /timings view from step 3 /batches admission view', () => {

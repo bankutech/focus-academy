@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
+import { StudentAuthProvider } from './context/StudentAuthContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import ScrollToTop from './components/common/ScrollToTop';
 
@@ -11,6 +12,10 @@ import MobileQuickBar from './components/common/MobileQuickBar';
 import HomePage from './pages/HomePage';
 
 const StudentDetailsPage = lazy(() => import('./pages/StudentDetailsPage'));
+const StudentLoginPage = lazy(() => import('./pages/StudentLoginPage'));
+const StudentRegisterPage = lazy(() => import('./pages/StudentRegisterPage'));
+const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
+const StudentProtectedRoute = lazy(() => import('./components/common/StudentProtectedRoute'));
 const ExamPrepPage = lazy(() => import('./pages/ExamPrepPage'));
 const BatchesPage = lazy(() => import('./pages/BatchesPage'));
 const BatchDetailPage = lazy(() => import('./pages/BatchDetailPage'));
@@ -68,53 +73,70 @@ export default function App() {
   return (
     <ErrorBoundary title="Focus Academy Application">
       <BrowserRouter>
-        <AppProvider>
-          <Suspense fallback={<RouteLoadingFallback />}>
-            <Routes>
-              <Route path="/admin-portal/login" element={<AdminLoginPage />} />
-              <Route
-                path="/admin-portal"
-                element={
-                  <AdminProtectedRoute>
-                    <AdminLayout />
-                  </AdminProtectedRoute>
-                }
-              >
-                <Route index element={<AdminDashboardPage />} />
-                <Route path="leads" element={<AdminLeadsPage />} />
-                <Route path="batches" element={<AdminBatchesPage />} />
-                <Route path="students" element={<AdminStudentsPage />} />
-                <Route path="fees" element={<AdminFeesPage />} />
-                <Route path="ledger" element={<AdminLedgerPage />} />
-                <Route path="reminders" element={<AdminRemindersPage />} />
-                <Route path="reports" element={<AdminReportsPage />} />
-                <Route path="audit-logs" element={<AdminAuditLogsPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="*" element={<Navigate to="/admin-portal" replace />} />
-              </Route>
+        <StudentAuthProvider>
+          <AppProvider>
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <Routes>
+                <Route path="/admin-portal/login" element={<AdminLoginPage />} />
+                <Route
+                  path="/admin-portal"
+                  element={
+                    <AdminProtectedRoute>
+                      <AdminLayout />
+                    </AdminProtectedRoute>
+                  }
+                >
+                  <Route index element={<AdminDashboardPage />} />
+                  <Route path="leads" element={<AdminLeadsPage />} />
+                  <Route path="batches" element={<AdminBatchesPage />} />
+                  <Route path="students" element={<AdminStudentsPage />} />
+                  <Route path="fees" element={<AdminFeesPage />} />
+                  <Route path="ledger" element={<AdminLedgerPage />} />
+                  <Route path="reminders" element={<AdminRemindersPage />} />
+                  <Route path="reports" element={<AdminReportsPage />} />
+                  <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+                  <Route path="settings" element={<AdminSettingsPage />} />
+                  <Route path="*" element={<Navigate to="/admin-portal" replace />} />
+                </Route>
 
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/student-details" element={<StudentDetailsPage />} />
-                <Route path="/login" element={<StudentDetailsPage />} />
-                <Route path="/signup" element={<StudentDetailsPage />} />
-                <Route path="/exam-prep" element={<ExamPrepPage />} />
-                <Route path="/batches" element={<BatchesPage />} />
-                <Route path="/batch/:batchId" element={<BatchDetailPage />} />
-                <Route path="/timings" element={<BatchesPage />} />
-                <Route path="/enroll" element={<EnrollPage />} />
-                <Route path="/enroll/:batchId" element={<EnrollPage />} />
-                <Route path="/courses" element={<CoursesPage />} />
-                <Route path="/classes" element={<CoursesPage />} />
-                <Route path="/faculty" element={<Navigate to="/batches" replace />} />
-                <Route path="/fees" element={<FeesPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </AppProvider>
+                <Route element={<PublicLayout />}>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/student-details" element={<StudentDetailsPage />} />
+                  <Route path="/login" element={<StudentLoginPage />} />
+                  <Route path="/student/login" element={<StudentLoginPage />} />
+                  <Route path="/signup" element={<StudentRegisterPage />} />
+                  <Route path="/register" element={<StudentRegisterPage />} />
+                  <Route path="/student/register" element={<StudentRegisterPage />} />
+                  <Route
+                    path="/student-dashboard"
+                    element={
+                      <StudentProtectedRoute>
+                        <StudentDashboardPage />
+                      </StudentProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/student/dashboard"
+                    element={<Navigate to="/student-dashboard" replace />}
+                  />
+                  <Route path="/exam-prep" element={<ExamPrepPage />} />
+                  <Route path="/batches" element={<BatchesPage />} />
+                  <Route path="/batch/:batchId" element={<BatchDetailPage />} />
+                  <Route path="/timings" element={<BatchesPage />} />
+                  <Route path="/enroll" element={<EnrollPage />} />
+                  <Route path="/enroll/:batchId" element={<EnrollPage />} />
+                  <Route path="/courses" element={<CoursesPage />} />
+                  <Route path="/classes" element={<CoursesPage />} />
+                  <Route path="/faculty" element={<Navigate to="/batches" replace />} />
+                  <Route path="/fees" element={<FeesPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </AppProvider>
+        </StudentAuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
   );

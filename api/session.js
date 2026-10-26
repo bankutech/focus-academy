@@ -1,5 +1,5 @@
 import { getServices } from './_lib/firebaseAdmin.js';
-import { prepare, fail, unavailable, clean, cleanPhone, newId, clientIp, withinRate } from './_lib/http.js';
+import { prepare, fail, unavailable, crashed, clean, cleanPhone, newId, clientIp, withinRate } from './_lib/http.js';
 import { hasSecret, mintToken } from './_lib/stepToken.js';
 
 const MAX_STEP = 4;
@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   prepare(res, ['POST']);
   if (req.method !== 'POST') return fail(res, 405, 'Method not allowed');
 
-  const services = getServices();
+  const services = await getServices();
   if (!services || !hasSecret()) return unavailable(res);
   const { db } = services;
 
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
       expiresAt,
       serverTime: new Date().toISOString()
     });
-  } catch {
-    return unavailable(res);
+  } catch (err) {
+    return crashed(res, 'session', err);
   }
 }

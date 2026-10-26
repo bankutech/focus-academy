@@ -26,6 +26,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
   const [phoneError, setPhoneError] = useState('');
   const [nameError, setNameError] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [leadDelivered, setLeadDelivered] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState('');
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
         return;
       }
 
-      await LeadService.submitLead({
+      const leadResult = await LeadService.submitLead({
         studentName: studentName.trim(),
         phone: val.sanitized,
         grade: subject.slice(0, 15),
@@ -70,6 +71,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
         subjects: subject,
         notes: `${sessionType === 'alignment-call' ? '5-Min Alignment Call' : '1-Day Free Trial'} | Timing: ${timing} | Challenge: ${childChallenge || 'None specified'}`
       });
+      setLeadDelivered(Boolean(leadResult.success));
 
       const customWhatsAppText = encodeURIComponent(
         `Hello Focus Academy Thoramangalam! 👋\n\nI want to confirm a ${sessionType === 'alignment-call' ? '5-Min Parent Alignment Call' : '1-Day Free Trial'}:\n\n• Student: ${studentName.trim()}\n• Contact: +91 ${val.sanitized}\n• Subject: ${subject}\n• Format: ${mode === 'online' ? 'Online Interactive' : 'Classroom Batch (Thiripura Complex)'}\n• Preferred Slot: ${timing}\n• Challenge/Goal: ${childChallenge || 'General'}\n\nPlease confirm availability.`
@@ -84,6 +86,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
   const handleReset = () => {
     setStep(1);
     setIsSubmitted(false);
+    setLeadDelivered(false);
     setPhoneError('');
     setNameError('');
     onClose();
@@ -167,10 +170,14 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
 
               <div>
                 <h4 className="text-xl font-bold text-[#0F172A]">
-                  {sessionType === 'alignment-call' ? 'Parent Alignment Call Scheduled' : 'Diagnostic Trial Confirmed'}
+                  {leadDelivered
+                    ? (sessionType === 'alignment-call' ? 'Parent Alignment Call Requested' : 'Diagnostic Trial Requested')
+                    : 'Please confirm on WhatsApp'}
                 </h4>
                 <p className="text-xs text-slate-600 mt-1 max-w-sm mx-auto">
-                  Our academic desk will confirm classroom trial batch allocation for <strong>{subject}</strong>.
+                  {leadDelivered
+                    ? <>Our academic desk will call you to confirm the slot for <strong>{subject}</strong>.</>
+                    : <>We could not reach the campus system, so please send the message below on WhatsApp to confirm your <strong>{subject}</strong> request.</>}
                 </p>
               </div>
 

@@ -114,7 +114,36 @@ service cloud.firestore {
     }
 
     match /academy_settings/{settingId} {
-      allow read, write: if isAdministrator();
+      allow read: if isAdministrator();
+      allow create, delete: if isOwner();
+      allow update: if isAdministrator() && (
+        isOwner()
+        || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['authorizedAdmins'])
+      );
+    }
+
+    match /student_profiles/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdministrator());
+      allow create: if isAuthenticated() && request.auth.uid == userId
+        && request.resource.data.uid == userId;
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdministrator())
+        && (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
+        && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role || isAdministrator());
+      allow delete: if isAdministrator();
+    }
+
+    match /enrollments/{enrollmentId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentUid == request.auth.uid ||
+        (request.auth.token.email != null && resource.data.email == request.auth.token.email) ||
+        isAdministrator()
+      );
+      allow create: if isAuthenticated() && (
+        request.resource.data.studentUid == request.auth.uid ||
+        isAdministrator()
+      );
+      allow update: if isAdministrator();
+      allow delete: if false;
     }
 
     match /{document=**} {

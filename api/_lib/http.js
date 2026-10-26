@@ -15,7 +15,14 @@ export const prepare = (res, methods) => {
 
 export const fail = (res, status, error, extra = {}) => res.status(status).json({ success: false, error, ...extra });
 
-export const unavailable = (res) => fail(res, 503, 'The admissions service is temporarily unavailable. Please try again in a minute.');
+export const unavailable = (res, detail) =>
+  fail(res, 503, 'The admissions service is temporarily unavailable. Please try again in a minute.', detail ? { detail } : {});
+
+export const crashed = (res, route, err) => {
+  const code = err?.code || err?.name || 'unknown_error';
+  console.error(`[api:${route}] unhandled error code=${code}`);
+  return fail(res, 500, 'Something went wrong on our side. Your request was not saved. Please call the campus desk if this continues.');
+};
 
 export const clean = (value, max = 150) => String(value ?? '').replace(/[<>'"`;]/g, '').trim().slice(0, max);
 

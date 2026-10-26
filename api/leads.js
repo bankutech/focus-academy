@@ -1,5 +1,5 @@
 import { getServices } from './_lib/firebaseAdmin.js';
-import { prepare, fail, unavailable, clean, cleanPhone, clientIp, newId, withinRate } from './_lib/http.js';
+import { prepare, fail, unavailable, crashed, clean, cleanPhone, clientIp, newId, withinRate } from './_lib/http.js';
 import { readToken } from './_lib/stepToken.js';
 import { isBatchCompatible } from '../src/types/schemas.js';
 
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   prepare(res, ['POST']);
   if (req.method !== 'POST') return fail(res, 405, 'Method not allowed');
 
-  const services = getServices();
+  const services = await getServices();
   if (!services) return unavailable(res);
   const { db } = services;
 
@@ -92,6 +92,8 @@ export default async function handler(req, res) {
       timing: clean(body.timing, 50) || null,
       subjects: clean(body.subjects, 150),
       notes: clean(body.notes, 500),
+      studentUid: clean(body.studentUid, 128) || null,
+      email: clean(body.email, 120) || null,
       source: body.reservationId ? 'enrollment' : 'inquiry',
       status: 'new',
       campus: 'Thoramangalam, Perambalur',
@@ -123,6 +125,45 @@ export default async function handler(req, res) {
 
     await db.collection('leads').doc(record.id).set(record);
 
+    if (record.source === 'enrollment') {
+      const enrollmentDoc = {
+        id: record.id,
+        studentUid: record.studentUid,
+        email: record.email,
+        studentName: record.studentName,
+        parentName: record.parentName,
+        phone: record.phone,
+        whatsappNumber: record.whatsappNumber,
+        secondaryPhone: record.secondaryPhone,
+        grade: record.grade,
+        board: record.board,
+        batchId: record.batchId,
+        batchName: clean(body.selectedBatchName || body.batchName || body.subjects, 120) || null,
+        timing: record.timing,
+        subjects: record.subjects,
+        reservationId: record.reservationId,
+        status: 'confirmed',
+        enrolledAt: record.timestamp,
+        updatedAt: record.timestamp,
+        schoolName: record.schoolName,
+        educationBoard: record.educationBoard,
+        targetYear: record.targetYear,
+        schoolShift: record.schoolShift,
+        schoolDismissalTime: record.schoolDismissalTime,
+        travelDurationMinutes: record.travelDurationMinutes,
+        scheduleClashWarning: record.scheduleClashWarning,
+        emergencyContactName: record.emergencyContactName,
+        emergencyPhone: record.emergencyPhone,
+        emergencyRelationship: record.emergencyRelationship,
+        medicalAlert: record.medicalAlert,
+        studentIdNumber: record.studentIdNumber,
+        addressStreet: record.addressStreet,
+        addressCityState: record.addressCityState,
+        addressPincode: record.addressPincode,
+      };
+      await db.collection('enrollments').doc(record.id).set(enrollmentDoc);
+    }
+
     let deliveryStatus = 'stored';
     const webhookUrl = process.env.LEAD_WEBHOOK_URL;
     if (webhookUrl) {
@@ -151,7 +192,7 @@ export default async function handler(req, res) {
         delivery: deliveryStatus,
       },
     });
-  } catch {
-    return fail(res, 500, 'Unable to record inquiry. Please call the campus desk directly.');
+  } catch (err) {
+    return crashed(res, 'leads', err);
   }
 }

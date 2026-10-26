@@ -32,6 +32,7 @@ import {
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
 import { BatchService } from '../services/batchService';
+import { useStudentAuth } from '../context/StudentAuthContext';
 
 const getNowIsoString = () => new Date().toISOString();
 
@@ -39,6 +40,7 @@ export default function EnrollPage() {
   const { batchId } = useParams();
   const navigate = useNavigate();
   const { studentFlow, setStudentFlow, registerStudent, ensureVerifiedSession } = useStudentFlow();
+  const { user: studentUser, profile: studentProfile } = useStudentAuth();
 
   const candidateBatch = BATCHES_DATA.find((b) => b.id === batchId) ||
     BATCHES_DATA.find((b) => b.id === studentFlow.selectedBatchId);
@@ -103,6 +105,7 @@ export default function EnrollPage() {
 
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRetryingLead, setIsRetryingLead] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
 
   const redirectPath = getStepRedirect(5, studentFlow);
@@ -378,7 +381,7 @@ export default function EnrollPage() {
 
     const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift}${enrollmentRecord.schoolDismissalTime ? ` (Finish: ${formatTime12(enrollmentRecord.schoolDismissalTime)}, Travel: ${enrollmentRecord.travelDurationMinutes || 0}m)` : ''} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
 
-    await LeadService.submitLead({
+    const leadResult = await LeadService.submitLead({
       website_url: honeypot || undefined,
       studentName: enrollmentRecord.studentName,
       parentName: enrollmentRecord.parentName,
@@ -407,12 +410,35 @@ export default function EnrollPage() {
       grade: enrollmentRecord.grade,
       board: enrollmentRecord.board,
       batchId: selectedBatch.id,
+      selectedBatchName: selectedBatch.name,
+      studentUid: studentUser?.uid || null,
+      email: studentUser?.email || null,
       reservationId: enrollmentRecord.reservationId,
       stepToken: session.stepToken,
       timing: selectedBatch.timing,
       subjects: selectedBatch.name,
       notes: notesSummary,
     });
+
+    const prefilledText = `Hello Focus Academy! I have completed admission registration for student: ${enrollmentRecord.studentName} (${enrollmentRecord.grade}, ${enrollmentRecord.board}). School: ${enrollmentRecord.schoolName}. Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Slip ID: ${saved.id}.`;
+    const whatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(prefilledText)}`;
+
+    setIsSubmitting(false);
+
+    if (!leadResult.success) {
+      setSubmissionResult({
+        success: false,
+        partial: true,
+        leadDelivery: 'queued_locally',
+        retryable: true,
+        retryPayload: leadResult.data,
+        error: `Your seat is held for ${selectedBatch.name}, but we could not send your details to the campus. ${leadResult.message}`,
+        whatsappUrl,
+        data: saved,
+        enrollmentRecord,
+      });
+      return;
+    }
 
     setStudentFlow((prev) => ({
       ...prev,
@@ -427,12 +453,9 @@ export default function EnrollPage() {
       step: 5,
     }));
 
-    const prefilledText = `Hello Focus Academy! I have completed admission registration for student: ${enrollmentRecord.studentName} (${enrollmentRecord.grade}, ${enrollmentRecord.board}). School: ${enrollmentRecord.schoolName}. Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Slip ID: ${saved.id}.`;
-    const whatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(prefilledText)}`;
-
-    setIsSubmitting(false);
     setSubmissionResult({
       success: true,
+      leadDelivery: 'delivered',
       data: saved,
       enrollmentRecord,
       whatsappUrl,
@@ -447,30 +470,61 @@ export default function EnrollPage() {
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-14">
         {submissionResult && !submissionResult.success && (
-          <div className="mb-6 bg-rose-50 border border-rose-200 rounded-lg p-5 text-left max-w-2xl mx-auto animate-in fade-in">
-            <h3 className="text-sm font-bold text-rose-900">Seat Reservation Notice</h3>
+          <div
+            role="alert"
+            className="mb-6 bg-rose-50 border border-rose-200 rounded-lg p-5 text-left max-w-2xl mx-auto animate-in fade-in"
+          >
+            <h3 className="text-sm font-bold text-rose-900">
+              {submissionResult.partial ? 'Your seat is held, but your details were not sent' : 'Seat Reservation Notice'}
+            </h3>
             <p className="text-xs text-rose-700 mt-1">{submissionResult.error}</p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <button 
-                type="button" 
-                onClick={() => setSubmissionResult(null)} 
-                className="text-xs font-bold px-3 py-1.5 bg-rose-100 text-rose-900 rounded-md hover:bg-rose-200 cursor-pointer"
-              >
-                Try Again
-              </button>
+              {submissionResult.retryable && submissionResult.retryPayload ? (
+                <button
+                  type="button"
+                  disabled={isRetryingLead}
+                  onClick={async () => {
+                    setIsRetryingLead(true);
+                    const retry = await LeadService.retryLastAttempt(submissionResult.retryPayload);
+                    setIsRetryingLead(false);
+                    if (retry.success) {
+                      setSubmissionResult({
+                        success: true,
+                        leadDelivery: 'delivered',
+                        data: submissionResult.data,
+                        enrollmentRecord: submissionResult.enrollmentRecord,
+                        whatsappUrl: submissionResult.whatsappUrl,
+                        waitlisted: Boolean(submissionResult.enrollmentRecord?.isWaitlisted),
+                        waitlistPosition: submissionResult.enrollmentRecord?.waitlistPosition,
+                      });
+                    }
+                  }}
+                  className="text-xs font-bold px-3 py-1.5 bg-rose-100 text-rose-900 rounded-md hover:bg-rose-200 cursor-pointer disabled:opacity-60"
+                >
+                  {isRetryingLead ? 'Sending…' : 'Retry Sending My Details'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSubmissionResult(null)}
+                  className="text-xs font-bold px-3 py-1.5 bg-rose-100 text-rose-900 rounded-md hover:bg-rose-200 cursor-pointer"
+                >
+                  Try Again
+                </button>
+              )}
               <Link 
                 to="/batches" 
-                className="text-xs font-bold text-[#EA580C] hover:underline"
+                className="text-xs font-bold text-[#C2410C] hover:underline"
               >
                 Browse Alternative Batches →
               </Link>
               <a
-                href="https://wa.me/919842451220?text=Hello%20Focus%20Academy,%20I%20need%20help%20with%20enrollment"
+                href={submissionResult.whatsappUrl || 'https://wa.me/919842451220?text=Hello%20Focus%20Academy,%20I%20need%20help%20with%20enrollment'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-200 hover:bg-emerald-100"
+                className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1.5 rounded-md border border-emerald-200 hover:bg-emerald-100"
               >
-                WhatsApp Desk Support
+                Send Details on WhatsApp Instead
               </a>
               <a
                 href="tel:+919842451220"
