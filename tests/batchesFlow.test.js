@@ -5,7 +5,8 @@ import {
   getBatchesByGrade, 
   getBatchesBySlot, 
   getBatchesFiltered,
-  resolveBoardForBatch
+  resolveBoardForBatch,
+  isBatchRecommendedForTrack
 } from '../src/data/batchesData';
 
 describe('Batches Data and Flow Filters', () => {
@@ -76,4 +77,58 @@ describe('Batches Data and Flow Filters', () => {
     const icseResolved = resolveBoardForBatch(multiBatch, 'ICSE Board');
     expect(icseResolved).toBe('ICSE Board');
   });
+
+  it('verifies Class 10 Foundation Olympiad and Class 12 NEET/JEE batches exist with proper configuration', () => {
+    const olympiadBatch = getBatchById('batch-10-foundation-olympiad');
+    expect(olympiadBatch).not.toBeNull();
+    expect(olympiadBatch?.grade).toBe('Class 10');
+    expect(olympiadBatch?.capacity).toBe(12);
+    expect(olympiadBatch?.slotId).toBe('slot-1');
+    expect(olympiadBatch?.prepTrackId).toBe('foundation-olympiad');
+
+    const neetJeeBatch = getBatchById('batch-12-neet-jee');
+    expect(neetJeeBatch).not.toBeNull();
+    expect(neetJeeBatch?.grade).toBe('Class 12');
+    expect(neetJeeBatch?.capacity).toBe(12);
+    expect(neetJeeBatch?.slotId).toBe('slot-3');
+    expect(neetJeeBatch?.prepTrackId).toBe('neet-jee-foundations');
+  });
+
+  it('accurately identifies recommended batch based on student Step 2 exam prep track', () => {
+    const bOlympiad = getBatchById('batch-10-foundation-olympiad');
+    const bRemedial = getBatchById('batch-remedial-maths');
+    const bSslcState = getBatchById('batch-10-state-board');
+    const bSslcCbse = getBatchById('batch-10-cbse');
+    const bSslcIcse = getBatchById('batch-10-icse');
+    const bHsc = getBatchById('batch-12-science-board');
+    const bNeetJee = getBatchById('batch-12-neet-jee');
+    const bMiddle = getBatchById('batch-middle-foundation');
+
+    expect(isBatchRecommendedForTrack(bOlympiad, 'foundation-olympiad', 'TN State Board (Samacheer)')).toBe(true);
+    expect(isBatchRecommendedForTrack(bRemedial, 'foundation-olympiad', 'TN State Board (Samacheer)')).toBe(false);
+
+    expect(isBatchRecommendedForTrack(bRemedial, 'concept-mastery', 'TN State Board (Samacheer)')).toBe(true);
+    expect(isBatchRecommendedForTrack(bSslcState, 'concept-mastery', 'TN State Board (Samacheer)')).toBe(false);
+
+    expect(isBatchRecommendedForTrack(bSslcState, 'sslc-95-plus', 'TN State Board (Samacheer)')).toBe(true);
+    expect(isBatchRecommendedForTrack(bSslcCbse, 'sslc-95-plus', 'CBSE Board')).toBe(true);
+    expect(isBatchRecommendedForTrack(bSslcIcse, 'sslc-95-plus', 'ICSE Board')).toBe(true);
+
+    expect(isBatchRecommendedForTrack(bNeetJee, 'neet-jee-foundations', 'TN State Board (Samacheer)')).toBe(true);
+    expect(isBatchRecommendedForTrack(bHsc, 'neet-jee-foundations', 'TN State Board (Samacheer)')).toBe(false);
+
+    expect(isBatchRecommendedForTrack(bHsc, 'hsc-board-95', 'TN State Board (Samacheer)')).toBe(true);
+    expect(isBatchRecommendedForTrack(bMiddle, 'middle-school-foundations', 'CBSE Board')).toBe(true);
+  });
+
+  it('supports recommendation fallback using examPrepTitle when examPrepId is omitted', () => {
+    const bOlympiad = getBatchById('batch-10-foundation-olympiad');
+    const bNeetJee = getBatchById('batch-12-neet-jee');
+    const bRemedial = getBatchById('batch-remedial-maths');
+
+    expect(isBatchRecommendedForTrack(bOlympiad, null, 'CBSE Board', 'Early Foundation (IIT / NEET Orientation)')).toBe(true);
+    expect(isBatchRecommendedForTrack(bNeetJee, null, 'CBSE Board', 'NEET & JEE Main Integrated Numerical Focus')).toBe(true);
+    expect(isBatchRecommendedForTrack(bRemedial, null, 'CBSE Board', 'Core Conceptual Foundations & Remedial Clinic')).toBe(true);
+  });
 });
+

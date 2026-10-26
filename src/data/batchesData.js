@@ -17,6 +17,7 @@ export const batchesData = [
     focusGoal: 'Complete SSLC Board Exam Preparation & 95%+ Target',
     monthlyFee: 2200,
     includesPrintedMaterials: true,
+    prepTrackId: 'sslc-95-plus',
     description: 'Intensive evening batch focused on Samacheer Kalvi textbooks, exemplar problems, theorem derivations, and past 10-year question paper drills. Includes weekly Saturday mock exams with evaluated answer sheets shared with parents.',
     features: [
       'Strictly capped at 12 students per batch',
@@ -43,6 +44,7 @@ export const batchesData = [
     subjects: ['NCERT Mathematics (Standard/Basic)', 'NCERT Science (Phy/Chem/Bio)'],
     focusGoal: 'CBSE Board Concept Mastery & Competency-Based Questions',
     monthlyFee: 2400,
+    prepTrackId: 'sslc-95-plus',
     description: 'Master CBSE Class 10 with deep NCERT deconstruction, case-based and assertion-reasoning question practices, and step-by-step marking scheme training.',
     features: [
       'NCERT line-by-line concept breakdown',
@@ -69,6 +71,7 @@ export const batchesData = [
     focusGoal: 'Board Exam 95%+ & NEET/JEE Foundation',
     monthlyFee: 2800,
     includesPrintedMaterials: true,
+    prepTrackId: 'hsc-board-95',
     description: 'Advanced late-evening batch for 12th board candidates. Designed for students who need sharp numerical problem solving, step-marked derivations, organic mechanism flowcharts, and calculus speed drills.',
     features: [
       'Derivations master book & formula flashcards',
@@ -94,6 +97,7 @@ export const batchesData = [
     subjects: ['Mathematics Core & Arithmetic', 'General Science & Experiments', 'English Grammar & Vocabulary'],
     focusGoal: 'Eliminate Rote Learning & Build Strong Mathematical Fundamentals',
     monthlyFee: 1800,
+    prepTrackId: 'middle-school-foundations',
     description: 'Early evening session right after school. Focuses on homework support, mental arithmetic, geometry proofs, and intuitive science experiments so students build solid academic discipline early.',
     features: [
       'Early evening timing (4:30 PM - 6:00 PM) fits school schedule',
@@ -119,6 +123,7 @@ export const batchesData = [
     subjects: ['Algebra & Geometry', 'Physics & Chemistry Basics', 'Biology'],
     focusGoal: 'Solid Foundation for 10th Board Exam Success',
     monthlyFee: 2000,
+    prepTrackId: 'class-9-preboard',
     description: 'Class 9 is the bridge year where curriculum complexity increases dramatically. We ensure students build strong algebra factoring, physics motion equations, and chemical valency concepts before entering Class 10.',
     features: [
       'Bridge concepts from Class 8 into Class 10 readiness',
@@ -144,6 +149,7 @@ export const batchesData = [
     subjects: ['Physics (Mechanics & Waves)', 'Chemistry (Thermodynamics & Bonding)', 'Mathematics (Calculus & Trigonometry)'],
     focusGoal: 'Master Class 11 Core Concepts (60% Weightage for Competitive Exams)',
     monthlyFee: 2600,
+    prepTrackId: 'class-11-core',
     description: 'Most students find Class 11 a sharp jump from Class 10. Our batches provide systematic derivations, conceptual proofs, and numerical application drills so students do not face learning debt in Class 12.',
     features: [
       'In-depth mechanics and calculus foundation',
@@ -169,6 +175,7 @@ export const batchesData = [
     subjects: ['ICSE Mathematics', 'Physics', 'Chemistry', 'Biology'],
     focusGoal: 'ICSE Board Concept Mastery & Step-Marking Training',
     monthlyFee: 2500,
+    prepTrackId: 'sslc-95-plus',
     description: 'Specialized batch for ICSE Class 10 candidates. Covers in-depth numericals, circuit theory, organic nomenclature, and structured answer presentation as per CISCE council standards.',
     features: [
       'Strictly capped at 12 students',
@@ -194,12 +201,67 @@ export const batchesData = [
     subjects: ['Algebra Factoring', 'Geometry Theorems', 'Trigonometry Basics', 'Arithmetic Speed'],
     focusGoal: 'Eliminate Math Anxiety & Build Problem-Solving Confidence',
     monthlyFee: 1800,
+    prepTrackId: 'concept-mastery',
     description: 'Designed specifically for students who feel hesitant or left behind in school math classes. Patient whiteboard problem-solving with 1-on-1 teacher guidance and zero embarrassment.',
     features: [
       'Strictly small 12-student batch',
       'Daily 1-on-1 step-by-step problem coaching',
       'Formula memorization maps & daily short quizzes',
       'Zero embarrassment encouraging learning environment'
+    ]
+  },
+  {
+    id: 'batch-10-foundation-olympiad',
+    name: 'Class 10 Early Foundation & Olympiad Numerical Accelerator',
+    shortTitle: 'Class 10 Olympiad Foundation',
+    grade: 'Class 10',
+    board: 'TN State Board, CBSE & ICSE',
+    slotId: 'slot-1',
+    timing: '4:30 PM – 6:00 PM',
+    days: 'Monday – Saturday',
+    capacity: 12,
+    enrolledCount: 7,
+    seatsRemaining: 5,
+    status: 'Admissions Open (5 Seats Left)',
+    classroom: 'Advanced Numerical Lab 104, First Floor, Thiripura Complex',
+    subjects: ['Advanced Mathematics (HOTS)', 'Olympiad Physics & Chemistry', 'Logical & Numerical Reasoning'],
+    focusGoal: 'Early Foundation (IIT / NEET Orientation) & Science Olympiads',
+    monthlyFee: 2500,
+    includesPrintedMaterials: true,
+    prepTrackId: 'foundation-olympiad',
+    description: 'High-order thinking questions (HOTS), speed numerical techniques, and Olympiad problem sets for ambitious Class 10 students aiming for national competitive exams.',
+    features: [
+      'Strictly capped at 12 students per batch',
+      'Advanced numerical drills and mental models',
+      'Olympiad and NTSE style analytical problem sets',
+      'Saturday competitive mock assessments'
+    ]
+  },
+  {
+    id: 'batch-12-neet-jee',
+    name: 'Class 12 NEET & JEE Main Integrated Numerical Accelerator',
+    shortTitle: 'Class 12 NEET / JEE Focus',
+    grade: 'Class 12',
+    board: 'TN State Board, CBSE & ISC',
+    slotId: 'slot-3',
+    timing: '7:30 PM – 9:00 PM',
+    days: 'Monday – Saturday',
+    capacity: 12,
+    enrolledCount: 8,
+    seatsRemaining: 4,
+    status: 'Admissions Open (4 Seats Left)',
+    classroom: 'Problem Solving Lab 103, First Floor, Thiripura Complex',
+    subjects: ['Physics Numericals & Dimensional Analysis', 'Organic & Physical Chemistry Problem Sets', 'Higher Mathematics / NEET Bio Drills'],
+    focusGoal: 'NEET & JEE Main Integrated Numerical Focus',
+    monthlyFee: 2900,
+    includesPrintedMaterials: true,
+    prepTrackId: 'neet-jee-foundations',
+    description: 'Dedicated competitive numerical accelerator for Class 12 aspirants. Daily whiteboard problem solving, rapid shortcut verification, and dimensional analysis drills synchronized with safe late evening dispersal.',
+    features: [
+      'Strictly capped at 12 students per batch',
+      'Daily numerical whiteboard problem drills',
+      'Formula applications & shortcut verification',
+      'Saturday full-length timed mock examinations'
     ]
   }
 ];
@@ -280,6 +342,67 @@ export function resolveBoardForBatch(batch, currentBoard) {
   if (bLower.includes('cbse') && !bLower.includes('state')) return 'CBSE Board';
   if (bLower.includes('icse') && !bLower.includes('state')) return 'ICSE Board';
   return 'TN State Board (Samacheer)';
+}
+
+export function isBatchRecommendedForTrack(batch, examPrepId, studentBoard, examPrepTitle) {
+  if (!batch) return false;
+  let trackId = examPrepId ? String(examPrepId).toLowerCase().trim() : '';
+  if (!trackId && examPrepTitle) {
+    const titleLower = String(examPrepTitle).toLowerCase();
+    if (titleLower.includes('olympiad') || titleLower.includes('early foundation')) trackId = 'foundation-olympiad';
+    else if (titleLower.includes('remedial') || titleLower.includes('concept mastery') || titleLower.includes('foundations & remedial')) trackId = 'concept-mastery';
+    else if (titleLower.includes('neet') || titleLower.includes('jee')) trackId = 'neet-jee-foundations';
+    else if (titleLower.includes('hsc') || titleLower.includes('higher secondary') || titleLower.includes('centum focus')) trackId = 'hsc-board-95';
+    else if (titleLower.includes('sslc') || titleLower.includes('95%+ target') || titleLower.includes('10th board')) trackId = 'sslc-95-plus';
+    else if (titleLower.includes('middle school')) trackId = 'middle-school-foundations';
+    else if (titleLower.includes('class 11')) trackId = 'class-11-core';
+    else if (titleLower.includes('class 9')) trackId = 'class-9-preboard';
+  }
+  if (!trackId) return false;
+
+  if (trackId === 'sslc-95-plus') {
+    if (studentBoard) {
+      const s = String(studentBoard).toLowerCase();
+      if (s.includes('cbse')) return batch.id === 'batch-10-cbse';
+      if (s.includes('icse') || s.includes('isc')) return batch.id === 'batch-10-icse';
+      return batch.id === 'batch-10-state-board';
+    }
+    return batch.id === 'batch-10-state-board' || batch.id === 'batch-10-cbse' || batch.id === 'batch-10-icse';
+  }
+
+  if (trackId === 'concept-mastery') {
+    return batch.id === 'batch-remedial-maths';
+  }
+
+  if (trackId === 'foundation-olympiad') {
+    return batch.id === 'batch-10-foundation-olympiad';
+  }
+
+  if (trackId === 'hsc-board-95') {
+    return batch.id === 'batch-12-science-board';
+  }
+
+  if (trackId === 'neet-jee-foundations') {
+    return batch.id === 'batch-12-neet-jee';
+  }
+
+  if (trackId === 'class-11-core') {
+    return batch.id === 'batch-11-science';
+  }
+
+  if (trackId === 'class-9-preboard') {
+    return batch.id === 'batch-9-preboard';
+  }
+
+  if (trackId === 'middle-school-foundations') {
+    return batch.id === 'batch-middle-foundation';
+  }
+
+  if (batch.prepTrackId && batch.prepTrackId === trackId) {
+    return true;
+  }
+
+  return false;
 }
 
 export const BATCHES_DATA = batchesData;

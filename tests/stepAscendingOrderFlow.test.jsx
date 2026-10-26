@@ -271,6 +271,68 @@ describe('Ascending Order Multi-Step Admission Guard Tests', () => {
     expect(screen.queryByText(/Class 10 Board Distinction/i)).toBeNull();
   });
 
+  it('badges matching track batch with Recommended for Your Track and prioritizes it at top of Step 3', async () => {
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'S. Kaviya',
+        phone: '9842451220',
+        grade: 'Class 10',
+        board: 'TN State Board (Samacheer)',
+        examPrepId: 'foundation-olympiad',
+        examPrep: 'Early Foundation (IIT / NEET Orientation)',
+        step: 3
+      })
+    );
+
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/batches']}>
+        <AppProvider>
+          <BatchesPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Recommended for Your Track/i)).toBeDefined();
+      expect(screen.getByText(/Class 10 Early Foundation & Olympiad/i)).toBeDefined();
+    });
+
+    const headings = screen.getAllByRole('heading', { level: 3 });
+    expect(headings[0].textContent).toContain('Class 10 Early Foundation & Olympiad');
+
+    unmount();
+
+    localStorage.setItem(
+      'focus_academy_student_flow',
+      JSON.stringify({
+        studentName: 'R. Rajesh',
+        phone: '9842451220',
+        grade: 'Class 12',
+        board: 'TN State Board, CBSE & ISC',
+        examPrepId: 'neet-jee-foundations',
+        examPrep: 'NEET & JEE Main Integrated Numerical Focus',
+        step: 3
+      })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/batches']}>
+        <AppProvider>
+          <BatchesPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Recommended for Your Track/i)).toBeDefined();
+      expect(screen.getByText(/Class 12 NEET & JEE Main Integrated/i)).toBeDefined();
+    });
+
+    const h12 = screen.getAllByRole('heading', { level: 3 });
+    expect(h12[0].textContent).toContain('Class 12 NEET & JEE Main Integrated');
+  });
+
   it('displays sequential step requirement notice on ExamPrepPage when redirected from step 4', () => {
     localStorage.setItem(
       'focus_academy_student_flow',

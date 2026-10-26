@@ -404,11 +404,13 @@ export const isBatchCompatible = (batch, grade, board) => {
     const bBoard = String(batch.board || '').toLowerCase();
 
     if (b.includes('state') || b.includes('samacheer')) {
-      if (!bBoard.includes('state') && !bBoard.includes('samacheer')) return false;
+      if (!bBoard.includes('state') && !bBoard.includes('samacheer') && !bBoard.includes('neet') && !bBoard.includes('jee')) return false;
     } else if (b.includes('cbse')) {
-      if (!bBoard.includes('cbse')) return false;
+      if (!bBoard.includes('cbse') && !bBoard.includes('neet') && !bBoard.includes('jee')) return false;
     } else if (b.includes('icse') || b.includes('isc')) {
-      if (!bBoard.includes('icse') && !bBoard.includes('isc')) return false;
+      if (!bBoard.includes('icse') && !bBoard.includes('isc') && !bBoard.includes('neet') && !bBoard.includes('jee')) return false;
+    } else if (b.includes('neet') || b.includes('jee')) {
+      if (!bBoard.includes('neet') && !bBoard.includes('jee')) return false;
     }
   }
 

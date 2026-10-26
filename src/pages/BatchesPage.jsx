@@ -12,7 +12,7 @@ import {
   ShieldCheck, 
   Calendar 
 } from 'lucide-react';
-import { BATCHES_DATA } from '../data/batchesData';
+import { BATCHES_DATA, isBatchRecommendedForTrack } from '../data/batchesData';
 import { BatchService } from '../services/batchService';
 import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow, getStepRedirect, isStep1Complete, isStep2Complete } from '../context/useAppContext';
@@ -157,10 +157,19 @@ export default function BatchesPage() {
   const filteredBatches = batchesList.filter((batch) => {
     let matchGrade = true;
     if (activeGradeFilter !== 'all') {
-      if (activeGradeFilter.includes('6') || activeGradeFilter.includes('7') || activeGradeFilter.includes('8')) {
-        matchGrade = batch.grade.includes('6') || batch.grade.includes('7') || batch.grade.includes('8') || batch.grade.includes('6 to 8');
+      const g = activeGradeFilter.toLowerCase();
+      if (g.includes('6') || g.includes('7') || g.includes('8')) {
+        matchGrade = batch.grade.includes('6') || batch.grade.includes('7') || batch.grade.includes('8') || batch.grade.includes('6 to 8') || batch.grade.toLowerCase().includes('middle');
+      } else if (g.includes('9')) {
+        matchGrade = batch.grade.includes('9');
+      } else if (g.includes('10')) {
+        matchGrade = batch.grade.includes('10');
+      } else if (g.includes('11')) {
+        matchGrade = batch.grade.includes('11');
+      } else if (g.includes('12')) {
+        matchGrade = batch.grade.includes('12');
       } else {
-        matchGrade = batch.grade.toLowerCase().includes(activeGradeFilter.toLowerCase());
+        matchGrade = batch.grade.toLowerCase().includes(g);
       }
     }
 
@@ -183,6 +192,14 @@ export default function BatchesPage() {
     }
 
     return matchGrade && matchBoard && matchSlot;
+  });
+
+  const prioritizedBatches = [...filteredBatches].sort((a, b) => {
+    const aRec = isBatchRecommendedForTrack(a, studentFlow.examPrepId, studentFlow.board, studentFlow.examPrep);
+    const bRec = isBatchRecommendedForTrack(b, studentFlow.examPrepId, studentFlow.board, studentFlow.examPrep);
+    if (aRec && !bRec) return -1;
+    if (!aRec && bRec) return 1;
+    return 0;
   });
 
   const handleSelectBatch = (batch) => {
@@ -589,23 +606,41 @@ export default function BatchesPage() {
                 </div>
 
                 <span className="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-md border border-slate-200 shrink-0">
-                  {filteredBatches.length} {filteredBatches.length === 1 ? 'Batch' : 'Batches'}
+                  {prioritizedBatches.length} {prioritizedBatches.length === 1 ? 'Batch' : 'Batches'}
                 </span>
               </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {filteredBatches.map((batch) => {
+              {prioritizedBatches.map((batch) => {
+                const isRecommended = isBatchRecommendedForTrack(
+                  batch,
+                  studentFlow.examPrepId,
+                  studentFlow.board,
+                  studentFlow.examPrep
+                );
                 return (
                   <div
                     key={batch.id}
-                    className="bg-white rounded-lg p-6 sm:p-7 border border-[#E2E8F0] shadow-xs flex flex-col justify-between hover:border-[#EA580C]/40 transition-all"
+                    className={`bg-white rounded-lg p-6 sm:p-7 border ${
+                      isRecommended
+                        ? 'border-[#EA580C] ring-1 ring-[#EA580C]/20 shadow-sm'
+                        : 'border-[#E2E8F0] shadow-xs'
+                    } flex flex-col justify-between hover:border-[#EA580C]/40 transition-all`}
                   >
                     <div>
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 mb-4">
-                        <span className="px-2.5 py-1 bg-[#0F172A] text-white rounded-md text-xs uppercase font-bold">
-                          {batch.grade} • {batch.board}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-2.5 py-1 bg-[#0F172A] text-white rounded-md text-xs uppercase font-bold">
+                            {batch.grade} • {batch.board}
+                          </span>
+
+                          {isRecommended && (
+                            <span className="px-2.5 py-1 bg-orange-100 text-[#EA580C] border border-orange-200 rounded-md text-xs font-bold flex items-center space-x-1">
+                              <span>Recommended for Your Track</span>
+                            </span>
+                          )}
+                        </div>
 
                         <span className="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded-md text-xs font-bold">
                           {batch.status}
