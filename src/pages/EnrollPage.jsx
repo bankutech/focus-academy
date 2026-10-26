@@ -109,6 +109,7 @@ export default function EnrollPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRetryingLead, setIsRetryingLead] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
+  const [declarationChecked, setDeclarationChecked] = useState(true);
 
   const redirectPath = getStepRedirect(5, studentFlow);
   if (redirectPath) {
@@ -252,6 +253,26 @@ export default function EnrollPage() {
       }
       if (errors.studentIdNumber || errors.gstin || errors.addressStreet || errors.addressCityState || errors.addressPincode) {
         setOpenSections((prev) => ({ ...prev, logistics: true }));
+      }
+      const firstErrorKey = Object.keys(errors)[0];
+      const fieldIdMap = {
+        studentName: 'enroll-student-name',
+        phone: 'enroll-phone',
+        schoolName: 'enroll-school-name',
+        educationBoard: 'enroll-education-board',
+        targetYear: 'enroll-target-year',
+        schoolShift: 'enroll-school-shift',
+        emergencyContactName: 'enroll-emergency-name',
+        emergencyPhone: 'enroll-emergency-phone',
+        studentIdNumber: 'enroll-id-number',
+        addressStreet: 'enroll-address-street',
+      };
+      const targetId = fieldIdMap[firstErrorKey];
+      if (targetId) {
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
       }
     }
 
@@ -829,6 +850,7 @@ export default function EnrollPage() {
 
             <form
               onSubmit={handleSubmit}
+              noValidate
               className="space-y-6"
             >
                   <input
@@ -1600,8 +1622,8 @@ export default function EnrollPage() {
                     <label className="flex items-start space-x-2.5 cursor-pointer">
                       <input
                         type="checkbox"
-                        required
-                        defaultChecked={true}
+                        checked={declarationChecked}
+                        onChange={(e) => setDeclarationChecked(e.target.checked)}
                         className="mt-0.5 rounded text-[#EA580C] focus:ring-[#EA580C] h-4 w-4 border-emerald-300"
                       />
                       <span className="leading-snug">
