@@ -92,8 +92,8 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-12 text-center bg-white rounded border border-slate-200">
-        <div className="w-7 h-7 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+      <div className="p-12 text-center bg-white rounded-none border border-slate-200">
+        <div className="w-7 h-7 border-2 border-brand border-t-transparent rounded-full admin-keep-circle animate-spin mx-auto mb-3" />
         <p className="text-xs font-semibold text-slate-500">Loading Campus Records...</p>
       </div>
     );
@@ -177,13 +177,13 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Top Bar */}
-      <div className="bg-white p-4 sm:p-5 rounded border border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="bg-white p-4 sm:p-5 rounded-none border border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2.5">
             <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A] tracking-tight">
               Campus Operations Dashboard
             </h1>
-            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-none text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
               <span>Session 2025–2026</span>
             </span>
@@ -197,28 +197,28 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={loadData}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded text-xs font-semibold border border-slate-300 transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-none text-xs font-semibold border border-slate-300 transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
           </button>
           <Link
             to="/admin-portal/ledger"
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#0F172A] hover:bg-slate-800 text-white rounded text-xs font-semibold transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#0F172A] hover:bg-slate-800 text-white rounded-none text-xs font-semibold transition-colors cursor-pointer"
           >
             <CreditCard className="w-3.5 h-3.5" />
             <span>Record Payment</span>
           </Link>
           <Link
             to="/admin-portal/students"
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-brand hover:bg-brand-strong text-white rounded text-xs font-semibold transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-brand hover:bg-brand-strong text-white rounded-none text-xs font-semibold transition-colors cursor-pointer"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Add Student</span>
           </Link>
           <Link
             to="/admin-portal/reminders"
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded text-xs font-semibold border border-slate-300 transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 rounded-none text-xs font-semibold border border-slate-300 transition-colors cursor-pointer"
           >
             <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
             <span>WhatsApp Due Notices</span>
@@ -227,7 +227,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {dataErrors.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded p-4 text-xs text-amber-900">
+        <div className="bg-amber-50 border border-amber-200 rounded-none p-4 text-xs text-amber-900">
           <div className="flex items-start space-x-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>
@@ -238,7 +238,7 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={loadData}
-                className="mt-2 px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold rounded text-[11px] cursor-pointer"
+                className="mt-2 px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold rounded-none text-[11px] cursor-pointer"
               >
                 Retry
               </button>
@@ -255,18 +255,18 @@ export default function AdminDashboardPage() {
             <Link
               key={card.title}
               to={card.link}
-              className="p-4 bg-white rounded border border-slate-200 hover:border-slate-300 transition-colors cursor-pointer group flex flex-col justify-between"
+              className="p-4 bg-white rounded-none border border-slate-200 hover:border-slate-300 transition-colors cursor-pointer group flex flex-col justify-between"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <div className="p-1.5 rounded bg-slate-100 text-slate-700 group-hover:bg-[#0F172A] group-hover:text-white transition-colors">
+                  <div className="p-1.5 rounded-none bg-slate-100 text-slate-700 group-hover:bg-[#0F172A] group-hover:text-white transition-colors">
                     <Icon className="w-3.5 h-3.5" />
                   </div>
                   <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                     {card.title}
                   </span>
                 </div>
-                <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded border ${card.badgeClass}`}>
+                <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-none border ${card.badgeClass}`}>
                   {card.badge}
                 </span>
               </div>
@@ -303,14 +303,14 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Admissions Table */}
-      <div className="bg-white rounded border border-slate-200 p-4 sm:p-5">
+      <div className="bg-white rounded-none border border-slate-200 p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 pb-3 border-b border-slate-200 gap-2">
           <div>
             <div className="flex items-center space-x-2">
               <h2 className="text-sm font-bold text-[#0F172A]">
                 Recent Batch Admissions & Registrations
               </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-800">
+              <span className="px-2 py-0.5 rounded-none text-[10px] font-semibold bg-orange-100 text-orange-800">
                 {enrollments.length} Total
               </span>
             </div>
@@ -372,7 +372,7 @@ export default function AdminDashboardPage() {
                       {enrItem.enrolledAt ? String(enrItem.enrolledAt).split('T')[0] : 'Today'}
                     </td>
                     <td className="py-2.5 px-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-semibold ${
                         enrItem.status === 'confirmed'
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                           : enrItem.status === 'waitlisted'
@@ -398,7 +398,7 @@ export default function AdminDashboardPage() {
 
       {/* Bottom Grid: Recent Verified Transactions & 12-Seat Capacity Guard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 bg-white rounded border border-slate-200 p-4 sm:p-5">
+        <div className="lg:col-span-2 bg-white rounded-none border border-slate-200 p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
             <div>
               <h2 className="text-sm font-bold text-[#0F172A]">
@@ -442,7 +442,7 @@ export default function AdminDashboardPage() {
                         ₹{Number(pay.amount).toLocaleString('en-IN')}
                       </td>
                       <td className="py-2.5 px-3">
-                        <span className="capitalize px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        <span className="capitalize px-2 py-0.5 rounded-none text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
                           {String(pay.paymentMethod || '').replace('_', ' ')}
                         </span>
                       </td>
@@ -462,7 +462,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* 12-Seat Capacity Guard */}
-        <div className="bg-white rounded border border-slate-200 p-4 sm:p-5 flex flex-col justify-between">
+        <div className="bg-white rounded-none border border-slate-200 p-4 sm:p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
               <div>
@@ -495,9 +495,9 @@ export default function AdminDashboardPage() {
                         {b.enrolledCount}{heldCount > 0 ? ` (+${heldCount} held)` : ''} / 12 Seats
                       </span>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-sm h-2 overflow-hidden">
+                    <div className="w-full bg-slate-100 rounded-none h-2 overflow-hidden">
                       <div
-                        className={`h-full rounded-sm transition-all duration-300 ${
+                        className={`h-full rounded-none transition-all duration-300 ${
                           isFull 
                             ? 'bg-rose-500' 
                             : pct >= 75 
@@ -513,7 +513,7 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="mt-5 pt-3 border-t border-slate-200 bg-slate-50 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 p-3.5 rounded-b flex items-center justify-between text-xs text-slate-600">
+          <div className="mt-5 pt-3 border-t border-slate-200 bg-slate-50 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 p-3.5 rounded-none flex items-center justify-between text-xs text-slate-600">
             <div className="flex items-center space-x-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
               <span className="font-medium text-[11px]">Strict 1:12 Faculty Ratio</span>

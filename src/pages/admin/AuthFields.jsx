@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 import { passwordStrength, passwordChecks } from './authHelpers';
 
-const INPUT = 'w-full py-2 sm:py-2.5 lg:py-1.5 xl:py-2.5 bg-slate-900/90 border rounded-xl text-white text-sm sm:text-base placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-colors shadow-xs disabled:opacity-60';
+const INPUT = 'w-full py-2 sm:py-2.5 lg:py-1.5 xl:py-2.5 bg-slate-900/90 border rounded-none text-white text-sm sm:text-base placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-colors shadow-xs disabled:opacity-60';
 const LABEL = 'block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1';
 
 export function TextField({ id, label, type = 'text', value, onChange, placeholder, autoComplete, icon: Icon, invalid, describedBy, disabled, inputRef, ...rest }) {
@@ -66,7 +66,7 @@ export function PasswordField({ id, label = 'Password', value, onChange, placeho
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? 'Hide password' : 'Show password'}
           aria-pressed={visible}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer p-2 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors cursor-pointer p-2 rounded-none focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
         >
           {visible ? <EyeOff className="w-4.5 h-4.5 sm:w-5 sm:h-5" /> : <Eye className="w-4.5 h-4.5 sm:w-5 sm:h-5" />}
         </button>
@@ -77,7 +77,7 @@ export function PasswordField({ id, label = 'Password', value, onChange, placeho
           <div className="mt-2">
             <div className="flex gap-1" aria-hidden="true">
               {[0, 1, 2, 3].map((i) => (
-                <span key={i} className={`h-1 flex-1 rounded-full ${strength.score > i ? bars[strength.score] : 'bg-slate-700'}`} />
+                <span key={i} className={`h-1 flex-1 rounded-full admin-keep-circle ${strength.score > i ? bars[strength.score] : 'bg-slate-700'}`} />
               ))}
             </div>
             <p className="mt-1 text-xs text-slate-400">
@@ -98,7 +98,7 @@ export function SubmitButton({ loading, children, loadingText, disabled, classNa
     <button
       type="submit"
       disabled={loading || disabled}
-      className={`w-full py-2 sm:py-2.5 lg:py-1.5 xl:py-2.5 px-4 bg-brand hover:bg-brand-strong text-white font-bold text-sm sm:text-base rounded-xl shadow-md shadow-orange-950/40 transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-brand ${className}`}
+      className={`w-full py-2 sm:py-2.5 lg:py-1.5 xl:py-2.5 px-4 bg-brand hover:bg-brand-strong text-white font-bold text-sm sm:text-base rounded-none shadow-md shadow-orange-950/40 transition-all duration-200 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 focus-visible:ring-brand ${className}`}
     >
       {loading ? <Loader2 className="w-4.5 h-4.5 animate-spin" aria-hidden="true" /> : null}
       <span>{loading ? loadingText : children}</span>
@@ -113,7 +113,7 @@ export function GoogleButton({ onClick, disabled, loading, children }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="w-full flex items-center justify-center space-x-3 px-4 py-2 sm:py-2.5 lg:py-1.5 xl:py-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-200 font-semibold text-sm sm:text-base rounded-xl shadow-xs transition-colors cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
+      className="w-full flex items-center justify-center space-x-3 px-4 py-2 sm:py-2.5 lg:py-1.5 xl:py-2.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-slate-200 font-semibold text-sm sm:text-base rounded-none shadow-xs transition-colors cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
     >
       <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

@@ -750,7 +750,26 @@ export default function EnrollPage() {
               </div>
             </div>
 
-            <div className="mt-8 space-y-3 max-w-md mx-auto">
+            <div className="mt-6 p-4 bg-brand/5 border border-brand/20 rounded-md text-xs text-left max-w-md mx-auto space-y-2">
+              <div className="font-bold text-brand flex items-center justify-between">
+                <span>Student Portal Account Details</span>
+                <span className="text-[10px] bg-brand text-white px-1.5 py-0.5 rounded font-mono uppercase">Active</span>
+              </div>
+              <p className="text-slate-600">
+                Your admission record has been linked to your registered mobile number (<span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.phone}</span>). Use this number to log in securely to access your schedule, monthly fee receipts, and official slip.
+              </p>
+              <div className="pt-2">
+                <Link
+                  to={studentUser ? '/student-dashboard' : '/student-login'}
+                  className="w-full py-2.5 bg-brand hover:bg-brand-strong text-white font-bold text-xs rounded shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  <span>{studentUser ? 'Go to Student Dashboard →' : 'Log In to Student Portal →'}</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3 max-w-md mx-auto">
               <a
                 href={submissionResult.whatsappUrl}
                 target="_blank"

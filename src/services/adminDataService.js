@@ -1,4 +1,4 @@
-import { isBatchCompatible } from '../types/schemas';
+import { isBatchCompatible, calculateNextPaymentDueDate } from '../types/schemas';
 import { db, isFirebaseConfigured } from './firebase';
 import { getVerifiedAdminEmail, subscribeVerifiedAdmin } from './adminIdentity';import { 
   collection, 
@@ -1382,7 +1382,7 @@ export const AdminDataService = {
                 discountAdjustment: 0,
                 adjustmentHistory: [],
                 billingStartDate: (r.createdAt || new Date().toISOString()).split('T')[0],
-                nextDueDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+                nextDueDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-05`,
                 status: 'active'
               },
               createdAt: r.createdAt || new Date().toISOString()
@@ -3357,6 +3357,33 @@ export const AdminDataService = {
     obligation.updatedAt = new Date().toISOString();
 
     store.payments.push(newPayment);
+
+    const studentIdx = store.students.findIndex(s => s.id === obligation.studentId);
+    if (studentIdx !== -1) {
+      const student = store.students[studentIdx];
+      const studentObligations = store.obligations.filter(o => o.studentId === student.id);
+      const studentPayments = store.payments.filter(p => p.studentId === student.id && !p.isReversed && !p.reversed);
+      const schedule = calculateNextPaymentDueDate({
+        student,
+        obligations: studentObligations,
+        payments: studentPayments
+      });
+      student.feeConfig = {
+        ...student.feeConfig,
+        nextDueDate: schedule.dueDate || student.feeConfig?.nextDueDate
+      };
+      student.updatedAt = new Date().toISOString();
+    }
+
+    const linkedEnrollmentId = paymentData.enrollmentId || obligation.enrollmentId;
+    if (linkedEnrollmentId) {
+      patchLocalEnrollmentRecords(linkedEnrollmentId, {
+        paymentStatus: obligation.balance === 0 ? 'paid' : 'partial',
+        amountPaid: Number(obligation.amountPaid) || 0,
+        paymentReference: receiptNumber
+      });
+    }
+
     saveLocalStore(store);
 
     if (isLive()) {
@@ -3364,6 +3391,17 @@ export const AdminDataService = {
         const batch = writeBatch(db);
         batch.set(doc(db, 'payments', newPayment.id), newPayment);
         batch.update(doc(db, 'fee_obligations', obligation.id), obligation);
+        if (studentIdx !== -1) {
+          batch.update(doc(db, 'students', obligation.studentId), store.students[studentIdx]);
+        }
+        if (linkedEnrollmentId) {
+          batch.update(doc(db, 'enrollments', linkedEnrollmentId), {
+            paymentStatus: obligation.balance === 0 ? 'paid' : 'partial',
+            amountPaid: Number(obligation.amountPaid) || 0,
+            paymentReference: receiptNumber,
+            updatedAt: new Date().toISOString()
+          });
+        }
         await batch.commit();
       } catch (err) {
         console.warn('Firestore recordPayment error (local payment preserved):', err);
@@ -3635,16 +3673,11 @@ export const AdminDataService = {
     const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
     const outstandingBalance = Math.max(0, totalFeesCharged - totalAmountPaid - totalWaived);
 
-    const today = new Date().toISOString().split('T')[0];
-    const overdueAmount = obligations
-      .filter(o => o.status === 'overdue' || (o.balance > 0 && today > o.dueDate))
-      .reduce((sum, o) => sum + Number(o.balance || 0), 0);
-
-    const upcomingObligations = obligations
-      .filter(o => o.balance > 0 && o.dueDate >= today)
-      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-
-    const nextDueDate = upcomingObligations.length > 0 ? upcomingObligations[0].dueDate : null;
+    const schedule = calculateNextPaymentDueDate({
+      student,
+      obligations,
+      payments: activePayments
+    });
 
     return {
       student,
@@ -3652,11 +3685,16 @@ export const AdminDataService = {
       totalAmountPaid,
       totalWaived,
       outstandingBalance,
-      overdueAmount,
-      nextDueDate,
+      overdueAmount: schedule.overdueAmount || 0,
+      nextDueDate: schedule.dueDate,
+      nextPaymentSchedule: schedule,
       obligations,
       payments
     };
+  },
+
+  calculateNextPaymentDueDate(args) {
+    return calculateNextPaymentDueDate(args);
   },
 
   async getActiveTillSession(_actor = 'admin') {

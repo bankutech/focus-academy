@@ -28,8 +28,15 @@ function getTodayStr() {
   return new Date().toISOString().split('T')[0];
 }
 
-function getDueDateStr() {
-  return new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+function getDueDateStr(startDateStr = getTodayStr()) {
+  const parts = startDateStr.split('-');
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  const targetMonth = d <= 5 ? m : m + 1;
+  const targetYear = targetMonth > 11 ? y + 1 : y;
+  const normMonth = targetMonth % 12;
+  return `${targetYear}-${String(normMonth + 1).padStart(2, '0')}-05`;
 }
 
 export default function AdminStudentsPage() {

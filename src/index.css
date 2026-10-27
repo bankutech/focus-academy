@@ -132,3 +132,45 @@
 .animate-loader-shimmer {
   animation: loaderShimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
+
+.admin-portal-root {
+  --admin-radius: 0px;
+}
+
+.admin-portal-root,
+.admin-portal-root .rounded,
+.admin-portal-root .rounded-sm,
+.admin-portal-root .rounded-md,
+.admin-portal-root .rounded-lg,
+.admin-portal-root .rounded-xl,
+.admin-portal-root .rounded-2xl,
+.admin-portal-root .rounded-3xl,
+.admin-portal-root .rounded-t-lg,
+.admin-portal-root .rounded-b-lg,
+.admin-portal-root .rounded-t-xl,
+.admin-portal-root .rounded-b-xl,
+.admin-portal-root .rounded-t-2xl,
+.admin-portal-root .rounded-b-2xl,
+.admin-portal-root .rounded-full:not(.admin-keep-circle):not(.animate-spin) {
+  border-radius: 0px !important;
+}
+
+.admin-portal-root input,
+.admin-portal-root select,
+.admin-portal-root textarea,
+.admin-portal-root button:not(.admin-keep-circle),
+.admin-portal-root table,
+.admin-portal-root th,
+.admin-portal-root td,
+.admin-portal-root [role="dialog"],
+.admin-portal-root [role="alert"],
+.admin-portal-root .card,
+.admin-portal-root .badge {
+  border-radius: 0px !important;
+}
+
+.admin-portal-root .admin-keep-circle,
+.admin-portal-root .animate-spin {
+  border-radius: 9999px !important;
+}
+

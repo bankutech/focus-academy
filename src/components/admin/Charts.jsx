@@ -3,7 +3,7 @@ import { rupees } from './chartData';
 
 export function ChartCard({ title, subtitle, children, className = '' }) {
   return (
-    <div className={`bg-white rounded border border-slate-200 p-4 sm:p-5 ${className}`}>
+    <div className={`bg-white rounded-none border border-slate-200 p-4 sm:p-5 ${className}`}>
       <div className="mb-3.5 pb-2.5 border-b border-slate-100">
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">{title}</h2>
         {subtitle && <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>}
@@ -15,7 +15,7 @@ export function ChartCard({ title, subtitle, children, className = '' }) {
 
 export function EmptyChart({ message = 'Nothing to chart yet.' }) {
   return (
-    <div className="h-40 flex items-center justify-center text-xs font-medium text-slate-400 border border-dashed border-slate-200 rounded">
+    <div className="h-40 flex items-center justify-center text-xs font-medium text-slate-400 border border-dashed border-slate-200 rounded-none">
       {message}
     </div>
   );

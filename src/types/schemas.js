@@ -416,3 +416,122 @@ export const isBatchCompatible = (batch, grade, board) => {
 
   return true;
 };
+
+export const calculateNextPaymentDueDate = ({
+  student,
+  feeConfig,
+  obligations = [],
+  payments = [],
+  referenceDate
+} = {}) => {
+  const currentStatus = student?.status || feeConfig?.status || 'active';
+  if (['paused', 'cancelled', 'completed', 'archived', 'inactive'].includes(currentStatus)) {
+    return {
+      dueDate: null,
+      formatted: 'Not scheduled',
+      status: 'not_scheduled',
+      isOverdue: false,
+      overdueAmount: 0,
+      outstandingBalance: 0,
+      explanation: 'Enrollment is ' + currentStatus
+    };
+  }
+
+  const effectiveRefDate = referenceDate ? new Date(referenceDate) : new Date();
+  const refDateStr = effectiveRefDate.toISOString().split('T')[0];
+
+  const activeObligations = Array.isArray(obligations) ? obligations : [];
+  const activePayments = Array.isArray(payments) ? payments.filter(p => !p.isReversed && !p.reversed) : [];
+
+  const totalFeeCharged = activeObligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
+  const totalPaid = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const totalWaived = activeObligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
+  const totalOutstanding = Math.max(0, totalFeeCharged - totalPaid - totalWaived);
+
+  const openObligations = activeObligations
+    .filter(o => {
+      const b = o.balance !== undefined ? Number(o.balance) : (Number(o.amountDue || 0) - Number(o.amountPaid || 0) - Number(o.waivedAmount || 0));
+      return b > 0;
+    })
+    .sort((a, b) => String(a.dueDate || '').localeCompare(String(b.dueDate || '')));
+
+  if (openObligations.length > 0) {
+    const overdueObligations = openObligations.filter(o => o.dueDate && o.dueDate < refDateStr);
+    const overdueAmount = overdueObligations.reduce((sum, o) => {
+      const b = o.balance !== undefined ? Number(o.balance) : (Number(o.amountDue || 0) - Number(o.amountPaid || 0));
+      return sum + Math.max(0, b);
+    }, 0);
+
+    const earliest = openObligations[0];
+    const isOverdue = earliest.dueDate && earliest.dueDate < refDateStr;
+    const isPartial = Number(earliest.amountPaid || 0) > 0;
+
+    return {
+      dueDate: earliest.dueDate || null,
+      formatted: earliest.dueDate || 'Pending Schedule',
+      status: isOverdue ? 'overdue' : (isPartial ? 'partially_paid' : 'pending'),
+      isOverdue,
+      overdueAmount,
+      outstandingBalance: totalOutstanding,
+      cycle: earliest.billingCycle || 'Current Cycle',
+      explanation: isOverdue 
+        ? 'Overdue balance of ₹' + overdueAmount + ' pending settlement' 
+        : (isPartial ? 'Partial payment recorded; balance pending' : 'Payment scheduled')
+    };
+  }
+
+  if (activeObligations.length > 0) {
+    const sortedObligations = [...activeObligations].sort((a, b) => String(a.dueDate || '').localeCompare(String(b.dueDate || '')));
+    const lastObligation = sortedObligations[sortedObligations.length - 1];
+    const baseDueDateStr = lastObligation.dueDate || refDateStr;
+    const baseDate = new Date(baseDueDateStr);
+    const billingFrequency = (feeConfig?.billingFrequency || student?.feeConfig?.billingFrequency || 'monthly').toLowerCase();
+
+    let monthStep = 1;
+    if (billingFrequency === 'quarterly') monthStep = 3;
+    else if (billingFrequency === 'half-yearly') monthStep = 6;
+    else if (billingFrequency === 'yearly') monthStep = 12;
+
+    const targetYear = baseDate.getUTCFullYear();
+    const targetMonth = baseDate.getUTCMonth() + monthStep;
+    const targetDay = baseDate.getUTCDate();
+    const nextDate = new Date(Date.UTC(targetYear, targetMonth, targetDay));
+    const nextDueDateStr = nextDate.toISOString().split('T')[0];
+
+    return {
+      dueDate: nextDueDateStr,
+      formatted: nextDueDateStr,
+      status: 'paid',
+      isOverdue: false,
+      overdueAmount: 0,
+      outstandingBalance: 0,
+      cycle: 'Next Cycle',
+      explanation: 'Current obligations settled in full. Next cycle due on ' + nextDueDateStr
+    };
+  }
+
+  const configuredDue = feeConfig?.nextDueDate || student?.feeConfig?.nextDueDate;
+  if (configuredDue) {
+    return {
+      dueDate: configuredDue,
+      formatted: configuredDue,
+      status: 'pending',
+      isOverdue: configuredDue < refDateStr,
+      overdueAmount: 0,
+      outstandingBalance: totalOutstanding,
+      cycle: 'Current Cycle',
+      explanation: 'Configured billing cycle start'
+    };
+  }
+
+  return {
+    dueDate: null,
+    formatted: 'Not scheduled',
+    status: 'not_scheduled',
+    isOverdue: false,
+    overdueAmount: 0,
+    outstandingBalance: 0,
+    cycle: 'None',
+    explanation: 'No active schedule or obligations found'
+  };
+};

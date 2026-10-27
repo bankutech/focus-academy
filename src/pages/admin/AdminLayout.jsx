@@ -94,14 +94,14 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body">
+    <div className="admin-portal-root min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body">
       <header className="bg-[#0F172A] text-white border-b border-[#1E293B] sticky top-0 z-40 shadow-xs">
         <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-md text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+              className="lg:hidden p-2 rounded-none text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
               aria-label="Toggle Navigation"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -113,14 +113,14 @@ export default function AdminLayout() {
                 alt="Focus Academy"
                 width="80"
                 height="80"
-                className="w-9 h-9 object-contain rounded-md bg-white p-0.5"
+                className="w-9 h-9 object-contain rounded-none bg-white p-0.5"
               />
               <div className="flex flex-col text-left">
                 <div className="flex items-center space-x-2">
                   <span className="font-extrabold text-sm sm:text-base tracking-tight text-white leading-none">
                     Focus Academy
                   </span>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-none bg-orange-500/20 text-orange-300 border border-orange-500/30">
                     Admin Portal
                   </span>
                 </div>
@@ -145,7 +145,7 @@ export default function AdminLayout() {
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:flex items-center space-x-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-md text-xs font-semibold border border-slate-700 transition-colors"
+              className="hidden lg:flex items-center space-x-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-none text-xs font-semibold border border-slate-700 transition-colors"
             >
               <span>View Public Site</span>
               <ExternalLink className="w-3 h-3" />
@@ -154,7 +154,7 @@ export default function AdminLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-600/90 hover:bg-red-600 text-white rounded-md text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-600/90 hover:bg-red-600 text-white rounded-none text-xs font-bold shadow-xs transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sign Out</span>
@@ -182,7 +182,7 @@ export default function AdminLayout() {
                       key={item.name}
                       to={item.path}
                       end={item.end}
-                      className={`flex items-center space-x-3 px-3 py-2.5 rounded text-xs font-bold transition-all cursor-pointer ${
+                      className={`flex items-center space-x-3 px-3 py-2.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
                         active
                           ? 'bg-[#0F172A] text-white shadow-xs'
                           : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
@@ -199,7 +199,7 @@ export default function AdminLayout() {
 
           <div className="p-4 border-t border-slate-200 bg-slate-50/70 text-[11px] text-slate-500 space-y-1.5">
             <div className="flex items-center space-x-1.5 font-bold text-[#0F172A]">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+              <span className="w-2 h-2 rounded-full admin-keep-circle bg-emerald-500 inline-block" />
               <span>Focus Academy</span>
             </div>
             <p className="text-[10px] text-slate-500 leading-snug">
@@ -227,13 +227,13 @@ export default function AdminLayout() {
                   </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-1 rounded text-slate-500 hover:bg-slate-100"
+                    className="p-1 rounded-none text-slate-500 hover:bg-slate-100"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="mt-4 p-2.5 bg-slate-50 rounded text-xs border border-slate-200 mb-4">
+                <div className="mt-4 p-2.5 bg-slate-50 rounded-none text-xs border border-slate-200 mb-4">
                   <p className="font-bold text-[#0F172A] truncate">{displayName}</p>
                   <p className="text-[11px] text-slate-500 truncate">{userEmail}</p>
                 </div>
@@ -251,7 +251,7 @@ export default function AdminLayout() {
                         to={item.path}
                         end={item.end}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center space-x-3 px-3 py-2.5 rounded text-xs font-bold transition-colors cursor-pointer ${
+                        className={`flex items-center space-x-3 px-3 py-2.5 rounded-none text-xs font-bold transition-colors cursor-pointer ${
                           active
                             ? 'bg-[#0F172A] text-white shadow-xs'
                             : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
@@ -269,7 +269,7 @@ export default function AdminLayout() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold cursor-pointer"
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-none text-xs font-bold cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
@@ -287,7 +287,7 @@ export default function AdminLayout() {
       </div>
       {shortcutsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 text-xs">
+          <div className="bg-white rounded-none shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 text-xs">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2 text-slate-900">
                 <Keyboard className="w-5 h-5 text-orange-600" />
@@ -299,29 +299,29 @@ export default function AdminLayout() {
             </div>
 
             <div className="space-y-2 mb-4">
-              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+              <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
                 <span className="text-slate-700 font-medium">Record Payment / Ledger</span>
-                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Alt + P</kbd>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">Alt + P</kbd>
               </div>
-              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+              <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
                 <span className="text-slate-700 font-medium">Students Directory</span>
-                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Alt + S</kbd>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">Alt + S</kbd>
               </div>
-              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+              <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
                 <span className="text-slate-700 font-medium">Batches &amp; Timings</span>
-                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Alt + B</kbd>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">Alt + B</kbd>
               </div>
-              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+              <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
                 <span className="text-slate-700 font-medium">Reports &amp; Cash Till</span>
-                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Alt + R</kbd>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">Alt + R</kbd>
               </div>
-              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+              <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
                 <span className="text-slate-700 font-medium">Close Modal / Blur Input</span>
-                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">Esc</kbd>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">Esc</kbd>
               </div>
-              <div className="flex justify-between items-center p-2 rounded bg-slate-50 border border-slate-100">
+              <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
                 <span className="text-slate-700 font-medium">Toggle Shortcuts Cheatsheet</span>
-                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold text-slate-800 shadow-2xs">?</kbd>
+                <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">?</kbd>
               </div>
             </div>
 
@@ -329,7 +329,7 @@ export default function AdminLayout() {
               <button
                 type="button"
                 onClick={() => setShortcutsModalOpen(false)}
-                className="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white font-bold rounded-lg cursor-pointer"
+                className="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white font-bold rounded-none cursor-pointer"
               >
                 Got It
               </button>
