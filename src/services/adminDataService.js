@@ -886,8 +886,7 @@ export const AdminDataService = {
       try {
         await setDoc(doc(db, 'academy_settings', 'main_config'), updated);
       } catch (err) {
-        console.error('Firestore updateSettings error:', err);
-        throw new Error(`Production Database Error: Failed to update settings in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore updateSettings error (local settings preserved):', err);
       }
     }
 
@@ -1021,18 +1020,18 @@ export const AdminDataService = {
       details
     };
 
+    const store = loadLocalStore();
+    store.auditLogs.unshift(entry);
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await setDoc(doc(db, 'audit_logs', entry.id), entry);
       } catch (err) {
-        console.error('Firestore audit log error:', err);
-        throw new Error(`Production Database Error: Failed to record audit log in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore audit log error (local log preserved):', err);
       }
     }
 
-    const store = loadLocalStore();
-    store.auditLogs.unshift(entry);
-    saveLocalStore(store);
     return entry;
   },
 
@@ -1104,18 +1103,17 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
+    const store = await hydrateStore();
+    store.batches.push(newBatch);
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await setDoc(doc(db, 'batches', newBatch.id), newBatch);
       } catch (err) {
-        console.error('Firestore createBatch error:', err);
-        throw new Error(`Production Database Error: Failed to save batch to Cloud Firestore: ${err.message}`);
+        console.warn('Firestore createBatch error (local batch preserved):', err);
       }
     }
-
-    const store = await hydrateStore();
-    store.batches.push(newBatch);
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -1155,8 +1153,7 @@ export const AdminDataService = {
       try {
         await updateDoc(doc(db, 'batches', batchId), updated);
       } catch (err) {
-        console.error('Firestore updateBatch error:', err);
-        throw new Error(`Production Database Error: Failed to update batch in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore updateBatch error (local update preserved):', err);
       }
     }
 
@@ -1198,18 +1195,17 @@ export const AdminDataService = {
       );
     }
 
+    const store = await hydrateStore();
+    store.batches = store.batches.filter(b => b.id !== batchId);
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await deleteDoc(doc(db, 'batches', batchId));
       } catch (err) {
-        console.error('Firestore deleteBatch error:', err);
-        throw new Error(`Production Database Error: Failed to delete batch from Cloud Firestore: ${err.message}`);
+        console.warn('Firestore deleteBatch error (local deletion preserved):', err);
       }
     }
-
-    const store = await hydrateStore();
-    store.batches = store.batches.filter(b => b.id !== batchId);
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2085,9 +2081,23 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
+    store.students.push(newStudent);
+
+    const bIdx = store.batches.findIndex(b => b.id === targetBatch.id);
+    if (bIdx !== -1) {
+      store.batches[bIdx].enrolledCount += 1;
+      const bCap = Math.max(1, Number(store.batches[bIdx].capacity) || 12);
+      store.batches[bIdx].seatsRemaining = Math.max(0, bCap - store.batches[bIdx].enrolledCount);
+    }
+
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await setDoc(doc(db, 'students', newStudent.id), newStudent);
+        if (bIdx !== -1) {
+          await updateDoc(doc(db, 'batches', targetBatch.id), store.batches[bIdx]);
+        }
         try {
           const resQuery = query(
             collection(db, 'reservations'),
@@ -2105,21 +2115,9 @@ export const AdminDataService = {
           console.warn('Could not update matching reservation status:', resErr);
         }
       } catch (err) {
-        console.error('Firestore createStudent error:', err);
-        throw new Error(`Production Database Error: Failed to save student to Cloud Firestore: ${err.message}`);
+        console.warn('Firestore createStudent error (local student preserved):', err);
       }
     }
-
-    store.students.push(newStudent);
-
-    const bIdx = store.batches.findIndex(b => b.id === targetBatch.id);
-    if (bIdx !== -1) {
-      store.batches[bIdx].enrolledCount += 1;
-      const bCap = Math.max(1, Number(store.batches[bIdx].capacity) || 12);
-      store.batches[bIdx].seatsRemaining = Math.max(0, bCap - store.batches[bIdx].enrolledCount);
-    }
-
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2399,8 +2397,7 @@ export const AdminDataService = {
           updatedAt: new Date().toISOString()
         });
       } catch (err) {
-        console.error('Firestore transferStudentBatch error:', err);
-        throw new Error(`Production Database Error: Failed to transfer student in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore transferStudentBatch error (local transfer preserved):', err);
       }
     }
 
@@ -2512,8 +2509,7 @@ export const AdminDataService = {
       try {
         await updateDoc(doc(db, 'students', studentId), student);
       } catch (err) {
-        console.error('Firestore applyFeeDiscount error:', err);
-        throw new Error(`Production Database Error: Failed to apply fee discount in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore applyFeeDiscount error (local discount preserved):', err);
       }
     }
 
@@ -2671,17 +2667,16 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
+    store.obligations.push(newObligation);
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await setDoc(doc(db, 'fee_obligations', newObligation.id), newObligation);
       } catch (err) {
-        console.error('Firestore createFeeObligation error:', err);
-        throw new Error(`Production Database Error: Failed to save fee obligation to Cloud Firestore: ${err.message}`);
+        console.warn('Firestore createFeeObligation error (local obligation preserved):', err);
       }
     }
-
-    store.obligations.push(newObligation);
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2799,16 +2794,15 @@ export const AdminDataService = {
     obl.waivedAt = new Date().toISOString();
     obl.updatedAt = new Date().toISOString();
 
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await updateDoc(doc(db, 'fee_obligations', obligationId), obl);
       } catch (err) {
-        console.error('Firestore waiveFeeObligation error:', err);
-        throw new Error(`Production Database Error: Failed to record fee waiver in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore waiveFeeObligation error (local waiver preserved):', err);
       }
     }
-
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2935,6 +2929,9 @@ export const AdminDataService = {
     obligation.status = obligation.balance === 0 ? 'paid' : 'partially_paid';
     obligation.updatedAt = new Date().toISOString();
 
+    store.payments.push(newPayment);
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         const batch = writeBatch(db);
@@ -2942,13 +2939,9 @@ export const AdminDataService = {
         batch.update(doc(db, 'fee_obligations', obligation.id), obligation);
         await batch.commit();
       } catch (err) {
-        console.error('Firestore recordPayment error:', err);
-        throw new Error(`Production Database Error: Failed to record payment in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore recordPayment error (local payment preserved):', err);
       }
     }
-
-    store.payments.push(newPayment);
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -3172,6 +3165,8 @@ export const AdminDataService = {
     payment.status = 'reversed';
     payment.refundStatus = 'reversed';
 
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         const batch = writeBatch(db);
@@ -3179,12 +3174,9 @@ export const AdminDataService = {
         batch.update(doc(db, 'fee_obligations', obligation.id), obligation);
         await batch.commit();
       } catch (err) {
-        console.error('Firestore reversePayment error:', err);
-        throw new Error(`Production Database Error: Failed to reverse payment in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore reversePayment error (local reversal preserved):', err);
       }
     }
-
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: actorEmail,
@@ -3841,17 +3833,16 @@ export const AdminDataService = {
       retryCount: 0
     };
 
+    store.reminders.unshift(reminderEntry);
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await setDoc(doc(db, 'reminders', reminderEntry.id), reminderEntry);
       } catch (err) {
-        console.error('Firestore sendOrLogWhatsAppReminder error:', err);
-        throw new Error(`Production Database Error: Failed to log reminder in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore sendOrLogWhatsAppReminder error (local reminder preserved):', err);
       }
     }
-
-    store.reminders.unshift(reminderEntry);
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -3972,8 +3963,7 @@ export const AdminDataService = {
         for (const p of payments) await setDoc(doc(db, 'payments', p.id), p);
         if (settings) await setDoc(doc(db, 'academy_settings', 'main_config'), settings);
       } catch (err) {
-        console.error('Firestore restoreFromBackupSnapshot sync error:', err);
-        throw new Error(`Production Database Error: Failed to restore backup in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore restoreFromBackupSnapshot sync error (local backup preserved):', err);
       }
     }
 

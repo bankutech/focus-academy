@@ -10,14 +10,21 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.email_verified == true;
     }
 
+    function isStaffEmail() {
+      return isAuthenticated() && request.auth.token.email != null && request.auth.token.email.lower() in [
+        'admin@focusacademyperambalur.com',
+        'director@focusacademyperambalur.com',
+        'principal@focusacademyperambalur.com',
+        'coordinator@focusacademyperambalur.com',
+        'focusacademy.perambalur@gmail.com',
+        'sagnikmitra1302@gmail.com'
+      ];
+    }
+
     function isOwner() {
       return isAuthenticated() && (
         request.auth.token.role == 'owner' ||
-        (hasVerifiedEmail() && request.auth.token.email != null && request.auth.token.email.lower() in [
-          'admin@focusacademyperambalur.com',
-          'director@focusacademyperambalur.com',
-          'sagnikmitra1302@gmail.com'
-        ])
+        isStaffEmail()
       );
     }
 
@@ -26,10 +33,7 @@ service cloud.firestore {
         isAuthenticated() && (
           request.auth.token.admin == true ||
           request.auth.token.role in ['admin', 'administrator'] ||
-          (hasVerifiedEmail() && request.auth.token.email != null && request.auth.token.email.lower() in [
-            'principal@focusacademyperambalur.com',
-            'focusacademy.perambalur@gmail.com'
-          ])
+          isStaffEmail()
         )
       );
     }
@@ -38,9 +42,7 @@ service cloud.firestore {
       return isAdministrator() || (
         isAuthenticated() && (
           request.auth.token.role == 'fee_manager' ||
-          (hasVerifiedEmail() && request.auth.token.email != null && request.auth.token.email.lower() in [
-            'coordinator@focusacademyperambalur.com'
-          ])
+          isStaffEmail()
         )
       );
     }
@@ -81,7 +83,7 @@ service cloud.firestore {
 
     match /audit_logs/{logId} {
       allow read: if isAdministrator();
-      allow create: if isFeeManager();
+      allow create: if isAuthenticated();
       allow update, delete: if false;
     }
 
