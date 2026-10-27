@@ -102,6 +102,7 @@ function removeLocalEnrollmentRecords(targetIds) {
     return idSet.has(row.id) ||
       (row.studentId && idSet.has(row.studentId)) ||
       (row.leadId && idSet.has(row.leadId)) ||
+      (row.enrollmentId && idSet.has(row.enrollmentId)) ||
       (row.admissionId && idSet.has(row.admissionId)) ||
       (row.reservationId && idSet.has(row.reservationId));
   };
@@ -1456,14 +1457,108 @@ export const AdminDataService = {
 
   async getEnrollments() {
     const list = [];
-    const seen = new Set();
+    const seenIds = new Set();
+    const seenReservations = new Set();
+    const seenComposite = new Set();
+
+    const makeKey = (phone, name, batchId) => {
+      const p = cleanPhone10(phone);
+      const n = normalizeName(name);
+      const b = String(batchId || '').trim().toLowerCase();
+      if (!p && !n) return '';
+      return `${p}__${n}__${b}`;
+    };
+
+    const registerItem = (item) => {
+      if (!item) return;
+      if (item.id) seenIds.add(String(item.id).trim());
+      if (item.enrollmentId) seenIds.add(String(item.enrollmentId).trim());
+      if (item.leadId) seenIds.add(String(item.leadId).trim());
+      if (item.studentId) seenIds.add(String(item.studentId).trim());
+      if (item.admissionId) seenIds.add(String(item.admissionId).trim());
+      if (item.reservationId) seenReservations.add(String(item.reservationId).trim());
+      const key = makeKey(item.phone || item.guardianPhone, item.studentName, item.batchId || item.selectedBatchId);
+      if (key) seenComposite.add(key);
+    };
+
+    const findExistingIndex = (cand) => {
+      if (!cand) return -1;
+      const cId = cand.id ? String(cand.id).trim() : '';
+      const cEnrollmentId = cand.enrollmentId ? String(cand.enrollmentId).trim() : '';
+      const cLeadId = cand.leadId ? String(cand.leadId).trim() : '';
+      const cStudentId = cand.studentId ? String(cand.studentId).trim() : '';
+      const cReservationId = cand.reservationId ? String(cand.reservationId).trim() : '';
+      const key = makeKey(cand.phone || cand.guardianPhone, cand.studentName, cand.batchId || cand.selectedBatchId);
+
+      return list.findIndex(e => {
+        const eId = String(e.id || '').trim();
+        const eEnrollmentId = String(e.enrollmentId || '').trim();
+        const eLeadId = String(e.leadId || '').trim();
+        const eStudentId = String(e.studentId || '').trim();
+        const eReservationId = String(e.reservationId || '').trim();
+
+        if (cId && (eId === cId || eEnrollmentId === cId || eLeadId === cId || eStudentId === cId)) return true;
+        if (cEnrollmentId && (eId === cEnrollmentId || eEnrollmentId === cEnrollmentId || eLeadId === cEnrollmentId)) return true;
+        if (cLeadId && (eId === cLeadId || eLeadId === cLeadId)) return true;
+        if (cStudentId && (eStudentId === cStudentId || eId === cStudentId)) return true;
+        if (cReservationId && eReservationId && eReservationId === cReservationId) return true;
+        if (key && makeKey(e.phone || e.guardianPhone, e.studentName, e.batchId || e.selectedBatchId) === key) return true;
+        return false;
+      });
+    };
+
+    const batches = await this.getBatches().catch(() => SEED_BATCHES);
+    const batchMap = new Map((batches || []).map(b => [b.id, b]));
+
+    const normalizeEnrollmentRecord = (record) => {
+      const bId = record.batchId || record.selectedBatchId;
+      const bObj = bId ? batchMap.get(bId) : null;
+      const monthlyFee = Number(record.monthlyFee || record.amountPerCycle || (bObj ? bObj.monthlyFee : 0)) || null;
+      const feeStatus = record.feeStatus && record.feeStatus !== 'unknown'
+        ? record.feeStatus
+        : (monthlyFee ? 'pending' : 'not_applicable');
+      const paymentStatus = record.paymentStatus && record.paymentStatus !== 'unknown'
+        ? record.paymentStatus
+        : 'unpaid';
+      return {
+        ...record,
+        monthlyFee: monthlyFee || record.monthlyFee || (bObj ? bObj.monthlyFee : null),
+        feeStatus,
+        paymentStatus,
+        batchName: record.batchName || record.selectedBatchName || (bObj ? bObj.name : null) || record.subjects || 'Focus Evening Batch',
+        timing: record.timing || (bObj ? bObj.timing : null) || 'Evening Session',
+        enrolledAt: record.enrolledAt || record.createdAt || record.timestamp || record.submittedAt || new Date().toISOString()
+      };
+    };
+
+    const mergeOrPush = (cand) => {
+      const existingIdx = findExistingIndex(cand);
+      if (existingIdx >= 0) {
+        const existing = list[existingIdx];
+        list[existingIdx] = normalizeEnrollmentRecord({
+          ...cand,
+          ...existing,
+          monthlyFee: existing.monthlyFee || cand.monthlyFee,
+          reservationId: existing.reservationId || cand.reservationId,
+          notes: existing.notes || cand.notes,
+          schoolName: existing.schoolName || cand.schoolName
+        });
+        registerItem(cand);
+        registerItem(list[existingIdx]);
+      } else {
+        const normalized = normalizeEnrollmentRecord(cand);
+        list.push(normalized);
+        registerItem(normalized);
+        registerItem(cand);
+      }
+    };
+
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'enrollments')), 8000);
         (snap ? snap.docs : []).forEach(d => {
-          seen.add(d.id);
           const data = d.data();
-          list.push({
+          mergeOrPush({
             ...data,
             id: d.id,
             enrolledAt: data.enrolledAt || data.createdAt || data.timestamp || data.submittedAt || new Date().toISOString(),
@@ -1479,18 +1574,15 @@ export const AdminDataService = {
     try {
       const allLeads = await this.getLeads();
       allLeads.filter(l => l.source === 'enrollment' || l.reservationId).forEach(l => {
-        if (!seen.has(l.id)) {
-          seen.add(l.id);
-          const mappedStatus = ['pending', 'confirmed', 'waitlisted', 'cancelled', 'archived'].includes(l.status)
-            ? l.status
-            : (l.status === 'converted' ? 'confirmed' : 'pending');
-          list.push({
-            ...l,
-            status: mappedStatus,
-            enrolledAt: l.timestamp || l.submittedAt || new Date().toISOString(),
-            batchName: l.batchName || l.selectedBatchName || l.subjects || 'Focus Evening Batch'
-          });
-        }
+        const mappedStatus = ['pending', 'confirmed', 'waitlisted', 'cancelled', 'archived'].includes(l.status)
+          ? l.status
+          : (l.status === 'converted' ? 'confirmed' : 'pending');
+        mergeOrPush({
+          ...l,
+          status: mappedStatus,
+          enrolledAt: l.timestamp || l.submittedAt || new Date().toISOString(),
+          batchName: l.batchName || l.selectedBatchName || l.subjects || 'Focus Evening Batch'
+        });
       });
     } catch (err) {
       console.warn('Local leads read error:', err);
@@ -1499,25 +1591,22 @@ export const AdminDataService = {
     try {
       const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
       registered.forEach(s => {
-        if (!seen.has(s.id)) {
-          seen.add(s.id);
-          list.push({
-            id: s.id,
-            studentName: s.studentName,
-            parentName: s.parentName || 'Parent',
-            phone: s.phone,
-            grade: s.grade,
-            board: s.board,
-            batchId: s.selectedBatchId,
-            batchName: s.selectedBatchName || 'Focus Evening Batch',
-            timing: s.timing || 'Evening Session',
-            reservationId: s.reservationId,
-            status: s.isWaitlisted ? 'waitlisted' : 'confirmed',
-            source: 'enrollment',
-            enrolledAt: s.createdAt || new Date().toISOString(),
-            schoolName: s.schoolName
-          });
-        }
+        mergeOrPush({
+          id: s.id,
+          studentName: s.studentName,
+          parentName: s.parentName || 'Parent',
+          phone: s.phone,
+          grade: s.grade,
+          board: s.board,
+          batchId: s.selectedBatchId,
+          batchName: s.selectedBatchName || 'Focus Evening Batch',
+          timing: s.timing || 'Evening Session',
+          reservationId: s.reservationId,
+          status: s.isWaitlisted ? 'waitlisted' : 'confirmed',
+          source: 'enrollment',
+          enrolledAt: s.createdAt || new Date().toISOString(),
+          schoolName: s.schoolName
+        });
       });
     } catch {
     }
@@ -1957,11 +2046,26 @@ export const AdminDataService = {
       cleanId,
       existingRecord?.studentId,
       existingRecord?.leadId,
+      existingRecord?.enrollmentId,
       existingRecord?.admissionId,
       existingRecord?.reservationId
     ].filter(Boolean);
 
     if (isLive()) {
+      if (existingRecord?.reservationId) {
+        try {
+          const leadSnap = await getDocs(query(collection(db, 'leads'), where('reservationId', '==', existingRecord.reservationId)));
+          leadSnap.forEach(d => {
+            idsToPurge.push(d.id);
+          });
+        } catch {}
+      }
+      try {
+        const leadSnap2 = await getDocs(query(collection(db, 'leads'), where('enrollmentId', '==', cleanId)));
+        leadSnap2.forEach(d => {
+          idsToPurge.push(d.id);
+        });
+      } catch {}
       for (const id of idsToPurge) {
         try {
           await deleteDoc(doc(db, 'enrollments', id));
@@ -2017,10 +2121,26 @@ export const AdminDataService = {
     const idsToPurge = [
       cleanId,
       existingLead?.studentId,
+      existingLead?.enrollmentId,
+      existingLead?.leadId,
+      existingLead?.admissionId,
       existingLead?.reservationId
     ].filter(Boolean);
 
     if (isLive()) {
+      if (existingLead?.reservationId) {
+        try {
+          const enrSnap = await getDocs(query(collection(db, 'enrollments'), where('reservationId', '==', existingLead.reservationId)));
+          enrSnap.forEach(d => {
+            idsToPurge.push(d.id);
+          });
+        } catch {}
+      }
+      if (existingLead?.enrollmentId) {
+        try {
+          idsToPurge.push(existingLead.enrollmentId);
+        } catch {}
+      }
       for (const id of idsToPurge) {
         try {
           await deleteDoc(doc(db, 'leads', id));

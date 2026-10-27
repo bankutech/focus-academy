@@ -524,11 +524,26 @@ export default function AdminLeadsPage() {
                       {enrollment.enrolledAt ? String(enrollment.enrolledAt).split('T')[0] : '—'}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="text-[11px] font-semibold text-slate-700 capitalize">
-                        Fee: {String(enrollment.feeStatus || 'unknown').replace('_', ' ')}
+                      <div className="text-[11px] font-bold text-slate-900">
+                        {enrollment.monthlyFee
+                          ? `₹${Number(enrollment.monthlyFee).toLocaleString('en-IN')}/mo`
+                          : (enrollment.feeStatus && enrollment.feeStatus !== 'unknown'
+                              ? `Fee: ${String(enrollment.feeStatus).replace('_', ' ')}`
+                              : 'Fee: Pending')}
                       </div>
-                      <div className="text-[11px] font-semibold text-slate-700 capitalize">
-                        Payment: {String(enrollment.paymentStatus || 'unknown')}
+                      <div className="text-[11px] mt-0.5 font-medium">
+                        <span className="text-slate-500">Payment: </span>
+                        <span className={
+                          enrollment.paymentStatus === 'paid'
+                            ? 'font-semibold text-emerald-700 capitalize'
+                            : enrollment.paymentStatus === 'partial'
+                            ? 'font-semibold text-amber-700 capitalize'
+                            : 'font-semibold text-slate-700 capitalize'
+                        }>
+                          {enrollment.paymentStatus && enrollment.paymentStatus !== 'unknown'
+                            ? String(enrollment.paymentStatus)
+                            : 'Unpaid'}
+                        </span>
                       </div>
                     </td>
                     <td className="py-3 px-4">
@@ -1031,8 +1046,9 @@ export default function AdminLeadsPage() {
                     <div className="px-4 py-2.5 bg-slate-50 font-bold text-slate-700">Fees & payments</div>
                     <div className="p-4 space-y-2">
                       <div className="flex flex-wrap gap-4">
-                        <span>Fee status: <strong className="capitalize">{String(detail.feeStatus || 'unknown').replace('_', ' ')}</strong></span>
-                        <span>Payment status: <strong className="capitalize">{detail.paymentStatus || 'unknown'}</strong></span>
+                        <span>Fee status: <strong className="capitalize">{String(detail.feeStatus || 'pending').replace('_', ' ')}</strong></span>
+                        <span>Payment status: <strong className="capitalize">{detail.paymentStatus || 'unpaid'}</strong></span>
+                        {detail.monthlyFee && <span>Tuition rate: <strong>₹{Number(detail.monthlyFee).toLocaleString('en-IN')}/mo</strong></span>}
                         <span>Billed: <strong>₹{totalDue.toLocaleString('en-IN')}</strong></span>
                         <span>Paid: <strong>₹{totalPaid.toLocaleString('en-IN')}</strong></span>
                         <span>Balance: <strong>₹{Math.max(0, totalDue - totalPaid - totalWaived).toLocaleString('en-IN')}</strong></span>
