@@ -276,4 +276,44 @@ describe('Payment ledger consistency', () => {
     expect(stored.receiptNumber).toBe(payment.receiptNumber);
     expect(stored.isReversed).toBe(true);
   });
+
+  it('distinguishes remote persisted enrollments from local device queue records', async () => {
+    localStorage.setItem(LOG_KEY, JSON.stringify([
+      {
+        id: 'FA-LOCAL-001',
+        studentName: 'Local Student',
+        parentName: 'Local Parent',
+        phone: '9842451998',
+        grade: 'Class 10',
+        board: 'CBSE',
+        batchId: 'batch-10-cbse',
+        status: 'pending',
+        source: 'enrollment',
+        enrolledAt: new Date().toISOString(),
+        serverConfirmed: false
+      },
+      {
+        id: 'FA-REMOTE-001',
+        studentName: 'Remote Student',
+        parentName: 'Remote Parent',
+        phone: '9842451997',
+        grade: 'Class 10',
+        board: 'CBSE',
+        batchId: 'batch-10-cbse',
+        status: 'confirmed',
+        source: 'enrollment',
+        enrolledAt: new Date().toISOString(),
+        serverConfirmed: true
+      }
+    ]));
+
+    const list = await AdminDataService.getEnrollments();
+    const localRec = list.find(e => e.id === 'FA-LOCAL-001');
+    const remoteRec = list.find(e => e.id === 'FA-REMOTE-001');
+
+    expect(localRec).toBeDefined();
+    expect(localRec._storageOrigin).toBe('local');
+    expect(remoteRec).toBeDefined();
+    expect(remoteRec._storageOrigin).toBe('cloud');
+  });
 });

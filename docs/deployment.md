@@ -60,6 +60,19 @@ The following environment variables must be configured in the hosting environmen
 | `VITE_FIREBASE_MESSAGING_SENDER_ID`| All Environments | No | Firebase Cloud Messaging Sender ID. |
 | `VITE_FIREBASE_APP_ID` | All Environments | No | Firebase Web Application ID. |
 | `VITE_ADMIN_ALLOWLIST` | Optional | No | Comma-delimited list of extra authorized administrator emails. |
+### Configuring FIREBASE_SERVICE_ACCOUNT in Vercel
+
+1. Open the [Firebase Console](https://console.firebase.google.com/) for project `focus-academy-7efeb`.
+2. Navigate to **Project Settings** (gear icon) > **Service accounts**.
+3. Under the **Firebase Admin SDK** tab, click **Generate new private key** and confirm.
+4. Open the downloaded JSON file locally (do NOT commit this file to Git, paste it in public chat, or include it in client bundles).
+5. Open your project in the [Vercel Dashboard](https://vercel.com/) > **Settings** > **Environment Variables**.
+6. Add the environment variable:
+   - **Key:** `FIREBASE_SERVICE_ACCOUNT`
+   - **Value:** Paste the raw JSON string directly, OR encode as Base64 (`[Convert]::ToBase64String([System.IO.File]::ReadAllBytes('serviceAccountKey.json'))` in PowerShell) and paste the Base64 string. `api/_lib/firebaseAdmin.js` automatically detects and parses either format.
+   - **Target Environments:** Select **Production** and **Preview**.
+7. Trigger a redeployment in Vercel.
+8. Verify that `https://focus-academy-virid.vercel.app/api/health` returns HTTP 200 with `{"firestore":{"ok":true}}`.
 
 ---
 
@@ -80,7 +93,7 @@ Before triggering a production deployment:
 After deployment completes:
 1. Navigate to the live URL (`https://focus-academy-virid.vercel.app/`).
 2. Verify homepage assets load eagerly (Campus photograph, SVG logo, fonts).
-3. Click "Enroll for 1-Day Free Trial" and test the complete 5-step funnel.
+3. Click "Enroll" and test the complete 5-step funnel.
 4. Verify phone call link triggers cellular dialer with `+919842451220`.
 5. Verify WhatsApp button opens pre-populated chat with `919842451220`.
 6. Inspect browser console for zero unhandled runtime exceptions.

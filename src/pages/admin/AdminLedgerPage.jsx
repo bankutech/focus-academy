@@ -280,8 +280,8 @@ export default function AdminLedgerPage() {
   const paginatedPayments = filteredPayments.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+    <div className="space-y-6 min-w-0 max-w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs min-w-0 max-w-full">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-[#0F172A] tracking-tight">
             Financial Ledger & Payments
@@ -291,11 +291,11 @@ export default function AdminLedgerPage() {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2.5">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => { setTillError(''); setTillSuccess(''); setTillModalOpen(true); }}
-            className={`inline-flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
+            className={`w-full sm:w-auto justify-center inline-flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer ${
               activeTill
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
@@ -324,7 +324,7 @@ export default function AdminLedgerPage() {
               setFormError('');
               setRecordModalOpen(true);
             }}
-            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            className="w-full sm:w-auto justify-center inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
           >
             <CreditCard className="w-4 h-4" />
             <span>Record New Payment</span>
@@ -332,31 +332,31 @@ export default function AdminLedgerPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Fees Collected This Month</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200">Verified</span>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 min-w-0 max-w-full">
+        <div className="p-4 sm:p-5 bg-white rounded-xl border border-slate-200 shadow-xs min-w-0">
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">Fees Collected This Month</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200 shrink-0">Verified</span>
           </div>
-          <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-mono tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-mono tracking-tight block truncate">
             ₹{(metrics?.feesCollectedThisMonth ?? 0).toLocaleString('en-IN')}
           </span>
         </div>
-        <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Outstanding Fees</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-amber-50 text-amber-800 border-amber-200">Pending</span>
+        <div className="p-4 sm:p-5 bg-white rounded-xl border border-slate-200 shadow-xs min-w-0">
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">Total Outstanding Fees</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-amber-50 text-amber-800 border-amber-200 shrink-0">Pending</span>
           </div>
-          <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-mono tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] font-mono tracking-tight block truncate">
             ₹{(metrics?.totalOutstandingFees ?? 0).toLocaleString('en-IN')}
           </span>
         </div>
-        <div className="p-5 bg-white rounded-xl border border-slate-200 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Overdue Fees</span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-rose-50 text-rose-700 border-rose-200">Action Required</span>
+        <div className="p-4 sm:p-5 bg-white rounded-xl border border-slate-200 shadow-xs min-w-0">
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">Overdue Fees</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded border bg-rose-50 text-rose-700 border-rose-200 shrink-0">Action Required</span>
           </div>
-          <span className="text-2xl sm:text-3xl font-extrabold text-rose-600 font-mono tracking-tight block">
+          <span className="text-2xl sm:text-3xl font-extrabold text-rose-600 font-mono tracking-tight block truncate">
             ₹{(metrics?.totalOverdueFees ?? 0).toLocaleString('en-IN')}
           </span>
         </div>
@@ -386,8 +386,8 @@ export default function AdminLedgerPage() {
         </div>
       )}
 
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap gap-3 items-center justify-between">
-        <div className="relative flex-1 min-w-[220px] max-w-md">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap gap-3 items-center justify-between min-w-0 max-w-full">
+        <div className="relative w-full sm:flex-1 min-w-[200px] max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
@@ -398,11 +398,11 @@ export default function AdminLedgerPage() {
           />
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <select
             value={adminFilter}
             onChange={(e) => { setAdminFilter(e.target.value); setCurrentPage(1); }}
-            className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
+            className="w-full sm:w-auto flex-1 sm:flex-none text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
           >
             <option value="all">All Administrators</option>
             {uniqueAdmins.map(adm => (
@@ -413,7 +413,7 @@ export default function AdminLedgerPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
+            className="w-full sm:w-auto flex-1 sm:flex-none text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
           >
             <option value="all">All Transactions</option>
             <option value="verified">Verified Only</option>
@@ -424,7 +424,7 @@ export default function AdminLedgerPage() {
           <select
             value={methodFilter}
             onChange={(e) => { setMethodFilter(e.target.value); setCurrentPage(1); }}
-            className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
+            className="w-full sm:w-auto flex-1 sm:flex-none text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
           >
             <option value="all">All Payment Methods</option>
             <option value="cash">Cash</option>
@@ -434,7 +434,7 @@ export default function AdminLedgerPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 text-xs text-slate-600 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-xs min-w-0 max-w-full">
         <span>
           <strong className="text-[#0F172A]">{filteredTotals.count}</strong> transaction{filteredTotals.count === 1 ? '' : 's'} listed
           {filteredTotals.reversedCount > 0 && ` • ${filteredTotals.reversedCount} reversed`}
@@ -444,9 +444,9 @@ export default function AdminLedgerPage() {
         </span>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden min-w-0 max-w-full">
+        <div className="overflow-x-auto max-w-full">
+          <table className="w-full min-w-[760px] text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] tracking-wider">
               <tr>
                 <th className="py-3 px-4 font-bold">Receipt #</th>
@@ -558,7 +558,7 @@ export default function AdminLedgerPage() {
         </div>
 
         {totalPages > 1 && (
-          <div className="p-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
+          <div className="p-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 bg-slate-50/50">
             <span>
               Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredPayments.length)} of {filteredPayments.length} transactions
             </span>
@@ -586,8 +586,8 @@ export default function AdminLedgerPage() {
       </div>
 
       {recordModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0F172A]/70 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 sm:p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2">
                 <CreditCard className="w-5 h-5 text-brand" />
@@ -637,7 +637,7 @@ export default function AdminLedgerPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Amount to Record (₹) *</label>
                   <input
@@ -661,7 +661,7 @@ export default function AdminLedgerPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Payment Method *</label>
                   <select
@@ -932,8 +932,8 @@ export default function AdminLedgerPage() {
       )}
 
       {reverseModalPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0F172A]/70 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 sm:p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2 text-red-600">
                 <RotateCcw className="w-5 h-5" />
@@ -1004,8 +1004,8 @@ export default function AdminLedgerPage() {
       )}
 
       {tillModalOpen && (
-        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 text-left max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-6 text-left max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg">
@@ -1119,7 +1119,7 @@ export default function AdminLedgerPage() {
                   <label className="block font-bold text-slate-700 mb-2">
                     Counted Physical Denominations
                   </label>
-                  <div className="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
                     {[
                       { key: 'd500', val: 500, label: '₹500 Notes' },
                       { key: 'd200', val: 200, label: '₹200 Notes' },
@@ -1144,7 +1144,7 @@ export default function AdminLedgerPage() {
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-lg border flex items-center justify-between text-xs font-bold bg-white">
+                <div className="p-3.5 rounded-lg border flex flex-wrap items-center justify-between gap-2 text-xs font-bold bg-white">
                   <div>
                     <span className="text-slate-500 block text-[11px]">Total Counted Cash:</span>
                     <span className="text-lg font-mono font-extrabold text-[#0F172A]">₹{countedCash.toLocaleString('en-IN')}</span>

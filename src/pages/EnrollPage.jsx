@@ -573,13 +573,15 @@ export default function EnrollPage() {
       step: 5,
     }));
 
+    const directFirestoreSuccess = Boolean(isFirebaseConfigured() && db && !firestoreWriteError);
+
     setSubmissionResult({
       success: true,
-      leadDelivery: leadResult.success ? 'delivered' : 'queued_locally',
+      leadDelivery: leadResult.success || directFirestoreSuccess ? 'delivered' : 'queued_locally',
       data: saved,
       enrollmentRecord,
       whatsappUrl,
-      isProvisional: Boolean(reservation.provisional || leadResult.offlineQueued),
+      isProvisional: Boolean(reservation.provisional || (!directFirestoreSuccess && leadResult.offlineQueued)),
       waitlisted: Boolean(reservation.waitlisted),
       waitlistPosition: reservation.waitlistPosition,
     });

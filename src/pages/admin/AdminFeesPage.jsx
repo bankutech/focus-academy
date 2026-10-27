@@ -133,8 +133,8 @@ export default function AdminFeesPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
+    <div className="space-y-6 min-w-0 max-w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs min-w-0 max-w-full">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-[#0F172A] tracking-tight">
             Recurring Fee Schedules & Obligations
@@ -147,7 +147,7 @@ export default function AdminFeesPage() {
         <button
           type="button"
           onClick={handleGenerateNextCycle}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          className="w-full sm:w-auto justify-center inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
         >
           <Calendar className="w-4 h-4" />
           <span>Generate Next Billing Cycle</span>
@@ -178,8 +178,8 @@ export default function AdminFeesPage() {
         </div>
       )}
 
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap gap-3 items-center justify-between">
-        <div className="relative flex-1 min-w-[220px] max-w-md">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap gap-3 items-center justify-between min-w-0 max-w-full">
+        <div className="relative w-full sm:flex-1 min-w-[200px] max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
@@ -193,14 +193,14 @@ export default function AdminFeesPage() {
           />
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
+            className="w-full sm:w-auto text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
@@ -212,9 +212,9 @@ export default function AdminFeesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden min-w-0 max-w-full">
+        <div className="overflow-x-auto max-w-full">
+          <table className="w-full min-w-[720px] text-left text-xs">
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] tracking-wider">
               <tr>
                 <th className="py-3 px-4 font-bold">Obligation ID</th>

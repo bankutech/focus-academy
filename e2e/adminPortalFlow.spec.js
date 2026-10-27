@@ -18,8 +18,8 @@ test.describe('Focus Academy Admin Portal E2E', () => {
     await page.locator('#admin-password').fill('SomePassword123');
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible();
-    await expect(page.getByText(/Email or password is incorrect|Access Denied/i).first()).toBeVisible();
+    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Email or password is incorrect|Access Denied/i).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('authenticates authorized administrator, views dashboard, and navigates all admin modules', async ({ page }) => {

@@ -94,44 +94,44 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="admin-portal-root min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body">
-      <header className="bg-[#0F172A] text-white border-b border-[#1E293B] sticky top-0 z-40 shadow-xs">
-        <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+    <div className="admin-portal-root min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body w-full max-w-full overflow-x-hidden">
+      <header className="bg-[#0F172A] text-white border-b border-[#1E293B] sticky top-0 z-40 shadow-xs w-full max-w-full">
+        <div className="w-full px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 max-w-full">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-none text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer"
+              className="lg:hidden p-1.5 sm:p-2 rounded-none text-slate-300 hover:text-white hover:bg-slate-800 cursor-pointer shrink-0"
               aria-label="Toggle Navigation"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <a href="/admin-portal" className="flex items-center space-x-3 cursor-pointer">
+            <a href="/admin-portal" className="flex items-center space-x-2 sm:space-x-3 cursor-pointer min-w-0">
               <img
                 src="/logo-80.png"
                 alt="Focus Academy"
                 width="80"
                 height="80"
-                className="w-9 h-9 object-contain rounded-none bg-white p-0.5"
+                className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-none bg-white p-0.5 shrink-0"
               />
-              <div className="flex flex-col text-left">
-                <div className="flex items-center space-x-2">
-                  <span className="font-extrabold text-sm sm:text-base tracking-tight text-white leading-none">
+              <div className="flex flex-col text-left min-w-0">
+                <div className="flex items-center space-x-1.5 sm:space-x-2">
+                  <span className="font-extrabold text-xs sm:text-base tracking-tight text-white leading-none truncate">
                     Focus Academy
                   </span>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-none bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                  <span className="hidden min-[420px]:inline-block text-[10px] uppercase font-bold tracking-wider px-1.5 sm:px-2 py-0.5 rounded-none bg-orange-500/20 text-orange-300 border border-orange-500/30 shrink-0">
                     Admin Portal
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-400 leading-none mt-1 hidden sm:inline">
+                <span className="text-[11px] text-slate-400 leading-none mt-1 hidden sm:inline truncate">
                   Thiripura Complex Campus Management
                 </span>
               </div>
             </a>
           </div>
 
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
             <div className="hidden sm:flex flex-col text-right">
               <span className="text-xs font-bold text-white leading-tight truncate max-w-[180px]">
                 {displayName}
@@ -154,7 +154,7 @@ export default function AdminLayout() {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-600/90 hover:bg-red-600 text-white rounded-none text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              className="flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1.5 bg-red-600/90 hover:bg-red-600 text-white rounded-none text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Sign Out</span>
@@ -279,8 +279,8 @@ export default function AdminLayout() {
           </div>
         )}
 
-        <main className="flex-1 min-w-0 bg-[#F8FAFC] p-4 sm:p-6 lg:p-8">
-          <div className="max-w-screen-2xl mx-auto space-y-6">
+        <main className="flex-1 min-w-0 bg-[#F8FAFC] p-3 sm:p-6 lg:p-8 max-w-full overflow-x-hidden">
+          <div className="max-w-screen-2xl mx-auto space-y-6 min-w-0 max-w-full">
             <Outlet />
           </div>
         </main>

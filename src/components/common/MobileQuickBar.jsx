@@ -4,7 +4,7 @@ import { CAMPUS_CONFIG } from '../../config/campusConfig';
 
 export default function MobileQuickBar() {
   const whatsappQuery = encodeURIComponent(
-    'Hello Focus Academy Perambalur! 👋\nI would like to inquire about evening batch timings, fees, and 1-day free trial at Thiripura Complex.'
+    'Hello Focus Academy Perambalur! 👋\nI would like to inquire about evening batch timings, fees, and admissions at Thiripura Complex.'
   );
 
   return (

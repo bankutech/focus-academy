@@ -281,7 +281,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             onClick={handleBookTrial}
             className="w-full min-h-[46px] py-3 px-4 bg-brand hover:bg-brand-strong text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98"
           >
-            <span>Book 1-Day Free Trial at this Rate</span>
+            <span>Enroll at this Rate</span>
             <ArrowRight className="w-3.5 h-3.5 text-orange-100" />
           </button>
         </div>

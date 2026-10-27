@@ -175,15 +175,14 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Top Bar */}
-      <div className="bg-white p-4 sm:p-5 rounded-none border border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="space-y-6 min-w-0 max-w-full">
+      <div className="bg-white p-4 sm:p-5 rounded-none border border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 min-w-0 max-w-full">
         <div>
-          <div className="flex items-center space-x-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A] tracking-tight">
               Campus Operations Dashboard
             </h1>
-            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-none text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-none text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0">
               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
               <span>Session 2025–2026</span>
             </span>
@@ -247,38 +246,37 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 min-w-0">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
             <Link
               key={card.title}
               to={card.link}
-              className="p-4 bg-white rounded-none border border-slate-200 hover:border-slate-300 transition-colors cursor-pointer group flex flex-col justify-between"
+              className="p-4 bg-white rounded-none border border-slate-200 hover:border-slate-300 transition-colors cursor-pointer group flex flex-col justify-between min-w-0 max-w-full overflow-hidden"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div className="p-1.5 rounded-none bg-slate-100 text-slate-700 group-hover:bg-[#0F172A] group-hover:text-white transition-colors">
+              <div className="flex items-center justify-between mb-2 gap-2 min-w-0">
+                <div className="flex items-center space-x-2 min-w-0">
+                  <div className="p-1.5 rounded-none bg-slate-100 text-slate-700 group-hover:bg-[#0F172A] group-hover:text-white transition-colors shrink-0">
                     <Icon className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider truncate">
                     {card.title}
                   </span>
                 </div>
-                <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-none border ${card.badgeClass}`}>
+                <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-none border shrink-0 ${card.badgeClass}`}>
                   {card.badge}
                 </span>
               </div>
 
-              <div className="my-1.5">
-                <span className="text-2xl font-bold text-[#0F172A] tracking-tight font-mono">
+              <div className="my-1.5 min-w-0">
+                <span className="text-2xl font-bold text-[#0F172A] tracking-tight font-mono truncate block">
                   {card.value}
                 </span>
               </div>
 
-              <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 group-hover:text-slate-700 transition-colors">
-                <span className="truncate text-[11px]">{card.sub}</span>
+              <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 group-hover:text-slate-700 transition-colors gap-2 min-w-0">
+                <span className="truncate text-[11px] min-w-0">{card.sub}</span>
                 <div className="flex items-center space-x-1 text-brand font-semibold text-[11px] flex-shrink-0 ml-2">
                   <span>View</span>
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
@@ -289,28 +287,26 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      {/* Analytics Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <ChartCard title="Fee Position" subtitle="Where every rupee billed this session stands">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 min-w-0 max-w-full">
+        <ChartCard title="Fee Position" subtitle="Where every rupee billed this session stands" className="min-w-0">
           <DonutChart data={feeStatusBreakdown(obligations)} centerLabel="Billed" label="Fee position by status" />
         </ChartCard>
-        <ChartCard title="Collections, Last 6 Months" subtitle="Verified receipts, reversals excluded">
+        <ChartCard title="Collections, Last 6 Months" subtitle="Verified receipts, reversals excluded" className="min-w-0">
           <BarChart data={monthlyCollections(payments)} format={rupees} label="Monthly fee collections" />
         </ChartCard>
-        <ChartCard title="Batch Seat Fill" subtitle="Enrolled against the 12-seat classroom cap">
+        <ChartCard title="Batch Seat Fill" subtitle="Enrolled against the 12-seat classroom cap" className="min-w-0">
           <BarChart data={batchOccupancy(batches)} label="Batch occupancy" showAxisMax={false} />
         </ChartCard>
       </div>
 
-      {/* Admissions Table */}
-      <div className="bg-white rounded-none border border-slate-200 p-4 sm:p-5">
+      <div className="bg-white rounded-none border border-slate-200 p-4 sm:p-5 min-w-0 max-w-full overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 pb-3 border-b border-slate-200 gap-2">
           <div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-sm font-bold text-[#0F172A]">
                 Recent Batch Admissions & Registrations
               </h2>
-              <span className="px-2 py-0.5 rounded-none text-[10px] font-semibold bg-orange-100 text-orange-800">
+              <span className="px-2 py-0.5 rounded-none text-[10px] font-semibold bg-orange-100 text-orange-800 shrink-0">
                 {enrollments.length} Total
               </span>
             </div>
@@ -320,7 +316,7 @@ export default function AdminDashboardPage() {
           </div>
           <Link
             to="/admin-portal/leads?source=enrollment"
-            className="text-xs font-semibold text-brand hover:underline flex items-center space-x-1"
+            className="text-xs font-semibold text-brand hover:underline flex items-center space-x-1 shrink-0 self-start sm:self-auto"
           >
             <span>View All Admissions</span>
             <ArrowRight className="w-3 h-3" />
@@ -328,8 +324,8 @@ export default function AdminDashboardPage() {
         </div>
 
         {enrollments && enrollments.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="overflow-x-auto max-w-full -mx-4 sm:mx-0 px-4 sm:px-0">
+            <table className="w-full min-w-[620px] text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200 text-slate-600 uppercase text-[10px] tracking-wider font-semibold">
                   <th className="py-2 px-3 font-semibold">Slip No</th>
@@ -396,10 +392,9 @@ export default function AdminDashboardPage() {
         )}
       </div>
 
-      {/* Bottom Grid: Recent Verified Transactions & 12-Seat Capacity Guard */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 bg-white rounded-none border border-slate-200 p-4 sm:p-5">
-          <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 min-w-0 max-w-full">
+        <div className="lg:col-span-2 bg-white rounded-none border border-slate-200 p-4 sm:p-5 min-w-0 max-w-full overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between mb-3 pb-3 border-b border-slate-200 gap-2">
             <div>
               <h2 className="text-sm font-bold text-[#0F172A]">
                 Recent Verified Transactions
@@ -410,7 +405,7 @@ export default function AdminDashboardPage() {
             </div>
             <Link
               to="/admin-portal/ledger"
-              className="text-xs font-semibold text-brand hover:underline flex items-center space-x-1"
+              className="text-xs font-semibold text-brand hover:underline flex items-center space-x-1 shrink-0"
             >
               <span>View Full Ledger</span>
               <ArrowRight className="w-3 h-3" />
@@ -418,8 +413,8 @@ export default function AdminDashboardPage() {
           </div>
 
           {metrics?.recentPayments && metrics.recentPayments.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            <div className="overflow-x-auto max-w-full -mx-4 sm:mx-0 px-4 sm:px-0">
+              <table className="w-full min-w-[500px] text-left text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-y border-slate-200 text-slate-600 uppercase text-[10px] tracking-wider font-semibold">
                     <th className="py-2 px-3 font-semibold">Receipt #</th>
@@ -461,10 +456,9 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
-        {/* 12-Seat Capacity Guard */}
-        <div className="bg-white rounded-none border border-slate-200 p-4 sm:p-5 flex flex-col justify-between">
+        <div className="bg-white rounded-none border border-slate-200 p-4 sm:p-5 flex flex-col justify-between min-w-0 max-w-full overflow-hidden">
           <div>
-            <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
+            <div className="flex flex-wrap items-center justify-between mb-3 pb-3 border-b border-slate-200 gap-2">
               <div>
                 <h2 className="text-sm font-bold text-[#0F172A]">
                   12-Seat Capacity Guard
@@ -473,7 +467,7 @@ export default function AdminDashboardPage() {
                   Classroom density & reservation enforcement
                 </p>
               </div>
-              <Link to="/admin-portal/batches" className="text-xs text-brand font-semibold hover:underline">
+              <Link to="/admin-portal/batches" className="text-xs text-brand font-semibold hover:underline shrink-0">
                 Manage Batches →
               </Link>
             </div>
@@ -487,11 +481,11 @@ export default function AdminDashboardPage() {
 
                 return (
                   <div key={b.id} className="text-xs">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-semibold text-slate-800 truncate max-w-[170px]">
+                    <div className="flex items-center justify-between mb-1.5 gap-2 min-w-0">
+                      <span className="font-semibold text-slate-800 truncate min-w-0 text-xs">
                         {b.name}
                       </span>
-                      <span className={`font-mono text-[11px] font-semibold ${isFull ? 'text-rose-600' : 'text-slate-600'}`}>
+                      <span className={`font-mono text-[11px] font-semibold shrink-0 ${isFull ? 'text-rose-600' : 'text-slate-600'}`}>
                         {b.enrolledCount}{heldCount > 0 ? ` (+${heldCount} held)` : ''} / 12 Seats
                       </span>
                     </div>
@@ -513,14 +507,14 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="mt-5 pt-3 border-t border-slate-200 bg-slate-50 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 p-3.5 rounded-none flex items-center justify-between text-xs text-slate-600">
-            <div className="flex items-center space-x-1.5">
+          <div className="mt-5 pt-3 border-t border-slate-200 bg-slate-50 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 p-3.5 rounded-none flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+            <div className="flex items-center space-x-1.5 shrink-0">
               <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
               <span className="font-medium text-[11px]">Strict 1:12 Faculty Ratio</span>
             </div>
             <Link
               to="/admin-portal/reports"
-              className="text-xs font-semibold text-brand hover:underline"
+              className="text-xs font-semibold text-brand hover:underline shrink-0"
             >
               Export Reports →
             </Link>

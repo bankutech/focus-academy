@@ -29,7 +29,7 @@ export default function HomePage() {
   });
   const { studentFlow: _studentFlow } = useStudentFlow();
   const whatsappInquiryUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(
-    'Hello Focus Academy! I would like to inquire about evening batch timings and trial admissions at Thiripura Complex, Thoramangalam.'
+    'Hello Focus Academy! I would like to inquire about evening batch timings and admissions at Thiripura Complex, Thoramangalam.'
   )}`;
 
   return (
@@ -56,10 +56,10 @@ export default function HomePage() {
               <div className="mt-7 sm:mt-8 flex flex-wrap items-center gap-3.5">
                 <Link
                   to="/student-details"
-                  aria-label="Enroll for 1-Day Free Trial"
+                  aria-label="Enroll"
                   className="min-h-[52px] inline-flex items-center justify-center space-x-2.5 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-base font-bold rounded-md shadow-sm transition-all cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  <span>Enroll for 1-Day Free Trial</span>
+                  <span>Enroll</span>
                   <ArrowRight className="w-4 h-4 text-orange-100" />
                 </Link>
 
@@ -86,7 +86,7 @@ export default function HomePage() {
               <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs sm:text-sm text-slate-500 font-medium">
                 <span className="flex items-center space-x-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>1-Day Free Trial (No Advance Fee)</span>
+                  <span>Zero Advance Fee to Register</span>
                 </span>
                 <span className="flex items-center space-x-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -181,9 +181,9 @@ export default function HomePage() {
                 <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Individual student attention and daily real-time notebook review</span>
               </div>
               <div className="pt-4 sm:pt-0 sm:px-6 text-left">
-                <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">1-Day</span>
-                <span className="text-xs sm:text-sm font-bold text-brand uppercase tracking-wider block mt-1.5">Free Trial</span>
-                <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Experience actual classroom teaching before paying any tuition fees</span>
+                <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">Daily</span>
+                <span className="text-xs sm:text-sm font-bold text-brand uppercase tracking-wider block mt-1.5">Notebook Check</span>
+                <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Step-marked problem checking and personalized concept feedback every evening</span>
               </div>
               <div className="pt-4 sm:pt-0 sm:px-6 text-left">
                 <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">4 – 9 PM</span>

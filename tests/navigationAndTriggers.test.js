@@ -227,7 +227,7 @@ describe('Navigation, Triggers and Form Validation Audit', () => {
     expect(aboutContent).toContain('Thoramangalam');
     expect(aboutContent).toContain('Perambalur');
     expect(aboutContent).toContain('Four Roads');
-    expect(aboutContent).toContain('Free Trial');
+    expect(aboutContent).toContain('Satisfaction Guarantee');
     expect(aboutContent).toContain('Parking');
     expect(aboutContent).not.toContain('star rating');
     expect(aboutContent).not.toContain('★');

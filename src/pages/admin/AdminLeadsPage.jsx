@@ -64,7 +64,6 @@ export default function AdminLeadsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // Enrollment management
   const [enrollmentSearch, setEnrollmentSearch] = useState('');
   const [enrollmentStatusFilter, setEnrollmentStatusFilter] = useState('active');
   const [viewEnrollment, setViewEnrollment] = useState(null);
@@ -553,6 +552,15 @@ export default function AdminLeadsPage() {
                           {enrollment.statusReason}
                         </div>
                       )}
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-none text-[9px] font-bold border ${
+                          enrollment._storageOrigin === 'cloud'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-300'
+                        }`}>
+                          {enrollment._storageOrigin === 'cloud' ? 'Cloud Synced (Firestore)' : 'Local Storage / Queue'}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end space-x-1.5">
@@ -768,6 +776,15 @@ export default function AdminLeadsPage() {
                             month: 'short',
                             year: 'numeric'
                           }) : 'Recent'}
+                        </div>
+                        <div className="mt-1">
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-none text-[9px] font-bold border ${
+                            lead._storageOrigin === 'cloud'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'bg-amber-50 text-amber-800 border-amber-300'
+                          }`}>
+                            {lead._storageOrigin === 'cloud' ? 'Cloud Synced (Firestore)' : 'Local Device Store'}
+                          </span>
                         </div>
                       </td>
 

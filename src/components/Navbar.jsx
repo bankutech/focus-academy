@@ -208,7 +208,7 @@ export default function Navbar() {
                 to="/student-details"
                 className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-6 py-2.5 bg-brand hover:bg-brand-strong text-white text-sm sm:text-base font-bold rounded-md shadow-xs hover:bg-brand-strong transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
               >
-                <span>Check Batch Seats</span>
+                <span>Click to Enroll</span>
                 <ArrowRight className="w-4 h-4 text-orange-100" />
               </Link>
 
@@ -318,7 +318,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-4 py-3.5 bg-brand hover:bg-brand-strong text-white font-bold rounded-md text-xs sm:text-sm shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand text-center mb-2"
               >
-                <span>Check Batch Seats & Timings →</span>
+                <span>Click to Enroll →</span>
               </Link>
             </div>
           </div>

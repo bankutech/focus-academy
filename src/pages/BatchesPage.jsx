@@ -362,8 +362,8 @@ export default function BatchesPage() {
 
                 <div className="mt-4 p-3.5 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-brand">1-Day Free Trial:</span>
-                    <span>Attend one complete evening session in any scheduled slot before paying any tuition fees. Zero registration fee. Seats are opened from the admission link below.</span>
+                    <span className="font-bold text-brand">Seat Reservation:</span>
+                    <span>Reserve your seat in any scheduled evening slot with zero advance registration fee. Seats are opened from the admission link below.</span>
                   </div>
                 </div>
               </div>
@@ -472,9 +472,9 @@ export default function BatchesPage() {
                   <Calendar className="w-4 h-4 text-brand" />
                   <span>Transparent Evaluation</span>
                 </div>
-                <h3 className="text-sm font-bold text-[#0F172A]">1-Day Free Trial Policy</h3>
+                <h3 className="text-sm font-bold text-[#0F172A]">Transparent Evaluation Policy</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Parents and students are welcome to attend a complete 90-minute evening session before paying any tuition fees. Experience the 12-student focus firsthand.
+                  Parents and students receive complete clarity on batch timings, curriculum coverage, and faculty guidance before enrollment. Experience the 12-student focus firsthand.
                 </p>
               </div>
             </div>
@@ -576,8 +576,8 @@ export default function BatchesPage() {
                 All batches run Monday to Saturday between 4:00 PM and 9:00 PM with a strict 12-student cap. Timings are synchronized with local school buses arriving via Four Roads and Trichy Main Road so students arrive refreshed.
               </p>
               <div className="mt-3 p-3 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
-                <span className="font-bold text-brand">1-Day Free Trial:</span>
-                <span>Attend one complete evening session before paying any fees. Zero registration fee.</span>
+                <span className="font-bold text-brand">Zero Registration Fee:</span>
+                <span>Reserve an evening batch slot with strict 12-student cap. Zero advance fee.</span>
               </div>
             </div>
 

@@ -69,12 +69,12 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
         grade: subject.slice(0, 15),
         board: 'Focus Academy Track',
         subjects: subject,
-        notes: `${sessionType === 'alignment-call' ? '5-Min Alignment Call' : '1-Day Free Trial'} | Timing: ${timing} | Challenge: ${childChallenge || 'None specified'}`
+        notes: `${sessionType === 'alignment-call' ? '5-Min Alignment Call' : 'Academic Consultation'} | Timing: ${timing} | Challenge: ${childChallenge || 'None specified'}`
       });
       setLeadDelivered(Boolean(leadResult.success));
 
       const customWhatsAppText = encodeURIComponent(
-        `Hello Focus Academy Thoramangalam! 👋\n\nI want to confirm a ${sessionType === 'alignment-call' ? '5-Min Parent Alignment Call' : '1-Day Free Trial'}:\n\n• Student: ${studentName.trim()}\n• Contact: +91 ${val.sanitized}\n• Subject: ${subject}\n• Format: ${mode === 'online' ? 'Online Interactive' : 'Classroom Batch (Thiripura Complex)'}\n• Preferred Slot: ${timing}\n• Challenge/Goal: ${childChallenge || 'General'}\n\nPlease confirm availability.`
+        `Hello Focus Academy Thoramangalam! 👋\n\nI want to confirm a ${sessionType === 'alignment-call' ? '5-Min Parent Alignment Call' : 'Academic Consultation'}:\n\n• Student: ${studentName.trim()}\n• Contact: +91 ${val.sanitized}\n• Subject: ${subject}\n• Format: ${mode === 'online' ? 'Online Interactive' : 'Classroom Batch (Thiripura Complex)'}\n• Preferred Slot: ${timing}\n• Challenge/Goal: ${childChallenge || 'General'}\n\nPlease confirm availability.`
       );
       setWhatsappUrl(`https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${customWhatsAppText}`);
       setIsSubmitted(true);
@@ -106,14 +106,14 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
           <button
             type="button"
             onClick={handleReset}
-            aria-label="Close diagnostic trial booking modal"
+            aria-label="Close diagnostic consultation booking modal"
             className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
 
           <h3 id="demo-modal-headline" className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-            {sessionType === 'alignment-call' ? 'Schedule 5-Min Parent Alignment Call' : 'Schedule 45-Min Diagnostic Trial'}
+            {sessionType === 'alignment-call' ? 'Schedule 5-Min Parent Alignment Call' : 'Schedule 45-Min Academic Consultation'}
           </h3>
           <p className="text-xs text-slate-400 mt-1 font-normal">
             {sessionType === 'alignment-call' 
@@ -130,7 +130,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                 sessionType === 'diagnostic-trial' ? 'bg-brand text-white font-bold' : 'text-slate-300 hover:text-white'
               }`}
             >
-              45-Min Trial Session
+              45-Min Consultation Session
             </button>
             <button
               type="button"
@@ -171,7 +171,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
               <div>
                 <h4 className="text-xl font-bold text-[#0F172A]">
                   {leadDelivered
-                    ? (sessionType === 'alignment-call' ? 'Parent Alignment Call Requested' : 'Diagnostic Trial Requested')
+                    ? (sessionType === 'alignment-call' ? 'Parent Alignment Call Requested' : 'Academic Consultation Requested')
                     : 'Please confirm on WhatsApp'}
                 </h4>
                 <p className="text-xs text-slate-600 mt-1 max-w-sm mx-auto">

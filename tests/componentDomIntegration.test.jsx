@@ -29,7 +29,7 @@ describe('React Component DOM Integration Tests', () => {
 
     expect(screen.getByText(/15% Sibling concession applied/i)).toBeDefined();
 
-    const bookTrialBtn = screen.getByRole('button', { name: /Book 1-Day Free Trial at this Rate/i });
+    const bookTrialBtn = screen.getByRole('button', { name: /Enroll at this Rate/i });
     fireEvent.click(bookTrialBtn);
 
     expect(handleSelectPackage).toHaveBeenCalledTimes(1);
@@ -78,7 +78,7 @@ describe('React Component DOM Integration Tests', () => {
     const phoneLink = screen.getByRole('link', { name: /\+91 98424 51220/i });
     expect(phoneLink.getAttribute('href')).toBe('tel:+919842451220');
 
-    const checkSeatsLink = screen.getByRole('link', { name: /Check Batch Seats/i });
+    const checkSeatsLink = screen.getByRole('link', { name: /Click to Enroll/i });
     expect(checkSeatsLink.getAttribute('href')).toBe('/student-details');
 
     const menuBtn = screen.getByRole('button', { name: /Open navigation menu/i });
@@ -88,7 +88,7 @@ describe('React Component DOM Integration Tests', () => {
     const closeBtn = screen.getByRole('button', { name: /Close navigation menu/i });
     expect(closeBtn).toBeDefined();
 
-    const mobileCheckSeats = screen.getByRole('link', { name: /Check Batch Seats & Timings/i });
+    const mobileCheckSeats = screen.getByRole('link', { name: /Click to Enroll →/i });
     expect(mobileCheckSeats.getAttribute('href')).toBe('/student-details');
 
     fireEvent.click(closeBtn);

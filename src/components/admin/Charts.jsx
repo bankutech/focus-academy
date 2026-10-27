@@ -3,7 +3,7 @@ import { rupees } from './chartData';
 
 export function ChartCard({ title, subtitle, children, className = '' }) {
   return (
-    <div className={`bg-white rounded-none border border-slate-200 p-4 sm:p-5 ${className}`}>
+    <div className={`bg-white rounded-none border border-slate-200 p-4 sm:p-5 min-w-0 max-w-full overflow-hidden ${className}`}>
       <div className="mb-3.5 pb-2.5 border-b border-slate-100">
         <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700">{title}</h2>
         {subtitle && <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>}
@@ -48,7 +48,7 @@ export function DonutChart({ data, centerLabel, centerValue, format = rupees, la
   }, []);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-5">
+    <div className="flex flex-col sm:flex-row items-center gap-5 min-w-0 max-w-full">
       <svg viewBox={`0 0 ${size} ${size}`} className="w-40 h-40 flex-shrink-0" role="img" aria-label={label || 'Distribution chart'}>
         {slices.map((s) => (
           <path key={s.label} d={s.path} fill={s.color} stroke="#fff" strokeWidth="2">
@@ -91,7 +91,7 @@ export function BarChart({ data, format = (n) => n, label, height = 190, showAxi
   const ticks = [0.5, 1].map((t) => ({ y: padTop + plotHeight * (1 - t), value: Math.round(ceiling * t) }));
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto max-w-full pb-1">
       <svg viewBox={`0 0 ${width} ${height}`} style={{ minWidth: width }} className="w-full" role="img" aria-label={label || 'Bar chart'}>
         {ticks.map((t) => (
           <g key={t.y}>

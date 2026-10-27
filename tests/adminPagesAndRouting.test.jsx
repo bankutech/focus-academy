@@ -260,6 +260,7 @@ describe('Admin Portal Pages & Routing Integrity', () => {
       expect(screen.getByText(/Finishes: 4:00 PM/i)).toBeDefined();
       expect(screen.getByText(/Travel: 30m/i)).toBeDefined();
       expect(screen.getByText(/Timing Risk/i)).toBeDefined();
+      expect(screen.getAllByText(/Local Device Store/i).length).toBeGreaterThan(0);
     });
   });
 });

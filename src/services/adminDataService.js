@@ -1412,7 +1412,7 @@ export const AdminDataService = {
         const q = query(collection(db, 'leads'), orderBy('timestamp', 'desc'));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
         if (snap && !snap.empty) {
-          liveLeads = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+          liveLeads = snap.docs.map(d => ({ ...d.data(), id: d.id, _storageOrigin: 'cloud' }));
         }
       } catch (err) {
         console.warn('Firestore getLeads query unavailable, using local leads:', err);
@@ -1450,7 +1450,8 @@ export const AdminDataService = {
             schoolDismissalTime: item.schoolDismissalTime || null,
             travelDurationMinutes: item.travelDurationMinutes !== undefined && item.travelDurationMinutes !== null ? item.travelDurationMinutes : null,
             scheduleClashWarning: item.scheduleClashWarning || null,
-            timing: item.timing || null
+            timing: item.timing || null,
+            _storageOrigin: item.serverConfirmed ? 'cloud' : 'local'
           });
         }
       });
@@ -1553,6 +1554,7 @@ export const AdminDataService = {
         list[existingIdx] = normalizeEnrollmentRecord({
           ...cand,
           ...existing,
+          _storageOrigin: existing._storageOrigin || cand._storageOrigin || 'local',
           monthlyFee: existing.monthlyFee || cand.monthlyFee,
           reservationId: existing.reservationId || cand.reservationId,
           notes: existing.notes || cand.notes,
@@ -1561,7 +1563,10 @@ export const AdminDataService = {
         registerItem(cand);
         registerItem(list[existingIdx]);
       } else {
-        const normalized = normalizeEnrollmentRecord(cand);
+        const normalized = normalizeEnrollmentRecord({
+          _storageOrigin: cand._storageOrigin || 'local',
+          ...cand
+        });
         list.push(normalized);
         registerItem(normalized);
         registerItem(cand);
@@ -1578,7 +1583,8 @@ export const AdminDataService = {
             id: d.id,
             enrolledAt: data.enrolledAt || data.createdAt || data.timestamp || data.submittedAt || new Date().toISOString(),
             status: data.status || 'pending',
-            batchName: data.batchName || data.selectedBatchName || data.subjects || 'Focus Evening Batch'
+            batchName: data.batchName || data.selectedBatchName || data.subjects || 'Focus Evening Batch',
+            _storageOrigin: 'cloud'
           });
         });
       } catch (err) {

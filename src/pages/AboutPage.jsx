@@ -23,7 +23,7 @@ export default function AboutPage() {
     path: '/about',
   });
   const whatsappInquiryUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(
-    'Hello Focus Academy Perambalur! I would like to learn more about your 12-student batch philosophy, campus facilities, and 1-day free trial.'
+    'Hello Focus Academy Perambalur! I would like to learn more about your 12-student batch philosophy, campus facilities, and admissions.'
   )}`;
 
   const facilities = [
@@ -100,8 +100,8 @@ export default function AboutPage() {
                 <div className="p-4 bg-white rounded-md border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
                   <ShieldCheck className="w-4 h-4 text-brand shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold block text-sm">1-Day Free Trial Guarantee</span>
-                    <span className="text-slate-600 mt-0.5 block">Sit in on an evening class before paying fees. Enroll only after you and your child are satisfied.</span>
+                    <span className="font-bold block text-sm">Academic Satisfaction Guarantee</span>
+                    <span className="text-slate-600 mt-0.5 block">Enroll with complete confidence in our 12-student batch attention and disciplined daily coaching.</span>
                   </div>
                 </div>
 
@@ -383,7 +383,7 @@ export default function AboutPage() {
             </h2>
 
             <p className="mt-3 text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Attend one complete evening session for free. Meet the subject teachers, inspect our classroom setup at Thiripura Complex, and experience our teaching methods before paying any admission fee.
+              Meet our subject teachers, inspect our classroom setup at Thiripura Complex, and experience our structured coaching methods with zero advance registration fee.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
@@ -391,7 +391,7 @@ export default function AboutPage() {
                 to="/student-details"
                 className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-brand hover:bg-brand-strong text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all active:scale-98"
               >
-                <span>Register for 1-Day Free Trial →</span>
+                <span>Enroll in Evening Batch →</span>
               </Link>
 
               <Link
