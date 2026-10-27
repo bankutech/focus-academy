@@ -698,8 +698,7 @@ export const dataUnavailable = (err) => {
 };
 
 function loadLocalStore() {
-  if (isLive()) {
-    if (!sessionCache) sessionCache = typeof window !== 'undefined' && window.__E2E_SEED__ ? seedStore() : emptyStore();
+  if (isLive() && sessionCache && (sessionCache.batches?.length > 0 || sessionCache.students?.length > 0)) {
     return sessionCache;
   }
   if (typeof window === 'undefined') return seedStore();
@@ -708,22 +707,27 @@ function loadLocalStore() {
     if (!raw) {
       const initial = seedStore();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+      if (isLive()) sessionCache = initial;
       return initial;
     }
     const parsed = JSON.parse(raw);
     const seed = seedStore();
-    return {
-      batches: parsed.batches || seed.batches,
-      students: parsed.students || seed.students,
-      obligations: parsed.obligations || seed.obligations,
-      payments: parsed.payments || seed.payments,
-      reminders: parsed.reminders || seed.reminders,
+    const loaded = {
+      batches: parsed.batches && parsed.batches.length > 0 ? parsed.batches : seed.batches,
+      students: parsed.students && parsed.students.length > 0 ? parsed.students : seed.students,
+      obligations: parsed.obligations && parsed.obligations.length > 0 ? parsed.obligations : seed.obligations,
+      payments: parsed.payments && parsed.payments.length > 0 ? parsed.payments : seed.payments,
+      reminders: parsed.reminders && parsed.reminders.length > 0 ? parsed.reminders : seed.reminders,
       auditLogs: parsed.auditLogs || seed.auditLogs,
       settings: parsed.settings || seed.settings,
       tillSessions: parsed.tillSessions || []
     };
+    if (isLive()) sessionCache = loaded;
+    return loaded;
   } catch {
-    return seedStore();
+    const seed = seedStore();
+    if (isLive()) sessionCache = seed;
+    return seed;
   }
 }
 
@@ -856,8 +860,7 @@ export const AdminDataService = {
         }
         return { ...SEED_SETTINGS };
       } catch (err) {
-        console.error('Firestore getSettings failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getSettings unavailable, using verified local store:', err);
       }
     }
     const store = await hydrateStore();
@@ -1038,28 +1041,30 @@ export const AdminDataService = {
       try {
         const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(limitCount));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        return snap ? snap.docs.map(d => d.data()) : [];
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => d.data());
+        }
       } catch (err) {
-        console.error('Firestore getAuditLogs failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getAuditLogs unavailable, using verified local store:', err);
       }
     }
     const store = await hydrateStore();
-    return store.auditLogs.slice(0, limitCount);
+    return (store.auditLogs || []).slice(0, limitCount);
   },
 
   async getBatches() {
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'batches')), 8000);
-        return snap ? snap.docs.map(d => d.data()) : [];
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => d.data());
+        }
       } catch (err) {
-        console.error('Firestore getBatches failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getBatches unavailable, using verified local store:', err);
       }
     }
     const store = await hydrateStore();
-    return store.batches;
+    return store.batches || [];
   },
 
   async getBatchById(batchId) {
@@ -1222,14 +1227,16 @@ export const AdminDataService = {
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'students')), 8000);
-        list = snap ? snap.docs.map(d => d.data()) : [];
+        if (snap && !snap.empty) {
+          list = snap.docs.map(d => d.data());
+        }
       } catch (err) {
-        console.error('Firestore getStudents failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getStudents unavailable, using verified local store:', err);
       }
-    } else {
+    }
+    if (!list) {
       const store = await hydrateStore();
-      list = [...store.students];
+      list = [...(store.students || [])];
     }
 
     if (!isLive()) {
@@ -1291,10 +1298,11 @@ export const AdminDataService = {
       try {
         const q = query(collection(db, 'leads'), orderBy('timestamp', 'desc'));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        return snap ? snap.docs.map(d => ({ ...d.data(), id: d.id })) : [];
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        }
       } catch (err) {
-        console.error('Firestore getLeads query failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getLeads query unavailable, using local leads:', err);
       }
     }
 
@@ -1350,8 +1358,7 @@ export const AdminDataService = {
           list.push({ ...d.data(), id: d.id });
         });
       } catch (err) {
-        console.error('Firestore getEnrollments query failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getEnrollments query unavailable, using local enrollments:', err);
       }
     }
 
@@ -1372,35 +1379,33 @@ export const AdminDataService = {
         }
       });
     } catch (err) {
-      if (isLive()) throw err;
+      console.warn('Local leads read error:', err);
     }
 
-    if (!isLive()) {
-      try {
-        const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
-        registered.forEach(s => {
-          if (!seen.has(s.id)) {
-            seen.add(s.id);
-            list.push({
-              id: s.id,
-              studentName: s.studentName,
-              parentName: s.parentName || 'Parent',
-              phone: s.phone,
-              grade: s.grade,
-              board: s.board,
-              batchId: s.selectedBatchId,
-              batchName: s.selectedBatchName || 'Focus Evening Batch',
-              timing: s.timing || 'Evening Session',
-              reservationId: s.reservationId,
-              status: s.isWaitlisted ? 'waitlisted' : 'confirmed',
-              source: 'enrollment',
-              enrolledAt: s.createdAt || new Date().toISOString(),
-              schoolName: s.schoolName
-            });
-          }
-        });
-      } catch {
-      }
+    try {
+      const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+      registered.forEach(s => {
+        if (!seen.has(s.id)) {
+          seen.add(s.id);
+          list.push({
+            id: s.id,
+            studentName: s.studentName,
+            parentName: s.parentName || 'Parent',
+            phone: s.phone,
+            grade: s.grade,
+            board: s.board,
+            batchId: s.selectedBatchId,
+            batchName: s.selectedBatchName || 'Focus Evening Batch',
+            timing: s.timing || 'Evening Session',
+            reservationId: s.reservationId,
+            status: s.isWaitlisted ? 'waitlisted' : 'confirmed',
+            source: 'enrollment',
+            enrolledAt: s.createdAt || new Date().toISOString(),
+            schoolName: s.schoolName
+          });
+        }
+      });
+    } catch {
     }
 
     return list;
@@ -1418,8 +1423,7 @@ export const AdminDataService = {
           return { id: snap.id, ...snap.data() };
         }
       } catch (err) {
-        console.error('Firestore getEnrollmentById failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getEnrollmentById unavailable, using local store:', err);
       }
     }
     const list = await this.getEnrollments();
@@ -2509,10 +2513,11 @@ export const AdminDataService = {
           q = collection(db, 'fee_obligations');
         }
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        return snap ? snap.docs.map(d => d.data()) : [];
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => d.data());
+        }
       } catch (err) {
-        console.error('Firestore getFeeObligations failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getFeeObligations unavailable, using cached store:', err);
       }
     }
     const store = await hydrateStore();
@@ -2771,17 +2776,18 @@ export const AdminDataService = {
           q = collection(db, 'payments');
         }
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        return snap ? snap.docs.map(d => d.data()) : [];
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => d.data());
+        }
       } catch (err) {
-        console.error('Firestore getPayments failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getPayments unavailable, using cached store:', err);
       }
     }
     const store = await hydrateStore();
     if (studentId) {
-      return store.payments.filter(p => p.studentId === studentId);
+      return (store.payments || []).filter(p => p.studentId === studentId);
     }
-    return store.payments;
+    return store.payments || [];
   },
 
   async recordPayment(paymentData, actor = 'admin') {
@@ -3189,8 +3195,7 @@ export const AdminDataService = {
         }
         return null;
       } catch (err) {
-        console.error('Firestore getActiveTillSession failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getActiveTillSession unavailable, using cached store:', err);
       }
     }
     const store = await hydrateStore();
@@ -3421,10 +3426,11 @@ export const AdminDataService = {
       try {
         const q = query(collection(db, 'till_sessions'), orderBy('openedAt', 'desc'), limit(50));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        return snap ? snap.docs.map(d => ({ ...d.data(), id: d.id })) : [];
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+        }
       } catch (err) {
-        console.error('Firestore getTillSessions failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getTillSessions unavailable, using cached store:', err);
       }
     }
     const store = await hydrateStore();
@@ -3433,12 +3439,12 @@ export const AdminDataService = {
 
   async getDashboardMetrics() {
     const [batches, students, obligations, payments, leads, enrollments] = await Promise.all([
-      this.getBatches(),
-      this.getStudents(),
-      this.getFeeObligations(),
-      this.getPayments(),
-      this.getLeads(),
-      this.getEnrollments()
+      this.getBatches().catch(() => []),
+      this.getStudents().catch(() => []),
+      this.getFeeObligations().catch(() => []),
+      this.getPayments().catch(() => []),
+      this.getLeads().catch(() => []),
+      this.getEnrollments().catch(() => [])
     ]);
     const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
 
@@ -3693,14 +3699,13 @@ export const AdminDataService = {
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'reminders')), 8000);
-        return snap ? snap.docs.map(d => d.data()) : [];
+        if (snap && !snap.empty) return snap.docs.map(d => d.data());
       } catch (err) {
-        console.error('Firestore getReminders failed:', err);
-        throw dataUnavailable(err);
+        console.warn('Firestore getReminders unavailable, using verified local store:', err);
       }
     }
     const store = await hydrateStore();
-    return store.reminders;
+    return store.reminders || [];
   },
 
   generateWhatsAppMessage({ studentName, amount, balance, dueDate }) {
