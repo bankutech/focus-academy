@@ -57,15 +57,32 @@ service cloud.firestore {
     }
 
     match /students/{studentId} {
-      allow read, create, update, delete: if isAdministrator();
+      allow read: if isAdministrator() || (
+        isAuthenticated() && (
+          resource.data.studentUid == request.auth.uid ||
+          (request.auth.token.email != null && resource.data.email == request.auth.token.email)
+        )
+      );
+      allow create, update, delete: if isAdministrator();
     }
 
     match /fee_obligations/{obligationId} {
-      allow read, write: if isFeeManager();
+      allow read: if isFeeManager() || (
+        isAuthenticated() && (
+          resource.data.studentUid == request.auth.uid ||
+          (request.auth.token.email != null && resource.data.email == request.auth.token.email)
+        )
+      );
+      allow write: if isFeeManager();
     }
 
     match /payments/{paymentId} {
-      allow read: if isFeeManager();
+      allow read: if isFeeManager() || (
+        isAuthenticated() && (
+          resource.data.studentUid == request.auth.uid ||
+          (request.auth.token.email != null && resource.data.email == request.auth.token.email)
+        )
+      );
       allow create: if isFeeManager()
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
@@ -83,26 +100,31 @@ service cloud.firestore {
 
     match /audit_logs/{logId} {
       allow read: if isAdministrator();
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated() || isStaffEmail();
       allow update, delete: if false;
     }
 
     match /leads/{leadId} {
-      allow create: if false;
-      allow read, update: if isAdministrator();
-      allow delete: if false;
+      allow read, update, delete: if isAdministrator();
+      allow create: if isAdministrator() || (
+        request.resource.data.keys().hasAll(['studentName', 'phone', 'grade'])
+        && request.resource.data.studentName is string && request.resource.data.studentName.size() >= 2
+        && request.resource.data.phone is string && request.resource.data.phone.size() >= 10
+      );
     }
 
     match /reservations/{reservationId} {
-      allow create: if false;
-      allow read, update: if isAdministrator();
-      allow delete: if false;
+      allow read: if true;
+      allow create, update: if isAdministrator() || (
+        request.resource.data.keys().hasAll(['batchId', 'studentName', 'phone'])
+        && request.resource.data.studentName is string
+        && request.resource.data.phone is string
+      );
+      allow delete: if isAdministrator();
     }
 
     match /counters/{counterId} {
-      allow read: if isFeeManager();
-      allow create: if isFeeManager() && request.resource.data.value == 1;
-      allow update: if isFeeManager() && request.resource.data.value == resource.data.value + 1;
+      allow read, create, update: if isFeeManager();
       allow delete: if false;
     }
 
@@ -136,17 +158,18 @@ service cloud.firestore {
     }
 
     match /enrollments/{enrollmentId} {
-      allow read: if isAuthenticated() && (
-        resource.data.studentUid == request.auth.uid ||
-        (request.auth.token.email != null && resource.data.email == request.auth.token.email) ||
-        isAdministrator()
+      allow read: if isAdministrator() || (
+        isAuthenticated() && (
+          resource.data.studentUid == request.auth.uid ||
+          (request.auth.token.email != null && resource.data.email == request.auth.token.email)
+        )
       );
-      allow create: if isAuthenticated() && (
-        request.resource.data.studentUid == request.auth.uid ||
-        isAdministrator()
+      allow create: if isAdministrator() || (
+        request.resource.data.keys().hasAll(['id', 'studentName', 'phone', 'grade', 'board', 'batchId'])
+        && request.resource.data.studentName is string && request.resource.data.studentName.size() >= 2
+        && request.resource.data.phone is string && request.resource.data.phone.size() >= 10
       );
-      allow update: if isAdministrator();
-      allow delete: if false;
+      allow update, delete: if isAdministrator();
     }
 
     match /{document=**} {

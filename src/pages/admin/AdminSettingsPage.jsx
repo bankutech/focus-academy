@@ -29,6 +29,7 @@ export default function AdminSettingsPage() {
   const [restoreError, setRestoreError] = useState('');
   const [restoreSuccess, setRestoreSuccess] = useState('');
   const [syncingCloud, setSyncingCloud] = useState(false);
+  const [migrationSummary, setMigrationSummary] = useState(null);
 
   const currentAdminEmail = getVerifiedAdminEmail() || '';
 
@@ -98,12 +99,14 @@ export default function AdminSettingsPage() {
   const handleSyncToCloud = async () => {
     setSyncingCloud(true);
     setFeedback({ type: '', message: '' });
+    setMigrationSummary(null);
     try {
       const res = await AdminDataService.syncAllToCloudFirestore(currentAdminEmail);
+      setMigrationSummary(res);
       if (res.success) {
         setFeedback({
           type: 'success',
-          message: `Successfully synchronized ${res.counts.batches} batches, ${res.counts.students} students, and institutional data to Firebase Cloud Firestore!`
+          message: `Successfully synchronized data to Firebase Cloud Firestore! (${res.totalMigrated ?? res.counts?.batches} new records migrated, ${res.totalSkipped ?? 0} existing records verified in cloud)`
         });
       } else {
         setFeedback({ type: 'error', message: res.reason || 'Cloud sync not available.' });
@@ -654,6 +657,55 @@ export default function AdminSettingsPage() {
                 <span>{syncingCloud ? 'Syncing to Cloud Firestore...' : 'Push All Data to Cloud Firestore'}</span>
               </button>
             </div>
+
+            {migrationSummary && migrationSummary.results && (
+              <div className="md:col-span-2 p-5 border border-emerald-200 rounded-xl bg-emerald-50/40 text-xs space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-emerald-200">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="font-bold text-emerald-950">Cloud Firestore Migration &amp; Audit Report</span>
+                  </div>
+                  <span className="text-[11px] font-mono text-emerald-800">
+                    Project: focus-academy-7efeb
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                  <div className="bg-white p-2.5 rounded-lg border border-emerald-200">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">Batches</div>
+                    <div className="text-sm font-bold text-slate-800">{migrationSummary.results.batches.migrated} / {migrationSummary.results.batches.total}</div>
+                    <div className="text-[10px] text-slate-400">{migrationSummary.results.batches.skipped} skipped</div>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-emerald-200">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">Students</div>
+                    <div className="text-sm font-bold text-slate-800">{migrationSummary.results.students.migrated} / {migrationSummary.results.students.total}</div>
+                    <div className="text-[10px] text-slate-400">{migrationSummary.results.students.skipped} skipped</div>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-emerald-200">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">Enrollments</div>
+                    <div className="text-sm font-bold text-slate-800">{migrationSummary.results.enrollments.migrated} / {migrationSummary.results.enrollments.total}</div>
+                    <div className="text-[10px] text-slate-400">{migrationSummary.results.enrollments.skipped} skipped</div>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-emerald-200">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">Fee Records</div>
+                    <div className="text-sm font-bold text-slate-800">{migrationSummary.results.obligations.migrated} / {migrationSummary.results.obligations.total}</div>
+                    <div className="text-[10px] text-slate-400">{migrationSummary.results.obligations.skipped} skipped</div>
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-emerald-200">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">Receipts</div>
+                    <div className="text-sm font-bold text-slate-800">{migrationSummary.results.payments.migrated} / {migrationSummary.results.payments.total}</div>
+                    <div className="text-[10px] text-slate-400">{migrationSummary.results.payments.skipped} skipped</div>
+                  </div>
+                </div>
+                {migrationSummary.errors && migrationSummary.errors.length > 0 && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 text-[11px] space-y-1">
+                    <div className="font-bold">Migration warnings / deferred writes:</div>
+                    {migrationSummary.errors.map((e, idx) => (
+                      <div key={idx}>• {e}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

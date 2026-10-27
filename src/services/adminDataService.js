@@ -1058,6 +1058,18 @@ export const AdminDataService = {
         if (snap && !snap.empty) {
           return snap.docs.map(d => d.data());
         }
+        if (snap && snap.empty) {
+          try {
+            const batchWriter = writeBatch(db);
+            SEED_BATCHES.forEach(b => {
+              batchWriter.set(doc(db, 'batches', b.id), b);
+            });
+            await batchWriter.commit();
+            return [...SEED_BATCHES];
+          } catch (bootErr) {
+            console.warn('Auto-bootstrap batches to Cloud Firestore deferred:', bootErr);
+          }
+        }
       } catch (err) {
         console.warn('Firestore getBatches unavailable, using verified local store:', err);
       }
@@ -1103,17 +1115,18 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
-    const store = await hydrateStore();
-    store.batches.push(newBatch);
-    saveLocalStore(store);
-
     if (isLive()) {
       try {
         await setDoc(doc(db, 'batches', newBatch.id), newBatch);
       } catch (err) {
-        console.warn('Firestore createBatch error (local batch preserved):', err);
+        console.error('Firestore createBatch failed:', err);
+        throw new Error(`Failed to save batch '${newBatch.name}' to Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
+
+    const store = await hydrateStore();
+    store.batches.push(newBatch);
+    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -1153,7 +1166,8 @@ export const AdminDataService = {
       try {
         await updateDoc(doc(db, 'batches', batchId), updated);
       } catch (err) {
-        console.warn('Firestore updateBatch error (local update preserved):', err);
+        console.error('Firestore updateBatch failed:', err);
+        throw new Error(`Failed to update batch '${updated.name}' in Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
 
@@ -1195,17 +1209,18 @@ export const AdminDataService = {
       );
     }
 
-    const store = await hydrateStore();
-    store.batches = store.batches.filter(b => b.id !== batchId);
-    saveLocalStore(store);
-
     if (isLive()) {
       try {
         await deleteDoc(doc(db, 'batches', batchId));
       } catch (err) {
-        console.warn('Firestore deleteBatch error (local deletion preserved):', err);
+        console.error('Firestore deleteBatch failed:', err);
+        throw new Error(`Failed to delete batch '${batchId}' from Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
+
+    const store = await hydrateStore();
+    store.batches = store.batches.filter(b => b.id !== batchId);
+    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -1347,11 +1362,17 @@ export const AdminDataService = {
     const seen = new Set();
     if (isLive()) {
       try {
-        const q = query(collection(db, 'enrollments'), orderBy('enrolledAt', 'desc'));
-        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'enrollments')), 8000);
         (snap ? snap.docs : []).forEach(d => {
           seen.add(d.id);
-          list.push({ ...d.data(), id: d.id });
+          const data = d.data();
+          list.push({
+            ...data,
+            id: d.id,
+            enrolledAt: data.enrolledAt || data.createdAt || data.timestamp || data.submittedAt || new Date().toISOString(),
+            status: data.status || 'pending',
+            batchName: data.batchName || data.selectedBatchName || data.subjects || 'Focus Evening Batch'
+          });
         });
       } catch (err) {
         console.warn('Firestore getEnrollments query unavailable, using local enrollments:', err);
@@ -1404,6 +1425,7 @@ export const AdminDataService = {
     } catch {
     }
 
+    list.sort((a, b) => new Date(b.enrolledAt || 0) - new Date(a.enrolledAt || 0));
     return list;
   },
 
@@ -2115,7 +2137,8 @@ export const AdminDataService = {
           console.warn('Could not update matching reservation status:', resErr);
         }
       } catch (err) {
-        console.warn('Firestore createStudent error (local student preserved):', err);
+        console.error('Firestore createStudent error:', err);
+        throw new Error(`Failed to save student '${newStudent.studentName}' to Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
 
@@ -2163,7 +2186,8 @@ export const AdminDataService = {
       try {
         await updateDoc(doc(db, 'students', studentId), updated);
       } catch (err) {
-        console.warn('Firestore updateStudent error (local update preserved):', err);
+        console.error('Firestore updateStudent error:', err);
+        throw new Error(`Failed to update student '${updated.studentName}' in Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
 
@@ -2237,26 +2261,38 @@ export const AdminDataService = {
       updatedBy: normalizeActorEmail(actor)
     };
 
-    student.status = status;
-    student.courseEndDate = courseEndDate !== undefined ? courseEndDate : (status === 'completed' || status === 'archived' ? new Date().toISOString().split('T')[0] : null);
-    student.statusReason = reason || '';
-    student.dropoutReason = (status === 'archived' || status === 'paused') ? (reason || 'Not specified') : null;
-    student.statusUpdatedAt = new Date().toISOString();
-    student.lifecycleHistory = [...(student.lifecycleHistory || []), historyEntry];
-    student.updatedAt = new Date().toISOString();
-
-    saveLocalStore(store);
+    const updated = {
+      ...student,
+      status,
+      courseEndDate: courseEndDate !== undefined ? courseEndDate : (status === 'completed' || status === 'archived' ? new Date().toISOString().split('T')[0] : null),
+      statusReason: reason || '',
+      dropoutReason: (status === 'archived' || status === 'paused') ? (reason || 'Not specified') : null,
+      statusUpdatedAt: new Date().toISOString(),
+      lifecycleHistory: [...(student.lifecycleHistory || []), historyEntry],
+      updatedAt: new Date().toISOString()
+    };
 
     if (isLive()) {
       try {
-        await updateDoc(doc(db, 'students', studentId), student);
+        await updateDoc(doc(db, 'students', studentId), updated);
         if (bIdx !== -1) {
           await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
         }
       } catch (err) {
-        console.warn('Firestore updateStudentLifecycleStatus error (local update preserved):', err);
+        console.error('Firestore updateStudentLifecycleStatus error:', err);
+        throw new Error(`Failed to update student lifecycle in Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
+
+    student.status = status;
+    student.courseEndDate = updated.courseEndDate;
+    student.statusReason = updated.statusReason;
+    student.dropoutReason = updated.dropoutReason;
+    student.statusUpdatedAt = updated.statusUpdatedAt;
+    student.lifecycleHistory = updated.lifecycleHistory;
+    student.updatedAt = updated.updatedAt;
+
+    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2296,6 +2332,18 @@ export const AdminDataService = {
       store.batches[bIdx].seatsRemaining = Math.max(0, bCap - store.batches[bIdx].enrolledCount);
     }
 
+    if (isLive()) {
+      try {
+        await deleteDoc(doc(db, 'students', studentId));
+        if (bIdx !== -1) {
+          await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
+        }
+      } catch (err) {
+        console.error('Firestore deleteStudent error:', err);
+        throw new Error(`Failed to delete student '${student.studentName}' from Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
+      }
+    }
+
     store.students.splice(sIdx, 1);
     store.obligations = (store.obligations || []).filter(o => o.studentId !== studentId);
 
@@ -2310,17 +2358,6 @@ export const AdminDataService = {
           localStorage.setItem('focus_academy_students', JSON.stringify(next));
         }
       } catch {}
-    }
-
-    if (isLive()) {
-      try {
-        await deleteDoc(doc(db, 'students', studentId));
-        if (bIdx !== -1) {
-          await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
-        }
-      } catch (err) {
-        console.warn('Firestore deleteStudent error (local deletion preserved):', err);
-      }
     }
 
     await this.logAudit({
@@ -2667,16 +2704,17 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
-    store.obligations.push(newObligation);
-    saveLocalStore(store);
-
     if (isLive()) {
       try {
         await setDoc(doc(db, 'fee_obligations', newObligation.id), newObligation);
       } catch (err) {
-        console.warn('Firestore createFeeObligation error (local obligation preserved):', err);
+        console.error('Firestore createFeeObligation error:', err);
+        throw new Error(`Failed to save fee obligation '${newObligation.id}' to Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
+
+    store.obligations.push(newObligation);
+    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2794,15 +2832,16 @@ export const AdminDataService = {
     obl.waivedAt = new Date().toISOString();
     obl.updatedAt = new Date().toISOString();
 
-    saveLocalStore(store);
-
     if (isLive()) {
       try {
         await updateDoc(doc(db, 'fee_obligations', obligationId), obl);
       } catch (err) {
-        console.warn('Firestore waiveFeeObligation error (local waiver preserved):', err);
+        console.error('Firestore waiveFeeObligation error:', err);
+        throw new Error(`Failed to save fee waiver to Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
+
+    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -3990,51 +4029,228 @@ export const AdminDataService = {
     if (!isLive()) {
       return { success: false, reason: 'Firebase is not live or configured in this environment.' };
     }
+    const actorEmail = normalizeActorEmail(actor);
     const store = loadLocalStore();
-    const batches = store.batches || [];
-    const students = store.students || [];
-    const obligations = store.obligations || [];
-    const payments = store.payments || [];
+    const batches = (store.batches && store.batches.length > 0) ? store.batches : SEED_BATCHES;
+    const students = (store.students && store.students.length > 0) ? store.students : SEED_STUDENTS;
+    const obligations = (store.obligations && store.obligations.length > 0) ? store.obligations : SEED_OBLIGATIONS;
+    const payments = (store.payments && store.payments.length > 0) ? store.payments : SEED_PAYMENTS;
     const settings = store.settings || this.getSettingsSync();
+
+    const legacyEnrollments = [];
+    const seenEnrollmentIds = new Set();
+    ['focus_academy_submitted_leads_v1', 'focus_academy_pending_leads_v1'].forEach((key) => {
+      try {
+        const raw = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(key)) || localStorage.getItem(key);
+        if (raw) {
+          const rows = JSON.parse(raw);
+          if (Array.isArray(rows)) {
+            rows.forEach((r) => {
+              if (r && r.id && !seenEnrollmentIds.has(r.id)) {
+                seenEnrollmentIds.add(r.id);
+                legacyEnrollments.push(r);
+              }
+            });
+          }
+        }
+      } catch {}
+    });
+
+    try {
+      const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+      if (Array.isArray(registered)) {
+        registered.forEach((r) => {
+          if (r && r.id && !seenEnrollmentIds.has(r.id)) {
+            seenEnrollmentIds.add(r.id);
+            legacyEnrollments.push({
+              id: r.id,
+              enrollmentId: r.id,
+              studentName: r.studentName,
+              parentName: r.parentName || 'Parent',
+              phone: r.phone,
+              grade: r.grade || 'Class 10',
+              board: r.board || 'TN State Board (Samacheer)',
+              batchId: r.selectedBatchId || 'batch-10-state-board',
+              batchName: r.selectedBatchName || 'Focus Evening Batch',
+              timing: r.timing || 'Evening Session',
+              status: r.isWaitlisted ? 'waitlisted' : 'confirmed',
+              source: 'legacy_enrollment',
+              enrolledAt: r.createdAt || new Date().toISOString()
+            });
+          }
+        });
+      }
+    } catch {}
+
+    const results = {
+      batches: { total: batches.length, migrated: 0, skipped: 0, failed: 0 },
+      students: { total: students.length, migrated: 0, skipped: 0, failed: 0 },
+      enrollments: { total: legacyEnrollments.length, migrated: 0, skipped: 0, failed: 0 },
+      obligations: { total: obligations.length, migrated: 0, skipped: 0, failed: 0 },
+      payments: { total: payments.length, migrated: 0, skipped: 0, failed: 0 },
+      settings: { status: 'skipped' },
+    };
+    const errors = [];
+
+    const getCloudIdSet = async (collName) => {
+      try {
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, collName)), 8000);
+        return new Set(snap.docs.map(d => d.id));
+      } catch {
+        return new Set();
+      }
+    };
+
+    const [cloudBatches, cloudStudents, cloudEnrollments, cloudObligations, cloudPayments] = await Promise.all([
+      getCloudIdSet('batches'),
+      getCloudIdSet('students'),
+      getCloudIdSet('enrollments'),
+      getCloudIdSet('fee_obligations'),
+      getCloudIdSet('payments')
+    ]);
 
     try {
       if (settings) {
-        await setDoc(doc(db, 'academy_settings', 'main_config'), settings);
+        await setDoc(doc(db, 'academy_settings', 'main_config'), settings, { merge: true });
+        results.settings.status = 'migrated';
       }
-      for (const b of batches) {
-        await setDoc(doc(db, 'batches', b.id), b);
-      }
-      for (const s of students) {
-        await setDoc(doc(db, 'students', s.id), s);
-      }
-      for (const o of obligations) {
-        await setDoc(doc(db, 'fee_obligations', o.id), o);
-      }
-      for (const p of payments) {
-        await setDoc(doc(db, 'payments', p.id), p);
-      }
-
-      await this.logAudit({
-        actor: normalizeActorEmail(actor),
-        action: 'DATABASE_SYNCED_TO_CLOUD',
-        entityType: 'database',
-        entityId: 'cloud_firestore',
-        details: `Synchronized ${batches.length} batches, ${students.length} students, and ${payments.length} payments to Cloud Firestore.`
-      });
-
-      return {
-        success: true,
-        counts: {
-          batches: batches.length,
-          students: students.length,
-          obligations: obligations.length,
-          payments: payments.length
-        }
-      };
     } catch (err) {
-      console.error('syncAllToCloudFirestore error:', err);
-      throw new Error(`Failed to sync to Cloud Firestore: ${err.message}`);
+      errors.push(`Settings sync: ${err.message}`);
+      results.settings.status = 'failed';
     }
+
+    for (const b of batches) {
+      if (!b.id || !b.name) {
+        results.batches.skipped++;
+        continue;
+      }
+      if (cloudBatches.has(b.id)) {
+        results.batches.skipped++;
+        continue;
+      }
+      try {
+        await setDoc(doc(db, 'batches', b.id), b, { merge: true });
+        results.batches.migrated++;
+      } catch (err) {
+        results.batches.failed++;
+        errors.push(`Batch ${b.id}: ${err.message}`);
+      }
+    }
+
+    for (const s of students) {
+      if (!s.id || !s.studentName || !s.guardianPhone) {
+        results.students.skipped++;
+        continue;
+      }
+      if (cloudStudents.has(s.id)) {
+        results.students.skipped++;
+        continue;
+      }
+      try {
+        await setDoc(doc(db, 'students', s.id), s, { merge: true });
+        results.students.migrated++;
+      } catch (err) {
+        results.students.failed++;
+        errors.push(`Student ${s.id}: ${err.message}`);
+      }
+    }
+
+    for (const enr of legacyEnrollments) {
+      if (!enr.id || !enr.studentName) {
+        results.enrollments.skipped++;
+        continue;
+      }
+      if (cloudEnrollments.has(enr.id)) {
+        results.enrollments.skipped++;
+        continue;
+      }
+      try {
+        const normalizedEnr = {
+          id: enr.id,
+          enrollmentId: enr.id,
+          studentName: enr.studentName,
+          parentName: enr.parentName || 'Parent',
+          phone: cleanPhone10(enr.phone),
+          grade: enr.grade || 'Class 10',
+          board: enr.board || 'TN State Board (Samacheer)',
+          batchId: enr.batchId || enr.selectedBatchId || 'batch-10-state-board',
+          batchName: enr.selectedBatchName || enr.batchName || 'Focus Evening Batch',
+          timing: enr.timing || 'Evening Session',
+          status: enr.status || 'confirmed',
+          enrolledAt: enr.enrolledAt || enr.submittedAt || enr.timestamp || new Date().toISOString(),
+          createdAt: enr.createdAt || new Date().toISOString(),
+          schoolName: enr.schoolName || '',
+          source: 'legacy_migration'
+        };
+        await setDoc(doc(db, 'enrollments', enr.id), normalizedEnr, { merge: true });
+        results.enrollments.migrated++;
+      } catch (err) {
+        results.enrollments.failed++;
+        errors.push(`Enrollment ${enr.id}: ${err.message}`);
+      }
+    }
+
+    for (const o of obligations) {
+      if (!o.id || !o.studentId) {
+        results.obligations.skipped++;
+        continue;
+      }
+      if (cloudObligations.has(o.id)) {
+        results.obligations.skipped++;
+        continue;
+      }
+      try {
+        await setDoc(doc(db, 'fee_obligations', o.id), o, { merge: true });
+        results.obligations.migrated++;
+      } catch (err) {
+        results.obligations.failed++;
+        errors.push(`Fee obligation ${o.id}: ${err.message}`);
+      }
+    }
+
+    for (const p of payments) {
+      if (!p.id || !p.studentId || !p.amount) {
+        results.payments.skipped++;
+        continue;
+      }
+      if (cloudPayments.has(p.id)) {
+        results.payments.skipped++;
+        continue;
+      }
+      try {
+        await setDoc(doc(db, 'payments', p.id), p, { merge: true });
+        results.payments.migrated++;
+      } catch (err) {
+        results.payments.failed++;
+        errors.push(`Payment ${p.id}: ${err.message}`);
+      }
+    }
+
+    const totalMigrated = results.batches.migrated + results.students.migrated + results.enrollments.migrated + results.obligations.migrated + results.payments.migrated;
+    const totalSkipped = results.batches.skipped + results.students.skipped + results.enrollments.skipped + results.obligations.skipped + results.payments.skipped;
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'DATABASE_MIGRATION_EXECUTED',
+      entityType: 'database',
+      entityId: 'cloud_firestore',
+      details: `Cloud Firestore migration executed: Migrated ${totalMigrated} records (Batches: ${results.batches.migrated}, Students: ${results.students.migrated}, Enrollments: ${results.enrollments.migrated}, Payments: ${results.payments.migrated}). Skipped ${totalSkipped} existing cloud records.`
+    });
+
+    return {
+      success: errors.length === 0,
+      totalMigrated,
+      totalSkipped,
+      counts: {
+        batches: results.batches.migrated,
+        students: results.students.migrated,
+        enrollments: results.enrollments.migrated,
+        obligations: results.obligations.migrated,
+        payments: results.payments.migrated
+      },
+      results,
+      errors
+    };
   },
 
   validateAndParseStudentCSV(csvContent) {

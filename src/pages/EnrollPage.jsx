@@ -417,15 +417,20 @@ export default function EnrollPage() {
 
     const saved = registerStudent(enrollmentRecord);
 
-    if (studentUser?.uid && isFirebaseConfigured() && db) {
+    let firestoreWriteError = null;
+    let cloudEnrollmentSaved = false;
+
+    const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift}${enrollmentRecord.schoolDismissalTime ? ` (Finish: ${formatTime12(enrollmentRecord.schoolDismissalTime)}, Travel: ${enrollmentRecord.travelDurationMinutes || 0}m)` : ''} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
+
+    if (isFirebaseConfigured() && db) {
       try {
         const directEnrollment = {
           id: saved.id,
           enrollmentId: saved.id,
           leadId: saved.id,
           source: 'enrollment',
-          studentUid: studentUser.uid,
-          email: studentUser.email || null,
+          studentUid: studentUser?.uid || null,
+          email: studentUser?.email || null,
           studentName: enrollmentRecord.studentName,
           parentName: enrollmentRecord.parentName,
           phone: enrollmentRecord.phone,
@@ -436,24 +441,53 @@ export default function EnrollPage() {
           batchId: selectedBatch.id,
           batchName: selectedBatch.name,
           timing: selectedBatch.timing,
+          monthlyFee: selectedBatch.monthlyFee,
           reservationId: enrollmentRecord.reservationId,
-          status: 'confirmed',
+          status: reservation.waitlisted ? 'waitlisted' : 'pending',
           enrolledAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           schoolName: enrollmentRecord.schoolName,
           educationBoard: enrollmentRecord.educationBoard,
           targetYear: enrollmentRecord.targetYear,
+          schoolShift: enrollmentRecord.schoolShift,
+          schoolDismissalTime: enrollmentRecord.schoolDismissalTime,
+          travelDurationMinutes: enrollmentRecord.travelDurationMinutes,
+          mediumOfInstruction: enrollmentRecord.mediumOfInstruction,
           emergencyContactName: enrollmentRecord.emergencyContactName,
           emergencyPhone: enrollmentRecord.emergencyPhone,
           emergencyRelationship: enrollmentRecord.emergencyRelationship,
+          medicalAlert: enrollmentRecord.medicalAlert,
           studentIdNumber: enrollmentRecord.studentIdNumber,
+          gstin: enrollmentRecord.gstin,
+          addressStreet: enrollmentRecord.addressStreet,
+          addressCityState: enrollmentRecord.addressCityState,
+          addressPincode: enrollmentRecord.addressPincode,
+          isWaitlisted: Boolean(reservation.waitlisted),
+          waitlistPosition: reservation.waitlistPosition || null,
+          notes: notesSummary,
         };
         await setDoc(doc(db, 'enrollments', saved.id), directEnrollment, { merge: true });
+        cloudEnrollmentSaved = true;
+
+        if (enrollmentRecord.reservationId) {
+          try {
+            await setDoc(doc(db, 'reservations', enrollmentRecord.reservationId), {
+              id: enrollmentRecord.reservationId,
+              batchId: selectedBatch.id,
+              studentName: enrollmentRecord.studentName,
+              phone: enrollmentRecord.phone,
+              status: reservation.waitlisted ? 'waitlisted' : 'held',
+              createdAt: new Date().toISOString(),
+              expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+            }, { merge: true });
+          } catch {
+          }
+        }
       } catch (err) {
-        console.warn('Direct Firestore enrollment write bypassed:', err);
+        console.error('Direct Firestore enrollment write failed:', err);
+        firestoreWriteError = err;
       }
     }
-
-    const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift}${enrollmentRecord.schoolDismissalTime ? ` (Finish: ${formatTime12(enrollmentRecord.schoolDismissalTime)}, Travel: ${enrollmentRecord.travelDurationMinutes || 0}m)` : ''} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
 
     const leadResult = await LeadService.submitLead({
       website_url: honeypot || undefined,
@@ -503,6 +537,16 @@ export default function EnrollPage() {
     const whatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(prefilledText)}`;
 
     setIsSubmitting(false);
+
+    if (firestoreWriteError && isFirebaseConfigured() && db) {
+      setSubmissionResult({
+        success: false,
+        partial: false,
+        error: `Database write could not be confirmed in Cloud Firestore: ${firestoreWriteError.message || 'Permission denied or network unreachable'}. Nothing was saved. Please try again or contact the campus desk.`,
+        retryable: true,
+      });
+      return;
+    }
 
     if (!leadResult.success && !leadResult.offlineQueued && leadResult.status === 'invalid') {
       setSubmissionResult({
