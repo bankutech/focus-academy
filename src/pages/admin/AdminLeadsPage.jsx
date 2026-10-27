@@ -1202,6 +1202,19 @@ export default function AdminLeadsPage() {
                   ))}
                 </select>
               </label>
+              {statusNext === 'confirmed' && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-3 rounded-lg text-[11px] space-y-1">
+                  <div className="font-bold flex items-center space-x-1.5 text-emerald-800">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Confirming this enrollment will:</span>
+                  </div>
+                  <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
+                    <li>Officially register student in the active <strong>Students Roster</strong>.</li>
+                    <li>Generate initial monthly fee obligation (<strong>₹{statusModal.monthlyFee ? Number(statusModal.monthlyFee).toLocaleString('en-IN') : '1,800'}</strong>) in Ledger &amp; Invoices.</li>
+                    <li>Update classroom batch seat occupancy.</li>
+                  </ul>
+                </div>
+              )}
               <label className="block">
                 <span className="block font-semibold text-slate-700 mb-1">Reason (required for cancel / archive)</span>
                 <textarea value={statusReason} onChange={(e) => setStatusReason(e.target.value)} rows={3} placeholder="e.g. Duplicate application, guardian requested cancellation" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
