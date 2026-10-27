@@ -55,8 +55,7 @@ service cloud.firestore {
     }
 
     match /students/{studentId} {
-      allow read, create, update: if isAdministrator();
-      allow delete: if false;
+      allow read, create, update, delete: if isAdministrator();
     }
 
     match /fee_obligations/{obligationId} {

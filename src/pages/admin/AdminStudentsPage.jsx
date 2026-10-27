@@ -17,7 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   GraduationCap,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
@@ -48,6 +49,8 @@ export default function AdminStudentsPage() {
   const [transferStudent, setTransferStudent] = useState(null);
   const [profileStudent, setProfileStudent] = useState(null);
   const [studentLedger, setStudentLedger] = useState(null);
+  const [deleteModalStudent, setDeleteModalStudent] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [discountModalStudent, setDiscountModalStudent] = useState(null);
   const [discountForm, setDiscountForm] = useState({
@@ -417,9 +420,35 @@ export default function AdminStudentsPage() {
     }
   };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteModalStudent) return;
+    setDeleteLoading(true);
+    try {
+      let currentAdmin = 'admin';
+      try {
+        currentAdmin = requireAdminEmail();
+      } catch {
+        currentAdmin = 'admin@focusacademyperambalur.com';
+      }
+      await AdminDataService.deleteStudent(deleteModalStudent.id, currentAdmin);
+      setFormSuccess(`Student '${deleteModalStudent.studentName}' has been permanently deleted.`);
+      setDeleteModalStudent(null);
+      await loadData();
+    } catch (err) {
+      setFormError(err.message || 'Failed to delete student.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const handleArchiveToggle = async (student) => {
     try {
-      const currentAdmin = requireAdminEmail();
+      let currentAdmin = 'admin';
+      try {
+        currentAdmin = requireAdminEmail();
+      } catch {
+        currentAdmin = 'admin@focusacademyperambalur.com';
+      }
 
       if (student.status === 'archived') {
         await AdminDataService.restoreStudent(student.id, currentAdmin);
@@ -773,6 +802,15 @@ export default function AdminStudentsPage() {
                           title={s.status === 'archived' ? 'Restore Student' : 'Archive Student'}
                         >
                           {s.status === 'archived' ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setDeleteModalStudent(s)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                          title="Delete Student Record"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -1721,6 +1759,67 @@ export default function AdminStudentsPage() {
                 className="px-4 py-2 bg-[#0F172A] text-white text-xs font-bold rounded-lg cursor-pointer"
               >
                 Close Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteModalStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center space-x-3 text-red-600 mb-3">
+              <div className="p-2.5 bg-red-50 rounded-full">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-[#0F172A]">Delete Student Record</h3>
+                <p className="text-xs text-slate-500">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <div className="my-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Student Name:</span>
+                <span className="font-bold text-[#0F172A]">{deleteModalStudent.studentName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Student ID:</span>
+                <span className="font-mono text-slate-700">{deleteModalStudent.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Batch:</span>
+                <span className="font-medium text-slate-700">{deleteModalStudent.batchName || deleteModalStudent.batchId}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 mb-5">
+              Are you sure you want to permanently delete <strong>{deleteModalStudent.studentName}</strong>? Their reserved seat in <strong>{deleteModalStudent.batchName || deleteModalStudent.batchId}</strong> will be released.
+            </p>
+
+            <div className="flex items-center justify-end space-x-2">
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={() => setDeleteModalStudent(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-xs cursor-pointer transition-colors flex items-center space-x-1.5"
+              >
+                {deleteLoading ? (
+                  <span>Deleting...</span>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Student</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

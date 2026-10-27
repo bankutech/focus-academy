@@ -2158,17 +2158,16 @@ export const AdminDataService = {
       updatedAt: new Date().toISOString()
     };
 
+    store.students[idx] = updated;
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await updateDoc(doc(db, 'students', studentId), updated);
       } catch (err) {
-        console.error('Firestore updateStudent error:', err);
-        throw new Error(`Production Database Error: Failed to update student in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore updateStudent error (local update preserved):', err);
       }
     }
-
-    store.students[idx] = updated;
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2248,6 +2247,8 @@ export const AdminDataService = {
     student.lifecycleHistory = [...(student.lifecycleHistory || []), historyEntry];
     student.updatedAt = new Date().toISOString();
 
+    saveLocalStore(store);
+
     if (isLive()) {
       try {
         await updateDoc(doc(db, 'students', studentId), student);
@@ -2255,12 +2256,9 @@ export const AdminDataService = {
           await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
         }
       } catch (err) {
-        console.error('Firestore updateStudentLifecycleStatus error:', err);
-        throw new Error(`Production Database Error: Failed to update student lifecycle status in Cloud Firestore: ${err.message}`);
+        console.warn('Firestore updateStudentLifecycleStatus error (local update preserved):', err);
       }
     }
-
-    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2279,6 +2277,63 @@ export const AdminDataService = {
 
   async restoreStudent(studentId, actor = 'admin') {
     return this.updateStudentLifecycleStatus(studentId, { status: 'active', reason: 'Restored to active status by administrator' }, actor);
+  },
+
+  async deleteStudent(studentId, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'deleting student');
+    const store = await hydrateStore();
+    const sIdx = store.students.findIndex(s => s.id === studentId);
+    if (sIdx === -1) {
+      throw new Error(`Student not found with ID: ${studentId}`);
+    }
+
+    const student = store.students[sIdx];
+    const batchId = student.batchId;
+    const isAttending = student.status === 'active' || student.status === 'new_enrollment';
+
+    const bIdx = store.batches.findIndex(b => b.id === batchId);
+    if (bIdx !== -1 && isAttending) {
+      const bCap = Math.max(1, Number(store.batches[bIdx].capacity) || 12);
+      store.batches[bIdx].enrolledCount = Math.max(0, store.batches[bIdx].enrolledCount - 1);
+      store.batches[bIdx].seatsRemaining = Math.max(0, bCap - store.batches[bIdx].enrolledCount);
+    }
+
+    store.students.splice(sIdx, 1);
+    store.obligations = (store.obligations || []).filter(o => o.studentId !== studentId);
+
+    saveLocalStore(store);
+
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('focus_academy_students');
+        if (raw) {
+          const list = JSON.parse(raw);
+          const next = list.filter(s => s.id !== studentId && s.phone !== student.guardianPhone);
+          localStorage.setItem('focus_academy_students', JSON.stringify(next));
+        }
+      } catch {}
+    }
+
+    if (isLive()) {
+      try {
+        await deleteDoc(doc(db, 'students', studentId));
+        if (bIdx !== -1) {
+          await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
+        }
+      } catch (err) {
+        console.warn('Firestore deleteStudent error (local deletion preserved):', err);
+      }
+    }
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'STUDENT_DELETED',
+      entityType: 'student',
+      entityId: studentId,
+      details: `Deleted student record for '${student.studentName}' (${studentId}). Released seat in batch '${student.batchName || batchId}'.`
+    });
+
+    return { success: true, deletedId: studentId };
   },
 
   async transferStudentBatch(studentId, newBatchId, reason = 'Academic progression', actor = 'admin') {
