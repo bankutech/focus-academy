@@ -289,7 +289,7 @@ The portal uses environment variables to allow seamless deployment across stagin
 | `VITE_CAMPUS_EMAIL` | String | `contact@focusacademyperambalur.com`| Official institute email for `mailto:` triggers |
 | `VITE_MAPS_DIRECTION_URL`| String | `https://maps.google.com/?q=...` | External Google Maps link for directions |
 | `VITE_MAPS_EMBED_URL` | String | `https://maps.google.com/maps?...` | Embed URL for responsive campus iframe |
-| `VITE_SITE_URL` | String | `https://focusacademyperambalur.com`| Canonical base URL for SEO and OpenGraph tags |
+| `VITE_SITE_URL` | String | `https://focus-academy-virid.vercel.app`| Canonical base URL for per-route canonical tags; set it when a custom domain starts serving |
 
 ---
 
@@ -330,7 +330,7 @@ flowchart LR
     CI --> Lint["Run oxlint & Comment Check"]
     CI --> Build["Vite Production Build (dist)"]
     Build --> Vercel["Deploy to Vercel / Netlify / Cloudflare Edge"]
-    Vercel --> Live["Live Production at focusacademyperambalur.com"]
+    Vercel --> Live["Live production at focus-academy-virid.vercel.app"]
 ```
 
 ### Deploying to Vercel

@@ -39,7 +39,7 @@ describe('Admin login page', () => {
     open();
     expect(screen.queryByText(/Authorized Desks/i)).toBeNull();
     expect(screen.queryByText(/director|principal|coordinator/i)).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Welcome back' })).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Administrator sign in' })).toBeDefined();
   });
 
   it('shows one plain message for wrong password and unknown email', async () => {

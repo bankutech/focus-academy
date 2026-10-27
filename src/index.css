@@ -1,5 +1,47 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Focus Academy design tokens
+   ---------------------------------------------------------------------------
+   Contrast ratios are measured against the surface each token is actually used
+   on (WCAG 2.2 SC 1.4.3 requires 4.5:1 for normal text, 3:1 for large text and
+   non-text UI/graphics).
+
+     --color-brand          #C2410C   5.18:1 on #FFFFFF | 4.95:1 on #F8FAFC
+                                      used for body/heading orange text and for
+                                      solid fills that carry white text
+     --color-brand-strong   #9A3412   7.31:1 on #FFFFFF | 6.98:1 on #F8FAFC
+                                      hover / pressed / active states
+     --color-brand-bright   #EA580C   3.56:1 on #FFFFFF
+                                      decorative surfaces only (glows, tints);
+                                      never placed behind normal-size text
+     --color-whatsapp       #15803D   5.02:1 with white text on the fill
+     --color-whatsapp-strong#166534   hover state for WhatsApp actions
+     --color-ink            #0F172A   17.9:1 on #FFFFFF (primary text)
+     --color-ink-soft       #475569   7.58:1 on #FFFFFF (secondary text)
+     --color-line           #E2E8F0   borders / dividers
+     --color-danger         #B91C1C   6.47:1 on #FFFFFF (error text)
+     --color-success        #15803D
+     --color-warning        #B45309
+   The bright brand orange stays part of the identity for decorative surfaces;
+   text and interactive fills use the darker brand tone so they pass AA.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-brand: #c2410c;
+  --color-brand-strong: #9a3412;
+  --color-brand-bright: #ea580c;
+  --color-brand-tint: #fff7ed;
+  --color-whatsapp: #15803d;
+  --color-whatsapp-strong: #166534;
+  --color-ink: #0f172a;
+  --color-ink-soft: #475569;
+  --color-line: #e2e8f0;
+  --color-canvas: #f8fafc;
+  --color-danger: #b91c1c;
+  --color-success: #15803d;
+  --color-warning: #b45309;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -23,6 +65,26 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     letter-spacing: -0.025em;
+  }
+  /* Keyboard focus fallback. Components that declare their own focus-visible
+     ring keep it; anything without one still shows a visible indicator. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+/* Respect users who ask for less motion. Transitions and animations collapse to
+   a single near-instant frame, and smooth scrolling is disabled. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

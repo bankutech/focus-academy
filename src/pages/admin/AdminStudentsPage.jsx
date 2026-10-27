@@ -111,6 +111,7 @@ export default function AdminStudentsPage() {
       setBatches(b);
     } catch (err) {
       console.error('Error loading students:', err);
+      setFormError(err.message || 'The student roster could not be loaded from the database.');
     }
   }, []);
 
@@ -537,7 +538,7 @@ export default function AdminStudentsPage() {
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add New Student</span>
@@ -574,7 +575,7 @@ export default function AdminStudentsPage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               placeholder="Search by student name, ID, phone, or batch..."
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand"
             />
           </div>
 
@@ -664,7 +665,7 @@ export default function AdminStudentsPage() {
                     </td>
 
                     <td className="py-3.5 px-4">
-                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-[#EA580C] border border-orange-200 truncate max-w-[200px]">
+                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-brand border border-orange-200 truncate max-w-[200px]">
                         {s.batchName || s.batchId}
                       </span>
                       {s.schoolShift && (
@@ -689,7 +690,7 @@ export default function AdminStudentsPage() {
 
                     <td className="py-3.5 px-4">
                       <div className="flex items-center space-x-1 font-mono text-slate-700">
-                        <Phone className="w-3 h-3 text-[#EA580C]" />
+                        <Phone className="w-3 h-3 text-brand" />
                         <span>+91 {s.guardianPhone}</span>
                       </div>
                       <p className="text-[11px] text-slate-400 truncate">{s.guardianName}</p>
@@ -720,7 +721,7 @@ export default function AdminStudentsPage() {
                           className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-[#0F172A] rounded-md font-bold text-[11px] flex items-center space-x-1 cursor-pointer"
                           title="View Ledger &amp; Profile"
                         >
-                          <Receipt className="w-3 h-3 text-[#EA580C]" />
+                          <Receipt className="w-3 h-3 text-brand" />
                           <span>Ledger</span>
                         </button>
 
@@ -745,11 +746,11 @@ export default function AdminStudentsPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenTransfer(s)}
-                          className="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-[#EA580C] rounded-md font-bold text-[11px] flex items-center space-x-1 cursor-pointer"
-                          title="Transfer Batch"
+                          className="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-brand rounded-md font-bold text-[11px] flex items-center space-x-1 cursor-pointer"
+                          title="Move an already enrolled student to a different batch (audited batch transfer)"
                         >
                           <ArrowRightLeft className="w-3 h-3" />
-                          <span className="hidden sm:inline">Transfer</span>
+                          <span className="hidden sm:inline">Change Batch</span>
                         </button>
 
                         <button
@@ -1048,7 +1049,7 @@ export default function AdminStudentsPage() {
                     id="consentCheck"
                     checked={formData.communicationConsent}
                     onChange={(e) => setFormData({ ...formData, communicationConsent: e.target.checked })}
-                    className="rounded text-[#EA580C] focus:ring-[#EA580C]"
+                    className="rounded text-brand focus:ring-brand"
                   />
                   <label htmlFor="consentCheck" className="text-slate-700 font-semibold text-xs">
                     Guardian consented to automated fee reminders and WhatsApp notifications
@@ -1091,7 +1092,7 @@ export default function AdminStudentsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-lg cursor-pointer"
+                  className="px-4 py-2 bg-brand hover:bg-brand-strong text-white font-bold rounded-lg cursor-pointer"
                 >
                   {editStudent ? 'Save Student Updates' : 'Confirm Admission'}
                 </button>
@@ -1106,10 +1107,13 @@ export default function AdminStudentsPage() {
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2">
-                <ArrowRightLeft className="w-5 h-5 text-[#EA580C]" />
-                <h2 className="text-base font-extrabold text-[#0F172A]">
-                  Transfer Batch: {transferStudent.studentName}
-                </h2>
+                <ArrowRightLeft className="w-5 h-5 text-brand" />                  <h2 className="text-base font-extrabold text-[#0F172A]">
+                    Change Batch: {transferStudent.studentName}
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Audited batch transfer — only for moving an already enrolled student to another batch.
+                    Enrollments are already registered in their selected batch and do not need a transfer.
+                  </p>
               </div>
               <button onClick={() => setTransferStudent(null)} className="text-slate-400 hover:text-slate-700 font-bold">
                 ✕
@@ -1135,7 +1139,7 @@ export default function AdminStudentsPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Current Batch:</span>
-                  <span className="font-bold text-[#EA580C]">{transferStudent.batchName}</span>
+                  <span className="font-bold text-brand">{transferStudent.batchName}</span>
                 </div>
               </div>
 
@@ -1188,7 +1192,7 @@ export default function AdminStudentsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-lg cursor-pointer"
+                  className="px-4 py-2 bg-brand hover:bg-brand-strong text-white font-bold rounded-lg cursor-pointer"
                 >
                   Confirm Audited Transfer
                 </button>
@@ -1384,7 +1388,7 @@ export default function AdminStudentsPage() {
           <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2">
-                <Upload className="w-5 h-5 text-[#EA580C]" />
+                <Upload className="w-5 h-5 text-brand" />
                 <h2 className="text-base font-extrabold text-[#0F172A]">
                   Import Students from CSV
                 </h2>
@@ -1403,7 +1407,7 @@ export default function AdminStudentsPage() {
                     onClick={() => {
                       setCsvContent('studentName,guardianName,guardianPhone,grade,board,batchId,billingFrequency,amountPerCycle\n"M. Priya","K. Murugan","9842419999","Class 10","TN State Board (Samacheer)","batch-10-state-board","monthly",2200');
                     }}
-                    className="text-[11px] text-[#EA580C] hover:underline font-bold"
+                    className="text-[11px] text-brand hover:underline font-bold"
                   >
                     Insert Sample Row
                   </button>
@@ -1557,6 +1561,55 @@ export default function AdminStudentsPage() {
               </button>
             </div>
 
+            <div className="mb-5 p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+              <div className="flex items-center space-x-2 mb-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-emerald-900">Enrollment Summary</h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-emerald-200 text-emerald-800">
+                  {profileStudent.status === 'active' || profileStudent.status === 'new_enrollment' ? 'Enrollment completed' : profileStudent.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-[11px]">
+                <div>
+                  <span className="block text-slate-500 font-semibold">Student registered</span>
+                  <span className="font-bold text-slate-800 font-mono">{profileStudent.id}</span>
+                </div>
+                <div>
+                  <span className="block text-slate-500 font-semibold">Selected batch</span>
+                  <span className="font-bold text-slate-800">{profileStudent.batchName || profileStudent.batchId}</span>
+                </div>
+                <div>
+                  <span className="block text-slate-500 font-semibold">Enrollment date</span>
+                  <span className="font-bold text-slate-800 font-mono">{profileStudent.enrollmentDate || '—'}</span>
+                </div>
+                <div>
+                  <span className="block text-slate-500 font-semibold">Admission ID</span>
+                  <span className="font-bold text-slate-800 font-mono">{profileStudent.enrollmentId || profileStudent.id}</span>
+                </div>
+                <div>
+                  <span className="block text-slate-500 font-semibold">Fee status</span>
+                  <span className="font-bold text-slate-800">{(() => {
+                    if (!studentLedger.obligations.length) return 'Not generated';
+                    const settled = studentLedger.totalAmountPaid + studentLedger.totalWaived >= studentLedger.totalFeesCharged;
+                    if (settled) return 'Settled';
+                    if (studentLedger.totalAmountPaid > 0) return 'Partially paid';
+                    return 'Pending payment';
+                  })()}</span>
+                </div>
+                <div>
+                  <span className="block text-slate-500 font-semibold">Payment status</span>
+                  <span className="font-bold text-slate-800">{studentLedger.totalAmountPaid > 0
+                    ? `₹${studentLedger.totalAmountPaid.toLocaleString('en-IN')} received of ₹${studentLedger.totalFeesCharged.toLocaleString('en-IN')}`
+                    : 'No payment received yet'}</span>
+                </div>
+                <div className="col-span-2 sm:col-span-4 text-[10px] text-emerald-900/80">
+                  {profileStudent.source === 'online_enrollment'
+                    ? 'Registered automatically from the online enrollment form. Batch transfer is only for moving this student to a different batch later.'
+                    : 'Registered by an administrator. Batch transfer is only for moving this student to a different batch later.'}
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 text-center">
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Charged</span>
@@ -1646,8 +1699,7 @@ export default function AdminStudentsPage() {
                     studentLedger.payments.map((p) => (
                       <div key={p.id} className="p-2.5 flex items-center justify-between">
                         <div>
-                          <p className="font-mono font-bold text-[#EA580C]">{p.receiptNumber}</p>
-                          <p className="text-[10px] text-slate-400">{p.paymentDate} • {p.paymentMethod.toUpperCase()} (Recorded by: {p.recordedBy || 'admin'})</p>
+                          <p className="font-mono font-bold text-brand">{p.receiptNumber}</p>                              <p className="text-[10px] text-slate-400">{p.paymentDate} • {String(p.paymentMethod || 'cash').toUpperCase()} (Recorded by: {p.recordedBy || 'admin'})</p>
                         </div>
                         <div className="text-right">
                           <p className="font-extrabold text-emerald-600">₹{p.amount}</p>

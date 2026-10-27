@@ -13,6 +13,7 @@ export default function Footer() {
     { name: 'Timings', path: '/timings' },
     { name: 'Fees', path: '/fees' },
     { name: 'Contact', path: '/contact' },
+    { name: 'Privacy Notice', path: '/privacy' },
   ];
 
   const handleBackToTop = () => {
@@ -29,10 +30,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 pb-10 border-b border-[#1E293B]">
           <div className="md:col-span-5">
             <Link to="/" onClick={handleBackToTop} className="flex items-center space-x-3 group">
-              <img 
-                src="/logo.png" 
-                alt="Focus Academy Logo" 
-                className="w-10 h-10 object-contain rounded-md bg-white p-0.5" 
+              <img
+                src="/logo-80.png"
+                alt="Focus Academy logo"
+                width="80"
+                height="80"
+                className="w-10 h-10 object-contain rounded-md bg-white p-0.5"
               />
               <div>
                 <span className="text-xl font-extrabold text-white tracking-tight block">
@@ -49,9 +52,9 @@ export default function Footer() {
           </div>
 
           <div className="md:col-span-3">
-            <h4 className="text-white font-bold uppercase tracking-wider text-xs sm:text-sm mb-4">
+            <h2 className="text-white font-bold uppercase tracking-wider text-xs sm:text-sm mb-4">
               Navigation
-            </h4>
+            </h2>
             <div className="grid grid-cols-2 gap-2.5 text-sm">
               {quickLinks.map((link) => (
                 <Link
@@ -66,11 +69,11 @@ export default function Footer() {
           </div>
 
           <div className="md:col-span-4 space-y-3 text-sm">
-            <h4 className="text-white font-bold uppercase tracking-wider text-xs sm:text-sm mb-4">
+            <h2 className="text-white font-bold uppercase tracking-wider text-xs sm:text-sm mb-4">
               Campus & Contact
-            </h4>
+            </h2>
             <div className="flex items-start space-x-2.5">
-              <MapPin className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+              <MapPin className="w-4 h-4 text-brand shrink-0 mt-0.5" />
               <a
                 href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                 target="_blank"
@@ -81,13 +84,13 @@ export default function Footer() {
               </a>
             </div>
             <div className="flex items-center space-x-2.5">
-              <Phone className="w-4 h-4 text-[#EA580C] shrink-0" />
+              <Phone className="w-4 h-4 text-brand shrink-0" />
               <a href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`} className="text-slate-300 hover:text-white font-semibold transition-colors">
                 {CAMPUS_CONFIG.contact.primaryPhone}
               </a>
             </div>
             <div className="flex items-center space-x-2.5">
-              <MessageCircle className="w-4 h-4 text-[#25D366] shrink-0" />
+              <MessageCircle className="w-4 h-4 text-whatsapp shrink-0" />
               <a
                 href={whatsappInquiryUrl}
                 target="_blank"

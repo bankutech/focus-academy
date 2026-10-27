@@ -261,7 +261,7 @@ export default function AdminRemindersPage() {
           onClick={() => setActiveTab('pending')}
           className={`pb-3 text-xs font-bold transition-colors cursor-pointer border-b-2 flex items-center space-x-2 ${
             activeTab === 'pending'
-              ? 'border-[#EA580C] text-[#EA580C]'
+              ? 'border-brand text-brand'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -274,7 +274,7 @@ export default function AdminRemindersPage() {
           onClick={() => setActiveTab('history')}
           className={`pb-3 text-xs font-bold transition-colors cursor-pointer border-b-2 flex items-center space-x-2 ${
             activeTab === 'history'
-              ? 'border-[#EA580C] text-[#EA580C]'
+              ? 'border-brand text-brand'
               : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -291,7 +291,7 @@ export default function AdminRemindersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={activeTab === 'pending' ? "Search student, obligation ID..." : "Search student, reminder ID, phone..."}
-            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand"
           />
         </div>
 

@@ -44,6 +44,7 @@ export default function AdminReportsPage() {
   const [handedOverInput, setHandedOverInput] = useState('S. Ramanathan (Managing Director)');
   const [closingNotesInput, setClosingNotesInput] = useState('');
   const [tillError, setTillError] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [maskGuardianContacts, setMaskGuardianContacts] = useState(true);
 
   async function loadReportData() {
@@ -76,8 +77,10 @@ export default function AdminReportsPage() {
         setTillSummary(sum);
         setClosingCashInput(String(sum.expectedCashInDrawer || ''));
       }
+      setLoadError('');
     } catch (err) {
       console.error('Failed to load reports data:', err);
+      setLoadError(err.message || 'Report data could not be loaded from the database.');
     } finally {
       setLoading(false);
     }
@@ -265,7 +268,7 @@ export default function AdminReportsPage() {
   if (loading) {
     return (
       <div className="p-8 text-center bg-white rounded-xl border border-slate-200">
-        <div className="w-8 h-8 border-4 border-[#EA580C] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" />
         <p className="text-xs font-semibold text-slate-500">Compiling Institutional Analytics &amp; Reports...</p>
       </div>
     );
@@ -273,6 +276,18 @@ export default function AdminReportsPage() {
 
   return (
     <div className="space-y-6">
+      {loadError && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-xs font-bold text-rose-800 flex items-center justify-between gap-3">
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={loadReportData}
+            className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 rounded-md font-bold cursor-pointer flex-shrink-0"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
@@ -298,7 +313,7 @@ export default function AdminReportsPage() {
               type="checkbox"
               checked={maskGuardianContacts}
               onChange={(e) => setMaskGuardianContacts(e.target.checked)}
-              className="rounded text-[#EA580C] focus:ring-[#EA580C]"
+              className="rounded text-brand focus:ring-brand"
             />
             <span>Mask Minor Phone Numbers</span>
           </label>
@@ -358,7 +373,7 @@ export default function AdminReportsPage() {
           </div>
           <div className="w-full bg-slate-100 rounded-full h-2 mt-3 overflow-hidden">
             <div 
-              className="bg-[#EA580C] h-2 rounded-full transition-all duration-500" 
+              className="bg-brand h-2 rounded-full transition-all duration-500" 
               style={{ width: `${Math.min(100, overallOccupancyPct)}%` }} 
             />
           </div>
@@ -413,7 +428,7 @@ export default function AdminReportsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
           <div>
             <div className="flex items-center space-x-2">
-              <Scale className="w-5 h-5 text-[#EA580C]" />
+              <Scale className="w-5 h-5 text-brand" />
               <h2 className="text-sm font-black text-[#0F172A] uppercase tracking-wide">
                 Financial Ledger Reconciliation
               </h2>

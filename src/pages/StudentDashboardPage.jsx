@@ -217,7 +217,7 @@ export default function StudentDashboardPage() {
           <div className="bg-[#0F172A] p-6 sm:p-8 text-white relative">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div className="flex items-start sm:items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-[#EA580C] text-white flex items-center justify-center font-bold text-2xl shadow-md shrink-0">
+                <div className="w-16 h-16 rounded-2xl bg-brand text-white flex items-center justify-center font-bold text-2xl shadow-md shrink-0">
                   {studentDisplayName.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -242,7 +242,7 @@ export default function StudentDashboardPage() {
               <div className="flex items-center gap-3">
                 <Link
                   to="/batches"
-                  className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 bg-brand hover:bg-brand-strong text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
                   <BookOpen className="w-4 h-4" />
                   <span>Browse Batches</span>
@@ -286,14 +286,14 @@ export default function StudentDashboardPage() {
               onClick={() => setActiveTab('enrollments')}
               className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
                 activeTab === 'enrollments'
-                  ? 'border-[#EA580C] text-[#EA580C]'
+                  ? 'border-brand text-brand'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>My Batches & Admissions</span>
               {enrollments.length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-orange-100 text-[#EA580C] text-[10px] font-bold">
+                <span className="px-1.5 py-0.2 rounded-full bg-orange-100 text-brand text-[10px] font-bold">
                   {enrollments.length}
                 </span>
               )}
@@ -304,7 +304,7 @@ export default function StudentDashboardPage() {
               onClick={() => setActiveTab('profile')}
               className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
                 activeTab === 'profile'
-                  ? 'border-[#EA580C] text-[#EA580C]'
+                  ? 'border-brand text-brand'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -317,7 +317,7 @@ export default function StudentDashboardPage() {
               onClick={() => setActiveTab('guidelines')}
               className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
                 activeTab === 'guidelines'
-                  ? 'border-[#EA580C] text-[#EA580C]'
+                  ? 'border-brand text-brand'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -330,7 +330,7 @@ export default function StudentDashboardPage() {
               onClick={() => setActiveTab('fees')}
               className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
                 activeTab === 'fees'
-                  ? 'border-[#EA580C] text-[#EA580C]'
+                  ? 'border-brand text-brand'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -391,14 +391,14 @@ export default function StudentDashboardPage() {
 
             {loadingEnrollments ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                <div className="w-8 h-8 border-3 border-[#EA580C] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <div className="w-8 h-8 border-3 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" />
                 <p className="text-xs font-semibold text-slate-500">
                   Retrieving your admission records from Focus Academy...
                 </p>
               </div>
             ) : enrollments.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-4">
-                <div className="w-14 h-14 bg-orange-50 text-[#EA580C] rounded-2xl flex items-center justify-center mx-auto">
+                <div className="w-14 h-14 bg-orange-50 text-brand rounded-2xl flex items-center justify-center mx-auto">
                   <BookOpen className="w-7 h-7" />
                 </div>
                 <div>
@@ -409,7 +409,7 @@ export default function StudentDashboardPage() {
                 </div>
                 <Link
                   to="/batches"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
                   <span>Browse Available Batches</span>
                   <ArrowRight className="w-4 h-4" />
@@ -434,7 +434,7 @@ export default function StudentDashboardPage() {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-50 text-[#EA580C] border border-orange-200 mb-1.5">
+                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-orange-50 text-brand border border-orange-200 mb-1.5">
                             {enr.grade || studentGrade} • {enr.board || 'Samacheer'}
                           </span>
                           <h3 className="text-base font-extrabold text-[#0F172A] leading-snug">
@@ -450,7 +450,7 @@ export default function StudentDashboardPage() {
                       <div className="space-y-2 bg-slate-50/70 p-3.5 rounded-xl border border-slate-100 text-xs text-slate-700">
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-[#EA580C]" />
+                            <Clock className="w-3.5 h-3.5 text-brand" />
                             <span>Batch Timing:</span>
                           </span>
                           <span className="font-bold text-[#0F172A]">{enr.timing || 'Evening Session (4:00 PM – 8:30 PM)'}</span>
@@ -471,7 +471,7 @@ export default function StudentDashboardPage() {
                         </div>
                         <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
                           <span className="text-slate-500">Admission Slip ID:</span>
-                          <span className="font-mono font-bold text-[#EA580C]">{enr.id}</span>
+                          <span className="font-mono font-bold text-brand">{enr.id}</span>
                         </div>
                       </div>
 
@@ -553,7 +553,7 @@ export default function StudentDashboardPage() {
                       required
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand"
                     />
                   </div>
 
@@ -567,7 +567,7 @@ export default function StudentDashboardPage() {
                       maxLength={10}
                       value={editMobile}
                       onChange={(e) => setEditMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand"
                     />
                   </div>
                 </div>
@@ -580,7 +580,7 @@ export default function StudentDashboardPage() {
                     <select
                       value={editGrade}
                       onChange={(e) => setEditGrade(e.target.value)}
-                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-brand"
                     >
                       <option value="Class 8">Class 8</option>
                       <option value="Class 9">Class 9</option>
@@ -598,7 +598,7 @@ export default function StudentDashboardPage() {
                     <select
                       value={editBoard}
                       onChange={(e) => setEditBoard(e.target.value)}
-                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-brand"
                     >
                       <option value="TN State Board (Samacheer)">TN State Board (Samacheer)</option>
                       <option value="CBSE Board">CBSE Board</option>
@@ -616,7 +616,7 @@ export default function StudentDashboardPage() {
                       type="text"
                       value={editParentName}
                       onChange={(e) => setEditParentName(e.target.value)}
-                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand"
                     />
                   </div>
 
@@ -629,7 +629,7 @@ export default function StudentDashboardPage() {
                       maxLength={10}
                       value={editParentPhone}
                       onChange={(e) => setEditParentPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+                      className="w-full px-3.5 py-2 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand"
                     />
                   </div>
                 </div>
@@ -638,7 +638,7 @@ export default function StudentDashboardPage() {
                   <button
                     type="submit"
                     disabled={savingProfile}
-                    className="px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                    className="px-5 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" />
                     <span>{savingProfile ? 'Saving Changes...' : 'Save Profile Changes'}</span>
@@ -707,7 +707,7 @@ export default function StudentDashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="p-4 rounded-xl bg-orange-50/50 border border-orange-100 space-y-1.5">
                 <div className="flex items-center gap-2 font-bold text-orange-950">
-                  <Award className="w-4 h-4 text-[#EA580C]" />
+                  <Award className="w-4 h-4 text-brand" />
                   <span>12-Student Strict Batch Cap</span>
                 </div>
                 <p className="text-slate-600 leading-relaxed">
@@ -756,7 +756,7 @@ export default function StudentDashboardPage() {
               </div>
               <a
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
-                className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs rounded-xl whitespace-nowrap self-start sm:self-auto cursor-pointer"
+                className="px-4 py-2 bg-brand hover:bg-brand-strong text-white font-bold text-xs rounded-xl whitespace-nowrap self-start sm:self-auto cursor-pointer"
               >
                 Call Campus Desk
               </a>
@@ -806,7 +806,7 @@ export default function StudentDashboardPage() {
             <div className="pt-2">
               <Link
                 to="/fees"
-                className="inline-flex items-center gap-2 text-xs font-bold text-[#EA580C] hover:underline cursor-pointer"
+                className="inline-flex items-center gap-2 text-xs font-bold text-brand hover:underline cursor-pointer"
               >
                 <span>View Full Transparent Tuition Fee Table & Calculator</span>
                 <ArrowRight className="w-3.5 h-3.5" />

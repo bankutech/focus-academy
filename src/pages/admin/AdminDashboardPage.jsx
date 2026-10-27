@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Users, 
@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   ShieldCheck,
   UserPlus,
-  ClipboardCheck
+  ClipboardCheck,
+  RefreshCw
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
@@ -25,55 +26,40 @@ export default function AdminDashboardPage() {
   const [obligations, setObligations] = useState([]);
   const [payments, setPayments] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
-  const [loadError, setLoadError] = useState('');
+  const [dataErrors, setDataErrors] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [m, b, o, p, enr] = await Promise.all([
-          AdminDataService.getDashboardMetrics(),
-          AdminDataService.getBatches(),
-          AdminDataService.getFeeObligations(),
-          AdminDataService.getPayments(),
-          AdminDataService.getEnrollments().catch(() => [])
-        ]);
-        setMetrics(m);
-        setBatches(b.filter(item => !item.isArchived));
-        setObligations(o);
-        setPayments(p);
-        setEnrollments(enr || []);
-      } catch (err) {
-        setLoadError(err.message || 'Campus records could not be loaded.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setDataErrors([]);
+    const errors = [];
+    const safeGet = async (label, fn) => {
+      try { return await fn(); }
+      catch (err) { errors.push(`${label}: ${err.message || 'unavailable'}`); return null; }
+    };
+    const [m, b, o, p, enr] = await Promise.all([
+      safeGet('Metrics', () => AdminDataService.getDashboardMetrics()),
+      safeGet('Batches', () => AdminDataService.getBatches()),
+      safeGet('Fee Obligations', () => AdminDataService.getFeeObligations()),
+      safeGet('Payments', () => AdminDataService.getPayments()),
+      safeGet('Enrollments', () => AdminDataService.getEnrollments()),
+    ]);
+    if (m) setMetrics(m);
+    if (b) setBatches(b.filter(item => !item.isArchived));
+    if (o) setObligations(o);
+    if (p) setPayments(p);
+    if (enr) setEnrollments(enr);
+    setDataErrors(errors);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   if (loading) {
     return (
       <div className="p-12 text-center bg-white rounded-xl border border-slate-200">
-        <div className="w-8 h-8 border-3 border-[#EA580C] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <div className="w-8 h-8 border-3 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" />
         <p className="text-xs font-semibold text-slate-500">Loading Campus Records...</p>
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className="p-8 text-center bg-white rounded-xl border border-rose-200">
-        <AlertTriangle className="w-6 h-6 text-rose-600 mx-auto mb-2" />
-        <p className="text-sm font-bold text-[#0F172A]">Campus records are unavailable</p>
-        <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">{loadError}</p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="mt-4 px-3.5 py-2 bg-[#0F172A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold cursor-pointer"
-        >
-          Try again
-        </button>
       </div>
     );
   }
@@ -172,9 +158,17 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={loadData}
+            className="inline-flex items-center space-x-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold border border-slate-200 transition-colors cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Refresh</span>
+          </button>
           <Link
             to="/admin-portal/ledger"
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
           >
             <CreditCard className="w-3.5 h-3.5" />
             <span>Record Payment</span>
@@ -195,6 +189,27 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {dataErrors.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900">
+          <div className="flex items-start space-x-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold mb-1">Some data sources are temporarily unavailable. Showing cached or partial data.</p>
+              {dataErrors.map((e, i) => (
+                <p key={i} className="text-amber-800 text-[11px]">• {e}</p>
+              ))}
+              <button
+                type="button"
+                onClick={loadData}
+                className="mt-2 px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded text-[11px] cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map((card) => {
@@ -227,7 +242,7 @@ export default function AdminDashboardPage() {
 
               <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 group-hover:text-slate-700 transition-colors">
                 <span className="truncate">{card.sub}</span>
-                <div className="flex items-center space-x-1 text-[#EA580C] font-semibold text-[11px] flex-shrink-0 ml-2">
+                <div className="flex items-center space-x-1 text-brand font-semibold text-[11px] flex-shrink-0 ml-2">
                   <span>View</span>
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                 </div>
@@ -266,7 +281,7 @@ export default function AdminDashboardPage() {
           </div>
           <Link
             to="/admin-portal/leads?source=enrollment"
-            className="text-xs font-bold text-[#EA580C] hover:underline flex items-center space-x-1"
+            className="text-xs font-bold text-brand hover:underline flex items-center space-x-1"
           >
             <span>View All Admissions</span>
             <ArrowRight className="w-3 h-3" />
@@ -278,52 +293,54 @@ export default function AdminDashboardPage() {
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-400 uppercase text-[10px] tracking-wider">
-                  <th className="py-2.5 font-bold">Slip No</th>
-                  <th className="py-2.5 font-bold">Student Name</th>
-                  <th className="py-2.5 font-bold">Grade & Board</th>
-                  <th className="py-2.5 font-bold">Selected Batch</th>
-                  <th className="py-2.5 font-bold">Contact Mobile</th>
-                  <th className="py-2.5 font-bold">Date</th>
+                  <th className="py-2.5 pr-3 font-bold">Slip No</th>
+                  <th className="py-2.5 pr-3 font-bold">Student Name</th>
+                  <th className="py-2.5 pr-3 font-bold">Grade & Board</th>
+                  <th className="py-2.5 pr-3 font-bold">Selected Batch</th>
+                  <th className="py-2.5 pr-3 font-bold">Contact Mobile</th>
+                  <th className="py-2.5 pr-3 font-bold">Date</th>
                   <th className="py-2.5 font-bold">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {enrollments.slice(0, 6).map((enrItem) => (
+                {enrollments.slice(0, 10).map((enrItem) => (
                   <tr key={enrItem.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3 font-mono font-bold text-[#EA580C]">
+                    <td className="py-3 pr-3 font-mono font-bold text-brand text-[11px]">
                       {enrItem.id}
                     </td>
-                    <td className="py-3 font-semibold text-[#0F172A]">
+                    <td className="py-3 pr-3">
                       <div className="font-bold text-[#0F172A]">{enrItem.studentName}</div>
                       {enrItem.parentName && (
                         <div className="text-[11px] text-slate-400 font-normal">Guardian: {enrItem.parentName}</div>
                       )}
                     </td>
-                    <td className="py-3 text-slate-700">
+                    <td className="py-3 pr-3 text-slate-700">
                       <span className="font-medium block">{enrItem.grade}</span>
                       <span className="text-[11px] text-slate-500">{enrItem.board}</span>
                     </td>
-                    <td className="py-3">
-                      <span className="font-semibold text-slate-800 block truncate max-w-[220px]">
+                    <td className="py-3 pr-3">
+                      <span className="font-semibold text-slate-800 block truncate max-w-[200px]">
                         {enrItem.batchName || enrItem.selectedBatchName || 'Focus Evening Batch'}
                       </span>
                       {enrItem.timing && (
                         <span className="text-[11px] text-slate-500 font-mono">{enrItem.timing}</span>
                       )}
                     </td>
-                    <td className="py-3 font-mono text-[11px] text-slate-700">
+                    <td className="py-3 pr-3 font-mono text-[11px] text-slate-700">
                       +91 {enrItem.phone}
                     </td>
-                    <td className="py-3 text-slate-500 font-mono text-[11px]">
+                    <td className="py-3 pr-3 text-slate-500 font-mono text-[11px]">
                       {enrItem.enrolledAt ? String(enrItem.enrolledAt).split('T')[0] : 'Today'}
                     </td>
                     <td className="py-3">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         enrItem.status === 'confirmed'
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : enrItem.status === 'waitlisted'
+                          ? 'bg-blue-50 text-blue-800 border border-blue-200'
                           : 'bg-amber-50 text-amber-800 border border-amber-200'
                       }`}>
-                        {enrItem.status === 'confirmed' ? 'Confirmed' : 'Pending Review'}
+                        {enrItem.status === 'confirmed' ? 'Confirmed' : enrItem.status === 'waitlisted' ? 'Waitlisted' : 'Pending Review'}
                       </span>
                     </td>
                   </tr>
@@ -332,9 +349,11 @@ export default function AdminDashboardPage() {
             </table>
           </div>
         ) : (
-          <p className="text-xs text-slate-400 py-6 text-center">
-            No online admissions recorded yet. Once a student submits their enrollment, their details will display here immediately.
-          </p>
+          <div className="py-10 text-center">
+            <ClipboardCheck className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-xs text-slate-400 font-semibold">No online admissions recorded yet.</p>
+            <p className="text-[11px] text-slate-400 mt-1">Once a student submits the enrollment form, their details will appear here immediately.</p>
+          </div>
         )}
       </div>
 
@@ -351,7 +370,7 @@ export default function AdminDashboardPage() {
             </div>
             <Link
               to="/admin-portal/ledger"
-              className="text-xs font-bold text-[#EA580C] hover:underline flex items-center space-x-1"
+              className="text-xs font-bold text-brand hover:underline flex items-center space-x-1"
             >
               <span>View Full Ledger</span>
               <ArrowRight className="w-3 h-3" />
@@ -373,7 +392,7 @@ export default function AdminDashboardPage() {
                 <tbody className="divide-y divide-slate-100">
                   {metrics.recentPayments.slice(0, 5).map((pay) => (
                     <tr key={pay.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 font-mono font-bold text-[#EA580C]">
+                      <td className="py-3 font-mono font-bold text-brand">
                         {pay.receiptNumber}
                       </td>
                       <td className="py-3 font-semibold text-[#0F172A]">
@@ -384,7 +403,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="py-3">
                         <span className="capitalize px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                          {pay.paymentMethod.replace('_', ' ')}
+                          {String(pay.paymentMethod || '').replace('_', ' ')}
                         </span>
                       </td>
                       <td className="py-3 text-slate-500 font-mono text-[11px]">
@@ -413,7 +432,7 @@ export default function AdminDashboardPage() {
                   Classroom density enforcement
                 </p>
               </div>
-              <Link to="/admin-portal/batches" className="text-xs text-[#EA580C] font-bold hover:underline">
+              <Link to="/admin-portal/batches" className="text-xs text-brand font-bold hover:underline">
                 Manage Batches →
               </Link>
             </div>
@@ -457,7 +476,7 @@ export default function AdminDashboardPage() {
             </div>
             <Link
               to="/admin-portal/reports"
-              className="text-xs font-bold text-[#EA580C] hover:underline"
+              className="text-xs font-bold text-brand hover:underline"
             >
               Export Reports →
             </Link>

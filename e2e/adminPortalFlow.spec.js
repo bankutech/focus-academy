@@ -69,6 +69,12 @@ test.describe('Focus Academy Admin Portal E2E', () => {
     await expect(page.getByText(/Campus Operations Dashboard/i)).toBeVisible();
     await expect(page.getByText(/Active Students/i).first()).toBeVisible();
 
+    await page.getByRole('link', { name: 'Inquiries & Leads' }).first().click();
+    await expect(page).toHaveURL(/.*admin-portal\/leads/);
+    await expect(page.getByText('Enrollments & Admission Inquiries').first()).toBeVisible();
+    await expect(page.getByText('Enrollment Records (Admission Funnel)').first()).toBeVisible();
+    await expect(page.getByText('No enrollment records match the current filter.').first()).toBeVisible();
+
     await page.getByRole('link', { name: 'Batches' }).first().click();
     await expect(page).toHaveURL(/.*admin-portal\/batches/);
     await expect(page.getByText('Batch Management').first()).toBeVisible();

@@ -24,6 +24,8 @@ const CoursesPage = lazy(() => import('./pages/CoursesPage'));
 const FeesPage = lazy(() => import('./pages/FeesPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'));
 const AdminProtectedRoute = lazy(() => import('./pages/admin/AdminProtectedRoute'));
@@ -40,12 +42,24 @@ const AdminAuditLogsPage = lazy(() => import('./pages/admin/AdminAuditLogsPage')
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
 
 function RouteLoadingFallback() {
-  return null;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="min-h-[60vh] w-full flex flex-col items-center justify-center gap-3 p-6 text-center bg-[#F8FAFC]"
+    >
+      <span
+        aria-hidden="true"
+        className="h-9 w-9 rounded-full border-2 border-[#E2E8F0] border-t-brand animate-spin"
+      />
+      <p className="text-sm font-semibold text-ink-soft">Loading this page…</p>
+    </div>
+  );
 }
 
 function PublicLayout() {
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans-body flex flex-col selection:bg-[#EA580C] selection:text-white">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] font-sans-body flex flex-col selection:bg-brand selection:text-white">
       <a 
         href="#main-content" 
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#0F172A] focus:text-white focus:rounded-xl focus:shadow-editorial text-xs font-bold"
@@ -131,7 +145,9 @@ export default function App() {
                   <Route path="/fees" element={<FeesPage />} />
                   <Route path="/contact" element={<ContactPage />} />
                   <Route path="/about" element={<AboutPage />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/404" element={<NotFoundPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>
             </Suspense>

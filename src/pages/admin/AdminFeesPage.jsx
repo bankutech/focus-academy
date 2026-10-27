@@ -40,6 +40,7 @@ export default function AdminFeesPage() {
       setStudents(s);
     } catch (err) {
       console.error('Failed to load fee obligations:', err);
+      setFormError(err.message || 'Fee schedules could not be loaded from the database.');
     }
   };
 
@@ -146,7 +147,7 @@ export default function AdminFeesPage() {
         <button
           type="button"
           onClick={handleGenerateNextCycle}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
         >
           <Calendar className="w-4 h-4" />
           <span>Generate Next Billing Cycle</span>
@@ -188,7 +189,7 @@ export default function AdminFeesPage() {
               setCurrentPage(1);
             }}
             placeholder="Search by student name, obligation ID, or cycle..."
-            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand"
           />
         </div>
 
@@ -286,7 +287,7 @@ export default function AdminFeesPage() {
                         {obl.balance > 0 && obl.status !== 'paid' && obl.status !== 'waived' ? (
                           <Link
                             to={`/admin-portal/ledger?studentId=${obl.studentId}&obligationId=${obl.id}`}
-                            className="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-[#EA580C] rounded-md font-bold text-[11px] cursor-pointer"
+                            className="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-brand rounded-md font-bold text-[11px] cursor-pointer"
                           >
                             Pay
                           </Link>

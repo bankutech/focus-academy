@@ -1,3 +1,4 @@
+import { usePageMeta } from '../../hooks/usePageMeta';
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -22,6 +23,11 @@ import { logOutAdmin, isFirebaseConfigured } from '../../services/firebase';
 import { getVerifiedAdmin, setVerifiedAdmin } from '../../services/adminIdentity';
 
 export default function AdminLayout() {
+  usePageMeta({
+    title: 'Admin Portal | Focus Academy',
+    path: '/admin-portal',
+    robots: 'noindex,nofollow',
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
@@ -112,10 +118,12 @@ export default function AdminLayout() {
             </button>
 
             <a href="/admin-portal" className="flex items-center space-x-3 cursor-pointer">
-              <img 
-                src="/logo.png" 
-                alt="Focus Academy" 
-                className="w-9 h-9 object-contain rounded-md bg-white p-0.5" 
+              <img
+                src="/logo-80.png"
+                alt="Focus Academy"
+                width="80"
+                height="80"
+                className="w-9 h-9 object-contain rounded-md bg-white p-0.5"
               />
               <div className="flex flex-col text-left">
                 <div className="flex items-center space-x-2">
@@ -213,7 +221,7 @@ export default function AdminLayout() {
                           : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 ${active ? 'text-[#EA580C]' : 'text-slate-400'}`} />
+                      <Icon className={`w-4 h-4 ${active ? 'text-brand' : 'text-slate-400'}`} />
                       <span>{item.name}</span>
                     </NavLink>
                   );
@@ -247,7 +255,7 @@ export default function AdminLayout() {
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-slate-200">
                   <div className="flex items-center space-x-2">
-                    <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
+                    <img src="/logo-80.png" alt="Focus Academy logo" width="80" height="80" className="w-8 h-8 object-contain" />
                     <span className="font-extrabold text-sm text-[#0F172A]">Focus Admin</span>
                   </div>
                   <button
@@ -282,7 +290,7 @@ export default function AdminLayout() {
                             : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
                         }`}
                       >
-                        <Icon className={`w-4 h-4 ${active ? 'text-[#EA580C]' : 'text-slate-400'}`} />
+                        <Icon className={`w-4 h-4 ${active ? 'text-brand' : 'text-slate-400'}`} />
                         <span>{item.name}</span>
                       </NavLink>
                     );

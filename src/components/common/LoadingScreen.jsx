@@ -32,12 +32,12 @@ export default function LoadingScreen({
       className="min-h-screen w-full bg-[#F8FAFC] flex flex-col items-center justify-center p-6 text-center select-none"
     >
       <div className="relative mb-6">
-        <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-[#EA580C]/25 via-[#F97316]/15 to-transparent blur-xl animate-pulse" />
+        <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-brand-bright/25 via-[#F97316]/15 to-transparent blur-xl animate-pulse" />
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#0F172A] border-2 border-slate-700/60 shadow-2xl flex items-center justify-center">
-          <div className="absolute -inset-1.5 border-2 border-transparent border-t-[#EA580C] border-r-[#F97316]/50 rounded-2xl animate-spin" />
+          <div className="absolute -inset-1.5 border-2 border-transparent border-t-brand border-r-[#F97316]/50 rounded-2xl animate-spin" />
           <div className="relative flex items-center">
             <span className="font-extrabold text-white text-3xl sm:text-4xl tracking-tight">FA</span>
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#EA580C] ml-1 animate-ping" />
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-brand ml-1 animate-ping" />
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function LoadingScreen({
             {message}
           </span>
           {initialMode && (
-            <span className="text-xs font-extrabold text-[#EA580C] tabular-nums">
+            <span className="text-xs font-extrabold text-brand tabular-nums">
               {progress}%
             </span>
           )}
@@ -66,11 +66,11 @@ export default function LoadingScreen({
         <div className="h-2 bg-slate-200/90 rounded-full overflow-hidden relative shadow-inner p-0.5">
           {initialMode ? (
             <div 
-              className="h-full bg-gradient-to-r from-[#EA580C] via-[#F97316] to-[#EA580C] rounded-full transition-all duration-75 ease-out"
+              className="h-full bg-gradient-to-r from-brand via-[#F97316] to-brand rounded-full transition-all duration-75 ease-out"
               style={{ width: `${progress}%` }}
             />
           ) : (
-            <div className="h-full bg-gradient-to-r from-[#EA580C] via-[#F97316] to-[#EA580C] w-1/2 rounded-full animate-loader-shimmer" />
+            <div className="h-full bg-gradient-to-r from-brand via-[#F97316] to-brand w-1/2 rounded-full animate-loader-shimmer" />
           )}
         </div>
       </div>

@@ -80,7 +80,7 @@ export default function StudentLoginPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-[#EA580C] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-brand border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -91,7 +91,7 @@ export default function StudentLoginPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-[#0F172A] text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <GraduationCap className="w-7 h-7 text-[#EA580C]" />
+            <GraduationCap className="w-7 h-7 text-brand" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
             {resetMode ? 'Reset Password' : 'Student Login'}
@@ -124,7 +124,7 @@ export default function StudentLoginPage() {
                 <button
                   type="button"
                   onClick={() => { setResetMode(false); setResetSent(false); setLocalError(''); }}
-                  className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-[#EA580C] hover:underline cursor-pointer"
+                  className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline cursor-pointer"
                 >
                   <ArrowRight className="w-3.5 h-3.5 rotate-180" /> Back to Sign In
                 </button>
@@ -144,7 +144,7 @@ export default function StudentLoginPage() {
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder="student@example.com"
                       autoComplete="email"
-                      className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA580C]/30 focus:border-[#EA580C] bg-white"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white"
                     />
                   </div>
                 </div>
@@ -182,7 +182,7 @@ export default function StudentLoginPage() {
                   onChange={(e) => { setEmail(e.target.value); setLocalError(''); }}
                   placeholder="student@example.com"
                   autoComplete="email"
-                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA580C]/30 focus:border-[#EA580C] bg-white"
+                  className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white"
                 />
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function StudentLoginPage() {
                   onChange={(e) => { setPassword(e.target.value); setLocalError(''); }}
                   placeholder="Enter your password"
                   autoComplete="current-password"
-                  className="w-full pl-10 pr-11 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#EA580C]/30 focus:border-[#EA580C] bg-white"
+                  className="w-full pl-10 pr-11 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white"
                 />
                 <button
                   type="button"
@@ -218,7 +218,7 @@ export default function StudentLoginPage() {
               <button
                 type="button"
                 onClick={() => { setResetMode(true); setResetEmail(email); setLocalError(''); }}
-                className="text-xs font-bold text-[#EA580C] hover:underline cursor-pointer"
+                className="text-xs font-bold text-brand hover:underline cursor-pointer"
               >
                 Forgot password?
               </button>
@@ -227,7 +227,7 @@ export default function StudentLoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -244,7 +244,7 @@ export default function StudentLoginPage() {
 
             <p className="text-center text-xs text-slate-500 pt-2">
               Don&apos;t have an account?{' '}
-              <Link to="/signup" className="font-bold text-[#EA580C] hover:underline">
+              <Link to="/signup" className="font-bold text-brand hover:underline">
                 Create Account
               </Link>
             </p>

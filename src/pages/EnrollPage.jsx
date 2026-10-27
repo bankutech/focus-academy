@@ -1,3 +1,4 @@
+import { usePageMeta } from '../hooks/usePageMeta';
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link, Navigate } from 'react-router-dom';
 import { 
@@ -39,6 +40,11 @@ import { doc, setDoc } from 'firebase/firestore';
 const getNowIsoString = () => new Date().toISOString();
 
 export default function EnrollPage() {
+  usePageMeta({
+    title: 'Admission Step 5 — Complete Batch Enrollment | Focus Academy',
+    description: 'Review the selected batch, confirm the guardian declaration and submit the Focus Academy admission for the campus desk to confirm.',
+    path: '/enroll',
+  });
   const { batchId } = useParams();
   const navigate = useNavigate();
   const { studentFlow, setStudentFlow, registerStudent, ensureVerifiedSession } = useStudentFlow();
@@ -109,7 +115,8 @@ export default function EnrollPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRetryingLead, setIsRetryingLead] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
-  const [declarationChecked, setDeclarationChecked] = useState(true);
+  const [declarationChecked, setDeclarationChecked] = useState(false);
+  const [optionalConsent, setOptionalConsent] = useState(false);
 
   const redirectPath = getStepRedirect(5, studentFlow);
   if (redirectPath) {
@@ -154,6 +161,10 @@ export default function EnrollPage() {
 
   const validateForm = () => {
     const errors = {};
+
+    if (!declarationChecked) {
+      errors.declaration = 'Please confirm the guardian declaration before submitting this admission.';
+    }
 
     if (!studentName.trim() || studentName.trim().length < 2) {
       errors.studentName = 'Student name must be at least 2 characters.';
@@ -410,6 +421,9 @@ export default function EnrollPage() {
       try {
         const directEnrollment = {
           id: saved.id,
+          enrollmentId: saved.id,
+          leadId: saved.id,
+          source: 'enrollment',
           studentUid: studentUser.uid,
           email: studentUser.email || null,
           studentName: enrollmentRecord.studentName,
@@ -433,7 +447,7 @@ export default function EnrollPage() {
           emergencyRelationship: enrollmentRecord.emergencyRelationship,
           studentIdNumber: enrollmentRecord.studentIdNumber,
         };
-        await setDoc(doc(db, 'enrollments', saved.id), directEnrollment);
+        await setDoc(doc(db, 'enrollments', saved.id), directEnrollment, { merge: true });
       } catch (err) {
         console.warn('Direct Firestore enrollment write bypassed:', err);
       }
@@ -473,7 +487,12 @@ export default function EnrollPage() {
       selectedBatchName: selectedBatch.name,
       studentUid: studentUser?.uid || null,
       email: studentUser?.email || null,
+      guardianDeclarationAccepted: true,
+      guardianDeclarationAcceptedAt: new Date().toISOString(),
+      optionalUpdatesConsent: optionalConsent === true,
       reservationId: enrollmentRecord.reservationId,
+      enrollmentId: saved.id,
+      isWaitlisted: Boolean(enrollmentRecord.isWaitlisted),
       stepToken: session?.stepToken,
       timing: selectedBatch.timing,
       subjects: selectedBatch.name,
@@ -569,7 +588,7 @@ export default function EnrollPage() {
               )}
               <Link 
                 to="/batches" 
-                className="text-xs font-bold text-[#C2410C] hover:underline"
+                className="text-xs font-bold text-brand hover:underline"
               >
                 Browse Alternative Batches →
               </Link>
@@ -594,7 +613,7 @@ export default function EnrollPage() {
         {submissionResult?.success ? (
           <div className="bg-white rounded-lg p-8 sm:p-12 border border-[#E2E8F0] shadow-sm text-center max-w-2xl mx-auto animate-in fade-in">
             <div className="w-16 h-16 rounded-full bg-[#0F172A] text-white flex items-center justify-center mx-auto mb-5 shadow-sm">
-              <CheckCircle2 className="w-9 h-9 text-[#EA580C]" />
+              <CheckCircle2 className="w-9 h-9 text-brand" />
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
@@ -625,7 +644,7 @@ export default function EnrollPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-medium">Batch:</span>
-                <span className="font-bold text-[#EA580C] text-right truncate max-w-[200px]">{selectedBatch.shortTitle}</span>
+                <span className="font-bold text-brand text-right truncate max-w-[200px]">{selectedBatch.shortTitle}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-medium">School / College:</span>
@@ -689,7 +708,7 @@ export default function EnrollPage() {
                 href={submissionResult.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3.5 bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold text-xs rounded-md shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-98"
+                className="w-full py-3.5 bg-whatsapp hover:bg-whatsapp-strong text-white font-bold text-xs rounded-md shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer active:scale-98"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Notify Campus Desk on WhatsApp</span>
@@ -768,7 +787,7 @@ export default function EnrollPage() {
             <div className="bg-white rounded-xl p-5 sm:p-6 border border-[#E2E8F0] shadow-xs">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 text-[#EA580C] text-xs font-bold uppercase tracking-wider">
+                  <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 text-brand text-xs font-bold uppercase tracking-wider">
                     Selected Evening Batch
                   </span>
                   <h2 className="text-lg sm:text-xl font-extrabold text-[#0F172A] tracking-tight">
@@ -778,7 +797,7 @@ export default function EnrollPage() {
 
                 <Link
                   to="/batches"
-                  className="inline-flex items-center space-x-1 text-xs font-bold text-[#EA580C] hover:text-[#C2410C] hover:underline shrink-0"
+                  className="inline-flex items-center space-x-1 text-xs font-bold text-brand hover:text-brand-strong hover:underline shrink-0"
                 >
                   <span>Change Batch</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -788,18 +807,18 @@ export default function EnrollPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 pt-4 text-xs">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-slate-700">
-                    <Clock className="w-4 h-4 text-[#EA580C] shrink-0" />
+                    <Clock className="w-4 h-4 text-brand shrink-0" />
                     <span className="font-semibold">{selectedBatch.timing} (Mon – Sat)</span>
                   </div>
                   <div className="flex items-center space-x-2 text-slate-600">
-                    <MapPin className="w-4 h-4 text-[#EA580C] shrink-0" />
+                    <MapPin className="w-4 h-4 text-brand shrink-0" />
                     <span className="truncate">{selectedBatch.classroom}</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2 text-slate-700">
-                    <Users className="w-4 h-4 text-[#EA580C] shrink-0" />
+                    <Users className="w-4 h-4 text-brand shrink-0" />
                     <span className="font-semibold">Max 12 Students ({selectedBatch.seatsRemaining} Seats Left)</span>
                   </div>
                   <div className="text-slate-600 flex items-center space-x-2">
@@ -826,7 +845,7 @@ export default function EnrollPage() {
                   </div>
                   <div className="text-slate-600 flex items-center space-x-2 pt-0.5">
                     <span className="text-slate-500">Study Material:</span>
-                    <strong className={includesPrintedMaterials ? 'text-[#EA580C] font-bold' : 'text-slate-700'}>
+                    <strong className={includesPrintedMaterials ? 'text-brand font-bold' : 'text-slate-700'}>
                       {includesPrintedMaterials ? 'Printed Books & Worksheets Included' : 'Digital Classroom Materials'}
                     </strong>
                   </div>
@@ -872,12 +891,12 @@ export default function EnrollPage() {
                       aria-expanded={openSections.academic}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-[#EA580C]/10 text-[#EA580C] flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center shrink-0">
                           <GraduationCap className="w-4 h-4" />
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="text-xs uppercase font-bold text-[#EA580C]">Section 1</span>
+                            <span className="text-xs uppercase font-bold text-brand">Section 1</span>
                             <span className="text-xs text-slate-400">•</span>
                             <span className="text-xs text-slate-500 font-semibold">Required</span>
                           </div>
@@ -908,7 +927,7 @@ export default function EnrollPage() {
                             placeholder="e.g. Thanthai Hans Roever, Kendriya Vidyalaya, DS Matriculation..."
                             className={`w-full px-3.5 py-2.5 bg-white border ${
                               formErrors.schoolName ? 'border-rose-500' : 'border-[#E2E8F0]'
-                            } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                            } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                             required
                           />
                           {formErrors.schoolName && (
@@ -929,7 +948,7 @@ export default function EnrollPage() {
                                 setBoard(e.target.value === 'State Board' ? 'TN State Board (Samacheer)' : `${e.target.value} Board`);
                                 if (formErrors.educationBoard) setFormErrors((prev) => ({ ...prev, educationBoard: '' }));
                               }}
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                               required
                             >
                               <option value="CBSE">CBSE (Central Board)</option>
@@ -953,7 +972,7 @@ export default function EnrollPage() {
                                 setTargetYear(e.target.value);
                                 if (formErrors.targetYear) setFormErrors((prev) => ({ ...prev, targetYear: '' }));
                               }}
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                               required
                             >
                               <option value="2026">2026 Exam Cycle</option>
@@ -979,7 +998,7 @@ export default function EnrollPage() {
                               value={previousScore}
                               onChange={(e) => setPreviousScore(e.target.value)}
                               placeholder='e.g. "88%" or "9.2 CGPA"'
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                             />
                             <p className="text-[11px] text-slate-500 mt-1">Helps teachers gauge baseline conceptual strengths.</p>
                           </div>
@@ -996,7 +1015,7 @@ export default function EnrollPage() {
                                 setSchoolShift(e.target.value);
                                 if (formErrors.schoolShift) setFormErrors((prev) => ({ ...prev, schoolShift: '' }));
                               }}
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                               required
                             >
                               <option value="Morning shift">Morning shift</option>
@@ -1023,7 +1042,7 @@ export default function EnrollPage() {
                                 setSchoolDismissalTime(e.target.value);
                                 if (formErrors.schoolDismissalTime) setFormErrors((prev) => ({ ...prev, schoolDismissalTime: '' }));
                               }}
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                             />
                             <p className="text-[11px] text-slate-500 mt-1">Typical school bell or dismissal time.</p>
                             {formErrors.schoolDismissalTime && (
@@ -1048,7 +1067,7 @@ export default function EnrollPage() {
                                   setTravelDurationMinutes(e.target.value);
                                   if (formErrors.travelDurationMinutes) setFormErrors((prev) => ({ ...prev, travelDurationMinutes: '' }));
                                 }}
-                                className="w-full px-3.5 py-2.5 pr-16 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                                className="w-full px-3.5 py-2.5 pr-16 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                               />
                               <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 pointer-events-none">
                                 minutes
@@ -1087,7 +1106,7 @@ export default function EnrollPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleSwitchBatch(timingEval.recommendedBatch)}
-                                  className="px-3 py-1.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded text-xs transition-colors shadow-2xs inline-flex items-center space-x-1 cursor-pointer self-start sm:self-auto"
+                                  className="px-3 py-1.5 bg-brand hover:bg-brand-strong text-white font-bold rounded text-xs transition-colors shadow-2xs inline-flex items-center space-x-1 cursor-pointer self-start sm:self-auto"
                                 >
                                   <span>Switch to {timingEval.recommendedBatch.name.split(' ')[0]} Batch</span>
                                   <ArrowRight className="w-3.5 h-3.5" />
@@ -1154,7 +1173,7 @@ export default function EnrollPage() {
                               placeholder="e.g. K. Vignesh"
                               className={`w-full px-3.5 py-2.5 bg-white border ${
                                 formErrors.studentName ? 'border-rose-500' : 'border-[#E2E8F0]'
-                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                               required
                             />
                             {formErrors.studentName && (
@@ -1174,7 +1193,7 @@ export default function EnrollPage() {
                               placeholder="e.g. 98424 51220"
                               className={`w-full px-3.5 py-2.5 bg-white border ${
                                 formErrors.phone ? 'border-rose-500' : 'border-[#E2E8F0]'
-                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                               required
                             />
                             {formErrors.phone && (
@@ -1194,7 +1213,7 @@ export default function EnrollPage() {
                               value={parentName}
                               onChange={(e) => setParentName(e.target.value)}
                               placeholder="e.g. Mr. S. Kannan (Father)"
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                             />
                           </div>
 
@@ -1209,7 +1228,7 @@ export default function EnrollPage() {
                                 setMediumOfInstruction(e.target.value);
                                 if (formErrors.mediumOfInstruction) setFormErrors((prev) => ({ ...prev, mediumOfInstruction: '' }));
                               }}
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                               required
                             >
                               <option value="English">English</option>
@@ -1242,7 +1261,7 @@ export default function EnrollPage() {
                                   if (formErrors.whatsappNumber) setFormErrors((prev) => ({ ...prev, whatsappNumber: '' }));
                                 }
                               }}
-                              className="rounded text-[#EA580C] focus:ring-[#EA580C] h-4 w-4 border-slate-300"
+                              className="rounded text-brand focus:ring-brand h-4 w-4 border-slate-300"
                             />
                             <span>WhatsApp number is same as calling phone number{phone ? ` (${phone})` : ''}</span>
                           </label>
@@ -1260,7 +1279,7 @@ export default function EnrollPage() {
                                 placeholder="e.g. 98424 51220 (Dedicated WhatsApp)"
                                 className={`w-full px-3.5 py-2.5 bg-white border ${
                                   formErrors.whatsappNumber ? 'border-rose-500' : 'border-[#E2E8F0]'
-                                } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                                 required={!sameAsPhone}
                               />
                               {formErrors.whatsappNumber && (
@@ -1273,7 +1292,7 @@ export default function EnrollPage() {
 
                         <div className="p-4 bg-amber-50/60 rounded-md border border-amber-200/80 space-y-3">
                           <div className="flex items-center space-x-2">
-                            <ShieldCheck className="w-4 h-4 text-[#EA580C]" />
+                            <ShieldCheck className="w-4 h-4 text-brand" />
                             <span className="text-xs uppercase font-bold text-[#0F172A]">
                               Emergency Contact (Mandatory for Offline Batches & Safety) *
                             </span>
@@ -1295,7 +1314,7 @@ export default function EnrollPage() {
                                 placeholder="e.g. Mrs. Lakshmi Kannan"
                                 className={`w-full px-3.5 py-2 bg-white border ${
                                   formErrors.emergencyContactName ? 'border-rose-500' : 'border-[#E2E8F0]'
-                                } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand`}
                                 required
                               />
                               {formErrors.emergencyContactName && (
@@ -1314,7 +1333,7 @@ export default function EnrollPage() {
                                   setEmergencyRelationship(e.target.value);
                                   if (formErrors.emergencyRelationship) setFormErrors((prev) => ({ ...prev, emergencyRelationship: '' }));
                                 }}
-                                className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                                className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                                 required
                               >
                                 <option value="Father">Father</option>
@@ -1342,7 +1361,7 @@ export default function EnrollPage() {
                                 placeholder="e.g. 98424 51222"
                                 className={`w-full px-3.5 py-2 bg-white border ${
                                   formErrors.emergencyPhone ? 'border-rose-500' : 'border-[#E2E8F0]'
-                                } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand`}
                                 required
                               />
                               {formErrors.emergencyPhone && (
@@ -1366,7 +1385,7 @@ export default function EnrollPage() {
                                 if (formErrors.secondaryPhone) setFormErrors((prev) => ({ ...prev, secondaryPhone: '' }));
                               }}
                               placeholder="e.g. 04328 221234 or 98424 51223"
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                             />
                             {formErrors.secondaryPhone && (
                               <p className="text-xs text-rose-600 mt-1">{formErrors.secondaryPhone}</p>
@@ -1383,7 +1402,7 @@ export default function EnrollPage() {
                               value={medicalAlert}
                               onChange={(e) => setMedicalAlert(e.target.value)}
                               placeholder="e.g. Inhaler, dust allergy, specs (Optional)"
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                             />
                           </div>
                         </div>
@@ -1415,7 +1434,7 @@ export default function EnrollPage() {
                               value={studentWeakness}
                               onChange={(e) => setStudentWeakness(e.target.value)}
                               placeholder="e.g. Hesitant in algebra proofs, physics numericals"
-                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                              className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                             />
                           </div>
                         </div>
@@ -1455,7 +1474,7 @@ export default function EnrollPage() {
                         {includesPrintedMaterials ? (
                           <div className="p-4 bg-orange-50/60 rounded-md border border-orange-200/80 space-y-3">
                             <div className="flex items-center space-x-2">
-                              <Truck className="w-4 h-4 text-[#EA580C]" />
+                              <Truck className="w-4 h-4 text-brand" />
                               <span className="text-xs uppercase font-bold text-[#0F172A]">
                                 Physical Shipping / Book Dispatch Address (Printed Materials Included) *
                               </span>
@@ -1480,7 +1499,7 @@ export default function EnrollPage() {
                                   placeholder="e.g. Door No. 24, Bharathi Nagar 2nd Cross, Thoramangalam"
                                   className={`w-full px-3.5 py-2.5 bg-white border ${
                                     formErrors.addressStreet ? 'border-rose-500' : 'border-[#E2E8F0]'
-                                  } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                  } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand`}
                                   required={includesPrintedMaterials}
                                 />
                                 {formErrors.addressStreet && (
@@ -1499,7 +1518,7 @@ export default function EnrollPage() {
                                     value={addressLandmark}
                                     onChange={(e) => setAddressLandmark(e.target.value)}
                                     placeholder="e.g. Near New Bus Stand"
-                                    className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                                    className="w-full px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                                   />
                                 </div>
 
@@ -1518,7 +1537,7 @@ export default function EnrollPage() {
                                     placeholder="e.g. Perambalur, Tamil Nadu"
                                     className={`w-full px-3.5 py-2 bg-white border ${
                                       formErrors.addressCityState ? 'border-rose-500' : 'border-[#E2E8F0]'
-                                    } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                    } rounded-md text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand`}
                                     required={includesPrintedMaterials}
                                   />
                                   {formErrors.addressCityState && (
@@ -1542,7 +1561,7 @@ export default function EnrollPage() {
                                     placeholder="e.g. 621212"
                                     className={`w-full px-3.5 py-2 bg-white border ${
                                       formErrors.addressPincode ? 'border-rose-500' : 'border-[#E2E8F0]'
-                                    } rounded-md text-xs sm:text-sm font-mono font-bold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                                    } rounded-md text-xs sm:text-sm font-mono font-bold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                                     required={includesPrintedMaterials}
                                   />
                                   {formErrors.addressPincode && (
@@ -1577,7 +1596,7 @@ export default function EnrollPage() {
                               placeholder="e.g. School ID Card No., Aadhaar or Govt ID No."
                               className={`w-full px-3.5 py-2.5 bg-white border ${
                                 formErrors.studentIdNumber ? 'border-rose-500' : 'border-[#E2E8F0]'
-                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                              } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                               required
                             />
                             <p className="text-[11px] text-slate-500 mt-1">
@@ -1604,7 +1623,7 @@ export default function EnrollPage() {
                               placeholder="e.g. 33AAAAA0000A1Z5 (15 Chars)"
                               className={`w-full px-3.5 py-2.5 bg-white border ${
                                 formErrors.gstin ? 'border-rose-500' : 'border-[#E2E8F0]'
-                              } rounded-md text-sm font-mono font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C] uppercase`}
+                              } rounded-md text-sm font-mono font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand uppercase`}
                             />
                             <p className="text-[11px] text-slate-500 mt-1">
                               Provide business GSTIN if claiming GST tax credit on official fee receipts.
@@ -1618,18 +1637,52 @@ export default function EnrollPage() {
                     )}
                   </div>
 
-                  <div className="p-3.5 bg-emerald-50 rounded-lg border border-emerald-200 text-xs text-emerald-950 space-y-1.5">
-                    <label className="flex items-start space-x-2.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={declarationChecked}
-                        onChange={(e) => setDeclarationChecked(e.target.checked)}
-                        className="mt-0.5 rounded text-[#EA580C] focus:ring-[#EA580C] h-4 w-4 border-emerald-300"
-                      />
-                      <span className="leading-snug">
-                        <strong>Verifiable Guardian Declaration (DPDP Act 2023):</strong> I confirm I am the parent or legal guardian of this student and consent to educational admission processing and emergency protocol activation. Zero online prepayment required.
-                      </span>
-                    </label>
+                  <div className={`p-3.5 rounded-lg border text-xs space-y-3 ${
+                    formErrors.declaration ? 'bg-rose-50 border-rose-300 text-rose-950' : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                  }`}>
+                    <div>
+                      <label className="flex items-start space-x-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={declarationChecked}
+                          onChange={(e) => {
+                            setDeclarationChecked(e.target.checked);
+                            if (formErrors.declaration) setFormErrors((prev) => ({ ...prev, declaration: '' }));
+                          }}
+                          aria-invalid={formErrors.declaration ? 'true' : undefined}
+                          aria-describedby={formErrors.declaration ? 'declaration-error' : undefined}
+                          className="mt-0.5 rounded text-brand focus:ring-brand h-4 w-4 border-emerald-300"
+                        />
+                        <span className="leading-snug">
+                          <strong>Required — Guardian Declaration:</strong> I confirm I am the parent or legal guardian of this student and I consent to this admission being processed, including contacting the emergency number above if needed. No payment is collected online.
+                        </span>
+                      </label>
+                      {formErrors.declaration && (
+                        <p id="declaration-error" className="mt-1.5 pl-6 font-semibold text-rose-700">
+                          {formErrors.declaration}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="pt-2.5 border-t border-emerald-200/70">
+                      <label className="flex items-start space-x-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={optionalConsent}
+                          onChange={(e) => setOptionalConsent(e.target.checked)}
+                          className="mt-0.5 rounded text-brand focus:ring-brand h-4 w-4 border-emerald-300"
+                        />
+                        <span className="leading-snug">
+                          <strong>Optional:</strong> send me batch updates, timetable changes and fee reminders on WhatsApp. You can still be admitted if you leave this unticked.
+                        </span>
+                      </label>
+                    </div>
+
+                    <p className="leading-snug pt-1 border-t border-emerald-200/70">
+                      <strong>What we do with this information:</strong> your child's details are used only to process this admission and to run the batch. See the{' '}
+                      <Link to="/privacy" className="font-bold underline underline-offset-2">privacy notice</Link>{' '}
+                      for what is stored, how long we keep it, and how to ask us to delete it.
+                    </p>
                   </div>
 
                   <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between">
@@ -1644,10 +1697,10 @@ export default function EnrollPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-98"
+                      className="inline-flex items-center space-x-2 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-98"
                     >
                       <span>{isSubmitting ? 'Verifying & Reserving...' : 'Complete Batch Enrollment'}</span>
-                      <Send className="w-4 h-4 text-orange-200" />
+                      <Send className="w-4 h-4 text-orange-100" />
                     </button>
                   </div>
                 </form>

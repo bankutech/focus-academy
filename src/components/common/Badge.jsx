@@ -16,7 +16,7 @@ export default function Badge({
 
   const variantClasses = {
     default: 'bg-[#0F172A] text-white',
-    orange: 'bg-orange-50 text-[#EA580C] border border-orange-200',
+    orange: 'bg-orange-50 text-brand border border-orange-200',
     emerald: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
     amber: 'bg-amber-50 text-amber-900 border border-amber-200',
     slate: 'bg-slate-100 text-slate-700 border border-[#E2E8F0]',

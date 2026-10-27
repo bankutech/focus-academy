@@ -25,7 +25,7 @@ export class ErrorBoundary extends React.Component {
       return (
         <div className="py-12 px-4 sm:px-6 max-w-4xl mx-auto my-8">
           <div className="bg-[#F8FAFC] rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 text-left shadow-editorial">
-            <div className="flex items-center space-x-2 text-[#EA580C] text-xs uppercase font-bold tracking-wider mb-2">
+            <div className="flex items-center space-x-2 text-brand text-xs uppercase font-bold tracking-wider mb-2">
               <AlertCircle className="w-4 h-4" />
               <span>Diagnostic Safeguard Triggered</span>
             </div>
@@ -44,7 +44,7 @@ export class ErrorBoundary extends React.Component {
                 onClick={this.handleReset}
                 className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-orange-200" />
+                <RefreshCw className="w-3.5 h-3.5 text-orange-100" />
                 <span>Reload Section</span>
               </button>
 
@@ -52,7 +52,7 @@ export class ErrorBoundary extends React.Component {
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
                 className="inline-flex items-center space-x-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-[#0F172A] border border-[#E2E8F0] text-xs font-semibold rounded-xl transition-colors"
               >
-                <Phone className="w-3.5 h-3.5 text-[#EA580C]" />
+                <Phone className="w-3.5 h-3.5 text-brand" />
                 <span>Call Campus Desk ({CAMPUS_CONFIG.contact.primaryPhone})</span>
               </a>
 

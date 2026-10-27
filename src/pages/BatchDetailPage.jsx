@@ -109,7 +109,7 @@ export default function BatchDetailPage() {
 
           <div className="mt-6 pt-6 border-t border-slate-100 grid sm:grid-cols-3 gap-4 text-xs">
             <div className="p-4 bg-slate-50 rounded-md border border-[#E2E8F0]">
-              <div className="flex items-center space-x-2 text-[#EA580C] font-bold mb-1">
+              <div className="flex items-center space-x-2 text-brand font-bold mb-1">
                 <Clock className="w-4 h-4" />
                 <span>Evening Timetable</span>
               </div>
@@ -118,7 +118,7 @@ export default function BatchDetailPage() {
             </div>
 
             <div className="p-4 bg-slate-50 rounded-md border border-[#E2E8F0]">
-              <div className="flex items-center space-x-2 text-[#EA580C] font-bold mb-1">
+              <div className="flex items-center space-x-2 text-brand font-bold mb-1">
                 <Users className="w-4 h-4" />
                 <span>Small Batch Limit</span>
               </div>
@@ -127,7 +127,7 @@ export default function BatchDetailPage() {
             </div>
 
             <div className="p-4 bg-slate-50 rounded-md border border-[#E2E8F0]">
-              <div className="flex items-center space-x-2 text-[#EA580C] font-bold mb-1">
+              <div className="flex items-center space-x-2 text-brand font-bold mb-1">
                 <Award className="w-4 h-4" />
                 <span>Monthly Fee</span>
               </div>
@@ -140,7 +140,7 @@ export default function BatchDetailPage() {
         <div className="grid md:grid-cols-2 gap-8 mb-8">
           <div className="bg-white rounded-lg p-6 sm:p-8 border border-[#E2E8F0] shadow-xs space-y-5">
             <h2 className="text-base font-bold text-[#0F172A] pb-3 border-b border-slate-100 flex items-center space-x-2">
-              <Calendar className="w-4 h-4 text-[#EA580C]" />
+              <Calendar className="w-4 h-4 text-brand" />
               <span>Weekly Academic Routine & Schedule</span>
             </h2>
 
@@ -185,7 +185,7 @@ export default function BatchDetailPage() {
 
           <div className="bg-white rounded-lg p-6 sm:p-8 border border-[#E2E8F0] shadow-xs space-y-5">
             <h2 className="text-base font-bold text-[#0F172A] pb-3 border-b border-slate-100 flex items-center space-x-2">
-              <BookOpen className="w-4 h-4 text-[#EA580C]" />
+              <BookOpen className="w-4 h-4 text-brand" />
               <span>Classroom Facilities & Study Materials</span>
             </h2>
 
@@ -195,7 +195,7 @@ export default function BatchDetailPage() {
                   key={idx}
                   className="p-3.5 bg-slate-50 rounded-md border border-[#E2E8F0] flex items-start space-x-3"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-brand shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-xs font-bold text-[#0F172A]">{fac.title}</h4>
                     <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{fac.desc}</p>
@@ -205,7 +205,7 @@ export default function BatchDetailPage() {
 
               <div className="p-3.5 bg-slate-50 rounded-md border border-[#E2E8F0] text-xs text-slate-600">
                 <div className="flex items-center space-x-2 text-[#0F172A] font-bold mb-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#EA580C]" />
+                  <MapPin className="w-3.5 h-3.5 text-brand" />
                   <span>Classroom Venue:</span>
                 </div>
                 <p>{batch.classroom}</p>
@@ -237,18 +237,18 @@ export default function BatchDetailPage() {
               <Link
                 to={`/enroll/${batch.id}`}
                 onClick={handleProceedToEnroll}
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
               >
                 <span>Confirm Batch & Proceed to Enrollment (Step 5)</span>
-                <ArrowRight className="w-4 h-4 text-orange-200" />
+                <ArrowRight className="w-4 h-4 text-orange-100" />
               </Link>
             ) : (
               <Link
                 to={`/batches?grade=${encodeURIComponent(studentFlow.grade)}`}
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
               >
                 <span>View Eligible Batches for {studentFlow.grade}</span>
-                <ArrowRight className="w-4 h-4 text-orange-200" />
+                <ArrowRight className="w-4 h-4 text-orange-100" />
               </Link>
             )}
           </div>

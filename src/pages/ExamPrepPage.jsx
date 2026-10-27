@@ -1,3 +1,4 @@
+import { usePageMeta } from '../hooks/usePageMeta';
 import React, { useState } from 'react';
 import { useNavigate, Link, Navigate, useLocation } from 'react-router-dom';
 import { 
@@ -11,6 +12,11 @@ import StepProgress from '../components/common/StepProgress';
 import { useStudentFlow, getStepRedirect } from '../context/useAppContext';
 
 export default function ExamPrepPage() {
+  usePageMeta({
+    title: 'Exam Preparation Tracks for Class 10 and 12 | Focus Academy',
+    description: 'Choose a board exam preparation track for Class 10 or Class 12 and see the batches Focus Academy recommends for it.',
+    path: '/exam-prep',
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const { studentFlow, setStudentFlow } = useStudentFlow();
@@ -177,7 +183,7 @@ export default function ExamPrepPage() {
         {redirectedFrom && !dismissNotice && (
           <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start justify-between gap-3 text-xs text-orange-950 animate-in fade-in">
             <div className="flex items-start space-x-2.5">
-              <Info className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+              <Info className="w-4 h-4 text-brand shrink-0 mt-0.5" />
               <div>
                 <strong className="block font-bold text-[#0F172A]">
                   Step 2 Required (Sequential Admission)
@@ -203,14 +209,14 @@ export default function ExamPrepPage() {
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>Student: <strong className="text-[#0F172A]">{studentFlow.studentName || 'New Student'}</strong></span>
             <span>•</span>
-            <span>Class: <strong className="text-[#EA580C]">{grade}</strong></span>
+            <span>Class: <strong className="text-brand">{grade}</strong></span>
             <span>•</span>
             <span>Board: <strong className="text-[#0F172A]">{board}</strong></span>
           </div>
 
           <Link
             to="/student-details"
-            className="inline-flex items-center space-x-1 text-xs text-[#EA580C] hover:underline"
+            className="inline-flex items-center space-x-1 text-xs text-brand hover:underline"
           >
             <Edit2 className="w-3 h-3" />
             <span>Change Details</span>
@@ -239,7 +245,7 @@ export default function ExamPrepPage() {
                   }}
                   className={`p-5 sm:p-6 rounded-lg border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-white border-[#EA580C] shadow-sm ring-1 ring-[#EA580C]'
+                      ? 'bg-white border-brand shadow-sm ring-1 ring-brand'
                       : 'bg-white hover:border-slate-300 border-[#E2E8F0] shadow-xs'
                   }`}
                 >
@@ -248,7 +254,7 @@ export default function ExamPrepPage() {
                       <div
                         className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 border ${
                           isSelected
-                            ? 'bg-[#EA580C] border-[#EA580C] text-white'
+                            ? 'bg-brand border-brand text-white'
                             : 'bg-white border-slate-300'
                         }`}
                       >
@@ -257,7 +263,7 @@ export default function ExamPrepPage() {
 
                       <div>
                         <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-xs uppercase font-bold px-2 py-0.5 bg-orange-50 border border-orange-200 rounded text-[#EA580C]">
+                          <span className="text-xs uppercase font-bold px-2 py-0.5 bg-orange-50 border border-orange-200 rounded text-brand">
                             {track.badge}
                           </span>
                           <span className="text-xs text-slate-500">
@@ -298,7 +304,7 @@ export default function ExamPrepPage() {
               value={customGoal}
               onChange={(e) => setCustomGoal(e.target.value)}
               placeholder="e.g. Need extra help in Class 10 Trigonometry & Physics electricity derivations..."
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-[#E2E8F0] rounded-md text-xs sm:text-sm text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-[#E2E8F0] rounded-md text-xs sm:text-sm text-[#0F172A] focus:outline-hidden focus:border-brand"
             />
           </div>
 
@@ -312,10 +318,10 @@ export default function ExamPrepPage() {
 
             <button
               type="submit"
-              className="inline-flex items-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+              className="inline-flex items-center space-x-2 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
             >
               <span>View Available Batches (Step 3)</span>
-              <ArrowRight className="w-4 h-4 text-orange-200" />
+              <ArrowRight className="w-4 h-4 text-orange-100" />
             </button>
           </div>
         </form>

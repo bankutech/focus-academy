@@ -1,3 +1,4 @@
+import { usePageMeta } from '../hooks/usePageMeta';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { 
@@ -18,6 +19,11 @@ import { useStudentAuth } from '../context/StudentAuthContext';
 import { validateIndianMobile } from '../types/schemas';
 
 export default function StudentDetailsPage() {
+  usePageMeta({
+    title: 'Admission Step 1 — Student Details | Focus Academy',
+    description: 'Start a Focus Academy admission by entering the student name, class, board and a contact number the campus desk can call.',
+    path: '/student-details',
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -171,8 +177,8 @@ export default function StudentDetailsPage() {
         >
           <div className="flex items-center space-x-2.5 text-xs sm:text-sm font-medium">
             <span className="relative flex h-2.5 w-2.5 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#EA580C] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#EA580C]"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand"></span>
             </span>
             <span className="text-slate-100">
               <strong className="text-white font-bold mr-1">Step 1 Required:</strong>
@@ -194,7 +200,7 @@ export default function StudentDetailsPage() {
         {redirectedFrom && !dismissNotice && (
           <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start justify-between gap-3 text-xs text-orange-950 animate-in fade-in">
             <div className="flex items-start space-x-2.5">
-              <Info className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+              <Info className="w-4 h-4 text-brand shrink-0 mt-0.5" />
               <div>
                 <strong className="block font-bold text-[#0F172A]">
                   Step 1 Required (Sequential Admission)
@@ -241,10 +247,10 @@ export default function StudentDetailsPage() {
         ) : (
           <div className="mb-6 p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center justify-between gap-3 text-xs text-slate-700">
             <div className="flex items-center space-x-2">
-              <LogIn className="w-4 h-4 text-[#EA580C] shrink-0" />
+              <LogIn className="w-4 h-4 text-brand shrink-0" />
               <span>Already created a Student Account?</span>
             </div>
-            <Link to="/login" className="font-bold text-[#EA580C] hover:underline shrink-0 cursor-pointer">
+            <Link to="/login" className="font-bold text-brand hover:underline shrink-0 cursor-pointer">
               Sign In to Student Portal &rarr;
             </Link>
           </div>
@@ -310,7 +316,7 @@ export default function StudentDetailsPage() {
                         placeholder="e.g. 98424 51220"
                         className={`w-full pl-9 pr-3.5 py-2.5 bg-white border ${
                           phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                       />
                     </div>
                     <button
@@ -350,7 +356,7 @@ export default function StudentDetailsPage() {
                       placeholder="e.g. K. Vignesh"
                       className={`w-full pl-9 pr-3.5 py-2.5 bg-white border ${
                         nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                      } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                      } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                     />
                   </div>
                   {nameError && (
@@ -389,7 +395,7 @@ export default function StudentDetailsPage() {
                         placeholder="e.g. K. Vignesh"
                         className={`w-full pl-9 pr-3.5 py-2.5 bg-white border ${
                           nameError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                       />
                     </div>
                     {nameError && (
@@ -415,7 +421,7 @@ export default function StudentDetailsPage() {
                         placeholder="e.g. 98424 51220"
                         className={`w-full pl-9 pr-3.5 py-2.5 bg-white border ${
                           phoneError ? 'border-rose-500' : 'border-[#E2E8F0]'
-                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                        } rounded-md text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                       />
                     </div>
                     {phoneError && (
@@ -434,7 +440,7 @@ export default function StudentDetailsPage() {
                     value={parentName}
                     onChange={(e) => setParentName(e.target.value)}
                     placeholder="e.g. Mr. S. Kannan (Father)"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                    className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-md text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                   />
                 </div>
               </div>
@@ -447,7 +453,7 @@ export default function StudentDetailsPage() {
                 Education Board
               </h2>
               <span className="text-xs text-slate-500">
-                Selected: <strong className="text-[#EA580C]">{board}</strong>
+                Selected: <strong className="text-brand">{board}</strong>
               </span>
             </div>
 
@@ -469,12 +475,12 @@ export default function StudentDetailsPage() {
                       <div className="flex items-center justify-between mb-2">
                         <span
                           className={`text-xs uppercase font-bold px-2 py-0.5 rounded ${
-                            isSelected ? 'bg-[#EA580C] text-white' : 'bg-white text-slate-600 border border-[#E2E8F0]'
+                            isSelected ? 'bg-brand text-white' : 'bg-white text-slate-600 border border-[#E2E8F0]'
                           }`}
                         >
                           {b.badge}
                         </span>
-                        {isSelected && <CheckCircle2 className="w-4 h-4 text-orange-200" />}
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-orange-100" />}
                       </div>
                       <p className="text-sm font-bold leading-tight">{b.name}</p>
                       <p
@@ -497,7 +503,7 @@ export default function StudentDetailsPage() {
                 Student Class / Grade
               </h2>
               <span className="text-xs text-slate-500">
-                Selected: <strong className="text-[#EA580C]">{grade}</strong>
+                Selected: <strong className="text-brand">{grade}</strong>
               </span>
             </div>
 
@@ -511,14 +517,14 @@ export default function StudentDetailsPage() {
                     onClick={() => setGrade(opt.id)}
                     className={`p-3 rounded-md border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                       isSelected
-                        ? 'bg-[#EA580C] text-white border-[#EA580C] shadow-xs font-bold'
+                        ? 'bg-brand text-white border-brand shadow-xs font-bold'
                         : 'bg-slate-50 hover:bg-white text-[#0F172A] border-[#E2E8F0]'
                     }`}
                   >
                     <span className="text-sm font-bold">{opt.label}</span>
                     <span
                       className={`text-xs mt-0.5 ${
-                        isSelected ? 'text-orange-200' : 'text-slate-500'
+                        isSelected ? 'text-orange-100' : 'text-slate-500'
                       }`}
                     >
                       {opt.stage}
@@ -539,7 +545,7 @@ export default function StudentDetailsPage() {
                 type="checkbox"
                 required
                 defaultChecked={true}
-                className="mt-0.5 rounded text-[#EA580C] focus:ring-[#EA580C] h-4 w-4 border-emerald-300"
+                className="mt-0.5 rounded text-brand focus:ring-brand h-4 w-4 border-emerald-300"
               />
               <span className="leading-snug text-emerald-900 font-medium">
                 I confirm that I am the parent or legal guardian of this student, and I consent to Focus Academy collecting and processing educational details strictly for academic batch allocation and counseling.
@@ -562,10 +568,10 @@ export default function StudentDetailsPage() {
               )}
               <button
                 type="submit"
-                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
               >
                 <span>Continue to Exam Preparation (Step 2)</span>
-                <ArrowRight className="w-4 h-4 text-orange-200" />
+                <ArrowRight className="w-4 h-4 text-orange-100" />
               </button>
             </div>
           </div>

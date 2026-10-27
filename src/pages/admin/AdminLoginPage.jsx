@@ -1,3 +1,4 @@
+import { usePageMeta } from '../../hooks/usePageMeta';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ShieldCheck, AlertCircle, CheckCircle2, Info, WifiOff, User } from 'lucide-react';
@@ -21,12 +22,16 @@ const RESET_NOTICE = (address) => `If an administrator account exists for ${addr
 const RESET_COOLDOWN_MS = 30000;
 
 const TITLES = {
-  login: ['Welcome back', 'Sign in to continue your learning journey.'],
-  register: ['Create account', 'Start your focused learning journey with us today.'],
+  login: ['Administrator sign in', 'Use your academy staff email and password.'],
+  register: ['Create administrator account', 'Registration is limited to emails the academy owner has approved.'],
   forgot: ['Reset password', 'Enter your administrator email to receive reset instructions.'],
 };
 
 export default function AdminLoginPage() {
+  usePageMeta({
+    path: '/admin-portal/login',
+    robots: 'noindex,nofollow',
+  });
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -252,10 +257,12 @@ export default function AdminLoginPage() {
         <div className="relative z-10 flex flex-col justify-between h-full">
           <div className="flex items-center justify-between gap-4">
             <Link to="/" className="flex items-center space-x-3 group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded-lg">
-              <img 
-                src="/logo.png" 
-                alt="Focus Academy Logo" 
-                className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-xl bg-white p-1 shadow-lg border border-slate-700/60" 
+              <img
+                src="/logo-80.png"
+                alt="Focus Academy logo"
+                width="80"
+                height="80"
+                className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-xl bg-white p-1 shadow-lg border border-slate-700/60"
               />
               <div className="flex flex-col text-left">
                 <span className="text-white font-extrabold text-base sm:text-xl tracking-tight block leading-tight">
@@ -277,10 +284,10 @@ export default function AdminLoginPage() {
 
           <div className="mt-6 lg:mt-auto pt-4 lg:pt-8">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-white tracking-tight leading-tight">
-              Learn Today. Lead Tomorrow.
+              Administrator access only.
             </h1>
             <p className="mt-2 lg:mt-3 text-sm sm:text-base xl:text-lg text-slate-300 leading-relaxed max-w-lg">
-              A focused learning experience for every student's future.
+              Sign in with your academy staff account to review admission enquiries, batch capacity, fee ledgers and audit records.
             </p>
           </div>
         </div>

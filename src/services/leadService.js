@@ -4,8 +4,8 @@ import { validateLeadInquiry } from '../types/schemas';
 const STORAGE_QUEUE_KEY = 'focus_academy_pending_leads_v1';
 const STORAGE_LOGS_KEY = 'focus_academy_submitted_leads_v1';
 
-const QUEUE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-const QUEUE_MAX_ENTRIES = 20;
+const QUEUE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+const QUEUE_MAX_ENTRIES = 5;
 const SUBMIT_TIMEOUT_MS = 8000;
 
 const RECEIPT_FIELDS = ['id', 'studentName', 'parentName', 'phone', 'grade', 'board', 'batchId', 'selectedBatchName', 'timing', 'source', 'submittedAt', 'serverConfirmed'];

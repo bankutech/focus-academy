@@ -12,10 +12,8 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
       await page.setViewportSize({ width: resolution.width, height: resolution.height });
       await page.goto('/admin-portal/login');
 
-      await expect(page.getByText('Learn Today. Lead Tomorrow.')).toBeVisible();
-      await expect(page.getByText("A focused learning experience for every student's future.")).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
-      await expect(page.getByText('Sign in to continue your learning journey.')).toBeVisible();
+      await expect(page.getByText('Administrator access only.')).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Administrator sign in' })).toBeVisible();
 
       const loginScroll = await page.evaluate(() => {
         const doc = document.documentElement;
@@ -33,7 +31,7 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
       expect(loginScroll.rightPanelHasScroll).toBe(false);
 
       await page.getByRole('button', { name: 'Create account' }).click();
-      await expect(page.getByRole('heading', { name: 'Create account' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Create administrator account' })).toBeVisible();
 
       const regScroll = await page.evaluate(() => {
         const doc = document.documentElement;
@@ -147,24 +145,24 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/admin-portal/login');
 
-    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Administrator sign in' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Create account' }).click();
-    await expect(page.getByRole('heading', { name: 'Create account' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Create administrator account' })).toBeVisible();
     await expect(page.locator('#reg-first-name')).toBeVisible();
     await expect(page.locator('#reg-last-name')).toBeVisible();
     await expect(page.locator('#reg-email')).toBeVisible();
     await expect(page.locator('#reg-password')).toBeVisible();
 
     await page.getByRole('button', { name: 'Sign in' }).first().click();
-    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Administrator sign in' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Forgot password?' }).click();
     await expect(page.getByRole('heading', { name: 'Reset password' })).toBeVisible();
     await expect(page.locator('#reset-email')).toBeVisible();
 
     await page.getByRole('button', { name: '← Back to sign in' }).click();
-    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Administrator sign in' })).toBeVisible();
   });
 
   test('validates password reset submission', async ({ page }) => {
@@ -210,7 +208,7 @@ test.describe('Focus Academy Split-Screen Authentication Page', () => {
       await page.goto('/admin-portal/login');
 
       await expect(page.getByRole('link', { name: /Back to website/i })).toBeVisible();
-      await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Administrator sign in' })).toBeVisible();
       await expect(page.locator('#admin-email')).toBeVisible();
       await expect(page.locator('#admin-password')).toBeVisible();
 

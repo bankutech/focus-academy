@@ -182,13 +182,113 @@ describe('Lead API', () => {
     expect(last.statusCode).toBe(429);
   });
 
-  it('confirms the held seat when the enrollment lead is saved', async () => {
+  const submitEnrollment = async (p, ip = '10.3.0.1', extra = {}) => {
+    const { applicationId, token } = await reachStep4(p, ip);
+    const hold = await call(batchesHandler, { batchId: 'batch-10-state-board', ...p, stepToken: token }, { ip });
+    const res = await call(leadsHandler, {
+      ...p,
+      parentName: 'Parent',
+      batchId: 'batch-10-state-board',
+      selectedBatchName: 'Class 10 State Board Evening',
+      reservationId: hold.body.reservationId,
+      stepToken: token,
+      ...extra
+    }, { ip });
+    return { res, applicationId, reservationId: hold.body.reservationId };
+  };
+
+  it('confirms the held seat and registers the student in the official roster', async () => {
     const p = person(3);
-    const { token } = await reachStep4(p);
-    const hold = await call(batchesHandler, { batchId: 'batch-10-state-board', ...p, stepToken: token });
-    const lead = await call(leadsHandler, { ...p, batchId: 'batch-10-state-board', reservationId: hold.body.reservationId, stepToken: token }, { ip: '10.3.0.1' });
-    expect(lead.statusCode).toBe(200);
-    expect(fake.all('reservations')[0].status).toBe('confirmed');
+    const { res, reservationId } = await submitEnrollment(p, '10.3.0.1');
+    expect(res.statusCode).toBe(200);
+
+    const lead = fake.all('leads')[0];
+    expect(lead.source).toBe('enrollment');
+    expect(lead.status).toBe('converted');
+    expect(lead.enrollmentStatus).toBe('confirmed');
+
+    const enrollment = fake.all('enrollments')[0];
+    expect(enrollment.id).toBe(lead.id);
+    expect(enrollment.status).toBe('confirmed');
+    expect(enrollment.studentId).toBeTruthy();
+    expect(enrollment.feeStatus).toBe('pending');
+    expect(enrollment.paymentStatus).toBe('unpaid');
+
+    const student = fake.read('students', enrollment.studentId);
+    expect(student.studentName).toBe(p.studentName);
+    expect(student.batchId).toBe('batch-10-state-board');
+    expect(student.enrollmentId).toBe(enrollment.id);
+    expect(student.source).toBe('online_enrollment');
+
+    const obligation = fake.read('fee_obligations', enrollment.feeObligationId);
+    expect(obligation.studentId).toBe(student.id);
+    expect(obligation.amountDue).toBe(2200);
+    expect(obligation.amountPaid).toBe(0);
+    expect(obligation.balance).toBe(2200);
+    expect(obligation.status).toBe('pending');
+
+    // No payment is invented because no money changed hands.
+    expect(fake.all('payments')).toHaveLength(0);
+
+    // The seat is counted exactly once: the hold is released as the student is rostered.
+    const reservation = fake.all('reservations').find(r => r.reservationId === reservationId);
+    expect(reservation.status).toBe('enrolled');
+    expect(fake.read('batches', 'batch-10-state-board').enrolledCount).toBe(10);
+  });
+
+  it('keeps a repeated submission idempotent instead of duplicating records', async () => {
+    const p = person(3);
+    const first = await submitEnrollment(p, '10.3.0.5');
+    expect(first.res.statusCode).toBe(200);
+    expect(first.res.body.meta.duplicate).toBe(false);
+
+    const second = await call(leadsHandler, {
+      ...p,
+      parentName: 'Parent',
+      batchId: 'batch-10-state-board',
+      selectedBatchName: 'Class 10 State Board Evening',
+      reservationId: first.reservationId,
+      stepToken: (await reachStep4(p, '10.3.0.5')).token,
+      enrollmentId: first.res.body.data.id
+    }, { ip: '10.3.0.5' });
+
+    expect(second.statusCode).toBe(200);
+    expect(second.body.duplicate).toBe(true);
+    expect(second.body.data.id).toBe(first.res.body.data.id);
+    expect(fake.all('leads')).toHaveLength(1);
+    expect(fake.all('enrollments')).toHaveLength(1);
+    expect(fake.all('students')).toHaveLength(1);
+    expect(fake.all('fee_obligations')).toHaveLength(1);
+    expect(fake.read('batches', 'batch-10-state-board').enrolledCount).toBe(10);
+  });
+
+  it('does not promote a waitlisted application into a confirmed seat', async () => {
+    const p = person(6);
+    const { applicationId, token } = await reachStep4(p, '10.3.0.6');
+    // Fill the classroom so the reservation request is forced onto the waitlist.
+    fake.seed('batches', 'batch-10-state-board', {
+      ...fake.read('batches', 'batch-10-state-board'),
+      enrolledCount: 12
+    });
+    const hold = await call(batchesHandler, { batchId: 'batch-10-state-board', ...p, stepToken: token, allowWaitlist: true }, { ip: '10.3.0.6' });
+    expect(hold.body.waitlisted).toBe(true);
+
+    const res = await call(leadsHandler, {
+      ...p,
+      parentName: 'Parent',
+      batchId: 'batch-10-state-board',
+      reservationId: hold.body.reservationId,
+      stepToken: token
+    }, { ip: '10.3.0.6' });
+    expect(res.statusCode).toBe(200);
+
+    const enrollment = fake.all('enrollments')[0];
+    expect(enrollment.status).toBe('waitlisted');
+    expect(enrollment.studentId).toBeUndefined();
+    expect(enrollment.feeObligationId).toBeUndefined();
+    expect(fake.all('students')).toHaveLength(0);
+    expect(fake.all('fee_obligations')).toHaveLength(0);
+    expect(fake.all('reservations').find(r => r.applicationId === applicationId).status).toBe('waitlist');
   });
 
   it('stores and validates operational, academic, emergency contact, dispatch, and verification details', async () => {

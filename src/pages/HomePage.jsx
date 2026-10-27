@@ -1,3 +1,4 @@
+import { usePageMeta } from '../hooks/usePageMeta';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -21,6 +22,11 @@ import {
 import { useStudentFlow } from '../context/useAppContext';
 
 export default function HomePage() {
+  usePageMeta({
+    title: 'Focus Academy — Tuition Center in Thoramangalam, Perambalur | Classes 6 to 12',
+    description: 'Focus Academy in Thoramangalam, Perambalur runs evening tuition for Classes 6–12 (State Board & CBSE), strictly capped at 12 students per batch.',
+    path: '/',
+  });
   const { studentFlow: _studentFlow } = useStudentFlow();
   const whatsappInquiryUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(
     'Hello Focus Academy! I would like to inquire about evening batch timings and trial admissions at Thiripura Complex, Thoramangalam.'
@@ -33,7 +39,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
             <div className="lg:col-span-7">
               <div className="flex items-center space-x-2.5 mb-3.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#EA580C]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-brand" />
                 <p className="text-xs sm:text-sm font-bold text-slate-800 tracking-wide">
                   ஃபோகஸ் அகாடமி • Focus Academy, Thoramangalam, Perambalur
                 </p>
@@ -51,18 +57,18 @@ export default function HomePage() {
                 <Link
                   to="/student-details"
                   aria-label="Enroll for 1-Day Free Trial"
-                  className="min-h-[52px] inline-flex items-center justify-center space-x-2.5 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-base font-bold rounded-md shadow-sm transition-all cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="min-h-[52px] inline-flex items-center justify-center space-x-2.5 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-base font-bold rounded-md shadow-sm transition-all cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   <span>Enroll for 1-Day Free Trial</span>
-                  <ArrowRight className="w-4 h-4 text-orange-200" />
+                  <ArrowRight className="w-4 h-4 text-orange-100" />
                 </Link>
 
                 <Link
                   to="/timings"
-                  aria-label="View evening batch timetable and schedule"
-                  className="min-h-[52px] inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-white hover:bg-slate-50 text-[#0F172A] text-sm sm:text-base font-bold rounded-md border border-[#E2E8F0] shadow-xs transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  aria-label="View Batch Timings (4–9 PM) — evening batch timetable and schedule"
+                  className="min-h-[52px] inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-white hover:bg-slate-50 text-[#0F172A] text-sm sm:text-base font-bold rounded-md border border-[#E2E8F0] shadow-xs transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  <Clock className="w-4 h-4 text-[#EA580C]" />
+                  <Clock className="w-4 h-4 text-brand" />
                   <span>View Batch Timings (4–9 PM)</span>
                 </Link>
 
@@ -72,7 +78,7 @@ export default function HomePage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center space-x-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800 py-2.5 px-1"
                 >
-                  <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                  <MessageCircle className="w-4 h-4 text-whatsapp" />
                   <span>Chat with Center on WhatsApp</span>
                 </a>
               </div>
@@ -94,7 +100,7 @@ export default function HomePage() {
 
               <div className="mt-8 pt-6 border-t border-slate-200 grid sm:grid-cols-2 gap-5 text-xs sm:text-sm text-slate-600">
                 <div className="flex items-start space-x-3">
-                  <Clock className="w-5 h-5 text-[#EA580C] shrink-0 mt-0.5" />
+                  <Clock className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-[#0F172A] block">Operating Hours:</span>
                     <span className="text-slate-700">{CAMPUS_CONFIG.timings.workingDays}: {CAMPUS_CONFIG.timings.dailyHours}</span>
@@ -103,14 +109,14 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-[#EA580C] shrink-0 mt-0.5" />
+                  <MapPin className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-[#0F172A] block">Campus Venue (Thoramangalam):</span>
                     <a
                       href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-slate-700 hover:text-[#EA580C] hover:underline block font-medium"
+                      className="text-slate-700 hover:text-brand hover:underline block font-medium"
                     >
                       {CAMPUS_CONFIG.location.complex}, {CAMPUS_CONFIG.location.doorNo}
                     </a>
@@ -151,7 +157,7 @@ export default function HomePage() {
                       href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-1 text-xs sm:text-sm font-bold text-[#EA580C] hover:underline shrink-0"
+                      className="inline-flex items-center space-x-1 text-xs sm:text-sm font-bold text-brand hover:underline shrink-0"
                     >
                       <span>Get Directions</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -171,22 +177,22 @@ export default function HomePage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
               <div className="pt-4 sm:pt-0 sm:pr-6 text-left">
                 <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">12 Max</span>
-                <span className="text-xs sm:text-sm font-bold text-[#EA580C] uppercase tracking-wider block mt-1.5">Strict Batch Cap</span>
+                <span className="text-xs sm:text-sm font-bold text-brand uppercase tracking-wider block mt-1.5">Strict Batch Cap</span>
                 <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Individual student attention and daily real-time notebook review</span>
               </div>
               <div className="pt-4 sm:pt-0 sm:px-6 text-left">
                 <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">1-Day</span>
-                <span className="text-xs sm:text-sm font-bold text-[#EA580C] uppercase tracking-wider block mt-1.5">Free Trial</span>
+                <span className="text-xs sm:text-sm font-bold text-brand uppercase tracking-wider block mt-1.5">Free Trial</span>
                 <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Experience actual classroom teaching before paying any tuition fees</span>
               </div>
               <div className="pt-4 sm:pt-0 sm:px-6 text-left">
                 <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">4 – 9 PM</span>
-                <span className="text-xs sm:text-sm font-bold text-[#EA580C] uppercase tracking-wider block mt-1.5">Evening Slots</span>
+                <span className="text-xs sm:text-sm font-bold text-brand uppercase tracking-wider block mt-1.5">Evening Slots</span>
                 <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Three 90-min sessions synchronized with town bus arrivals at Four Roads</span>
               </div>
               <div className="pt-4 sm:pt-0 sm:pl-6 text-left">
                 <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">100%</span>
-                <span className="text-xs sm:text-sm font-bold text-[#EA580C] uppercase tracking-wider block mt-1.5">Board Aligned</span>
+                <span className="text-xs sm:text-sm font-bold text-brand uppercase tracking-wider block mt-1.5">Board Aligned</span>
                 <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Rigorous Tamil Nadu State Board (Samacheer) & CBSE blueprint coaching</span>
               </div>
             </div>
@@ -208,7 +214,7 @@ export default function HomePage() {
 
             <Link
               to="/courses"
-              className="inline-flex items-center space-x-1.5 text-sm sm:text-base font-bold text-[#EA580C] hover:underline shrink-0"
+              className="inline-flex items-center space-x-1.5 text-sm sm:text-base font-bold text-brand hover:underline shrink-0"
             >
               <span>View Full Subject Curriculum & Fees →</span>
             </Link>
@@ -221,7 +227,7 @@ export default function HomePage() {
                 className="py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start hover:bg-slate-50/60 transition-colors px-2 sm:px-6"
               >
                 <div className="lg:col-span-4">
-                  <div className="flex items-center space-x-2 text-xs sm:text-sm font-bold text-[#EA580C] mb-1.5">
+                  <div className="flex items-center space-x-2 text-xs sm:text-sm font-bold text-brand mb-1.5">
                     <span>{program.grade}</span>
                     <span>•</span>
                     <span>{program.board}</span>
@@ -258,7 +264,7 @@ export default function HomePage() {
                       program.id === 'middle-school' ? 'Class 6' :
                       'Class 10'
                     )}`}
-                    className="w-full sm:w-auto lg:w-full min-h-[46px] inline-flex items-center justify-center space-x-1.5 px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm font-bold rounded-md transition-colors shadow-xs"
+                    className="w-full sm:w-auto lg:w-full min-h-[46px] inline-flex items-center justify-center space-x-1.5 px-5 py-2.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-md transition-colors shadow-xs"
                   >
                     <span>Enroll in {program.id === 'middle-school' ? 'Class 6' : 'Class 10'} →</span>
                   </Link>
@@ -294,7 +300,7 @@ export default function HomePage() {
                 className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 items-center"
               >
                 <div className="md:col-span-3">
-                  <span className="text-xs sm:text-sm font-bold text-[#EA580C] uppercase tracking-wide block">
+                  <span className="text-xs sm:text-sm font-bold text-brand uppercase tracking-wide block">
                     {slot.slotNum}
                   </span>
                   <span className="text-xl sm:text-2xl font-extrabold text-[#0F172A] block mt-1">
@@ -327,7 +333,7 @@ export default function HomePage() {
 
                   <Link
                     to={`/student-details?grade=${slot.id === 'slot-1' ? 'Class+6' : slot.id === 'slot-2' ? 'Class+10' : 'Class+12'}`}
-                    className="flex-1 w-full min-h-[46px] inline-flex items-center justify-center px-4 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-md text-center transition-colors"
+                    className="flex-1 w-full min-h-[46px] inline-flex items-center justify-center px-4 py-2.5 bg-brand hover:bg-brand-strong text-white text-xs sm:text-sm font-bold rounded-md text-center transition-colors"
                   >
                     Hold Seat
                   </Link>
@@ -350,8 +356,8 @@ export default function HomePage() {
               href={whatsappInquiryUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Ask about batch schedule on WhatsApp"
-              className="min-h-[46px] inline-flex items-center space-x-2 px-5 py-2.5 bg-[#25D366] hover:bg-[#20BA5A] text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all shrink-0"
+              aria-label="Ask Schedule on WhatsApp — batch timetable enquiry"
+              className="min-h-[46px] inline-flex items-center space-x-2 px-5 py-2.5 bg-whatsapp hover:bg-whatsapp-strong text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all shrink-0"
             >
               <MessageCircle className="w-4 h-4" />
               <span>Ask Schedule on WhatsApp</span>
@@ -392,7 +398,7 @@ export default function HomePage() {
                 <div className="mt-5 pt-3.5 border-t border-slate-800">
                   <Link
                     to="/student-details"
-                    className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-orange-300 hover:text-orange-200"
+                    className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-semibold text-orange-300 hover:text-orange-100"
                   >
                     <span>{Number(st.num) === 1 ? 'Step 1: Details →' : 'Start at Step 1 →'}</span>
                   </Link>
@@ -404,7 +410,7 @@ export default function HomePage() {
           <div className="mt-12 pt-8 border-t border-slate-800 text-left">
             <Link
               to="/student-details"
-              className="min-h-[50px] inline-flex items-center space-x-2.5 px-8 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm sm:text-base font-bold rounded-md shadow-xs transition-all active:scale-98"
+              className="min-h-[50px] inline-flex items-center space-x-2.5 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-sm sm:text-base font-bold rounded-md shadow-xs transition-all active:scale-98"
             >
               <span>Begin Student Registration (Step 1) →</span>
             </Link>
@@ -427,7 +433,7 @@ export default function HomePage() {
 
             <Link
               to="/about"
-              className="inline-flex items-center space-x-1.5 text-sm sm:text-base font-bold text-[#EA580C] hover:underline shrink-0"
+              className="inline-flex items-center space-x-1.5 text-sm sm:text-base font-bold text-brand hover:underline shrink-0"
             >
               <span>Learn More About Focus Academy →</span>
             </Link>
@@ -435,7 +441,7 @@ export default function HomePage() {
 
           <div className="grid sm:grid-cols-2 gap-8 lg:gap-14">
             {HOME_FEATURES.map((feat, idx) => (
-              <div key={idx} className="border-l-3 border-[#EA580C] pl-5 sm:pl-6 text-left">
+              <div key={idx} className="border-l-3 border-brand pl-5 sm:pl-6 text-left">
                 <h3 className="text-lg sm:text-xl font-bold text-[#0F172A]">
                   {feat.title}
                 </h3>
@@ -448,7 +454,7 @@ export default function HomePage() {
 
           <div className="mt-14 p-6 sm:p-8 bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] grid sm:grid-cols-3 gap-6 text-left">
             <div className="flex items-start space-x-3.5">
-              <ShieldCheck className="w-6 h-6 text-[#EA580C] shrink-0 mt-0.5" />
+              <ShieldCheck className="w-6 h-6 text-brand shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-base font-bold text-[#0F172A]">Senior Subject Faculty</h3>
                 <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
@@ -458,17 +464,17 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-start space-x-3.5">
-              <BookOpen className="w-6 h-6 text-[#EA580C] shrink-0 mt-0.5" />
+              <BookOpen className="w-6 h-6 text-brand shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-base font-bold text-[#0F172A]">1-Day Free Trial Guarantee</h3>
+                <h3 className="text-base font-bold text-[#0F172A]">Parents Welcome in Class</h3>
                 <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
-                  Attend a live 90-minute evening session at Thiripura Complex before paying any fees. Parents are welcome to inspect notebooks.
+                  Parents may sit in on a live session at Thiripura Complex and inspect the student's corrected notebooks before deciding.
                 </p>
               </div>
             </div>
 
             <div className="flex items-start space-x-3.5">
-              <Award className="w-6 h-6 text-[#EA580C] shrink-0 mt-0.5" />
+              <Award className="w-6 h-6 text-brand shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-base font-bold text-[#0F172A]">Weekly Board Mocks</h3>
                 <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">

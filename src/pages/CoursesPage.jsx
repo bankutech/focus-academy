@@ -1,3 +1,4 @@
+import { usePageMeta } from '../hooks/usePageMeta';
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { 
@@ -9,6 +10,11 @@ import { categoriesData } from '../data/categoriesData';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 
 export default function CoursesPage() {
+  usePageMeta({
+    title: 'Courses and Syllabus for Classes 6–12 | Focus Academy Perambalur',
+    description: 'Subject-wise syllabus for school tuition and board exam coaching at Focus Academy: Maths, Science, English, Social Science for State Board and CBSE students.',
+    path: '/courses',
+  });
   const [searchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
 
@@ -135,7 +141,7 @@ export default function CoursesPage() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="mb-8">
           <div className="flex items-center space-x-2 text-xs text-slate-500 mb-2">
-            <Link to="/" className="hover:text-[#EA580C]">Home</Link>
+            <Link to="/" className="hover:text-brand">Home</Link>
             <span>/</span>
             <span className="text-[#0F172A] font-bold">Class & Board Selection</span>
           </div>
@@ -161,7 +167,7 @@ export default function CoursesPage() {
                   onClick={() => setSelectedBoard(b.id)}
                   className={`px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                     selectedBoard === b.id
-                      ? 'bg-[#EA580C] text-white shadow-xs'
+                      ? 'bg-brand text-white shadow-xs'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                   }`}
                 >
@@ -209,7 +215,7 @@ export default function CoursesPage() {
                   onClick={() => setSelectedGoal(goal.id)}
                   className={`px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                     selectedGoal === goal.id
-                      ? 'bg-[#0F172A] text-orange-200 shadow-xs border border-[#EA580C]'
+                      ? 'bg-[#0F172A] text-orange-100 shadow-xs border border-brand'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                   }`}
                 >
@@ -227,7 +233,7 @@ export default function CoursesPage() {
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="text-[#EA580C] hover:underline font-bold cursor-pointer"
+                className="text-brand hover:underline font-bold cursor-pointer"
               >
                 Reset All Filters ↺
               </button>
@@ -252,7 +258,7 @@ export default function CoursesPage() {
               </button>
               <a
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
-                className="px-4 py-2 bg-[#EA580C] text-white text-xs font-bold rounded-md cursor-pointer"
+                className="px-4 py-2 bg-brand text-white text-xs font-bold rounded-md cursor-pointer"
               >
                 Call Counselor: {CAMPUS_CONFIG.contact.primaryPhone}
               </a>
@@ -263,7 +269,7 @@ export default function CoursesPage() {
             {filteredCourses.map((course) => (
               <div
                 key={course.id}
-                className="bg-white rounded-lg border border-[#E2E8F0] shadow-xs hover:border-[#EA580C]/40 transition-all duration-300 overflow-hidden flex flex-col justify-between"
+                className="bg-white rounded-lg border border-[#E2E8F0] shadow-xs hover:border-brand/40 transition-all duration-300 overflow-hidden flex flex-col justify-between"
               >
                 <div>
                   <div className="relative h-44 w-full bg-[#0F172A] overflow-hidden">
@@ -288,7 +294,7 @@ export default function CoursesPage() {
                   </div>
 
                   <div className="p-6">
-                    <div className="text-xs text-[#EA580C] font-bold uppercase mb-1">
+                    <div className="text-xs text-brand font-bold uppercase mb-1">
                       {course.category}
                     </div>
                     
@@ -326,7 +332,7 @@ export default function CoursesPage() {
                     </div>
                     <div className="text-right">
                       <span className="block text-xs text-slate-500">Timings</span>
-                      <span className="text-xs font-bold text-[#EA580C]">4:00 PM – 9:00 PM</span>
+                      <span className="text-xs font-bold text-brand">4:00 PM – 9:00 PM</span>
                     </div>
                   </div>
 
@@ -337,12 +343,12 @@ export default function CoursesPage() {
                       className="flex-1 py-2 px-3 text-xs font-semibold rounded-md border border-[#E2E8F0] bg-slate-50 hover:bg-slate-100 text-[#0F172A] transition-colors cursor-pointer flex items-center justify-center space-x-1"
                     >
                       <span>{expandedSyllabusId === course.id ? 'Hide Syllabus' : 'Syllabus Details'}</span>
-                      <span className="text-xs text-[#EA580C] font-bold">{expandedSyllabusId === course.id ? '▲' : '▼'}</span>
+                      <span className="text-xs text-brand font-bold">{expandedSyllabusId === course.id ? '▲' : '▼'}</span>
                     </button>
 
                     <Link
                       to="/contact"
-                      className="py-2 px-3 text-xs font-semibold rounded-md border border-[#E2E8F0] bg-white hover:bg-slate-50 text-[#EA580C] transition-colors cursor-pointer"
+                      className="py-2 px-3 text-xs font-semibold rounded-md border border-[#E2E8F0] bg-white hover:bg-slate-50 text-brand transition-colors cursor-pointer"
                     >
                       Inquire
                     </Link>
@@ -350,7 +356,7 @@ export default function CoursesPage() {
 
                   {expandedSyllabusId === course.id && (
                     <div className="p-3 bg-white rounded-md border border-[#E2E8F0] mb-3 text-xs space-y-1.5 animate-in fade-in">
-                      <span className="text-xs uppercase font-bold text-[#EA580C] block">
+                      <span className="text-xs uppercase font-bold text-brand block">
                         Curriculum Highlights:
                       </span>
                       <p className="text-slate-600 leading-relaxed text-xs">
@@ -358,7 +364,7 @@ export default function CoursesPage() {
                       </p>
                       <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                         <span>Small Batch: Max 12 Seats</span>
-                        <Link to="/contact" className="text-[#EA580C] font-bold hover:underline">
+                        <Link to="/contact" className="text-brand font-bold hover:underline">
                           Enroll in Batch →
                         </Link>
                       </div>
@@ -373,10 +379,10 @@ export default function CoursesPage() {
                       course.id.includes('9') ? 'Class 9' :
                       'Class 6'
                     )}`}
-                    className="w-full inline-flex items-center justify-center space-x-2 py-3 bg-[#0F172A] hover:bg-[#EA580C] text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer group"
+                    className="w-full inline-flex items-center justify-center space-x-2 py-3 bg-[#0F172A] hover:bg-brand-strong text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer group"
                   >
                     <span>View Evening Batches & Timings</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-orange-200 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-3.5 h-3.5 text-orange-100 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </div>
               </div>
@@ -386,7 +392,7 @@ export default function CoursesPage() {
 
         <div className="mt-16 bg-white rounded-lg p-6 sm:p-8 border border-[#E2E8F0] shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-md bg-orange-50 text-[#EA580C] flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-md bg-orange-50 text-brand flex items-center justify-center shrink-0">
               <PhoneCall className="w-6 h-6" />
             </div>
             <div>

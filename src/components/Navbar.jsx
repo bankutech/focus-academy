@@ -88,8 +88,8 @@ export default function Navbar() {
       <div className="bg-[#0F172A] text-slate-200 text-xs py-2 px-4 border-b border-[#1E293B] tracking-wide">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 flex items-center justify-between">
           <div className="flex items-center space-x-3 overflow-hidden text-ellipsis whitespace-nowrap">
-            <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-200 text-xs uppercase font-bold border border-orange-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#EA580C] animate-pulse"></span>
+            <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-100 text-xs uppercase font-bold border border-orange-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></span>
               <span>Evening Batches</span>
             </span>
             <span className="text-slate-300 font-medium hidden sm:inline">
@@ -104,9 +104,9 @@ export default function Navbar() {
             <a 
               href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`} 
               aria-label={`Call Focus Academy Campus Desk at ${CAMPUS_CONFIG.contact.primaryPhone}`}
-              className="flex items-center space-x-1.5 text-orange-200 hover:text-white transition-colors cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded"
+              className="flex items-center space-x-1.5 text-orange-100 hover:text-white transition-colors cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand rounded"
             >
-              <Phone className="w-3.5 h-3.5 text-[#EA580C]" />
+              <Phone className="w-3.5 h-3.5 text-brand" />
               <span className="font-semibold">{CAMPUS_CONFIG.contact.primaryPhone}</span>
             </a>
             <span className="text-slate-600 hidden sm:inline">•</span>
@@ -114,18 +114,18 @@ export default function Navbar() {
               href={whatsappInquiryUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Direct chat on WhatsApp with Focus Academy coordinator"
+              aria-label="WhatsApp Desk — start a chat with a Focus Academy coordinator"
               className="hidden sm:flex items-center space-x-1 text-emerald-400 hover:text-white transition-colors cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white rounded"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+              <MessageSquare className="w-3.5 h-3.5 text-whatsapp" />
               <span className="font-semibold">WhatsApp Desk</span>
             </a>
             <span className="text-slate-600 hidden lg:inline">•</span>
             <Link 
               to="/fees"
-              className="hidden lg:flex items-center space-x-1 hover:text-white transition-colors underline underline-offset-4 decoration-slate-600 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded"
+              className="hidden lg:flex items-center space-x-1 hover:text-white transition-colors underline underline-offset-4 decoration-slate-600 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand rounded"
             >
-              <Calculator className="w-3.5 h-3.5 text-[#EA580C]" />
+              <Calculator className="w-3.5 h-3.5 text-brand" />
               <span>Fees</span>
             </Link>
           </div>
@@ -143,12 +143,14 @@ export default function Navbar() {
               <Link 
                 to="/" 
                 onClick={handleBrandClick}
-                className="flex items-center space-x-3 group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] rounded-md"
+                className="flex items-center space-x-3 group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand rounded-md"
               >
-                <img 
-                  src="/logo.png" 
-                  alt="Focus Academy Logo" 
-                  className="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-md" 
+                <img
+                  src="/logo-80.png"
+                  alt="Focus Academy logo"
+                  width="80"
+                  height="80"
+                  className="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-md"
                 />
                 <div className="flex flex-col text-left">
                   <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-[#0F172A] leading-tight">
@@ -172,7 +174,7 @@ export default function Navbar() {
                     end={link.path === '/'}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`px-3.5 xl:px-4 py-2 rounded-lg transition-all cursor-pointer text-base xl:text-lg font-bold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] ${
+                    className={`px-3.5 xl:px-4 py-2 rounded-lg transition-all cursor-pointer text-base xl:text-lg font-bold focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand ${
                       active
                         ? 'bg-[#0F172A] text-white shadow-xs'
                         : 'text-slate-700 hover:text-[#0F172A] hover:bg-slate-100'
@@ -190,7 +192,7 @@ export default function Navbar() {
                   to="/student-dashboard"
                   className="inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-colors cursor-pointer"
                 >
-                  <GraduationCap className="w-4 h-4 text-[#EA580C]" />
+                  <GraduationCap className="w-4 h-4 text-brand" />
                   <span>{profile?.studentName?.split(' ')[0] || 'My Portal'}</span>
                 </Link>
               ) : (
@@ -198,17 +200,17 @@ export default function Navbar() {
                   to="/login"
                   className="hidden md:inline-flex items-center space-x-1.5 px-3 py-2 text-slate-700 hover:text-[#0F172A] hover:bg-slate-100 text-xs sm:text-sm font-bold rounded-md transition-colors cursor-pointer"
                 >
-                  <LogIn className="w-4 h-4 text-[#EA580C]" />
+                  <LogIn className="w-4 h-4 text-brand" />
                   <span>Student Login</span>
                 </Link>
               )}
 
               <Link
                 to="/student-details"
-                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-6 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-sm sm:text-base font-bold rounded-md shadow-xs hover:bg-[#C2410C] transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-6 py-2.5 bg-brand hover:bg-brand-strong text-white text-sm sm:text-base font-bold rounded-md shadow-xs hover:bg-brand-strong transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <span>Check Batch Seats</span>
-                <ArrowRight className="w-4 h-4 text-orange-200" />
+                <ArrowRight className="w-4 h-4 text-orange-100" />
               </Link>
 
               <button
@@ -216,7 +218,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-expanded={mobileMenuOpen}
                 aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-                className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-[#0F172A] hover:bg-slate-100 border border-[#E2E8F0] transition-colors cursor-pointer bg-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-[#0F172A] hover:bg-slate-100 border border-[#E2E8F0] transition-colors cursor-pointer bg-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -239,7 +241,7 @@ export default function Navbar() {
             className="absolute top-full left-0 right-0 max-h-[calc(100vh-100%)] max-h-[calc(100dvh-100%)] overflow-y-auto overscroll-contain z-50 lg:hidden bg-[#F8FAFC] border-b border-[#E2E8F0] shadow-md px-4 pt-3 pb-28 sm:pb-12 animate-in slide-in-from-top duration-200 space-y-4 text-left"
           >
             <div className="p-3.5 bg-white rounded-md border border-[#E2E8F0] shadow-xs">
-              <div className="flex items-center space-x-2 text-xs uppercase text-[#EA580C] font-bold">
+              <div className="flex items-center space-x-2 text-xs uppercase text-brand font-bold">
                 <Clock className="w-3.5 h-3.5" />
                 <span>Evening Batches: 4:00 PM – 9:00 PM</span>
               </div>
@@ -262,10 +264,10 @@ export default function Navbar() {
                       active
                         ? 'bg-[#0F172A] text-white border-[#0F172A]'
                         : 'bg-white hover:bg-slate-50 text-[#0F172A] border-[#E2E8F0]'
-                    } focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]`}
+                    } focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand`}
                   >
                     <span className="text-base font-bold">{link.name}</span>
-                    <ArrowRight className={`w-4 h-4 ${active ? 'text-orange-200' : 'text-[#EA580C]'}`} />
+                    <ArrowRight className={`w-4 h-4 ${active ? 'text-orange-100' : 'text-brand'}`} />
                   </NavLink>
                 );
               })}
@@ -278,7 +280,7 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-[#0F172A] text-white font-bold rounded-md text-xs sm:text-sm shadow-xs cursor-pointer"
                 >
-                  <GraduationCap className="w-4 h-4 text-[#EA580C]" />
+                  <GraduationCap className="w-4 h-4 text-brand" />
                   <span>My Student Portal ({profile?.studentName?.split(' ')[0] || 'Dashboard'})</span>
                 </Link>
               ) : (
@@ -287,17 +289,17 @@ export default function Navbar() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-white hover:bg-slate-50 text-[#0F172A] font-bold rounded-md text-xs sm:text-sm border border-[#E2E8F0] shadow-xs cursor-pointer"
                 >
-                  <LogIn className="w-4 h-4 text-[#EA580C]" />
+                  <LogIn className="w-4 h-4 text-brand" />
                   <span>Student Sign In / Register</span>
                 </Link>
               )}
 
               <a
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
-                aria-label={`Call Campus Desk at ${CAMPUS_CONFIG.contact.primaryPhone}`}
-                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-white text-[#0F172A] font-semibold rounded-md text-xs border border-[#E2E8F0] shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                aria-label={`Call Campus Desk: ${CAMPUS_CONFIG.contact.primaryPhone}`}
+                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-white text-[#0F172A] font-semibold rounded-md text-xs border border-[#E2E8F0] shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
               >
-                <Phone className="w-4 h-4 text-[#EA580C]" />
+                <Phone className="w-4 h-4 text-brand" />
                 <span>Call Campus Desk: {CAMPUS_CONFIG.contact.primaryPhone}</span>
               </a>
 
@@ -305,8 +307,8 @@ export default function Navbar() {
                 href={whatsappInquiryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Direct chat on WhatsApp with Focus Academy coordinator"
-                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold rounded-md text-xs shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
+                aria-label="Chat on WhatsApp Directly with a Focus Academy coordinator"
+                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-3 py-3 bg-whatsapp hover:bg-whatsapp-strong text-white font-semibold rounded-md text-xs shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Chat on WhatsApp Directly</span>
@@ -315,7 +317,7 @@ export default function Navbar() {
               <Link
                 to="/student-details"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-4 py-3.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-md text-xs sm:text-sm shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C] text-center mb-2"
+                className="w-full min-h-[48px] flex items-center justify-center space-x-2 px-4 py-3.5 bg-brand hover:bg-brand-strong text-white font-bold rounded-md text-xs sm:text-sm shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand text-center mb-2"
               >
                 <span>Check Batch Seats & Timings →</span>
               </Link>

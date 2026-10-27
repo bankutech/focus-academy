@@ -15,10 +15,10 @@ export default function MobileQuickBar() {
       <div className="max-w-md mx-auto grid grid-cols-2 gap-2.5">
         <a
           href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
-          aria-label={`Call Focus Academy Campus Desk at ${CAMPUS_CONFIG.contact.primaryPhone}`}
-          className="min-h-[48px] flex items-center justify-center space-x-2 px-3 bg-[#1E293B] hover:bg-[#334155] text-white border border-[#334155] rounded-md text-xs font-bold transition-all shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+          aria-label={`Call Campus Desk at ${CAMPUS_CONFIG.contact.primaryPhone}`}
+          className="min-h-[48px] flex items-center justify-center space-x-2 px-3 bg-[#1E293B] hover:bg-[#334155] text-white border border-[#334155] rounded-md text-xs font-bold transition-all shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
         >
-          <Phone className="w-4 h-4 text-orange-200 shrink-0" />
+          <Phone className="w-4 h-4 text-orange-100 shrink-0" />
           <span className="truncate">Call Campus Desk</span>
         </a>
 
@@ -26,8 +26,8 @@ export default function MobileQuickBar() {
           href={`https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${whatsappQuery}`}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Chat directly with Focus Academy on WhatsApp"
-          className="min-h-[48px] flex items-center justify-center space-x-2 px-3 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-md text-xs font-bold transition-all shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
+          aria-label="Chat on WhatsApp with a Focus Academy coordinator"
+          className="min-h-[48px] flex items-center justify-center space-x-2 px-3 bg-whatsapp hover:bg-whatsapp-strong text-white rounded-md text-xs font-bold transition-all shadow-xs active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
         >
           <MessageCircle className="w-4 h-4 shrink-0" />
           <span className="truncate">Chat on WhatsApp</span>

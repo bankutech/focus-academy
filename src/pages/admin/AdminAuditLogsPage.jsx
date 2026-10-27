@@ -17,14 +17,17 @@ export default function AdminAuditLogsPage() {
   const [actionFilter, setActionFilter] = useState('all');
   const [entityFilter, setEntityFilter] = useState('all');
   const [selectedLog, setSelectedLog] = useState(null);
+  const [loadError, setLoadError] = useState('');
 
   const loadLogs = async () => {
     try {
       setLoading(true);
       const auditData = await AdminDataService.getAuditLogs(100);
       setLogs(auditData);
+      setLoadError('');
     } catch (err) {
       console.error('Failed to load audit logs:', err);
+      setLoadError(err.message || 'Audit history could not be loaded from the database.');
     } finally {
       setLoading(false);
     }
@@ -105,6 +108,18 @@ export default function AdminAuditLogsPage() {
 
   return (
     <div className="space-y-6">
+      {loadError && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-xs font-bold text-rose-800 flex items-center justify-between gap-3">
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={loadLogs}
+            className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 rounded-md font-bold cursor-pointer flex-shrink-0"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight flex items-center space-x-2">
@@ -155,7 +170,7 @@ export default function AdminAuditLogsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by action, details, actor email, or entity ID..."
-            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand"
           />
         </div>
 

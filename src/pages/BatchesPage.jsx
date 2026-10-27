@@ -1,3 +1,4 @@
+import { usePageMeta } from '../hooks/usePageMeta';
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useLocation, Navigate } from 'react-router-dom';
 import { 
@@ -126,6 +127,15 @@ export default function BatchesPage() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const isTimingsView = location.pathname === '/timings';
+  usePageMeta({
+    title: isTimingsView
+      ? 'Batch Timings and Evening Schedule (4–9 PM) | Focus Academy Perambalur'
+      : 'Choose a Batch for Admission | Focus Academy Perambalur',
+    description: isTimingsView
+      ? 'Evening batch timings for Classes 6–12 at Focus Academy, Thoramangalam: shift slots, days, classroom and strict 12-student batch caps.'
+      : 'Select the evening batch that fits your child\'s class, board and school shift to continue the Focus Academy admission.',
+    path: isTimingsView ? '/timings' : '/batches',
+  });
   const urlSlot = searchParams.get('slot') || 'all';
 
   const { studentFlow, setStudentFlow } = useStudentFlow();
@@ -314,7 +324,7 @@ export default function BatchesPage() {
 
                 <div className="mt-6 grid sm:grid-cols-3 gap-4">
                   <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs">
-                    <div className="text-xs font-bold text-[#EA580C] uppercase tracking-wide">Shift 1 (Evening)</div>
+                    <div className="text-xs font-bold text-brand uppercase tracking-wide">Shift 1 (Evening)</div>
                     <div className="text-lg font-extrabold text-[#0F172A] mt-1">4:30 PM – 6:00 PM</div>
                     <div className="text-xs text-slate-600 mt-2 leading-relaxed">
                       Classes 6–8 Foundation & Class 9. Synchronized with early school bus arrivals from Four Roads.
@@ -326,7 +336,7 @@ export default function BatchesPage() {
                   </div>
 
                   <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs">
-                    <div className="text-xs font-bold text-[#EA580C] uppercase tracking-wide">Shift 2 (Evening)</div>
+                    <div className="text-xs font-bold text-brand uppercase tracking-wide">Shift 2 (Evening)</div>
                     <div className="text-lg font-extrabold text-[#0F172A] mt-1">6:00 PM – 7:30 PM</div>
                     <div className="text-xs text-slate-600 mt-2 leading-relaxed">
                       Class 10 Board Distinction & Class 11 Core Science & Maths batches. Timed for town bus arrivals.
@@ -338,7 +348,7 @@ export default function BatchesPage() {
                   </div>
 
                   <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs">
-                    <div className="text-xs font-bold text-[#EA580C] uppercase tracking-wide">Shift 3 (Night)</div>
+                    <div className="text-xs font-bold text-brand uppercase tracking-wide">Shift 3 (Night)</div>
                     <div className="text-lg font-extrabold text-[#0F172A] mt-1">7:30 PM – 9:00 PM</div>
                     <div className="text-xs text-slate-600 mt-2 leading-relaxed">
                       Class 12 Higher Secondary Mastery & Intensive Board / Competitive prep. Safe night dispersal.
@@ -352,15 +362,9 @@ export default function BatchesPage() {
 
                 <div className="mt-4 p-3.5 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center space-x-2">
-                    <span className="font-bold text-[#EA580C]">1-Day Free Trial:</span>
-                    <span>Attend one complete evening session in any scheduled slot before paying any tuition fees. Zero registration fee.</span>
+                    <span className="font-bold text-brand">1-Day Free Trial:</span>
+                    <span>Attend one complete evening session in any scheduled slot before paying any tuition fees. Zero registration fee. Seats are opened from the admission link below.</span>
                   </div>
-                  <Link
-                    to="/student-details"
-                    className="font-bold text-[#EA580C] hover:text-[#C2410C] shrink-0"
-                  >
-                    Start Admission at Step 1 →
-                  </Link>
                 </div>
               </div>
             </div>
@@ -382,7 +386,12 @@ export default function BatchesPage() {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div
+                role="region"
+                aria-label="Batch timetable table — scroll horizontally for all columns"
+                tabIndex={0}
+                className="overflow-x-auto focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand rounded-md"
+              >
                 <table className="w-full text-xs text-left text-[#0F172A]">
                   <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[11px] border-b border-[#E2E8F0]">
                     <tr>
@@ -409,7 +418,7 @@ export default function BatchesPage() {
                             {row.board}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 font-bold text-[#EA580C] whitespace-nowrap">
+                        <td className="py-3.5 px-4 font-bold text-brand whitespace-nowrap">
                           <span className="block text-[11px] text-slate-500 font-normal">{row.shift}</span>
                           <span>{row.timing}</span>
                         </td>
@@ -420,7 +429,7 @@ export default function BatchesPage() {
                           {row.subjects}
                         </td>
                         <td className="py-3.5 px-4 text-slate-600 whitespace-nowrap flex items-center space-x-1 pt-4">
-                          <MapPin className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
+                          <MapPin className="w-3.5 h-3.5 text-brand shrink-0" />
                           <span>{row.classroom}</span>
                         </td>
                         <td className="py-3.5 px-4 text-right whitespace-nowrap">
@@ -437,8 +446,8 @@ export default function BatchesPage() {
 
             <div className="grid md:grid-cols-3 gap-5">
               <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs space-y-2">
-                <div className="flex items-center space-x-2 text-xs font-bold text-[#EA580C] uppercase tracking-wide">
-                  <Bus className="w-4 h-4 text-[#EA580C]" />
+                <div className="flex items-center space-x-2 text-xs font-bold text-brand uppercase tracking-wide">
+                  <Bus className="w-4 h-4 text-brand" />
                   <span>Four Roads & Trichy Transit</span>
                 </div>
                 <h3 className="text-sm font-bold text-[#0F172A]">Bus Route Synchronization</h3>
@@ -448,8 +457,8 @@ export default function BatchesPage() {
               </div>
 
               <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs space-y-2">
-                <div className="flex items-center space-x-2 text-xs font-bold text-[#EA580C] uppercase tracking-wide">
-                  <ShieldCheck className="w-4 h-4 text-[#EA580C]" />
+                <div className="flex items-center space-x-2 text-xs font-bold text-brand uppercase tracking-wide">
+                  <ShieldCheck className="w-4 h-4 text-brand" />
                   <span>Safety & Facilities</span>
                 </div>
                 <h3 className="text-sm font-bold text-[#0F172A]">Secure Monitored Classrooms</h3>
@@ -459,8 +468,8 @@ export default function BatchesPage() {
               </div>
 
               <div className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs space-y-2">
-                <div className="flex items-center space-x-2 text-xs font-bold text-[#EA580C] uppercase tracking-wide">
-                  <Calendar className="w-4 h-4 text-[#EA580C]" />
+                <div className="flex items-center space-x-2 text-xs font-bold text-brand uppercase tracking-wide">
+                  <Calendar className="w-4 h-4 text-brand" />
                   <span>Transparent Evaluation</span>
                 </div>
                 <h3 className="text-sm font-bold text-[#0F172A]">1-Day Free Trial Policy</h3>
@@ -472,8 +481,8 @@ export default function BatchesPage() {
 
             <div className="bg-white rounded-lg p-6 sm:p-8 border border-[#E2E8F0] shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
               <div className="space-y-1.5 max-w-2xl">
-                <div className="inline-flex items-center space-x-2 text-xs font-bold text-[#EA580C] uppercase tracking-wide">
-                  <span className="w-2 h-2 rounded-full bg-[#EA580C]"></span>
+                <div className="inline-flex items-center space-x-2 text-xs font-bold text-brand uppercase tracking-wide">
+                  <span className="w-2 h-2 rounded-full bg-brand"></span>
                   <span>Sequential 5-Step Admission Funnel</span>
                 </div>
                 <h3 className="text-lg sm:text-xl font-bold text-[#0F172A]">
@@ -493,7 +502,7 @@ export default function BatchesPage() {
                 </Link>
                 <Link
                   to="/student-details"
-                  className="px-6 py-3 text-xs font-bold text-white bg-[#EA580C] hover:bg-[#C2410C] rounded-md shadow-xs transition-colors flex items-center justify-center space-x-1.5"
+                  className="px-6 py-3 text-xs font-bold text-white bg-brand hover:bg-brand-strong rounded-md shadow-xs transition-colors flex items-center justify-center space-x-1.5"
                 >
                   <span>Begin Admission at Step 1: Student Details →</span>
                 </Link>
@@ -506,13 +515,13 @@ export default function BatchesPage() {
               <div className="space-y-1">
                 <div className="flex items-center space-x-2 text-xs text-slate-600">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span className="font-bold text-[#EA580C]">Step 3 of 5</span>
+                  <span className="font-bold text-brand">Step 3 of 5</span>
                   <span>•</span>
                   {studentFlow.studentName ? (
                     <>
                       <span>Student: <strong className="text-[#0F172A]">{studentFlow.studentName}</strong></span>
                       <span>•</span>
-                      <span>Target: <strong className="text-[#EA580C]">{studentFlow.examPrep || 'Academic Excellence'}</strong></span>
+                      <span>Target: <strong className="text-brand">{studentFlow.examPrep || 'Academic Excellence'}</strong></span>
                     </>
                   ) : (
                     <>
@@ -534,7 +543,7 @@ export default function BatchesPage() {
                   <>
                     <Link
                       to="/student-details"
-                      className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
+                      className="inline-flex items-center space-x-1 text-slate-600 hover:text-brand px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
                     >
                       <Edit2 className="w-3 h-3" />
                       <span>Change Class/Board</span>
@@ -542,7 +551,7 @@ export default function BatchesPage() {
 
                     <Link
                       to="/exam-prep"
-                      className="inline-flex items-center space-x-1 text-slate-600 hover:text-[#EA580C] px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
+                      className="inline-flex items-center space-x-1 text-slate-600 hover:text-brand px-3 py-1.5 rounded-md border border-[#E2E8F0] bg-slate-50"
                     >
                       <Edit2 className="w-3 h-3" />
                       <span>Change Goal</span>
@@ -551,7 +560,7 @@ export default function BatchesPage() {
                 ) : (
                   <Link
                     to="/student-details"
-                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-white bg-[#EA580C] hover:bg-[#C2410C] px-3.5 py-2 rounded-md shadow-xs transition-colors"
+                    className="inline-flex items-center space-x-1.5 text-xs font-bold text-white bg-brand hover:bg-brand-strong px-3.5 py-2 rounded-md shadow-xs transition-colors"
                   >
                     <span>Personalize for My Child (Step 1) →</span>
                   </Link>
@@ -567,7 +576,7 @@ export default function BatchesPage() {
                 All batches run Monday to Saturday between 4:00 PM and 9:00 PM with a strict 12-student cap. Timings are synchronized with local school buses arriving via Four Roads and Trichy Main Road so students arrive refreshed.
               </p>
               <div className="mt-3 p-3 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
-                <span className="font-bold text-[#EA580C]">1-Day Free Trial:</span>
+                <span className="font-bold text-brand">1-Day Free Trial:</span>
                 <span>Attend one complete evening session before paying any fees. Zero registration fee.</span>
               </div>
             </div>
@@ -579,7 +588,7 @@ export default function BatchesPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 sm:gap-4 overflow-hidden w-full md:w-auto">
                 <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar touch-pan-x scroll-smooth w-full sm:w-auto py-0.5">
                   <span className="text-xs uppercase font-bold text-slate-500 mr-1 shrink-0 flex items-center space-x-1">
-                    <Filter className="w-3 h-3 text-[#EA580C]" />
+                    <Filter className="w-3 h-3 text-brand" />
                     <span>Class:</span>
                   </span>
                   {gradeOptions.map((g) => {
@@ -613,7 +622,7 @@ export default function BatchesPage() {
                       onClick={() => setActiveBoardFilter(b.id)}
                       className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer shrink-0 min-h-[34px] flex items-center ${
                         activeBoardFilter === b.id
-                          ? 'bg-[#EA580C] text-white shadow-xs'
+                          ? 'bg-brand text-white shadow-xs'
                           : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-[#E2E8F0]'
                       }`}
                     >
@@ -660,9 +669,9 @@ export default function BatchesPage() {
                     key={batch.id}
                     className={`bg-white rounded-lg p-6 sm:p-7 border ${
                       isRecommended
-                        ? 'border-[#EA580C] ring-1 ring-[#EA580C]/20 shadow-sm'
+                        ? 'border-brand ring-1 ring-brand/20 shadow-sm'
                         : 'border-[#E2E8F0] shadow-xs'
-                    } flex flex-col justify-between hover:border-[#EA580C]/40 transition-all`}
+                    } flex flex-col justify-between hover:border-brand/40 transition-all`}
                   >
                     <div>
                       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 mb-4">
@@ -672,7 +681,7 @@ export default function BatchesPage() {
                           </span>
 
                           {isRecommended && (
-                            <span className="px-2.5 py-1 bg-orange-100 text-[#EA580C] border border-orange-200 rounded-md text-xs font-bold flex items-center space-x-1">
+                            <span className="px-2.5 py-1 bg-orange-100 text-brand border border-orange-200 rounded-md text-xs font-bold flex items-center space-x-1">
                               <span>Recommended for Your Track</span>
                             </span>
                           )}
@@ -689,7 +698,7 @@ export default function BatchesPage() {
 
                       <div className="mt-4 grid sm:grid-cols-2 gap-3 text-xs bg-slate-50 p-3.5 rounded-md border border-[#E2E8F0]">
                         <div className="flex items-center space-x-2">
-                          <Clock className="w-4 h-4 text-[#EA580C] shrink-0" />
+                          <Clock className="w-4 h-4 text-brand shrink-0" />
                           <div>
                             <span className="font-bold text-[#0F172A] block">{batch.timing}</span>
                             <span className="text-slate-500 text-xs">{batch.days}</span>
@@ -697,7 +706,7 @@ export default function BatchesPage() {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          <Users className="w-4 h-4 text-[#EA580C] shrink-0" />
+                          <Users className="w-4 h-4 text-brand shrink-0" />
                           <div>
                             <span className="font-bold text-[#0F172A] block">Max 12 Students</span>
                             <span className="text-emerald-700 font-bold text-xs">{batch.seatsRemaining} Seats Left</span>
@@ -722,13 +731,13 @@ export default function BatchesPage() {
                       </div>
 
                       <div className="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-600 flex items-center space-x-2">
-                        <MapPin className="w-3.5 h-3.5 text-[#EA580C] shrink-0" />
+                        <MapPin className="w-3.5 h-3.5 text-brand shrink-0" />
                         <span className="truncate">{batch.classroom}</span>
                       </div>
 
                       <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500 flex items-center justify-between">
                         <span className="flex items-center space-x-1.5">
-                          <BookOpen className="w-3.5 h-3.5 text-[#EA580C]" />
+                          <BookOpen className="w-3.5 h-3.5 text-brand" />
                           <span>Curriculum:</span>
                         </span>
                         <strong className="text-[#0F172A]">Samacheer Kalvi & NCERT Aligned</strong>
@@ -752,10 +761,10 @@ export default function BatchesPage() {
                         <Link
                           to={getBatchLink(batch)}
                           onClick={() => handleSelectBatch(batch)}
-                          className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+                          className="w-full sm:w-auto inline-flex items-center justify-center space-x-1.5 px-5 py-3 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                         >
                           <span>{isTimingsView && !isStep1Complete(studentFlow) ? 'Enroll (Start at Step 1)' : 'Select Batch & Details (Step 4)'}</span>
-                          <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
+                          <ArrowRight className="w-3.5 h-3.5 text-orange-100" />
                         </Link>
                       </div>
                     </div>

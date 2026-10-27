@@ -133,7 +133,7 @@ export default function AdminSettingsPage() {
   if (loading || !settings) {
     return (
       <div className="p-8 text-center bg-white rounded-xl border border-slate-200">
-        <div className="w-8 h-8 border-4 border-[#EA580C] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" />
         <p className="text-xs font-semibold text-slate-500">Loading Academy Configuration &amp; Policies...</p>
       </div>
     );
@@ -151,7 +151,7 @@ export default function AdminSettingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center space-x-2">
-            <SettingsIcon className="w-6 h-6 text-[#EA580C]" />
+            <SettingsIcon className="w-6 h-6 text-brand" />
             <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
               Academy Settings &amp; Governance
             </h1>
@@ -348,7 +348,7 @@ export default function AdminSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'Saving...' : 'Save Academy Settings'}</span>
@@ -417,7 +417,7 @@ export default function AdminSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'Saving...' : 'Save Billing Policies'}</span>
@@ -464,7 +464,7 @@ export default function AdminSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'Saving...' : 'Save WhatsApp Template'}</span>
@@ -578,7 +578,7 @@ export default function AdminSettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-5 border border-slate-200 rounded-xl space-y-3 bg-slate-50">
               <div className="flex items-center space-x-2">
-                <Download className="w-5 h-5 text-[#EA580C]" />
+                <Download className="w-5 h-5 text-brand" />
                 <h3 className="font-bold text-sm text-[#0F172A]">Export Complete System Snapshot</h3>
               </div>
               <p className="text-xs text-slate-500">

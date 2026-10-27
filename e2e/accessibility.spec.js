@@ -13,6 +13,8 @@ const PUBLIC_ROUTES = [
   { path: '/fees', name: 'fees' },
   { path: '/contact', name: 'contact' },
   { path: '/student-details', name: 'student-details' },
+  { path: '/privacy', name: 'privacy' },
+  { path: '/this-page-does-not-exist', name: 'not-found' },
 ];
 
 const VIEWPORTS = [

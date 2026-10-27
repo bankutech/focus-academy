@@ -8,6 +8,54 @@ import { SessionAuthService } from '../services/sessionAuthService';
 
 const BookDemoModal = lazy(() => import('../components/Modals/BookDemoModal'));
 
+const PERSISTED_FLOW_FIELDS = [
+  'studentName',
+  'parentName',
+  'phone',
+  'board',
+  'grade',
+  'examPrep',
+  'examPrepId',
+  'schoolName',
+  'schoolShift',
+  'selectedBatchId',
+  'selectedBatchName',
+  'batchTiming',
+  'subjects',
+  'monthlyFee',
+  'step',
+  'stepToken',
+  'applicationId',
+  'syncedStep',
+  'syncedPhone',
+  'syncedName',
+  'syncedIdentity',
+];
+
+const PERSISTED_STUDENT_FIELDS = [
+  'id',
+  'studentName',
+  'parentName',
+  'phone',
+  'email',
+  'studentUid',
+  'grade',
+  'board',
+  'selectedBatchId',
+  'selectedBatchName',
+  'timing',
+  'reservationId',
+  'createdAt',
+];
+
+const pickPersisted = (source, fields) => {
+  if (!source || typeof source !== 'object') return {};
+  return fields.reduce((acc, field) => {
+    if (source[field] !== undefined) acc[field] = source[field];
+    return acc;
+  }, {});
+};
+
 export function AppProvider({ children }) {
   const [studentFlow, setStudentFlow] = useState(() => {
     try {
@@ -41,11 +89,12 @@ export function AppProvider({ children }) {
       const nextRaw = typeof updaterOrValue === 'function' ? updaterOrValue(prev) : updaterOrValue;
       const nextStep = Math.max(Number(prev?.step) || 1, Number(nextRaw?.step) || 1);
       const next = { ...nextRaw, step: nextStep };
+      const persisted = JSON.stringify(pickPersisted(next, PERSISTED_FLOW_FIELDS));
       try {
         if (typeof sessionStorage !== 'undefined') {
-          sessionStorage.setItem('focus_academy_student_flow', JSON.stringify(next));
+          sessionStorage.setItem('focus_academy_student_flow', persisted);
         }
-        localStorage.setItem('focus_academy_student_flow', JSON.stringify(next));
+        localStorage.setItem('focus_academy_student_flow', persisted);
       } catch {
       }
       return next;
@@ -124,7 +173,7 @@ export function AppProvider({ children }) {
 
   const registerStudent = useCallback((record) => {
     const id = `FA-${Date.now().toString().slice(-6)}`;
-    const savedRecord = { ...record, id };
+    const savedRecord = { ...pickPersisted(record, PERSISTED_STUDENT_FIELDS), id };
     try {
       const storage = typeof sessionStorage !== 'undefined' ? sessionStorage : localStorage;
       const list = JSON.parse(storage.getItem('focus_academy_students') || '[]');

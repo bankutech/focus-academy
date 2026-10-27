@@ -1,3 +1,4 @@
+import { usePageMeta } from '../hooks/usePageMeta';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -16,6 +17,11 @@ import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { HOME_BATCH_SLOTS } from '../data/homeData';
 
 export default function AboutPage() {
+  usePageMeta({
+    title: 'About Focus Academy | Campus and Teaching Method in Perambalur',
+    description: 'How Focus Academy teaches: 12-student batches, daily notebook inspection, Saturday timed mock exams and direct parent feedback in Thoramangalam, Perambalur.',
+    path: '/about',
+  });
   const whatsappInquiryUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(
     'Hello Focus Academy Perambalur! I would like to learn more about your 12-student batch philosophy, campus facilities, and 1-day free trial.'
   )}`;
@@ -74,7 +80,7 @@ export default function AboutPage() {
     <div className="py-10 sm:py-14 bg-[#F8FAFC] min-h-screen text-left">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex items-center space-x-2 text-xs text-slate-500 mb-4">
-          <Link to="/" className="hover:text-[#EA580C]">Home</Link>
+          <Link to="/" className="hover:text-brand">Home</Link>
           <span>/</span>
           <span className="text-[#0F172A] font-bold">About Focus Academy</span>
         </div>
@@ -92,7 +98,7 @@ export default function AboutPage() {
 
               <div className="mt-6 grid sm:grid-cols-2 gap-3.5">
                 <div className="p-4 bg-white rounded-md border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
-                  <ShieldCheck className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+                  <ShieldCheck className="w-4 h-4 text-brand shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold block text-sm">1-Day Free Trial Guarantee</span>
                     <span className="text-slate-600 mt-0.5 block">Sit in on an evening class before paying fees. Enroll only after you and your child are satisfied.</span>
@@ -100,7 +106,7 @@ export default function AboutPage() {
                 </div>
 
                 <div className="p-4 bg-white rounded-md border border-[#E2E8F0] text-xs text-[#0F172A] flex items-start space-x-3 shadow-xs">
-                  <Bus className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+                  <Bus className="w-4 h-4 text-brand shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold block text-sm">Bus-Synchronized Timings</span>
                     <span className="text-slate-600 mt-0.5 block">Slots aligned with Perambalur town buses via Four Roads & Trichy Main Road for student safety.</span>
@@ -111,17 +117,17 @@ export default function AboutPage() {
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
                   to="/timings"
-                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-brand hover:bg-brand-strong text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   <span>View Batch Timings & Seats</span>
-                  <ArrowRight className="w-4 h-4 text-orange-200" />
+                  <ArrowRight className="w-4 h-4 text-orange-100" />
                 </Link>
 
                 <Link
                   to="/contact"
-                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-white hover:bg-slate-50 text-[#0F172A] text-xs sm:text-sm font-bold rounded-md border border-[#E2E8F0] shadow-xs transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="min-h-[46px] inline-flex items-center justify-center space-x-2 px-6 py-3 bg-white hover:bg-slate-50 text-[#0F172A] text-xs sm:text-sm font-bold rounded-md border border-[#E2E8F0] shadow-xs transition-all focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  <MapPin className="w-4 h-4 text-[#EA580C]" />
+                  <MapPin className="w-4 h-4 text-brand" />
                   <span>Visit Campus</span>
                 </Link>
               </div>
@@ -146,7 +152,7 @@ export default function AboutPage() {
 
                 <div className="space-y-3 text-sm text-slate-600">
                   <div className="flex items-start space-x-2.5">
-                    <MapPin className="w-4 h-4 text-[#EA580C] shrink-0 mt-0.5" />
+                    <MapPin className="w-4 h-4 text-brand shrink-0 mt-0.5" />
                     <div>
                       <span className="font-bold text-[#0F172A] block">Address:</span>
                       <span className="leading-relaxed">{CAMPUS_CONFIG.location.fullAddress}</span>
@@ -154,12 +160,12 @@ export default function AboutPage() {
                   </div>
 
                   <div className="flex items-center space-x-2.5">
-                    <Clock className="w-4 h-4 text-[#EA580C] shrink-0" />
+                    <Clock className="w-4 h-4 text-brand shrink-0" />
                     <span>{CAMPUS_CONFIG.timings.workingDays}: {CAMPUS_CONFIG.timings.dailyHours}</span>
                   </div>
 
                   <div className="flex items-center space-x-2.5">
-                    <Phone className="w-4 h-4 text-[#EA580C] shrink-0" />
+                    <Phone className="w-4 h-4 text-brand shrink-0" />
                     <span>Campus Helpdesk: {CAMPUS_CONFIG.contact.primaryPhone}</span>
                   </div>
                 </div>
@@ -169,7 +175,7 @@ export default function AboutPage() {
                     href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-[#EA580C] hover:underline"
+                    className="inline-flex items-center space-x-1.5 text-xs sm:text-sm font-bold text-brand hover:underline"
                   >
                     <span>Directions on Google Maps</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -181,7 +187,7 @@ export default function AboutPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center space-x-1 text-xs font-bold text-emerald-700 hover:underline"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+                    <MessageSquare className="w-3.5 h-3.5 text-whatsapp" />
                     <span>WhatsApp Desk</span>
                   </a>
                 </div>
@@ -267,7 +273,7 @@ export default function AboutPage() {
               return (
                 <div key={idx} className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs flex flex-col justify-between">
                   <div>
-                    <div className="w-10 h-10 rounded-md bg-orange-50 text-[#EA580C] flex items-center justify-center mb-3.5">
+                    <div className="w-10 h-10 rounded-md bg-orange-50 text-brand flex items-center justify-center mb-3.5">
                       <Icon className="w-5 h-5" />
                     </div>
                     <h3 className="text-base font-bold text-[#0F172A] mb-2 leading-snug">
@@ -298,7 +304,7 @@ export default function AboutPage() {
 
               <div className="mt-6 p-4 bg-[#F8FAFC] rounded-md border border-[#E2E8F0] text-xs space-y-2">
                 <div className="flex items-center space-x-2 text-[#0F172A] font-bold">
-                  <MapPin className="w-4 h-4 text-[#EA580C]" />
+                  <MapPin className="w-4 h-4 text-brand" />
                   <span>Strategic Campus Landmark</span>
                 </div>
                 <p className="text-slate-600">
@@ -313,7 +319,7 @@ export default function AboutPage() {
                   <div key={slot.id} className="p-4 bg-[#F8FAFC] rounded-md border border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold text-[#EA580C] uppercase">
+                        <span className="text-xs font-bold text-brand uppercase">
                           {slot.slotNum}
                         </span>
                         <span className="text-xs px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
@@ -321,7 +327,7 @@ export default function AboutPage() {
                         </span>
                       </div>
                       <div className="flex items-center space-x-2 text-base font-bold text-[#0F172A] mt-1">
-                        <Clock className="w-4 h-4 text-[#EA580C]" />
+                        <Clock className="w-4 h-4 text-brand" />
                         <span>{slot.time}</span>
                       </div>
                       <p className="text-xs font-semibold text-[#0F172A] mt-0.5">
@@ -356,7 +362,7 @@ export default function AboutPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {facilities.map((fac, idx) => (
               <div key={idx} className="bg-white p-5 rounded-lg border border-[#E2E8F0] shadow-xs">
-                <div className="w-8 h-8 rounded-md bg-orange-50 border border-orange-200 flex items-center justify-center text-[#EA580C] mb-3">
+                <div className="w-8 h-8 rounded-md bg-orange-50 border border-orange-200 flex items-center justify-center text-brand mb-3">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <h3 className="text-sm font-bold text-[#0F172A] mb-1.5 leading-snug">
@@ -383,7 +389,7 @@ export default function AboutPage() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
               <Link
                 to="/student-details"
-                className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all active:scale-98"
+                className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-brand hover:bg-brand-strong text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all active:scale-98"
               >
                 <span>Register for 1-Day Free Trial →</span>
               </Link>
@@ -392,7 +398,7 @@ export default function AboutPage() {
                 to="/contact"
                 className="min-h-[46px] inline-flex items-center space-x-2 px-6 py-3 bg-[#1E293B] hover:bg-slate-700 text-white text-xs sm:text-sm font-bold rounded-md border border-slate-700 transition-all"
               >
-                <MapPin className="w-4 h-4 text-orange-200" />
+                <MapPin className="w-4 h-4 text-orange-100" />
                 <span>Visit Campus at Thoramangalam</span>
               </Link>
 
@@ -400,7 +406,7 @@ export default function AboutPage() {
                 href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`}
                 className="min-h-[46px] inline-flex items-center space-x-2 px-5 py-3 bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-bold rounded-md border border-white/15 transition-all"
               >
-                <Phone className="w-4 h-4 text-orange-200" />
+                <Phone className="w-4 h-4 text-orange-100" />
                 <span>Call {CAMPUS_CONFIG.contact.primaryPhone}</span>
               </a>
             </div>

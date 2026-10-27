@@ -70,7 +70,9 @@ service cloud.firestore {
         && request.resource.data.amount > 0
         && request.resource.data.keys().hasAll(['id', 'receiptNumber', 'obligationId', 'studentId', 'amount', 'recordedBy']);
       allow update: if isFeeManager()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isReversed', 'reversed', 'reversalReason', 'reversedBy', 'reversedAt']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+          ['isReversed', 'reversed', 'reversalReason', 'reversedBy', 'reversedAt', 'status', 'refundStatus']
+        );
       allow delete: if false;
     }
 

@@ -17,7 +17,12 @@ export default function StepProgress({ currentStep }) {
 
   return (
     <div className="bg-white border-b border-[#E2E8F0] py-3.5 px-4 sticky top-16 z-30 shadow-xs">
-      <div className="max-w-5xl mx-auto flex items-center justify-between overflow-x-auto no-scrollbar gap-2">
+      <div
+        role="region"
+        aria-label="Admission progress steps"
+        tabIndex={0}
+        className="max-w-5xl mx-auto flex items-center justify-between overflow-x-auto no-scrollbar gap-2 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand rounded-md"
+      >
         {steps.map((step, idx) => {
           const isCompleted = step.number < currentStep;
           const isCurrent = step.number === currentStep;
@@ -30,7 +35,7 @@ export default function StepProgress({ currentStep }) {
                     isCompleted
                       ? 'bg-emerald-600 text-white'
                       : isCurrent
-                      ? 'bg-[#EA580C] text-white shadow-xs'
+                      ? 'bg-brand text-white shadow-xs'
                       : 'bg-slate-100 text-slate-500 border border-[#E2E8F0]'
                   }`}
                 >
@@ -40,14 +45,14 @@ export default function StepProgress({ currentStep }) {
                 {isCompleted ? (
                   <Link
                     to={step.path}
-                    className="text-xs font-semibold text-slate-600 hover:text-[#EA580C] transition-colors"
+                    className="text-xs font-semibold text-slate-600 hover:text-brand transition-colors"
                   >
                     {step.title}
                   </Link>
                 ) : (
                   <span
                     className={`text-xs font-semibold ${
-                      isCurrent ? 'text-[#0F172A] font-bold' : 'text-slate-400'
+                      isCurrent ? 'text-[#0F172A] font-bold' : 'text-slate-500'
                     }`}
                   >
                     {step.title}

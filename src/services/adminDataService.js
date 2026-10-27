@@ -1,20 +1,92 @@
 import { isBatchCompatible } from '../types/schemas';
 import { db, isFirebaseConfigured } from './firebase';
-import { getVerifiedAdminEmail, subscribeVerifiedAdmin } from './adminIdentity';
-import { 
+import { getVerifiedAdminEmail, subscribeVerifiedAdmin } from './adminIdentity';import { 
   collection, 
   doc, 
+  getDoc,
   getDocs, 
   setDoc, 
   updateDoc, 
   deleteDoc, 
   query, 
   where, 
-  orderBy,
-  writeBatch,
-  runTransaction,
+  orderBy, 
+  writeBatch, 
+  runTransaction, 
   limit 
 } from 'firebase/firestore';
+
+export const ENROLLMENT_STATUSES = ['pending', 'confirmed', 'waitlisted', 'cancelled', 'archived'];
+
+const ENROLLMENT_TRANSITIONS = {
+  pending: ['confirmed', 'waitlisted', 'cancelled', 'archived'],
+  confirmed: ['cancelled', 'archived'],
+  waitlisted: ['confirmed', 'cancelled', 'archived'],
+  cancelled: ['pending', 'confirmed'],
+  archived: ['pending', 'confirmed']
+};
+
+const LEAD_STATUS_FOR_ENROLLMENT = {
+  confirmed: 'converted',
+  pending: 'new',
+  waitlisted: 'new',
+  cancelled: 'archived',
+  archived: 'archived'
+};
+
+const ENROLLMENT_EDITABLE_FIELDS = [
+  'studentName', 'parentName', 'phone', 'whatsappNumber', 'secondaryPhone',
+  'grade', 'board', 'batchId', 'timing', 'subjects', 'schoolName',
+  'educationBoard', 'targetYear', 'schoolShift', 'schoolDismissalTime',
+  'emergencyContactName', 'emergencyRelationship', 'emergencyPhone',
+  'medicalAlert', 'notes'
+];
+
+const cleanPhone10 = (value) => String(value || '').replace(/\D/g, '').slice(-10);
+const normalizeName = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+function patchLocalEnrollmentRecords(enrollmentId, patch) {
+  if (typeof window === 'undefined') return false;
+  let found = false;
+  ['focus_academy_submitted_leads_v1', 'focus_academy_pending_leads_v1'].forEach((key) => {
+    try {
+      const raw = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(key)) || localStorage.getItem(key);
+      if (!raw) return;
+      const rows = JSON.parse(raw);
+      if (!Array.isArray(rows)) return;
+      let changed = false;
+      const next = rows.map((row) => {
+        if (row && row.id === enrollmentId) {
+          changed = true;
+          return { ...row, ...patch };
+        }
+        return row;
+      });
+      if (changed) {
+        const serialized = JSON.stringify(next);
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, serialized);
+        localStorage.setItem(key, serialized);
+        found = true;
+      }
+    } catch {
+    }
+  });
+  try {
+    const raw = localStorage.getItem('focus_academy_students');
+    if (raw) {
+      const rows = JSON.parse(raw);
+      if (Array.isArray(rows)) {
+        const next = rows.map((row) => (row && row.id === enrollmentId ? { ...row, ...patch } : row));
+        if (JSON.stringify(next) !== raw) {
+          localStorage.setItem('focus_academy_students', JSON.stringify(next));
+          found = true;
+        }
+      }
+    }
+  } catch {
+  }
+  return found;
+}
 
 const STORAGE_KEY = 'focus_academy_admin_data_v1';
 
@@ -782,8 +854,10 @@ export const AdminDataService = {
           const docData = snap.docs[0].data();
           return { ...SEED_SETTINGS, ...docData };
         }
+        return { ...SEED_SETTINGS };
       } catch (err) {
-        console.warn('Firestore getSettings unavailable, using verified local store:', err);
+        console.error('Firestore getSettings failed:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();
@@ -964,9 +1038,10 @@ export const AdminDataService = {
       try {
         const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(limitCount));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) return snap.docs.map(d => d.data());
+        return snap ? snap.docs.map(d => d.data()) : [];
       } catch (err) {
-        console.warn('Firestore getAuditLogs unavailable, using verified local store:', err);
+        console.error('Firestore getAuditLogs failed:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();
@@ -977,9 +1052,10 @@ export const AdminDataService = {
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'batches')), 8000);
-        if (snap && !snap.empty) return snap.docs.map(d => d.data());
+        return snap ? snap.docs.map(d => d.data()) : [];
       } catch (err) {
-        console.warn('Firestore getBatches unavailable, using verified local store:', err);
+        console.error('Firestore getBatches failed:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();
@@ -1146,59 +1222,59 @@ export const AdminDataService = {
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'students')), 8000);
-        if (snap && !snap.empty) list = snap.docs.map(d => d.data());
+        list = snap ? snap.docs.map(d => d.data()) : [];
       } catch (err) {
-        console.warn('Firestore getStudents unavailable, using verified local store:', err);
+        console.error('Firestore getStudents failed:', err);
+        throw dataUnavailable(err);
       }
-    }
-    if (!list) {
+    } else {
       const store = await hydrateStore();
       list = [...store.students];
-    } else {
-      list = [...list];
     }
 
-    try {
-      const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
-      const existingIds = new Set(list.map(s => s.id));
-      const existingPhones = new Set(list.map(s => s.guardianPhone || s.phone));
-      registered.forEach(r => {
-        if (!existingIds.has(r.id) && !existingPhones.has(r.phone)) {
-          existingIds.add(r.id);
-          list.push({
-            id: r.id,
-            studentName: r.studentName,
-            guardianName: r.parentName || 'Parent / Guardian',
-            guardianPhone: r.phone,
-            secondaryPhone: r.secondaryPhone || null,
-            grade: r.grade,
-            board: r.board,
-            academicSession: '2025-2026',
-            batchId: r.selectedBatchId,
-            batchName: r.selectedBatchName || 'Focus Evening Batch',
-            enrollmentDate: (r.createdAt || new Date().toISOString()).split('T')[0],
-            courseEndDate: null,
-            status: 'active',
-            notificationPreferences: {
-              communicationConsent: true,
-              preferredChannel: 'whatsapp',
-              remindersDisabled: false,
-              reminderDisabledReason: ''
-            },
-            feeConfig: {
-              billingFrequency: 'monthly',
-              amountPerCycle: r.monthlyFee || 2800,
-              discountAdjustment: 0,
-              adjustmentHistory: [],
-              billingStartDate: (r.createdAt || new Date().toISOString()).split('T')[0],
-              nextDueDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-              status: 'active'
-            },
-            createdAt: r.createdAt || new Date().toISOString()
-          });
-        }
-      });
-    } catch {
+    if (!isLive()) {
+      try {
+        const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+        const existingIds = new Set(list.map(s => s.id));
+        const existingPhones = new Set(list.map(s => s.guardianPhone || s.phone));
+        registered.forEach(r => {
+          if (!existingIds.has(r.id) && !existingPhones.has(r.phone)) {
+            existingIds.add(r.id);
+            list.push({
+              id: r.id,
+              studentName: r.studentName,
+              guardianName: r.parentName || 'Parent / Guardian',
+              guardianPhone: r.phone,
+              secondaryPhone: r.secondaryPhone || null,
+              grade: r.grade,
+              board: r.board,
+              academicSession: '2025-2026',
+              batchId: r.selectedBatchId,
+              batchName: r.selectedBatchName || 'Focus Evening Batch',
+              enrollmentDate: (r.createdAt || new Date().toISOString()).split('T')[0],
+              courseEndDate: null,
+              status: 'active',
+              notificationPreferences: {
+                communicationConsent: true,
+                preferredChannel: 'whatsapp',
+                remindersDisabled: false,
+                reminderDisabledReason: ''
+              },
+              feeConfig: {
+                billingFrequency: 'monthly',
+                amountPerCycle: r.monthlyFee || 2800,
+                discountAdjustment: 0,
+                adjustmentHistory: [],
+                billingStartDate: (r.createdAt || new Date().toISOString()).split('T')[0],
+                nextDueDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+                status: 'active'
+              },
+              createdAt: r.createdAt || new Date().toISOString()
+            });
+          }
+        });
+      } catch {
+      }
     }
 
     if (!options.includeArchived) {
@@ -1210,61 +1286,15 @@ export const AdminDataService = {
     return list;
   },
 
-  async getEnrollments() {
-    let list = [];
-
-    if (isLive()) {
-      try {
-        const q = query(collection(db, 'enrollments'), orderBy('enrolledAt', 'desc'));
-        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) {
-          list = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-        }
-      } catch (err) {
-        console.warn('Firestore getEnrollments unavailable, using local store:', err);
-      }
-    }
-
-    try {
-      const localRaw = localStorage.getItem('focus_academy_students') || '[]';
-      const localRecords = JSON.parse(localRaw);
-      const existingIds = new Set(list.map(e => e.id));
-      localRecords.forEach(r => {
-        if (!existingIds.has(r.id)) {
-          existingIds.add(r.id);
-          list.push({
-            id: r.id,
-            studentName: r.studentName,
-            parentName: r.parentName || '',
-            phone: r.phone,
-            grade: r.grade,
-            board: r.board,
-            batchId: r.selectedBatchId,
-            batchName: r.selectedBatchName || 'Focus Evening Batch',
-            timing: r.timing || '',
-            reservationId: r.reservationId || '',
-            status: r.isWaitlisted ? 'waitlisted' : 'confirmed',
-            enrolledAt: r.createdAt || new Date().toISOString(),
-          });
-        }
-      });
-    } catch {
-    }
-
-    list.sort((a, b) => new Date(b.enrolledAt || 0) - new Date(a.enrolledAt || 0));
-    return list;
-  },
-
   async getLeads() {
     if (isLive()) {
       try {
         const q = query(collection(db, 'leads'), orderBy('timestamp', 'desc'));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) {
-          return snap.docs.map(d => ({ ...d.data(), id: d.id }));
-        }
+        return snap ? snap.docs.map(d => ({ ...d.data(), id: d.id })) : [];
       } catch (err) {
-        console.warn('Firestore getLeads query error, attempting local fallback:', err);
+        console.error('Firestore getLeads query failed:', err);
+        throw dataUnavailable(err);
       }
     }
 
@@ -1281,6 +1311,7 @@ export const AdminDataService = {
         if (!seen.has(id)) {
           seen.add(id);
           local.push({
+            ...item,
             id,
             timestamp: item.submittedAt || item.queuedAt || new Date().toISOString(),
             studentName: item.studentName,
@@ -1289,8 +1320,9 @@ export const AdminDataService = {
             grade: item.grade || 'Class 10',
             board: item.board || 'State Board',
             batchId: item.batchId || null,
+            batchName: item.batchName || item.selectedBatchName || null,
             status: item.status || 'new',
-            source: item.reservationId ? 'enrollment' : 'inquiry',
+            source: item.source || (item.reservationId ? 'enrollment' : 'inquiry'),
             subjects: item.subjects || '',
             notes: item.notes || '',
             schoolShift: item.schoolShift || null,
@@ -1313,14 +1345,13 @@ export const AdminDataService = {
       try {
         const q = query(collection(db, 'enrollments'), orderBy('enrolledAt', 'desc'));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) {
-          snap.docs.forEach(d => {
-            seen.add(d.id);
-            list.push({ ...d.data(), id: d.id });
-          });
-        }
+        (snap ? snap.docs : []).forEach(d => {
+          seen.add(d.id);
+          list.push({ ...d.data(), id: d.id });
+        });
       } catch (err) {
-        console.warn('Firestore getEnrollments query error, falling back to leads:', err);
+        console.error('Firestore getEnrollments query failed:', err);
+        throw dataUnavailable(err);
       }
     }
 
@@ -1329,49 +1360,459 @@ export const AdminDataService = {
       allLeads.filter(l => l.source === 'enrollment' || l.reservationId).forEach(l => {
         if (!seen.has(l.id)) {
           seen.add(l.id);
+          const mappedStatus = ['pending', 'confirmed', 'waitlisted', 'cancelled', 'archived'].includes(l.status)
+            ? l.status
+            : (l.status === 'converted' ? 'confirmed' : 'pending');
           list.push({
             ...l,
+            status: mappedStatus,
             enrolledAt: l.timestamp || l.submittedAt || new Date().toISOString(),
-            batchName: l.selectedBatchName || l.subjects || 'Focus Evening Batch'
+            batchName: l.batchName || l.selectedBatchName || l.subjects || 'Focus Evening Batch'
           });
         }
       });
-    } catch {
+    } catch (err) {
+      if (isLive()) throw err;
     }
 
-    try {
-      const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
-      registered.forEach(s => {
-        if (!seen.has(s.id)) {
-          seen.add(s.id);
-          list.push({
-            id: s.id,
-            studentName: s.studentName,
-            parentName: s.parentName || 'Parent',
-            phone: s.phone,
-            grade: s.grade,
-            board: s.board,
-            batchId: s.selectedBatchId,
-            batchName: s.selectedBatchName || 'Focus Evening Batch',
-            timing: s.timing || 'Evening Session',
-            reservationId: s.reservationId,
-            status: 'confirmed',
-            source: 'enrollment',
-            enrolledAt: s.createdAt || new Date().toISOString(),
-            schoolName: s.schoolName
-          });
-        }
-      });
-    } catch {
+    if (!isLive()) {
+      try {
+        const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+        registered.forEach(s => {
+          if (!seen.has(s.id)) {
+            seen.add(s.id);
+            list.push({
+              id: s.id,
+              studentName: s.studentName,
+              parentName: s.parentName || 'Parent',
+              phone: s.phone,
+              grade: s.grade,
+              board: s.board,
+              batchId: s.selectedBatchId,
+              batchName: s.selectedBatchName || 'Focus Evening Batch',
+              timing: s.timing || 'Evening Session',
+              reservationId: s.reservationId,
+              status: s.isWaitlisted ? 'waitlisted' : 'confirmed',
+              source: 'enrollment',
+              enrolledAt: s.createdAt || new Date().toISOString(),
+              schoolName: s.schoolName
+            });
+          }
+        });
+      } catch {
+      }
     }
 
     return list;
+  },
+
+  async getEnrollmentById(enrollmentId) {
+    const cleanId = String(enrollmentId || '').trim();
+    if (!cleanId) {
+      throw new Error('An enrollment ID is required.');
+    }
+    if (isLive()) {
+      try {
+        const snap = await this.withFirestoreTimeout(getDoc(doc(db, 'enrollments', cleanId)), 8000);
+        if (snap.exists()) {
+          return { id: snap.id, ...snap.data() };
+        }
+      } catch (err) {
+        console.error('Firestore getEnrollmentById failed:', err);
+        throw dataUnavailable(err);
+      }
+    }
+    const list = await this.getEnrollments();
+    const found = list.find(e => e.id === cleanId);
+    if (!found) {
+      throw new Error(`Enrollment record not found: ${cleanId}`);
+    }
+    return found;
+  },
+
+  async _resolveLinkedStudent(enrollment) {
+    if (enrollment.studentId) {
+      const direct = await this.getStudentById(enrollment.studentId);
+      if (direct) return direct;
+    }
+    const students = await this.getStudents({ includeArchived: true });
+    const byId = students.find(s => s.id === enrollment.id);
+    if (byId) return byId;
+    const phone = cleanPhone10(enrollment.phone);
+    const nameKey = normalizeName(enrollment.studentName);
+    if (!phone && !nameKey) return null;
+    return students.find(s =>
+      (phone && cleanPhone10(s.guardianPhone) === phone) ||
+      (nameKey && normalizeName(s.studentName) === nameKey && cleanPhone10(s.guardianPhone) === phone)
+    ) || null;
+  },
+
+  async _writeEnrollment(enrollmentId, patch, actorEmail) {
+    const now = new Date().toISOString();
+    const payload = { ...patch, updatedAt: now, updatedBy: actorEmail };
+
+    if (isLive()) {
+      try {
+        await updateDoc(doc(db, 'enrollments', enrollmentId), payload);
+      } catch (err) {
+        console.error('Firestore enrollment update failed:', err);
+        throw dataUnavailable(err);
+      }
+      try {
+        const check = await this.withFirestoreTimeout(getDoc(doc(db, 'enrollments', enrollmentId)), 8000);
+        if (!check.exists()) throw new Error('missing_record');
+        const stored = check.data();
+        const mismatch = Object.entries(payload).find(([key, value]) => JSON.stringify(stored[key]) !== JSON.stringify(value));
+        if (mismatch) throw new Error(`mismatch_${mismatch[0]}`);
+      } catch (err) {
+        console.error('Firestore enrollment read-back verification failed:', err);
+        throw new Error('The enrollment change could not be confirmed in the database. Nothing was changed — please reload and try again.');
+      }
+
+      try {
+        const leadSnap = await this.withFirestoreTimeout(getDoc(doc(db, 'leads', enrollmentId)), 8000);
+        if (leadSnap.exists()) {
+          await updateDoc(doc(db, 'leads', enrollmentId), { ...payload, source: leadSnap.data().source || 'enrollment' });
+        }
+      } catch (err) {
+        console.error('Firestore lead sync failed during enrollment update:', err);
+        throw dataUnavailable(err);
+      }
+      return;
+    }
+
+    const patched = patchLocalEnrollmentRecords(enrollmentId, patch);
+    if (!patched) {
+      throw new Error(`Enrollment record not found: ${enrollmentId}. Nothing was changed — please refresh and try again.`);
+    }
+  },
+
+  async updateEnrollment(enrollmentId, updates = {}, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'editing enrollment record');
+    const actorEmail = normalizeActorEmail(actor);
+    const enrollment = await this.getEnrollmentById(enrollmentId);
+
+    const rejected = Object.keys(updates).filter(key => !ENROLLMENT_EDITABLE_FIELDS.includes(key));
+    if (rejected.length > 0) {
+      throw new Error(`These fields cannot be edited on an enrollment record: ${rejected.join(', ')}.`);
+    }
+    if (Object.keys(updates).length === 0) {
+      throw new Error('No changes were provided to save.');
+    }
+
+    const patch = {};
+    if (updates.studentName !== undefined) {
+      const name = String(updates.studentName || '').trim();
+      if (name.length < 2) throw new Error('Student name must be at least 2 characters.');
+      patch.studentName = name;
+    }
+    if (updates.parentName !== undefined) {
+      patch.parentName = String(updates.parentName || '').trim() || 'Parent / Guardian';
+    }
+    if (updates.phone !== undefined) {
+      const phone = cleanPhone10(updates.phone);
+      if (!/^[6-9]\d{9}$/.test(phone)) {
+        throw new Error('A valid 10-digit Indian mobile number is required.');
+      }
+      patch.phone = phone;
+      if (!enrollment.whatsappNumber || cleanPhone10(enrollment.whatsappNumber) === cleanPhone10(enrollment.phone)) {
+        patch.whatsappNumber = phone;
+      }
+    }
+    if (updates.secondaryPhone !== undefined) {
+      const secondary = cleanPhone10(updates.secondaryPhone);
+      patch.secondaryPhone = secondary ? secondary : null;
+      if (patch.secondaryPhone && !/^[6-9]\d{9}$/.test(patch.secondaryPhone)) {
+        throw new Error('The secondary contact number must be a valid 10-digit Indian mobile number.');
+      }
+    }
+    ['grade', 'board', 'schoolName', 'educationBoard', 'targetYear', 'schoolShift', 'subjects', 'notes',
+      'emergencyContactName', 'emergencyRelationship', 'medicalAlert'].forEach((field) => {
+      if (updates[field] !== undefined) {
+        patch[field] = String(updates[field] || '').trim() || null;
+      }
+    });
+    if (updates.emergencyPhone !== undefined) {
+      const emergency = cleanPhone10(updates.emergencyPhone);
+      if (emergency && !/^[6-9]\d{9}$/.test(emergency)) {
+        throw new Error('The emergency contact number must be a valid 10-digit Indian mobile number.');
+      }
+      patch.emergencyPhone = emergency || null;
+    }
+    if (updates.schoolDismissalTime !== undefined) {
+      patch.schoolDismissalTime = String(updates.schoolDismissalTime || '').trim() || null;
+    }
+    if (updates.batchId !== undefined) {
+      patch.batchId = String(updates.batchId || '').trim();
+    }
+
+    if (patch.grade || patch.board || patch.batchId) {
+      const grade = patch.grade || enrollment.grade;
+      const board = patch.board || enrollment.board;
+      const batchId = patch.batchId || enrollment.batchId;
+      if (batchId) {
+        const batch = await this.getBatchById(batchId);
+        if (!batch) {
+          throw new Error(`Batch '${batchId}' was not found.`);
+        }
+        if (!isBatchCompatible(batch, grade, board)) {
+          throw new Error(`Academic Mismatch: '${grade}' (${board || 'All'}) cannot be assigned to batch '${batch.name}' (${batch.grade}, ${batch.board}).`);
+        }
+        patch.batchName = batch.name;
+        if (patch.timing === undefined && patch.batchId && patch.batchId !== enrollment.batchId) {
+          patch.timing = batch.timing;
+        }
+      } else if (patch.batchId) {
+        throw new Error('A batch is required. Select an evening batch for this enrollment.');
+      }
+    }
+
+    await this._writeEnrollment(enrollmentId, patch, actorEmail);
+
+    const student = await this._resolveLinkedStudent(enrollment);
+    let updatedStudent = null;
+    let batchChangeNotice = null;
+    if (student) {
+      const batchChanged = patch.batchId && patch.batchId !== student.batchId;
+      if (batchChanged) {
+        await this.transferStudentBatch(student.id, patch.batchId,
+          `Enrollment record ${enrollmentId} edited by administrator`, actor);
+        batchChangeNotice = `Batch changed from '${student.batchName}' to '${patch.batchName}'.`;
+      }
+      const studentPatch = {};
+      if (patch.studentName !== undefined) studentPatch.studentName = patch.studentName;
+      if (patch.parentName !== undefined) studentPatch.guardianName = patch.parentName;
+      if (patch.phone !== undefined) studentPatch.guardianPhone = patch.phone;
+      if (patch.secondaryPhone !== undefined) studentPatch.secondaryPhone = patch.secondaryPhone;
+      if (patch.grade !== undefined) studentPatch.grade = patch.grade;
+      if (patch.board !== undefined) studentPatch.board = patch.board;
+      if (patch.schoolShift !== undefined) studentPatch.schoolShift = patch.schoolShift;
+      if (patch.schoolDismissalTime !== undefined) studentPatch.schoolDismissalTime = patch.schoolDismissalTime;
+      if (patch.emergencyContactName !== undefined) studentPatch.emergencyContactName = patch.emergencyContactName;
+      if (patch.medicalAlert !== undefined) studentPatch.medicalAlert = patch.medicalAlert;
+      if (Object.keys(studentPatch).length > 0) {
+        updatedStudent = await this.updateStudent(student.id, studentPatch, actor);
+      } else {
+        updatedStudent = await this.getStudentById(student.id);
+      }
+    }
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'ENROLLMENT_UPDATED',
+      entityType: 'enrollment',
+      entityId: enrollmentId,
+      details: `Edited enrollment record for '${patch.studentName || enrollment.studentName}' (${Object.keys(patch).join(', ')}).${batchChangeNotice ? ` ${batchChangeNotice}` : ''}`
+    });
+
+    return {
+      success: true,
+      enrollment: { ...enrollment, ...patch, updatedAt: new Date().toISOString() },
+      student: updatedStudent,
+      batchChangeNotice
+    };
+  },
+
+  async updateEnrollmentStatus(enrollmentId, nextStatus, options = {}, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'changing enrollment status');
+    const actorEmail = normalizeActorEmail(actor);
+    const reason = String(options.reason || '').trim();
+
+    if (!ENROLLMENT_STATUSES.includes(nextStatus)) {
+      throw new Error(`Invalid enrollment status '${nextStatus}'. Allowed statuses: ${ENROLLMENT_STATUSES.join(', ')}.`);
+    }
+
+    const enrollment = await this.getEnrollmentById(enrollmentId);
+    const currentStatus = ENROLLMENT_STATUSES.includes(enrollment.status)
+      ? enrollment.status
+      : (enrollment.status === 'converted' ? 'confirmed' : 'pending');
+
+    if (currentStatus === nextStatus) {
+      throw new Error(`This enrollment is already '${nextStatus}'. No change was made.`);
+    }
+    const allowedTransitions = ENROLLMENT_TRANSITIONS[currentStatus] || [];
+    if (!allowedTransitions.includes(nextStatus)) {
+      throw new Error(`Invalid enrollment status change '${currentStatus}' → '${nextStatus}'. Allowed from '${currentStatus}': ${allowedTransitions.join(', ') || 'none'}.`);
+    }
+    if (nextStatus === 'cancelled' && reason.length < 5) {
+      throw new Error('A cancellation reason of at least 5 characters is required.');
+    }
+    if (nextStatus === 'archived' && reason.length < 5) {
+      throw new Error('An archive reason of at least 5 characters is required.');
+    }
+
+    const student = await this._resolveLinkedStudent(enrollment);
+    const payments = student ? await this.getPayments(student.id) : await this.getPayments();
+    const linkedPayments = student
+      ? payments
+      : payments.filter(p => p.enrollmentId === enrollmentId || (enrollment.studentId && p.studentId === enrollment.studentId));
+    const activePayments = linkedPayments.filter(p => !p.isReversed && !p.reversed);
+    const activeTotal = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    if (nextStatus === 'cancelled' && activeTotal > 0 && options.allowWithPayments !== true) {
+      throw new Error(
+        `This enrollment has ₹${activeTotal.toLocaleString('en-IN')} in verified payments` +
+        ` (${activePayments.map(p => p.receiptNumber).join(', ')}). Reverse those receipts in Ledger & Payments first,` +
+        ' or archive the record instead — financial history is never erased.'
+      );
+    }
+
+    const warnings = [];
+    let registeredStudent = student;
+
+    if (nextStatus === 'confirmed' && !student) {
+      const batchId = enrollment.batchId;
+      if (!batchId) {
+        throw new Error('This enrollment has no batch assigned. Edit the enrollment and select a batch before confirming it.');
+      }
+      registeredStudent = await this.createStudent({
+        studentName: enrollment.studentName,
+        guardianName: enrollment.parentName || 'Parent / Guardian',
+        guardianPhone: enrollment.phone,
+        secondaryPhone: enrollment.secondaryPhone,
+        grade: enrollment.grade,
+        board: enrollment.board,
+        batchId,
+        academicSession: '2025-2026',
+        enrollmentDate: String(enrollment.enrolledAt || new Date().toISOString()).split('T')[0],
+        status: 'active',
+        schoolShift: enrollment.schoolShift || null,
+        schoolDismissalTime: enrollment.schoolDismissalTime || null,
+        travelDurationMinutes: enrollment.travelDurationMinutes || null,
+        scheduleClashWarning: enrollment.scheduleClashWarning || null,
+        emergencyContactName: enrollment.emergencyContactName || null,
+        medicalAlert: enrollment.medicalAlert || null,
+        enrollmentId,
+        leadId: enrollment.leadId || enrollmentId,
+        studentUid: enrollment.studentUid || null,
+        reservationId: enrollment.reservationId || null,
+        source: 'online_enrollment'
+      }, actor);
+    }
+
+    if (registeredStudent) {
+      if (nextStatus === 'cancelled' || nextStatus === 'archived') {
+        if (registeredStudent.status !== 'archived') {
+          try {
+            await this.updateStudentLifecycleStatus(registeredStudent.id, {
+              status: 'archived',
+              reason: `${nextStatus === 'cancelled' ? 'Enrollment cancelled' : 'Enrollment archived'}: ${reason}`
+            }, actor);
+          } catch (err) {
+            warnings.push(`Student roster record could not be archived: ${err.message}`);
+          }
+        }
+      } else if (nextStatus === 'confirmed' && registeredStudent.status === 'archived') {
+        try {
+          await this.restoreStudent(registeredStudent.id, actor);
+        } catch (err) {
+          warnings.push(`Student roster record could not be restored: ${err.message}`);
+        }
+      }
+    }
+
+    const now = new Date().toISOString();
+    const statusHistory = [
+      ...(enrollment.statusHistory || []),
+      { from: currentStatus, to: nextStatus, reason: reason || '', updatedAt: now, updatedBy: actorEmail }
+    ];
+    const patch = {
+      status: nextStatus,
+      statusReason: reason || enrollment.statusReason || '',
+      statusHistory
+    };
+    if (nextStatus === 'confirmed') {
+      patch.studentId = (registeredStudent && registeredStudent.id) || enrollment.studentId || null;
+      patch.confirmedAt = enrollment.confirmedAt || now;
+      patch.feeStatus = enrollment.feeStatus && enrollment.feeStatus !== 'not_applicable' ? enrollment.feeStatus : 'pending';
+      patch.paymentStatus = activeTotal > 0 ? 'partial' : 'unpaid';
+
+      if (registeredStudent) {
+        try {
+          const obligations = (await this.getFeeObligations(registeredStudent.id)).filter(o => o.status !== 'cancelled');
+          const totalDue = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
+          const totalPaid = obligations.reduce((sum, o) => sum + Number(o.amountPaid || 0), 0);
+          const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
+          if (obligations.length === 0) {
+            patch.feeStatus = 'not_generated';
+            patch.paymentStatus = 'unpaid';
+          } else if (totalDue > 0 && totalPaid + totalWaived >= totalDue) {
+            patch.feeStatus = 'settled';
+            patch.paymentStatus = 'paid';
+          } else if (totalPaid > 0) {
+            patch.feeStatus = 'pending';
+            patch.paymentStatus = 'partial';
+          } else {
+            patch.feeStatus = 'pending';
+            patch.paymentStatus = 'unpaid';
+          }
+        } catch (err) {
+          warnings.push(`Fee status could not be recalculated: ${err.message}`);
+        }
+      }
+    }
+    if (nextStatus === 'cancelled' || nextStatus === 'archived') {
+      patch.removedFromActiveList = true;
+      patch.archivedAt = now;
+    }
+    if (nextStatus === 'pending' || nextStatus === 'waitlisted') {
+      patch.removedFromActiveList = false;
+    }
+
+    await this._writeEnrollment(enrollmentId, patch, actorEmail);
+
+    const leadStatus = LEAD_STATUS_FOR_ENROLLMENT[nextStatus];
+    if (leadStatus) {
+      try {
+        await this.updateLeadStatus(enrollmentId, leadStatus, actor);
+      } catch (err) {
+        if (/not found/i.test(err.message || '')) {
+          warnings.push('No inquiry lead exists for this enrollment, so its lead status was left unchanged.');
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'ENROLLMENT_STATUS_CHANGED',
+      entityType: 'enrollment',
+      entityId: enrollmentId,
+      details: `Enrollment for '${enrollment.studentName}' changed from '${currentStatus}' to '${nextStatus}'.${reason ? ` Reason: ${reason}` : ''}`
+    });
+
+    const fresh = await this.getEnrollmentById(enrollmentId).catch(() => ({ ...enrollment, ...patch }));
+    return {
+      success: true,
+      enrollment: fresh,
+      student: registeredStudent,
+      from: currentStatus,
+      to: nextStatus,
+      warnings
+    };
+  },
+
+  async archiveEnrollment(enrollmentId, reason, actor = 'admin') {
+    const cleanReason = String(reason || '').trim();
+    if (cleanReason.length < 5) {
+      throw new Error('An archive reason of at least 5 characters is required.');
+    }
+    return this.updateEnrollmentStatus(enrollmentId, 'archived', { reason: cleanReason }, actor);
   },
 
   async updateLeadStatus(leadId, status, actor = 'admin') {
     this.verifyPermission(actor, 'canManageStudents', 'updating lead status');
     const actorEmail = normalizeActorEmail(actor);
     const now = new Date().toISOString();
+
+    const validStatuses = ['new', 'contacted', 'converted', 'cancelled', 'archived'];
+    if (!validStatuses.includes(status)) {
+      throw new Error(`Invalid lead status '${status}'. Allowed statuses: ${validStatuses.join(', ')}.`);
+    }
+    if (!leadId) {
+      throw new Error('A lead ID is required to update its status.');
+    }
 
     if (isLive()) {
       try {
@@ -1381,7 +1822,46 @@ export const AdminDataService = {
           updatedBy: actorEmail
         });
       } catch (err) {
-        console.warn('Firestore updateLeadStatus error:', err);
+        console.error('Firestore updateLeadStatus error:', err);
+        throw dataUnavailable(err);
+      }
+
+      try {
+        const check = await this.withFirestoreTimeout(getDoc(doc(db, 'leads', leadId)), 8000);
+        if (!check.exists() || check.data().status !== status) {
+          throw new Error('readback_mismatch');
+        }
+      } catch (err) {
+        console.error('Firestore updateLeadStatus verification failed:', err);
+        throw new Error('The lead status change could not be confirmed in the database. Nothing was changed — please reload and try again.');
+      }
+    } else {
+      let found = false;
+      ['focus_academy_submitted_leads_v1', 'focus_academy_pending_leads_v1'].forEach((key) => {
+        try {
+          const raw = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(key)) || localStorage.getItem(key);
+          if (!raw) return;
+          const rows = JSON.parse(raw);
+          if (!Array.isArray(rows)) return;
+          let changed = false;
+          const next = rows.map((row) => {
+            if (row && row.id === leadId) {
+              changed = true;
+              return { ...row, status, updatedAt: now, updatedBy: actorEmail };
+            }
+            return row;
+          });
+          if (changed) {
+            const serialized = JSON.stringify(next);
+            if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, serialized);
+            localStorage.setItem(key, serialized);
+            found = true;
+          }
+        } catch {
+        }
+      });
+      if (!found) {
+        throw new Error(`Lead not found: ${leadId}. Nothing was changed — please refresh the list and try again.`);
       }
     }
 
@@ -1533,8 +2013,27 @@ export const AdminDataService = {
     const cleanSecondaryPhone = studentData.secondaryPhone ? String(studentData.secondaryPhone).replace(/\D/g, '').slice(-10) : null;
 
     const store = await hydrateStore();
-    const nextNum = store.students.length + 1;
-    const cleanId = studentData.id || `FA-2026-${String(nextNum).padStart(3, '0')}`;
+    const year = new Date().getFullYear();
+    let seq = store.students.length + 1;
+    let cleanId = studentData.id || `FA-${year}-${String(seq).padStart(3, '0')}`;
+
+    if (!studentData.id) {
+      const idTaken = async (candidate) => {
+        if (store.students.some(s => s.id === candidate)) return true;
+        if (!isLive()) return false;
+        try {
+          const snap = await this.withFirestoreTimeout(getDoc(doc(db, 'students', candidate)), 8000);
+          return snap.exists();
+        } catch (err) {
+          console.error('Firestore student ID availability check failed:', err);
+          throw dataUnavailable(err);
+        }
+      };
+      while (await idTaken(cleanId)) {
+        seq += 1;
+        cleanId = `FA-${year}-${String(seq).padStart(3, '0')}`;
+      }
+    }
 
     const newStudent = {
       id: cleanId,
@@ -1573,6 +2072,11 @@ export const AdminDataService = {
         nextDueDate: studentData.nextDueDate || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
         status: 'active'
       },
+      enrollmentId: studentData.enrollmentId || null,
+      leadId: studentData.leadId || null,
+      studentUid: studentData.studentUid || null,
+      reservationId: studentData.reservationId || null,
+      source: studentData.source || 'admin',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -2005,9 +2509,10 @@ export const AdminDataService = {
           q = collection(db, 'fee_obligations');
         }
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) return snap.docs.map(d => d.data());
+        return snap ? snap.docs.map(d => d.data()) : [];
       } catch (err) {
-        console.warn('Firestore getFeeObligations unavailable, using verified local store:', err);
+        console.error('Firestore getFeeObligations failed:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();
@@ -2049,8 +2554,44 @@ export const AdminDataService = {
       );
     }
 
-    const nextNum = store.obligations.length + 101;
-    const cleanId = obligationData.id || `OBL-2026-${nextNum}`;
+    if (isLive()) {
+      try {
+        const q = query(
+          collection(db, 'fee_obligations'),
+          where('studentId', '==', obligationData.studentId),
+          where('billingCycle', '==', obligationData.billingCycle)
+        );
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
+        const duplicate = (snap ? snap.docs : []).find(d => (d.data().status || 'pending') !== 'cancelled');
+        if (duplicate) {
+          return { id: duplicate.id, ...duplicate.data() };
+        }
+      } catch (err) {
+        console.error('Firestore createFeeObligation duplicate check failed:', err);
+        throw dataUnavailable(err);
+      }
+    }
+
+    const obligationYear = new Date().getFullYear();
+    let nextNum = store.obligations.length + 101;
+    let cleanId = obligationData.id || `OBL-${obligationYear}-${nextNum}`;
+    if (!obligationData.id) {
+      const idTaken = async (candidate) => {
+        if (store.obligations.some(o => o.id === candidate)) return true;
+        if (!isLive()) return false;
+        try {
+          const snap = await this.withFirestoreTimeout(getDoc(doc(db, 'fee_obligations', candidate)), 8000);
+          return snap.exists();
+        } catch (err) {
+          console.error('Firestore fee obligation ID availability check failed:', err);
+          throw dataUnavailable(err);
+        }
+      };
+      while (await idTaken(cleanId)) {
+        nextNum += 1;
+        cleanId = `OBL-${obligationYear}-${nextNum}`;
+      }
+    }
     const amountDue = Number(obligationData.amountDue);
 
     const newObligation = {
@@ -2230,9 +2771,10 @@ export const AdminDataService = {
           q = collection(db, 'payments');
         }
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) return snap.docs.map(d => d.data());
+        return snap ? snap.docs.map(d => d.data()) : [];
       } catch (err) {
-        console.warn('Firestore getPayments unavailable, using verified local store:', err);
+        console.error('Firestore getPayments failed:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();
@@ -2311,10 +2853,17 @@ export const AdminDataService = {
       studentName: obligation.studentName,
       batchId: obligation.batchId,
       obligationId: obligation.id,
+      enrollmentId: paymentData.enrollmentId || obligation.enrollmentId || null,
       amount,
       paymentDate: paymentData.paymentDate || new Date().toISOString().split('T')[0],
       paymentMethod: paymentData.paymentMethod || 'cash',
       referenceNumber: paymentData.referenceNumber || `REF-${Date.now().toString(36).toUpperCase()}`,
+      gatewayTransactionId: paymentData.gatewayTransactionId ||
+        (paymentData.referenceNumber && !String(paymentData.referenceNumber).startsWith('REF-') ? String(paymentData.referenceNumber) : null),
+      verificationStatus: paymentData.verificationStatus || 'verified',
+      status: 'verified',
+      receiptStatus: 'issued',
+      refundStatus: 'none',
       recordedBy: normalizeActorEmail(actor),
       notes: paymentData.notes || '',
       createdAt: new Date().toISOString()
@@ -2403,10 +2952,16 @@ export const AdminDataService = {
           studentName: obligation.studentName,
           batchId: obligation.batchId,
           obligationId: obligation.id,
+          enrollmentId: paymentData.enrollmentId || obligation.enrollmentId || null,
           amount,
           paymentDate: paymentData.paymentDate || now.split('T')[0],
           paymentMethod: paymentData.paymentMethod || 'cash',
           referenceNumber: refText || uid('REF'),
+          gatewayTransactionId: paymentData.gatewayTransactionId || (refText && !refText.startsWith('REF-') ? refText : null),
+          verificationStatus: paymentData.verificationStatus || 'verified',
+          status: 'verified',
+          receiptStatus: 'issued',
+          refundStatus: 'none',
           recordedBy: actorEmail,
           notes: paymentData.notes || '',
           createdAt: now
@@ -2474,7 +3029,7 @@ export const AdminDataService = {
         else status = today > obligation.dueDate ? 'overdue' : 'pending';
 
         const now = new Date().toISOString();
-        const updatedPayment = { ...payment, isReversed: true, reversed: true, reversalReason: reason.trim(), reversedBy: actorEmail, reversedAt: now };
+        const updatedPayment = { ...payment, isReversed: true, reversed: true, reversalReason: reason.trim(), reversedBy: actorEmail, reversedAt: now, status: 'reversed', verificationStatus: payment.verificationStatus || 'verified', refundStatus: 'reversed' };
         const updatedObligation = { ...obligation, amountPaid, balance, status, updatedAt: now };
         const audit = buildAudit({
           actor: actorEmail,
@@ -2484,7 +3039,7 @@ export const AdminDataService = {
           details: `Reversed payment of ₹${payment.amount} (Receipt: ${payment.receiptNumber}) for '${obligation.studentName}'. Reason: ${reason.trim()}`
         });
 
-        tx.update(paymentRef, { isReversed: true, reversed: true, reversalReason: updatedPayment.reversalReason, reversedBy: actorEmail, reversedAt: now });
+        tx.update(paymentRef, { isReversed: true, reversed: true, reversalReason: updatedPayment.reversalReason, reversedBy: actorEmail, reversedAt: now, status: 'reversed', refundStatus: 'reversed' });
         tx.set(obligationRef, updatedObligation);
         if (refDoc && refSnap && refSnap.exists()) tx.delete(refDoc);
         tx.set(doc(db, 'audit_logs', audit.id), audit);
@@ -2553,6 +3108,8 @@ export const AdminDataService = {
     payment.reversalReason = reason.trim();
     payment.reversedBy = actorEmail;
     payment.reversedAt = timestamp;
+    payment.status = 'reversed';
+    payment.refundStatus = 'reversed';
 
     if (isLive()) {
       try {
@@ -2630,8 +3187,10 @@ export const AdminDataService = {
         if (snap && !snap.empty) {
           return { ...snap.docs[0].data(), id: snap.docs[0].id };
         }
+        return null;
       } catch (err) {
-        console.warn('Firestore getActiveTillSession error:', err);
+        console.error('Firestore getActiveTillSession failed:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();
@@ -2680,7 +3239,15 @@ export const AdminDataService = {
       try {
         await this.withFirestoreTimeout(setDoc(doc(db, 'till_sessions', session.id), session), 8000);
       } catch (err) {
-        console.warn('Firestore openTillSession fallback:', err);
+        console.error('Firestore openTillSession failed:', err);
+        throw dataUnavailable(err);
+      }
+      try {
+        const check = await this.withFirestoreTimeout(getDoc(doc(db, 'till_sessions', session.id)), 8000);
+        if (!check.exists()) throw new Error('missing_till_session');
+      } catch (err) {
+        console.error('Firestore openTillSession verification failed:', err);
+        throw new Error('The cash drawer session could not be confirmed in the database. Nothing was changed — please try again.');
       }
     }
 
@@ -2854,11 +3421,10 @@ export const AdminDataService = {
       try {
         const q = query(collection(db, 'till_sessions'), orderBy('openedAt', 'desc'), limit(50));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) {
-          return snap.docs.map(d => ({ ...d.data(), id: d.id }));
-        }
+        return snap ? snap.docs.map(d => ({ ...d.data(), id: d.id })) : [];
       } catch (err) {
-        console.warn('Firestore getTillSessions error:', err);
+        console.error('Firestore getTillSessions failed:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();
@@ -2871,8 +3437,8 @@ export const AdminDataService = {
       this.getStudents(),
       this.getFeeObligations(),
       this.getPayments(),
-      this.getLeads().catch(() => []),
-      this.getEnrollments().catch(() => [])
+      this.getLeads(),
+      this.getEnrollments()
     ]);
     const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
 
@@ -3127,9 +3693,10 @@ export const AdminDataService = {
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'reminders')), 8000);
-        if (snap && !snap.empty) return snap.docs.map(d => d.data());
+        return snap ? snap.docs.map(d => d.data()) : [];
       } catch (err) {
-        console.warn('Firestore getReminders unavailable, using verified local store:', err);
+        console.error('Firestore getReminders failed:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();

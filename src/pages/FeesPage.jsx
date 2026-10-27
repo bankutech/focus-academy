@@ -1,3 +1,4 @@
+import { usePageMeta } from '../hooks/usePageMeta';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import FeeCalculator from '../components/FeeCalculator';
@@ -5,6 +6,11 @@ import { useModals } from '../context/useAppContext';
 import { ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function FeesPage() {
+  usePageMeta({
+    title: 'Fee Structure and Concession Calculator | Focus Academy Perambalur',
+    description: 'Monthly fees, sibling and quarterly concessions and the fee calculator for Focus Academy evening batches in Thoramangalam, Perambalur.',
+    path: '/fees',
+  });
   const { openDemoModal } = useModals();
 
   return (
@@ -12,7 +18,7 @@ export default function FeesPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="flex items-center space-x-2 text-xs text-slate-500 mb-2.5">
-            <Link to="/" className="hover:text-[#EA580C]">Home</Link>
+            <Link to="/" className="hover:text-brand">Home</Link>
             <span>/</span>
             <span className="text-[#0F172A] font-bold">Tuition Fees & Calculator</span>
           </div>
@@ -39,9 +45,9 @@ export default function FeesPage() {
 
         <div className="mt-6 mb-10 bg-white rounded-lg p-5 sm:p-6 border border-[#E2E8F0] shadow-xs flex flex-col md:flex-row items-center justify-between gap-5">
           <div className="max-w-2xl">
-            <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">
+            <h2 className="text-base sm:text-lg font-bold text-[#0F172A]">
               Have multiple children or need special subject combinations?
-            </h3>
+            </h2>
             <p className="text-xs text-slate-600 mt-1 leading-relaxed">
               We offer a 15% sibling discount and tailored combinations for students needing support across mathematics, science, and languages.
             </p>
@@ -50,10 +56,10 @@ export default function FeesPage() {
           <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
             <Link
               to="/timings"
-              className="w-full md:w-auto min-h-[44px] inline-flex items-center justify-center space-x-2 px-6 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-bold rounded-md shadow-xs transition-all active:scale-98"
+              className="w-full md:w-auto min-h-[44px] inline-flex items-center justify-center space-x-2 px-6 py-2.5 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded-md shadow-xs transition-all active:scale-98"
             >
               <span>Check Batch Timings & Enroll</span>
-              <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
+              <ArrowRight className="w-3.5 h-3.5 text-orange-100" />
             </Link>
           </div>
         </div>

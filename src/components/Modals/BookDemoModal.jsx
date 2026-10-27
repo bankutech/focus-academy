@@ -127,7 +127,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
               type="button"
               onClick={() => setSessionType('diagnostic-trial')}
               className={`px-3 py-1 rounded transition-colors cursor-pointer ${
-                sessionType === 'diagnostic-trial' ? 'bg-[#EA580C] text-white font-bold' : 'text-slate-300 hover:text-white'
+                sessionType === 'diagnostic-trial' ? 'bg-brand text-white font-bold' : 'text-slate-300 hover:text-white'
               }`}
             >
               45-Min Trial Session
@@ -136,7 +136,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
               type="button"
               onClick={() => setSessionType('alignment-call')}
               className={`px-3 py-1 rounded transition-colors cursor-pointer flex items-center space-x-1 ${
-                sessionType === 'alignment-call' ? 'bg-[#EA580C] text-white font-bold' : 'text-slate-300 hover:text-white'
+                sessionType === 'alignment-call' ? 'bg-brand text-white font-bold' : 'text-slate-300 hover:text-white'
               }`}
             >
               <PhoneCall className="w-3 h-3" />
@@ -146,15 +146,15 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
 
           {!isSubmitted && (
             <div className="mt-3 flex items-center space-x-2 text-xs">
-              <span className={`px-2 py-0.5 rounded ${step >= 1 ? 'bg-[#EA580C] text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
+              <span className={`px-2 py-0.5 rounded ${step >= 1 ? 'bg-brand text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
                 1. Syllabus
               </span>
               <span className="text-slate-500">→</span>
-              <span className={`px-2 py-0.5 rounded ${step >= 2 ? 'bg-[#EA580C] text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
+              <span className={`px-2 py-0.5 rounded ${step >= 2 ? 'bg-brand text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
                 2. Format
               </span>
               <span className="text-slate-500">→</span>
-              <span className={`px-2 py-0.5 rounded ${step >= 3 ? 'bg-[#EA580C] text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
+              <span className={`px-2 py-0.5 rounded ${step >= 3 ? 'bg-brand text-white font-bold' : 'bg-slate-800 text-slate-400'}`}>
                 3. Registry
               </span>
             </div>
@@ -165,7 +165,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
           {isSubmitted ? (
             <div className="text-center py-4 space-y-4 animate-in fade-in">
               <div className="w-14 h-14 rounded-full bg-[#0F172A] text-white flex items-center justify-center mx-auto shadow-sm">
-                <CheckCircle2 className="w-8 h-8 text-[#EA580C]" />
+                <CheckCircle2 className="w-8 h-8 text-brand" />
               </div>
 
               <div>
@@ -188,7 +188,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Syllabus / Track:</span>
-                  <span className="font-bold text-[#EA580C]">{subject}</span>
+                  <span className="font-bold text-brand">{subject}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Format:</span>
@@ -224,7 +224,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-2.5 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2"
+                  className="w-full py-2.5 bg-whatsapp hover:bg-whatsapp-strong text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2"
                 >
                   <span>Chat on WhatsApp Directly →</span>
                 </a>
@@ -250,7 +250,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="e.g. Class 10 State Board Maths, Physics Derivations, CBSE Science..."
-                    className="w-full bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                    className="w-full bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                     required
                   />
 
@@ -298,7 +298,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                           : 'bg-white border-[#E2E8F0] text-slate-600'
                       }`}
                     >
-                      <Building2 className="w-4 h-4 text-[#EA580C] mb-1" />
+                      <Building2 className="w-4 h-4 text-brand mb-1" />
                       <p className="text-xs font-bold">Classroom Center Batch</p>
                       <p className="text-xs opacity-70">Thiripura Complex, Thoramangalam</p>
                     </button>
@@ -312,7 +312,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
                           : 'bg-white border-[#E2E8F0] text-slate-600'
                       }`}
                     >
-                      <Video className="w-4 h-4 text-[#EA580C] mb-1" />
+                      <Video className="w-4 h-4 text-brand mb-1" />
                       <p className="text-xs font-bold">1-on-1 Online</p>
                       <p className="text-xs opacity-70">HD Whiteboard Workspace</p>
                     </button>
@@ -423,7 +423,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
 
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-semibold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+                  className="px-5 py-2.5 bg-brand hover:bg-brand-strong text-white text-xs font-semibold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                 >
                   <span>
                     {step === 3 

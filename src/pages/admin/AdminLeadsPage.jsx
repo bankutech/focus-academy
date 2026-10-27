@@ -12,17 +12,45 @@ import {
   ChevronLeft, 
   ChevronRight, 
   RefreshCw, 
-  AlertTriangle 
+  AlertTriangle,
+  ClipboardList,
+  Eye,
+  Pencil,
+  FileText
 } from 'lucide-react';
-import { AdminDataService } from '../../services/adminDataService';
+import { AdminDataService, ENROLLMENT_STATUSES } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
 import { formatTime12 } from '../../types/schemas';
+
+const ENROLLMENT_STATUS_META = {
+  pending: { label: 'Pending Review', className: 'bg-amber-50 text-amber-800 border-amber-200' },
+  confirmed: { label: 'Confirmed', className: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+  waitlisted: { label: 'Waitlisted', className: 'bg-blue-50 text-blue-800 border-blue-200' },
+  cancelled: { label: 'Cancelled', className: 'bg-rose-50 text-rose-800 border-rose-200' },
+  archived: { label: 'Archived', className: 'bg-slate-100 text-slate-600 border-slate-200' }
+};
+
+const normalizeEnrollmentStatus = (status) => {
+  if (ENROLLMENT_STATUSES.includes(status)) return status;
+  if (status === 'converted') return 'confirmed';
+  return 'pending';
+};
+
+const enrollmentStatusBadge = (status) => {
+  const meta = ENROLLMENT_STATUS_META[normalizeEnrollmentStatus(status)] || ENROLLMENT_STATUS_META.pending;
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${meta.className}`}>
+      {meta.label}
+    </span>
+  );
+};
 
 export default function AdminLeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const urlSource = searchParams.get('source') || 'all';
 
   const [leads, setLeads] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -30,6 +58,20 @@ export default function AdminLeadsPage() {
   const [sourceFilter, setSourceFilter] = useState(urlSource);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+
+  // Enrollment management
+  const [enrollmentSearch, setEnrollmentSearch] = useState('');
+  const [enrollmentStatusFilter, setEnrollmentStatusFilter] = useState('active');
+  const [viewEnrollment, setViewEnrollment] = useState(null);
+  const [viewEnrollmentDetail, setViewEnrollmentDetail] = useState(null);
+  const [editEnrollment, setEditEnrollment] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [statusModal, setStatusModal] = useState(null);
+  const [statusNext, setStatusNext] = useState('confirmed');
+  const [statusReason, setStatusReason] = useState('');
+  const [archiveModal, setArchiveModal] = useState(null);
+  const [archiveReason, setArchiveReason] = useState('');
+  const [enrollmentBusy, setEnrollmentBusy] = useState(false);
 
   useEffect(() => {
     const s = searchParams.get('source');
@@ -50,14 +92,20 @@ export default function AdminLeadsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [leadsList, batchesList] = await Promise.all([
+      const [leadsList, batchesList, enrollmentList] = await Promise.all([
         AdminDataService.getLeads(),
-        AdminDataService.getBatches()
+        AdminDataService.getBatches(),
+        AdminDataService.getEnrollments().catch(err => {
+          setFormError(err.message || 'Enrollment records could not be loaded.');
+          return [];
+        })
       ]);
       setLeads(leadsList);
       setBatches(batchesList);
+      setEnrollments(enrollmentList);
     } catch (err) {
       console.error('Failed to load admission leads:', err);
+      setFormError(err.message || 'Admission data could not be loaded from the database.');
     } finally {
       setLoading(false);
     }
@@ -71,11 +119,102 @@ export default function AdminLeadsPage() {
     try {
       const currentAdmin = requireAdminEmail();
       await AdminDataService.updateLeadStatus(leadId, newStatus, currentAdmin);
-      setFormSuccess(`Updated lead status to '${newStatus}'.`);
+      setFormSuccess(`Updated inquiry status to '${newStatus}'.`);
+      setFormError('');
       await loadData();
     } catch (err) {
       setFormError(err.message || 'Failed to update lead status.');
     }
+  };
+
+  const openEnrollmentView = async (enrollment) => {
+    setFormError('');
+    setViewEnrollmentDetail(null);
+    setViewEnrollment(enrollment);
+    try {
+      const [detail, obligations, payments] = await Promise.all([
+        AdminDataService.getEnrollmentById(enrollment.id),
+        AdminDataService.getFeeObligations().catch(() => []),
+        AdminDataService.getPayments().catch(() => [])
+      ]);
+      const studentId = detail.studentId || detail.id;
+      setViewEnrollmentDetail({
+        enrollment: detail,
+        obligations: obligations.filter(o => o.studentId === studentId || o.enrollmentId === detail.id),
+        payments: payments.filter(p => p.studentId === studentId || p.enrollmentId === detail.id)
+      });
+    } catch (err) {
+      setFormError(err.message || 'Enrollment record could not be loaded.');
+      setViewEnrollment(null);
+    }
+  };
+
+  const openEnrollmentEdit = (enrollment) => {
+    setFormError('');
+    setEditForm({
+      studentName: enrollment.studentName || '',
+      parentName: enrollment.parentName || '',
+      phone: enrollment.phone || '',
+      secondaryPhone: enrollment.secondaryPhone || '',
+      grade: enrollment.grade || 'Class 10',
+      board: enrollment.board || 'TN State Board (Samacheer)',
+      batchId: enrollment.batchId || '',
+      schoolName: enrollment.schoolName || '',
+      schoolShift: enrollment.schoolShift || '',
+      emergencyContactName: enrollment.emergencyContactName || '',
+      emergencyPhone: enrollment.emergencyPhone || '',
+      medicalAlert: enrollment.medicalAlert || ''
+    });
+    setEditEnrollment(enrollment);
+  };
+
+  const executeEnrollmentAction = async (action) => {
+    setEnrollmentBusy(true);
+    setFormError('');
+    setFormSuccess('');
+    try {
+      const currentAdmin = requireAdminEmail();
+      const message = await action(currentAdmin);
+      setFormSuccess(message);
+      setEditEnrollment(null);
+      setViewEnrollment(null);
+      setViewEnrollmentDetail(null);
+      setStatusModal(null);
+      setArchiveModal(null);
+      setStatusReason('');
+      setArchiveReason('');
+      await loadData();
+    } catch (err) {
+      setFormError(err.message || 'The operation failed. Nothing was changed.');
+    } finally {
+      setEnrollmentBusy(false);
+    }
+  };
+
+  const submitEnrollmentEdit = async (e) => {
+    e.preventDefault();
+    await executeEnrollmentAction(async (currentAdmin) => {
+      const result = await AdminDataService.updateEnrollment(editEnrollment.id, editForm, currentAdmin);
+      return `Enrollment ${editEnrollment.id} updated and synced to student record${result.batchChangeNotice ? ` — ${result.batchChangeNotice}` : ''}.`;
+    });
+  };
+
+  const submitStatusChange = async (e) => {
+    e.preventDefault();
+    await executeEnrollmentAction(async (currentAdmin) => {
+      const result = await AdminDataService.updateEnrollmentStatus(statusModal.id, statusNext, { reason: statusReason }, currentAdmin);
+      const warningSuffix = result.warnings.length > 0 ? ` Warnings: ${result.warnings.join(' ')}` : '';
+      return `Enrollment ${statusModal.id} changed from '${result.from}' to '${result.to}'.${warningSuffix}`;
+    });
+  };
+
+  const submitArchive = async (e) => {
+    e.preventDefault();
+    await executeEnrollmentAction(async (currentAdmin) => {
+      const result = await AdminDataService.archiveEnrollment(archiveModal.id, archiveReason, currentAdmin);
+      const warningSuffix = result.warnings.length > 0 ? ` Warnings: ${result.warnings.join(' ')}` : '';
+      return `Enrollment ${archiveModal.id} archived and removed from the active list. Financial history preserved.${warningSuffix}`;
+    });
   };
 
   const handleOpenConvert = (lead) => {
@@ -148,6 +287,29 @@ export default function AdminLeadsPage() {
     });
   }, [leads, statusFilter, sourceFilter, search]);
 
+  const filteredEnrollments = useMemo(() => {
+    return enrollments.filter((enrollment) => {
+      const status = normalizeEnrollmentStatus(enrollment.status);
+      if (enrollmentStatusFilter === 'active') {
+        if (status !== 'pending' && status !== 'confirmed' && status !== 'waitlisted') return false;
+      } else if (enrollmentStatusFilter !== 'all' && status !== enrollmentStatusFilter) {
+        return false;
+      }
+      if (enrollmentSearch) {
+        const q = enrollmentSearch.toLowerCase();
+        return (
+          (enrollment.id || '').toLowerCase().includes(q) ||
+          (enrollment.studentName || '').toLowerCase().includes(q) ||
+          (enrollment.parentName || '').toLowerCase().includes(q) ||
+          (enrollment.phone || '').includes(q) ||
+          (enrollment.studentId || '').toLowerCase().includes(q) ||
+          (enrollment.batchName || enrollment.batchId || '').toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [enrollments, enrollmentStatusFilter, enrollmentSearch]);
+
   const totalPages = Math.ceil(filteredLeads.length / pageSize) || 1;
   const paginatedLeads = filteredLeads.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -156,7 +318,7 @@ export default function AdminLeadsPage() {
       case 'new':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/10 text-orange-700 border border-orange-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#EA580C] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
             <span>New Admission</span>
           </span>
         );
@@ -190,9 +352,9 @@ export default function AdminLeadsPage() {
     <div className="space-y-6 text-left">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-[#0F172A]">Admission Inquiries & Leads</h1>
+          <h1 className="text-2xl font-black tracking-tight text-[#0F172A]">Enrollments & Admission Inquiries</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Real-time prospective admissions from the 5-step enrollment funnel & website inquiries.
+            Completed enrollment forms (manageable records) plus prospective admissions from the 5-step funnel & website inquiries.
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -231,7 +393,7 @@ export default function AdminLeadsPage() {
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <span className="text-xs font-semibold text-orange-600">New / Uncontacted</span>
-          <div className="text-2xl font-black text-[#EA580C] mt-1">{metrics.newCount}</div>
+          <div className="text-2xl font-black text-brand mt-1">{metrics.newCount}</div>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <span className="text-xs font-semibold text-blue-600">Counselor Contacted</span>
@@ -243,6 +405,171 @@ export default function AdminLeadsPage() {
         </div>
       </div>
 
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
+          <div>
+            <h2 className="text-sm font-extrabold text-[#0F172A] flex items-center space-x-2">
+              <ClipboardList className="w-4 h-4 text-brand" />
+              <span>Enrollment Records (Admission Funnel)</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800">
+                {enrollments.length} Total
+              </span>
+            </h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Every completed enrollment form with its admission ID, batch, fee and payment status — view, edit, re-status, archive.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={enrollmentSearch}
+              onChange={(e) => setEnrollmentSearch(e.target.value)}
+              placeholder="Search enrollment, student, phone..."
+              className="px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand md:w-64"
+            />
+            <select
+              value={enrollmentStatusFilter}
+              onChange={(e) => setEnrollmentStatusFilter(e.target.value)}
+              className="px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg font-semibold text-slate-700"
+            >
+              <option value="active">Active (pending + confirmed)</option>
+              <option value="all">All Statuses</option>
+              {ENROLLMENT_STATUSES.map(s => (
+                <option key={s} value={s}>{ENROLLMENT_STATUS_META[s].label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="py-10 text-center text-slate-400 text-sm">
+            <RefreshCw className="w-5 h-5 mx-auto mb-2 animate-spin text-brand" />
+            Loading enrollment records...
+          </div>
+        ) : filteredEnrollments.length === 0 ? (
+          <div className="py-10 text-center">
+            <ClipboardList className="w-7 h-7 text-slate-300 mx-auto mb-2" />
+            <p className="text-xs text-slate-400 font-semibold">No enrollment records match the current filter.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200">
+                <tr>
+                  <th className="py-3 px-4">Enrollment ID</th>
+                  <th className="py-3 px-4">Student & Guardian</th>
+                  <th className="py-3 px-4">Batch</th>
+                  <th className="py-3 px-4">Admission ID</th>
+                  <th className="py-3 px-4">Enrolled On</th>
+                  <th className="py-3 px-4">Fee / Payment</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                {filteredEnrollments.map((enrollment) => (
+                  <tr key={enrollment.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-4 font-mono font-bold text-brand text-[11px]">{enrollment.id}</td>
+                    <td className="py-3 px-4">
+                      <div className="font-bold text-[#0F172A]">{enrollment.studentName}</div>
+                      <div className="text-[11px] text-slate-500">
+                        {enrollment.parentName || 'Parent'} • +91 {enrollment.phone}
+                      </div>
+                      <div className="text-[11px] text-slate-500">{enrollment.grade} • {enrollment.board}</div>
+                    </td>
+                    <td className="py-3 px-4 max-w-[180px]">
+                      <div className="font-semibold text-slate-900 truncate">
+                        {enrollment.batchName || enrollment.selectedBatchName || enrollment.batchId || 'Not assigned'}
+                      </div>
+                      {enrollment.timing && (
+                        <div className="text-[11px] text-slate-500 flex items-center space-x-1">
+                          <Clock className="w-3 h-3" />
+                          <span>{enrollment.timing}</span>
+                        </div>
+                      )}
+                      {enrollment.reservationId && (
+                        <div className="text-[10px] text-orange-600 font-mono font-bold">Seat: {enrollment.reservationId}</div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 font-mono text-[11px] font-bold text-slate-700">
+                      {enrollment.studentId || enrollment.id}
+                    </td>
+                    <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
+                      {enrollment.enrolledAt ? String(enrollment.enrolledAt).split('T')[0] : '—'}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-[11px] font-semibold text-slate-700 capitalize">
+                        Fee: {String(enrollment.feeStatus || 'unknown').replace('_', ' ')}
+                      </div>
+                      <div className="text-[11px] font-semibold text-slate-700 capitalize">
+                        Payment: {String(enrollment.paymentStatus || 'unknown')}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {enrollmentStatusBadge(enrollment.status)}
+                      {enrollment.statusReason && (
+                        <div className="text-[10px] text-slate-400 mt-0.5 max-w-[140px] truncate" title={enrollment.statusReason}>
+                          {enrollment.statusReason}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openEnrollmentView(enrollment)}
+                          className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded text-[11px] inline-flex items-center space-x-1 cursor-pointer"
+                          title="View complete enrollment record"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openEnrollmentEdit(enrollment)}
+                          className="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded text-[11px] inline-flex items-center space-x-1 cursor-pointer"
+                          title="Edit enrollment details"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStatusModal(enrollment);
+                            setStatusNext(normalizeEnrollmentStatus(enrollment.status) === 'confirmed' ? 'pending' : 'confirmed');
+                            setStatusReason('');
+                            setFormError('');
+                          }}
+                          className="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded text-[11px] inline-flex items-center space-x-1 cursor-pointer"
+                          title="Change enrollment status"
+                        >
+                          <FileText className="w-3 h-3" />
+                          <span>Status</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setArchiveModal(enrollment);
+                            setArchiveReason('');
+                            setFormError('');
+                          }}
+                          className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded text-[11px] inline-flex items-center space-x-1 cursor-pointer"
+                          title="Archive enrollment (keeps financial history)"
+                        >
+                          <Archive className="w-3 h-3" />
+                          <span>Archive</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -251,7 +578,7 @@ export default function AdminLeadsPage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             placeholder="Search by student, parent, mobile, batch..."
-            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand"
           />
         </div>
 
@@ -283,7 +610,7 @@ export default function AdminLeadsPage() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-16 text-center text-slate-400 text-sm">
-            <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin text-[#EA580C]" />
+            <RefreshCw className="w-6 h-6 mx-auto mb-2 animate-spin text-brand" />
             Loading admissions inquiries...
           </div>
         ) : paginatedLeads.length === 0 ? (
@@ -320,7 +647,7 @@ export default function AdminLeadsPage() {
                         <div className="flex items-center space-x-2 mt-1">
                           <a
                             href={`tel:+91${cleanPhone}`}
-                            className="inline-flex items-center space-x-1 text-[#EA580C] hover:underline font-semibold"
+                            className="inline-flex items-center space-x-1 text-brand hover:underline font-semibold"
                           >
                             <Phone className="w-3 h-3" />
                             <span>+91 {cleanPhone}</span>
@@ -393,17 +720,38 @@ export default function AdminLeadsPage() {
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end space-x-1.5">
-                          {lead.status !== 'converted' && (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenConvert(lead)}
-                              className="px-2.5 py-1.5 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded text-xs shadow-2xs inline-flex items-center space-x-1 cursor-pointer"
-                              title="Enroll student and issue fee obligation"
-                            >
-                              <UserPlus className="w-3.5 h-3.5" />
-                              <span>Enroll</span>
-                            </button>
-                          )}
+                          {(() => {
+                            const linkedEnrollment = (lead.source === 'enrollment' || lead.reservationId)
+                              ? enrollments.find(e => e.id === lead.id)
+                              : null;
+                            const alreadyRegistered = Boolean(lead.studentId || (linkedEnrollment && linkedEnrollment.studentId)) || lead.status === 'converted';
+                            return (
+                              <>
+                                {!alreadyRegistered && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenConvert(lead)}
+                                    className="px-2.5 py-1.5 bg-brand hover:bg-brand-strong text-white font-bold rounded text-xs shadow-2xs inline-flex items-center space-x-1 cursor-pointer"
+                                    title="Register student and issue fee obligation"
+                                  >
+                                    <UserPlus className="w-3.5 h-3.5" />
+                                    <span>Register</span>
+                                  </button>
+                                )}
+                                {linkedEnrollment && (
+                                  <button
+                                    type="button"
+                                    onClick={() => openEnrollmentView(linkedEnrollment)}
+                                    className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded text-xs inline-flex items-center space-x-1 cursor-pointer"
+                                    title="View the completed enrollment record"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>Enrollment</span>
+                                  </button>
+                                )}
+                              </>
+                            );
+                          })()}
 
                           {lead.status === 'new' && (
                             <button
@@ -555,9 +903,280 @@ export default function AdminLeadsPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg font-bold shadow-xs cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg font-bold shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? 'Enrolling...' : 'Confirm Enrollment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {viewEnrollment && (
+        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 text-left animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <h2 className="text-base font-bold text-[#0F172A]">Enrollment Record: {viewEnrollment.id}</h2>
+                <p className="text-xs text-slate-500">Complete enrollment details, fees and payments</p>
+              </div>
+              <button type="button" onClick={() => { setViewEnrollment(null); setViewEnrollmentDetail(null); }} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {!viewEnrollmentDetail ? (
+              <div className="py-10 text-center text-slate-400 text-sm">
+                <RefreshCw className="w-5 h-5 mx-auto mb-2 animate-spin text-brand" />
+                Loading enrollment record...
+              </div>
+            ) : (() => {
+              const detail = viewEnrollmentDetail.enrollment;
+              const totalDue = viewEnrollmentDetail.obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
+              const totalPaid = viewEnrollmentDetail.payments.filter(p => !p.isReversed && !p.reversed)
+                .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+              const totalWaived = viewEnrollmentDetail.obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
+              return (
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      ['Enrollment status', normalizeEnrollmentStatus(detail.status)],
+                      ['Admission ID', detail.studentId || 'Not registered yet'],
+                      ['Enrolled on', detail.enrolledAt ? String(detail.enrolledAt).split('T')[0] : '—'],
+                      ['Seat hold', detail.reservationId || 'None']
+                    ].map(([label, value]) => (
+                      <div key={label} className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</div>
+                        <div className="font-bold text-slate-800 mt-0.5 break-words">{String(value)}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="border border-slate-200 rounded-lg divide-y divide-slate-100">
+                    <div className="px-4 py-2.5 bg-slate-50 font-bold text-slate-700">Student & contact details</div>
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <p><span className="text-slate-500">Student:</span> <strong>{detail.studentName}</strong></p>
+                      <p><span className="text-slate-500">Guardian:</span> <strong>{detail.parentName || '—'}</strong></p>
+                      <p><span className="text-slate-500">Phone:</span> +91 {detail.phone}</p>
+                      <p><span className="text-slate-500">Alternate:</span> {detail.secondaryPhone ? `+91 ${detail.secondaryPhone}` : '—'}</p>
+                      <p><span className="text-slate-500">Grade / Board:</span> <strong>{detail.grade} • {detail.board}</strong></p>
+                      <p><span className="text-slate-500">Batch:</span> <strong>{detail.batchName || detail.batchId || '—'}</strong></p>
+                      <p><span className="text-slate-500">Timing:</span> {detail.timing || '—'}</p>
+                      <p><span className="text-slate-500">School:</span> {detail.schoolName || '—'}</p>
+                      <p><span className="text-slate-500">School shift:</span> {detail.schoolShift || '—'}</p>
+                      <p><span className="text-slate-500">Emergency:</span> {detail.emergencyContactName ? `${detail.emergencyContactName} (${detail.emergencyRelationship || '—'}) ${detail.emergencyPhone ? `+91 ${detail.emergencyPhone}` : ''}` : '—'}</p>
+                      <p><span className="text-slate-500">Medical alert:</span> {detail.medicalAlert || 'None'}</p>
+                      <p><span className="text-slate-500">Student UID:</span> {detail.studentUid || 'Not linked'}</p>
+                    </div>
+                    {detail.notes && (
+                      <div className="px-4 py-2.5 border-t border-slate-100 text-slate-600"><span className="font-bold">Submitted notes:</span> {detail.notes}</div>
+                    )}
+                    {detail.reviewReason && (
+                      <div className="px-4 py-2.5 border-t border-slate-100 text-amber-800 bg-amber-50"><span className="font-bold">Review needed:</span> {detail.reviewReason}</div>
+                    )}
+                  </div>
+
+                  <div className="border border-slate-200 rounded-lg divide-y divide-slate-100">
+                    <div className="px-4 py-2.5 bg-slate-50 font-bold text-slate-700">Fees & payments</div>
+                    <div className="p-4 space-y-2">
+                      <div className="flex flex-wrap gap-4">
+                        <span>Fee status: <strong className="capitalize">{String(detail.feeStatus || 'unknown').replace('_', ' ')}</strong></span>
+                        <span>Payment status: <strong className="capitalize">{detail.paymentStatus || 'unknown'}</strong></span>
+                        <span>Billed: <strong>₹{totalDue.toLocaleString('en-IN')}</strong></span>
+                        <span>Paid: <strong>₹{totalPaid.toLocaleString('en-IN')}</strong></span>
+                        <span>Balance: <strong>₹{Math.max(0, totalDue - totalPaid - totalWaived).toLocaleString('en-IN')}</strong></span>
+                      </div>
+                      {viewEnrollmentDetail.obligations.length > 0 && (
+                        <ul className="space-y-1 text-[11px]">
+                          {viewEnrollmentDetail.obligations.map(o => (
+                            <li key={o.id} className="flex justify-between border-b border-slate-100 pb-1">
+                              <span className="font-mono">{o.id} • {o.billingCycle} • due {o.dueDate}</span>
+                              <span>₹{Number(o.amountDue || 0).toLocaleString('en-IN')} (₹{Number(o.amountPaid || 0).toLocaleString('en-IN')} paid) — {o.status}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {viewEnrollmentDetail.payments.length > 0 && (
+                        <ul className="space-y-1 text-[11px]">
+                          {viewEnrollmentDetail.payments.map(p => (
+                            <li key={p.id} className="flex justify-between border-b border-slate-100 pb-1">
+                              <span className="font-mono">{p.receiptNumber} • {p.id}</span>
+                              <span>₹{Number(p.amount || 0).toLocaleString('en-IN')} • {String(p.paymentMethod || '').replace('_', ' ')} • {p.paymentDate} • {p.isReversed || p.reversed ? 'reversed' : 'verified'}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {viewEnrollmentDetail.obligations.length === 0 && viewEnrollmentDetail.payments.length === 0 && (
+                        <p className="text-slate-400">No fee obligation or payment has been generated for this enrollment yet.</p>
+                      )}
+                      <p className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded p-2">
+                        No payment gateway is connected to the enrollment form, so fees stay unpaid until an administrator records a verified transaction in Ledger &amp; Payments.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                    <button type="button" onClick={() => { setViewEnrollment(null); setViewEnrollmentDetail(null); }} className="px-4 py-2 border border-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 cursor-pointer">Close</button>
+                    <button type="button" onClick={() => { const e = viewEnrollment; setViewEnrollment(null); setViewEnrollmentDetail(null); openEnrollmentEdit(e); }} className="px-4 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg font-bold cursor-pointer">Edit Enrollment</button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {editEnrollment && (
+        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 text-left animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <h2 className="text-base font-bold text-[#0F172A]">Edit Enrollment</h2>
+                <p className="text-xs text-slate-500">{editEnrollment.id} — changes are saved to Firestore and synced to the student roster</p>
+              </div>
+              <button type="button" onClick={() => setEditEnrollment(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={submitEnrollmentEdit} className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Student name *</span>
+                  <input type="text" required minLength={2} value={editForm.studentName} onChange={(e) => setEditForm({ ...editForm, studentName: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Guardian / parent name</span>
+                  <input type="text" value={editForm.parentName} onChange={(e) => setEditForm({ ...editForm, parentName: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Mobile number *</span>
+                  <input type="tel" required value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Alternate number</span>
+                  <input type="tel" value={editForm.secondaryPhone} onChange={(e) => setEditForm({ ...editForm, secondaryPhone: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Grade *</span>
+                  <select required value={editForm.grade} onChange={(e) => setEditForm({ ...editForm, grade: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
+                    {['Class 9', 'Class 10', 'Class 11', 'Class 12', 'Classes 6 to 8'].map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Board *</span>
+                  <select required value={editForm.board} onChange={(e) => setEditForm({ ...editForm, board: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
+                    {['TN State Board (Samacheer)', 'TN State Board, CBSE & ISC', 'CBSE', 'ICSE'].map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </label>
+                <label className="block col-span-2">
+                  <span className="block font-semibold text-slate-700 mb-1">Batch</span>
+                  <select value={editForm.batchId} onChange={(e) => setEditForm({ ...editForm, batchId: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
+                    <option value="">Keep current batch</option>
+                    {batches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.timing})</option>)}
+                  </select>
+                  <span className="text-[10px] text-slate-500">Changing the batch performs an audited batch transfer on the student record.</span>
+                </label>
+                <label className="block col-span-2">
+                  <span className="block font-semibold text-slate-700 mb-1">School name</span>
+                  <input type="text" value={editForm.schoolName} onChange={(e) => setEditForm({ ...editForm, schoolName: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">School shift</span>
+                  <input type="text" value={editForm.schoolShift} onChange={(e) => setEditForm({ ...editForm, schoolShift: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Emergency contact</span>
+                  <input type="text" value={editForm.emergencyContactName} onChange={(e) => setEditForm({ ...editForm, emergencyContactName: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Emergency phone</span>
+                  <input type="tel" value={editForm.emergencyPhone} onChange={(e) => setEditForm({ ...editForm, emergencyPhone: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+                <label className="block">
+                  <span className="block font-semibold text-slate-700 mb-1">Medical alert</span>
+                  <input type="text" value={editForm.medicalAlert} onChange={(e) => setEditForm({ ...editForm, medicalAlert: e.target.value })} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button type="button" onClick={() => setEditEnrollment(null)} className="px-4 py-2 border border-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 cursor-pointer">Cancel</button>
+                <button type="submit" disabled={enrollmentBusy} className="px-4 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg font-bold cursor-pointer disabled:opacity-50">
+                  {enrollmentBusy ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {statusModal && (
+        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 text-left animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <h2 className="text-base font-bold text-[#0F172A]">Change Enrollment Status</h2>
+                <p className="text-xs text-slate-500">{statusModal.id} — {statusModal.studentName}</p>
+              </div>
+              <button type="button" onClick={() => setStatusModal(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={submitStatusChange} className="space-y-3 text-xs">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-600">
+                Current status: <strong>{ENROLLMENT_STATUS_META[normalizeEnrollmentStatus(statusModal.status)].label}</strong>
+                {statusModal.studentId ? <span> • registered as <strong>{statusModal.studentId}</strong></span> : <span> • not yet registered as a student</span>}
+              </div>
+              <label className="block">
+                <span className="block font-semibold text-slate-700 mb-1">New status</span>
+                <select value={statusNext} onChange={(e) => setStatusNext(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold">
+                  {ENROLLMENT_STATUSES.map(s => (
+                    <option key={s} value={s} disabled={s === normalizeEnrollmentStatus(statusModal.status)}>
+                      {ENROLLMENT_STATUS_META[s].label}{s === normalizeEnrollmentStatus(statusModal.status) ? ' (current)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="block font-semibold text-slate-700 mb-1">Reason (required for cancel / archive)</span>
+                <textarea value={statusReason} onChange={(e) => setStatusReason(e.target.value)} rows={3} placeholder="e.g. Duplicate application, guardian requested cancellation" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+              </label>
+              <p className="text-[11px] text-slate-500">
+                Valid transitions only: pending → confirmed/waitlisted/cancelled/archived; waitlisted → confirmed/cancelled/archived; confirmed → cancelled/archived.
+              </p>
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button type="button" onClick={() => setStatusModal(null)} className="px-4 py-2 border border-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 cursor-pointer">Cancel</button>
+                <button type="submit" disabled={enrollmentBusy} className="px-4 py-2 bg-brand hover:bg-brand-strong text-white rounded-lg font-bold cursor-pointer disabled:opacity-50">
+                  {enrollmentBusy ? 'Applying...' : 'Apply Status Change'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {archiveModal && (
+        <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 text-left animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <h2 className="text-base font-bold text-[#0F172A]">Archive Enrollment</h2>
+                <p className="text-xs text-slate-500">{archiveModal.id} — {archiveModal.studentName}</p>
+              </div>
+              <button type="button" onClick={() => setArchiveModal(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={submitArchive} className="space-y-3 text-xs">
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900">
+                Archiving removes this enrollment from the active list only. The student record, fee obligations and payment receipts are preserved for audit — nothing is deleted.
+                {archiveModal.paymentStatus && archiveModal.paymentStatus !== 'unpaid' ? ` Current payment status: ${archiveModal.paymentStatus}.` : ''}
+              </div>
+              <label className="block">
+                <span className="block font-semibold text-slate-700 mb-1">Archive reason * (min 5 characters)</span>
+                <textarea required minLength={5} value={archiveReason} onChange={(e) => setArchiveReason(e.target.value)} rows={3} placeholder="e.g. Duplicate application created by a second form submission" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg" />
+              </label>
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button type="button" onClick={() => setArchiveModal(null)} className="px-4 py-2 border border-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-50 cursor-pointer">Cancel</button>
+                <button type="submit" disabled={enrollmentBusy} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold cursor-pointer disabled:opacity-50">
+                  {enrollmentBusy ? 'Archiving...' : 'Confirm Archive'}
                 </button>
               </div>
             </form>

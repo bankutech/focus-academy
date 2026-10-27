@@ -81,29 +81,35 @@ export default function ContactSection({ isPage = false }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-[#F8FAFC] p-6 rounded-lg border border-[#E2E8F0] shadow-xs text-left">
-              <h3 className="text-lg font-bold text-[#0F172A]">
-                {CAMPUS_CONFIG.brand.name}, {CAMPUS_CONFIG.location.area}
-              </h3>
+              {isPage ? (
+                <h2 id="contact-heading" className="text-lg font-bold text-[#0F172A]">
+                  {CAMPUS_CONFIG.brand.name}, {CAMPUS_CONFIG.location.area}
+                </h2>
+              ) : (
+                <h3 className="text-lg font-bold text-[#0F172A]">
+                  {CAMPUS_CONFIG.brand.name}, {CAMPUS_CONFIG.location.area}
+                </h3>
+              )}
               
               <a
                 href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 text-xs sm:text-sm text-slate-600 hover:text-[#EA580C] leading-relaxed block transition-colors"
+                className="mt-2 text-xs sm:text-sm text-slate-600 hover:text-brand leading-relaxed block transition-colors"
               >
                 {CAMPUS_CONFIG.location.fullAddress}
               </a>
 
               <div className="mt-4 pt-4 border-t border-[#E2E8F0] space-y-2.5 text-xs">
                 <div className="flex items-center space-x-2.5 text-[#0F172A]">
-                  <Phone className="w-4 h-4 text-[#EA580C] shrink-0" />
+                  <Phone className="w-4 h-4 text-brand shrink-0" />
                   <a href={`tel:${CAMPUS_CONFIG.contact.primaryPhoneRaw}`} className="font-semibold hover:underline">
                     {CAMPUS_CONFIG.contact.primaryPhone}
                   </a>
                 </div>
 
                 <div className="flex items-center space-x-2.5 text-slate-600">
-                  <Mail className="w-4 h-4 text-[#EA580C] shrink-0" />
+                  <Mail className="w-4 h-4 text-brand shrink-0" />
                   <a href={`mailto:${CAMPUS_CONFIG.contact.email}`} className="text-xs truncate hover:underline">
                     {CAMPUS_CONFIG.contact.email}
                   </a>
@@ -117,7 +123,7 @@ export default function ContactSection({ isPage = false }) {
                 </div>
 
                 <div className="flex items-center space-x-2.5 text-emerald-700">
-                  <MessageSquare className="w-4 h-4 text-[#25D366] shrink-0" />
+                  <MessageSquare className="w-4 h-4 text-whatsapp shrink-0" />
                   <a
                     href={`https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(
                       'Hello Focus Academy Thoramangalam! I would like to inquire about evening batch admissions at Thiripura Complex.'
@@ -135,14 +141,14 @@ export default function ContactSection({ isPage = false }) {
             <div className="bg-[#F8FAFC] rounded-lg border border-[#E2E8F0] overflow-hidden shadow-xs">
               <div className="p-4 bg-[#0F172A] text-white flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-xs font-bold">
-                  <MapPin className="w-4 h-4 text-[#EA580C]" />
+                  <MapPin className="w-4 h-4 text-brand" />
                   <span>Map Target: Thiripura Complex, Thoramangalam, Perambalur</span>
                 </div>
                 <a
                   href={CAMPUS_CONFIG.location.googleMapsDirectionUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-orange-200 hover:underline flex items-center space-x-1"
+                  className="text-xs text-orange-100 hover:underline flex items-center space-x-1"
                 >
                   <span>Open in Maps</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -161,7 +167,7 @@ export default function ContactSection({ isPage = false }) {
 
               <div className="p-3.5 bg-white text-xs text-slate-500 flex items-center justify-between border-t border-[#E2E8F0]">
                 <span>Landmark: {CAMPUS_CONFIG.location.landmark}</span>
-                <span className="text-[#EA580C] font-semibold">Easy Parking Available</span>
+                <span className="text-brand font-semibold">Easy Parking Available</span>
               </div>
             </div>
           </div>
@@ -223,7 +229,7 @@ export default function ContactSection({ isPage = false }) {
                     href={submissionResult.whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-2 px-5 py-3 bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+                    className="inline-flex items-center space-x-2 px-5 py-3 bg-whatsapp hover:bg-whatsapp-strong text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                   >
                     <MessageSquare className="w-4 h-4" />
                     <span>Fast-Track Admission on WhatsApp →</span>
@@ -258,7 +264,7 @@ export default function ContactSection({ isPage = false }) {
                       placeholder="e.g. K. Vignesh"
                       className={`w-full min-h-[48px] bg-white border ${
                         validationErrors.studentName ? 'border-rose-500' : 'border-[#E2E8F0]'
-                      } rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                      } rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                       required
                     />
                     {validationErrors.studentName && (
@@ -276,7 +282,7 @@ export default function ContactSection({ isPage = false }) {
                       value={parentName}
                       onChange={(e) => setParentName(e.target.value)}
                       placeholder="e.g. Mr. S. Kannan"
-                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                     />
                   </div>
                 </div>
@@ -294,7 +300,7 @@ export default function ContactSection({ isPage = false }) {
                       placeholder="e.g. 98424 51220"
                       className={`w-full min-h-[48px] bg-white border ${
                         validationErrors.phone ? 'border-rose-500' : 'border-[#E2E8F0]'
-                      } rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]`}
+                      } rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand`}
                       required
                     />
                     {validationErrors.phone && (
@@ -310,7 +316,7 @@ export default function ContactSection({ isPage = false }) {
                       id="target-grade"
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
-                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                     >
                       <option value="Class 10">Class 10 (Secondary Board Preparation)</option>
                       <option value="Class 12">Class 12 (Higher Secondary STEM / Commerce)</option>
@@ -332,7 +338,7 @@ export default function ContactSection({ isPage = false }) {
                       id="curriculum-board"
                       value={board}
                       onChange={(e) => setBoard(e.target.value)}
-                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                     >
                       <option value="TN State Board (Samacheer)">TN State Board (Samacheer Kalvi)</option>
                       <option value="CBSE Board">CBSE Board (NCERT)</option>
@@ -351,7 +357,7 @@ export default function ContactSection({ isPage = false }) {
                       value={subjects}
                       onChange={(e) => setSubjects(e.target.value)}
                       placeholder="e.g. Maths, Physics, Chemistry, Biology"
-                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                      className="w-full min-h-[48px] bg-white border border-[#E2E8F0] rounded-md px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
                     />
                   </div>
                 </div>
@@ -366,7 +372,7 @@ export default function ContactSection({ isPage = false }) {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="e.g. Struggles with algebra factoring, pre-board test panic, wants to target 95%+ in 10th boards..."
-                    className="w-full bg-white border border-[#E2E8F0] rounded-md p-3 text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+                    className="w-full bg-white border border-[#E2E8F0] rounded-md p-3 text-xs sm:text-sm font-medium text-[#0F172A] focus:outline-hidden focus:border-brand"
                   />
                 </div>
 
@@ -378,9 +384,9 @@ export default function ContactSection({ isPage = false }) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full min-h-[48px] py-3.5 bg-[#EA580C] hover:bg-[#C2410C] disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]"
+                  className="w-full min-h-[48px] py-3.5 bg-brand hover:bg-brand-strong disabled:opacity-50 text-white text-xs sm:text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  <Send className="w-4 h-4 text-orange-200" />
+                  <Send className="w-4 h-4 text-orange-100" />
                   <span>{isSubmitting ? 'Validating & Submitting...' : 'Submit Enrollment Inquiry (Evening Batches)'}</span>
                 </button>
               </form>

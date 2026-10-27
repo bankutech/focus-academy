@@ -54,6 +54,7 @@ export default function AdminBatchesPage() {
       setStudents(s);
     } catch (err) {
       console.error('Error loading batches:', err);
+      setFormError(err.message || 'Batch data could not be loaded from the database.');
     }
   };
 
@@ -188,7 +189,7 @@ export default function AdminBatchesPage() {
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Create New Batch</span>
@@ -227,7 +228,7 @@ export default function AdminBatchesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search batches by name, grade, or classroom..."
-            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand"
           />
         </div>
 
@@ -309,7 +310,7 @@ export default function AdminBatchesPage() {
 
                 <div className="space-y-1.5 text-xs text-slate-600 my-3">
                   <div className="flex items-center space-x-2">
-                    <Clock className="w-3.5 h-3.5 text-[#EA580C]" />
+                    <Clock className="w-3.5 h-3.5 text-brand" />
                     <span>{batch.timing} ({batch.days})</span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -413,7 +414,7 @@ export default function AdminBatchesPage() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Class 10 State Board - Prime Evening Batch"
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#EA580C]"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand"
                 />
               </div>
 
@@ -513,7 +514,7 @@ export default function AdminBatchesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-lg cursor-pointer"
+                  className="px-4 py-2 bg-brand hover:bg-brand-strong text-white font-bold rounded-lg cursor-pointer"
                 >
                   {editBatch ? 'Save Changes' : 'Create Batch'}
                 </button>

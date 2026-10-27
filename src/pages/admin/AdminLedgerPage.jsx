@@ -24,6 +24,7 @@ export default function AdminLedgerPage() {
 
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [adminFilter, setAdminFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -92,6 +93,7 @@ export default function AdminLedgerPage() {
       }
     } catch (err) {
       console.error('Error loading ledger data:', err);
+      setFormError(err.message || 'Ledger data could not be loaded from the database. No payment history was changed.');
     }
   }, [location.search]);
 
@@ -176,6 +178,16 @@ export default function AdminLedgerPage() {
   const uniqueAdmins = Array.from(new Set(payments.map(p => p.recordedBy || 'admin@focusacademyperambalur.com'))).filter(Boolean);
 
   const filteredPayments = payments.filter((p) => {
+    const isReversed = Boolean(p.isReversed || p.reversed || p.status === 'reversed');
+    if (statusFilter === 'verified' && (isReversed || (p.verificationStatus && p.verificationStatus !== 'verified'))) {
+      return false;
+    }
+    if (statusFilter === 'reversed' && !isReversed) {
+      return false;
+    }
+    if (statusFilter === 'pending' && (p.verificationStatus || 'verified') !== 'pending') {
+      return false;
+    }
     if (methodFilter !== 'all' && p.paymentMethod !== methodFilter) {
       return false;
     }
@@ -185,14 +197,27 @@ export default function AdminLedgerPage() {
     if (search) {
       const q = search.toLowerCase();
       return (
-        p.studentName.toLowerCase().includes(q) ||
-        p.receiptNumber.toLowerCase().includes(q) ||
+        String(p.studentName || '').toLowerCase().includes(q) ||
+        String(p.receiptNumber || '').toLowerCase().includes(q) ||
+        String(p.id || '').toLowerCase().includes(q) ||
+        String(p.studentId || '').toLowerCase().includes(q) ||
+        String(p.enrollmentId || '').toLowerCase().includes(q) ||
+        String(p.obligationId || '').toLowerCase().includes(q) ||
         (p.recordedBy && p.recordedBy.toLowerCase().includes(q)) ||
         (p.referenceNumber && p.referenceNumber.toLowerCase().includes(q))
       );
     }
     return true;
   });
+
+  const filteredTotals = useMemo(() => {
+    const active = filteredPayments.filter(p => !p.isReversed && !p.reversed);
+    return {
+      count: filteredPayments.length,
+      total: active.reduce((sum, p) => sum + Number(p.amount || 0), 0),
+      reversedCount: filteredPayments.length - active.length
+    };
+  }, [filteredPayments]);
 
   const handleOpenTill = async (e) => {
     e.preventDefault();
@@ -299,7 +324,7 @@ export default function AdminLedgerPage() {
               setFormError('');
               setRecordModalOpen(true);
             }}
-            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#EA580C] hover:bg-[#C2410C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
           >
             <CreditCard className="w-4 h-4" />
             <span>Record New Payment</span>
@@ -369,7 +394,7 @@ export default function AdminLedgerPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by student name, receipt #, or reference..."
-            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+            className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-brand"
           />
         </div>
 
@@ -386,6 +411,17 @@ export default function AdminLedgerPage() {
           </select>
 
           <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
+          >
+            <option value="all">All Transactions</option>
+            <option value="verified">Verified Only</option>
+            <option value="reversed">Reversed Only</option>
+            <option value="pending">Pending Verification</option>
+          </select>
+
+          <select
             value={methodFilter}
             onChange={(e) => { setMethodFilter(e.target.value); setCurrentPage(1); }}
             className="text-xs border border-slate-300 rounded-lg px-2.5 py-2 text-slate-700 bg-white"
@@ -396,6 +432,16 @@ export default function AdminLedgerPage() {
             <option value="bank_transfer">Bank Transfer</option>
           </select>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-xs">
+        <span>
+          <strong className="text-[#0F172A]">{filteredTotals.count}</strong> transaction{filteredTotals.count === 1 ? '' : 's'} listed
+          {filteredTotals.reversedCount > 0 && ` • ${filteredTotals.reversedCount} reversed`}
+        </span>
+        <span>
+          Verified total: <strong className="text-emerald-700 font-mono">₹{filteredTotals.total.toLocaleString('en-IN')}</strong>
+        </span>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
@@ -410,6 +456,7 @@ export default function AdminLedgerPage() {
                 <th className="py-3 px-4 font-bold">Recorded By</th>
                 <th className="py-3 px-4 font-bold">Reference / UTR</th>
                 <th className="py-3 px-4 font-bold">Date</th>
+                <th className="py-3 px-4 font-bold">Status</th>
                 <th className="py-3 px-4 font-bold text-right">Actions</th>
               </tr>
             </thead>
@@ -417,7 +464,7 @@ export default function AdminLedgerPage() {
               {paginatedPayments.length > 0 ? (
                 paginatedPayments.map((pay) => (
                   <tr key={pay.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#EA580C]">
+                    <td className="py-3.5 px-4 font-mono font-bold text-brand">
                       {pay.receiptNumber}
                     </td>
 
@@ -438,8 +485,11 @@ export default function AdminLedgerPage() {
 
                     <td className="py-3.5 px-4">
                       <span className="capitalize font-bold text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                        {pay.paymentMethod.replace('_', ' ')}
+                        {String(pay.paymentMethod || 'cash').replace('_', ' ')}
                       </span>
+                      {pay.enrollmentId && (
+                        <div className="text-[10px] font-mono text-slate-400 mt-0.5">Enrollment: {pay.enrollmentId}</div>
+                      )}
                     </td>
 
                     <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600">
@@ -452,6 +502,21 @@ export default function AdminLedgerPage() {
 
                     <td className="py-3.5 px-4 font-mono text-slate-600">
                       {pay.paymentDate}
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <span className={`block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full w-fit ${
+                        (pay.isReversed || pay.reversed)
+                          ? 'bg-red-100 text-red-700'
+                          : (pay.verificationStatus || 'verified') === 'verified'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {(pay.isReversed || pay.reversed) ? 'Reversed' : (pay.verificationStatus || 'verified')}
+                      </span>
+                      <span className="block text-[10px] text-slate-400 mt-0.5 capitalize">
+                        Receipt: {pay.receiptStatus || 'issued'} • Refund: {pay.refundStatus || 'none'}
+                      </span>
                     </td>
 
                     <td className="py-3.5 px-4 text-right space-x-1.5">
@@ -525,7 +590,7 @@ export default function AdminLedgerPage() {
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2">
-                <CreditCard className="w-5 h-5 text-[#EA580C]" />
+                <CreditCard className="w-5 h-5 text-brand" />
                 <h2 className="text-base font-extrabold text-[#0F172A]">
                   Record Verified Payment
                 </h2>
@@ -632,7 +697,7 @@ export default function AdminLedgerPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-lg cursor-pointer"
+                  className="px-4 py-2 bg-brand hover:bg-brand-strong text-white font-bold rounded-lg cursor-pointer"
                 >
                   Record & Generate Receipt
                 </button>
@@ -713,7 +778,7 @@ export default function AdminLedgerPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>PAY METHOD:</span>
-                    <span className="uppercase font-black">{receiptModalPayment.paymentMethod.replace('_', ' ')}</span>
+                    <span className="uppercase font-black">{String(receiptModalPayment.paymentMethod || 'cash').replace('_', ' ')}</span>
                   </div>
                   {receiptModalPayment.referenceNumber && (
                     <div className="flex justify-between text-[11px]">
@@ -754,7 +819,7 @@ export default function AdminLedgerPage() {
                 <div className="flex justify-between items-center mb-3 text-[11px]">
                   <div>
                     <span className="text-slate-500">Receipt No: </span>
-                    <span className="font-mono font-bold text-[#EA580C]">{receiptModalPayment.receiptNumber}</span>
+                    <span className="font-mono font-bold text-brand">{receiptModalPayment.receiptNumber}</span>
                   </div>
                   <div>
                     <span className="text-slate-500">Date: </span>
@@ -773,7 +838,7 @@ export default function AdminLedgerPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Payment Mode:</span>
-                    <span className="capitalize font-bold text-slate-900">{receiptModalPayment.paymentMethod.replace('_', ' ')}</span>
+                    <span className="capitalize font-bold text-slate-900">{String(receiptModalPayment.paymentMethod || 'cash').replace('_', ' ')}</span>
                   </div>
                   {receiptModalPayment.referenceNumber && (
                     <div className="flex justify-between">
@@ -891,7 +956,7 @@ export default function AdminLedgerPage() {
             <div className="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-slate-500">Receipt Number:</span>
-                <span className="font-mono font-bold text-[#EA580C]">{reverseModalPayment.receiptNumber}</span>
+                <span className="font-mono font-bold text-brand">{reverseModalPayment.receiptNumber}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Student:</span>
@@ -988,7 +1053,7 @@ export default function AdminLedgerPage() {
 
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    Opening Petty Cash / Drawer Float (₹) <span className="text-[#EA580C]">*</span>
+                    Opening Petty Cash / Drawer Float (₹) <span className="text-brand">*</span>
                   </label>
                   <input
                     type="number"
@@ -997,7 +1062,7 @@ export default function AdminLedgerPage() {
                     required
                     value={openingFloatInput}
                     onChange={(e) => setOpeningFloatInput(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-bold text-slate-800 text-sm focus:outline-hidden focus:ring-2 focus:ring-[#EA580C]"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-bold text-slate-800 text-sm focus:outline-hidden focus:ring-2 focus:ring-brand"
                     placeholder="e.g. 1000"
                   />
                   <span className="text-[11px] text-slate-400 mt-1 block">
@@ -1027,7 +1092,7 @@ export default function AdminLedgerPage() {
                   <button
                     type="submit"
                     disabled={isTillSubmitting}
-                    className="px-4 py-2 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer disabled:opacity-50"
+                    className="px-4 py-2 bg-brand hover:bg-brand-strong text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer disabled:opacity-50"
                   >
                     {isTillSubmitting ? 'Opening Drawer...' : 'Open Till Drawer'}
                   </button>

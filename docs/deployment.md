@@ -1,8 +1,12 @@
 # Focus Academy — Release & Deployment Guide
 
 **Target Platform:** Vercel Edge & Cloud Firestore  
-**Primary Production Domain:** `https://focusacademyperambalur.com/`  
-**Vercel Live Preview:** `https://focus-academy-virid.vercel.app/`  
+**Verified serving origin (2026-10-27):** `https://focus-academy-virid.vercel.app/`  
+**Intended custom domain:** `https://focusacademyperambalur.com/` — did not resolve/serve (HTTP 000) during the audit  
+
+> Canonical URLs, OpenGraph tags, `sitemap.xml`, `robots.txt` and the JSON-LD block all use the verified serving
+> origin. When the custom domain is attached in Vercel, change it in those four files plus `VITE_SITE_URL`
+> (`src/hooks/usePageMeta.js` reads it) and re-run the accessibility/SEO checks.
 
 ---
 

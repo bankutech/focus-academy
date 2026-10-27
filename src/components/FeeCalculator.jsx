@@ -72,7 +72,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             id="calculator-grade"
             value={grade}
             onChange={(e) => setGrade(e.target.value)}
-            className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+            className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3.5 py-2 text-xs sm:text-sm font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
           >
             <option value="class-6-8">Class 6 to 8 (Middle School Foundation)</option>
             <option value="class-9-10">Class 9 & 10 (SSLC / Board Exam Focus)</option>
@@ -90,7 +90,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
               id="calculator-board"
               value={board}
               onChange={(e) => setBoard(e.target.value)}
-              className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+              className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
             >
               <option value="State Board">TN State Board (Samacheer)</option>
               <option value="CBSE">CBSE Board (NCERT)</option>
@@ -107,7 +107,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
               id="calculator-center"
               value={center}
               onChange={(e) => setCenter(e.target.value)}
-              className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-[#EA580C]"
+              className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
             >
               <option value="Thoramangalam">Thiripura Complex, Thoramangalam (Main Center)</option>
               <option value="Four Roads Access">Four Roads / Rajanagar Campus Desk</option>
@@ -129,7 +129,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
                   : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
               }`}
             >
-              <Building2 className={`w-4 h-4 ${mode === 'classroom' ? 'text-orange-200' : 'text-[#EA580C]'}`} />
+              <Building2 className={`w-4 h-4 ${mode === 'classroom' ? 'text-orange-100' : 'text-brand'}`} />
               <span>Classroom Center Batch</span>
             </button>
 
@@ -142,7 +142,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
                   : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
               }`}
             >
-              <Laptop className={`w-4 h-4 ${mode === 'online' ? 'text-orange-200' : 'text-[#EA580C]'}`} />
+              <Laptop className={`w-4 h-4 ${mode === 'online' ? 'text-orange-100' : 'text-brand'}`} />
               <span>Online Interactive</span>
             </button>
           </div>
@@ -174,7 +174,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
                   : 'bg-slate-50 text-slate-700 border-[#E2E8F0] hover:bg-slate-100'
               }`}
             >
-              <Users className="w-3.5 h-3.5 text-[#EA580C]" />
+              <Users className="w-3.5 h-3.5 text-brand" />
               <span>2+ Children (15% Off)</span>
             </button>
           </div>
@@ -185,7 +185,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             <label htmlFor="calculator-frequency" className="text-xs uppercase tracking-wider text-slate-600 font-bold">
               Weekly Class Hours
             </label>
-            <span className="text-xs font-bold text-[#EA580C] bg-orange-50 px-2.5 py-0.5 rounded border border-orange-200">
+            <span className="text-xs font-bold text-brand bg-orange-50 px-2.5 py-0.5 rounded border border-orange-200">
               {hoursPerWeek} Hours / Week ({monthlyHours} hrs/mo)
             </span>
           </div>
@@ -197,9 +197,9 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
             step="1"
             value={hoursPerWeek}
             onChange={(e) => setHoursPerWeek(Number(e.target.value))}
-            className="w-full accent-[#EA580C] cursor-pointer"
+            className="w-full accent-brand cursor-pointer"
           />
-          <div className="flex justify-between text-xs text-slate-400 mt-1">
+          <div className="flex justify-between text-xs text-slate-500 mt-1">
             <span>2 hrs (Catch-up)</span>
             <span>4 hrs (Recommended Standard)</span>
             <span>8 hrs (Intensive)</span>
@@ -241,7 +241,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
               <span className="font-bold text-[#0F172A]">{monthlyHours} Hours / Month</span>
             </div>
 
-            <div className="flex justify-between text-[#EA580C] font-semibold">
+            <div className="flex justify-between text-brand font-semibold">
               <span className="flex items-center space-x-1">
                 <TrendingDown className="w-3.5 h-3.5" />
                 <span>Quarterly Concession (12% Off):</span>
@@ -279,10 +279,10 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
           <button
             type="button"
             onClick={handleBookTrial}
-            className="w-full min-h-[46px] py-3 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98"
+            className="w-full min-h-[46px] py-3 px-4 bg-brand hover:bg-brand-strong text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer flex items-center justify-center space-x-2 active:scale-98"
           >
             <span>Book 1-Day Free Trial at this Rate</span>
-            <ArrowRight className="w-3.5 h-3.5 text-orange-200" />
+            <ArrowRight className="w-3.5 h-3.5 text-orange-100" />
           </button>
         </div>
       </div>

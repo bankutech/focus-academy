@@ -144,7 +144,7 @@ export default function StudentRegisterPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-[#0F172A] text-white flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <GraduationCap className="w-7 h-7 text-[#EA580C]" />
+            <GraduationCap className="w-7 h-7 text-brand" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
             Create Student Account
@@ -182,7 +182,7 @@ export default function StudentRegisterPage() {
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
                     placeholder="Student's Full Name"
-                    className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default function StudentRegisterPage() {
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     placeholder="10-digit mobile"
-                    className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function StudentRegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="student@example.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                 />
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
@@ -249,7 +249,7 @@ export default function StudentRegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Min 6 characters"
-                    className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                   <button
                     type="button"
@@ -275,7 +275,7 @@ export default function StudentRegisterPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter password"
-                    className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
               </div>
@@ -294,7 +294,7 @@ export default function StudentRegisterPage() {
                   <select
                     value={grade}
                     onChange={(e) => setGrade(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all cursor-pointer"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all cursor-pointer"
                   >
                     {gradeOptions.map((opt) => (
                       <option key={opt.id} value={opt.id}>
@@ -312,7 +312,7 @@ export default function StudentRegisterPage() {
                 <select
                   value={board}
                   onChange={(e) => setBoard(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all cursor-pointer"
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all cursor-pointer"
                 >
                   {boardOptions.map((opt) => (
                     <option key={opt.id} value={opt.id}>
@@ -338,7 +338,7 @@ export default function StudentRegisterPage() {
                     value={parentName}
                     onChange={(e) => setParentName(e.target.value)}
                     placeholder="Father / Mother name"
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all"
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
 
@@ -352,7 +352,7 @@ export default function StudentRegisterPage() {
                     value={parentPhone}
                     onChange={(e) => setParentPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     placeholder="10-digit mobile"
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-[#EA580C] focus:border-transparent transition-all"
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
                   />
                 </div>
               </div>
@@ -370,7 +370,7 @@ export default function StudentRegisterPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3.5 px-4 bg-[#EA580C] hover:bg-[#C2410C] text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full py-3.5 px-4 bg-brand hover:bg-brand-strong text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 disabled:pointer-events-none"
             >
               {isSubmitting ? (
                 <>
@@ -392,7 +392,7 @@ export default function StudentRegisterPage() {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="font-bold text-[#EA580C] hover:underline cursor-pointer"
+                className="font-bold text-brand hover:underline cursor-pointer"
               >
                 Sign in to Student Portal
               </Link>
