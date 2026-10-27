@@ -95,6 +95,7 @@ async function finalizeEnrollment(db, { record, waitlisted }) {
     enrolledAt: record.timestamp,
     updatedAt: record.timestamp,
     source: 'enrollment',
+    monthlyFee: Number(record.monthlyFee || batch?.monthlyFee || 2200),
     feeStatus: 'not_applicable',
     paymentStatus: 'unpaid',
     schoolName: record.schoolName,

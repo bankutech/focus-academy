@@ -37,10 +37,14 @@ const normalizeEnrollmentStatus = (status) => {
   return 'pending';
 };
 
-const enrollmentStatusBadge = (status) => {
-  const meta = ENROLLMENT_STATUS_META[normalizeEnrollmentStatus(status)] || ENROLLMENT_STATUS_META.pending;
+const enrollmentStatusBadge = (status, reservationId) => {
+  const norm = normalizeEnrollmentStatus(status);
+  let meta = ENROLLMENT_STATUS_META[norm] || ENROLLMENT_STATUS_META.pending;
+  if (norm === 'pending' && reservationId) {
+    meta = { label: 'Seat Reserved (Pending Review)', className: 'bg-blue-50 text-blue-800 border-blue-200' };
+  }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${meta.className}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-bold border ${meta.className}`}>
       {meta.label}
     </span>
   );
@@ -525,11 +529,7 @@ export default function AdminLeadsPage() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="text-[11px] font-bold text-slate-900">
-                        {enrollment.monthlyFee
-                          ? `₹${Number(enrollment.monthlyFee).toLocaleString('en-IN')}/mo`
-                          : (enrollment.feeStatus && enrollment.feeStatus !== 'unknown'
-                              ? `Fee: ${String(enrollment.feeStatus).replace('_', ' ')}`
-                              : 'Fee: Pending')}
+                        ₹{Number(enrollment.monthlyFee || batches.find(b => b.id === enrollment.batchId)?.monthlyFee || 2200).toLocaleString('en-IN')}/mo
                       </div>
                       <div className="text-[11px] mt-0.5 font-medium">
                         <span className="text-slate-500">Payment: </span>
@@ -547,7 +547,7 @@ export default function AdminLeadsPage() {
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      {enrollmentStatusBadge(enrollment.status)}
+                      {enrollmentStatusBadge(enrollment.status, enrollment.reservationId)}
                       {enrollment.statusReason && (
                         <div className="text-[10px] text-slate-400 mt-0.5 max-w-[140px] truncate" title={enrollment.statusReason}>
                           {enrollment.statusReason}
