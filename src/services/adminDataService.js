@@ -3986,6 +3986,57 @@ export const AdminDataService = {
     };
   },
 
+  async syncAllToCloudFirestore(actor = 'admin') {
+    if (!isLive()) {
+      return { success: false, reason: 'Firebase is not live or configured in this environment.' };
+    }
+    const store = loadLocalStore();
+    const batches = store.batches || [];
+    const students = store.students || [];
+    const obligations = store.obligations || [];
+    const payments = store.payments || [];
+    const settings = store.settings || this.getSettingsSync();
+
+    try {
+      if (settings) {
+        await setDoc(doc(db, 'academy_settings', 'main_config'), settings);
+      }
+      for (const b of batches) {
+        await setDoc(doc(db, 'batches', b.id), b);
+      }
+      for (const s of students) {
+        await setDoc(doc(db, 'students', s.id), s);
+      }
+      for (const o of obligations) {
+        await setDoc(doc(db, 'fee_obligations', o.id), o);
+      }
+      for (const p of payments) {
+        await setDoc(doc(db, 'payments', p.id), p);
+      }
+
+      await this.logAudit({
+        actor: normalizeActorEmail(actor),
+        action: 'DATABASE_SYNCED_TO_CLOUD',
+        entityType: 'database',
+        entityId: 'cloud_firestore',
+        details: `Synchronized ${batches.length} batches, ${students.length} students, and ${payments.length} payments to Cloud Firestore.`
+      });
+
+      return {
+        success: true,
+        counts: {
+          batches: batches.length,
+          students: students.length,
+          obligations: obligations.length,
+          payments: payments.length
+        }
+      };
+    } catch (err) {
+      console.error('syncAllToCloudFirestore error:', err);
+      throw new Error(`Failed to sync to Cloud Firestore: ${err.message}`);
+    }
+  },
+
   validateAndParseStudentCSV(csvContent) {
     if (!csvContent || typeof csvContent !== 'string') {
       const errs = [{ line: 0, reason: 'Empty or invalid CSV content', error: 'Empty or invalid CSV content' }];

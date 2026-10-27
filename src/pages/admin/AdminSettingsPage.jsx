@@ -28,6 +28,7 @@ export default function AdminSettingsPage() {
   const [restoreFileContent, setRestoreFileContent] = useState(null);
   const [restoreError, setRestoreError] = useState('');
   const [restoreSuccess, setRestoreSuccess] = useState('');
+  const [syncingCloud, setSyncingCloud] = useState(false);
 
   const currentAdminEmail = getVerifiedAdminEmail() || '';
 
@@ -91,6 +92,29 @@ export default function AdminSettingsPage() {
       setFeedback({ type: 'success', message: 'Full institutional database snapshot downloaded successfully.' });
     } catch (err) {
       setFeedback({ type: 'error', message: err.message || 'Failed to generate backup snapshot.' });
+    }
+  };
+
+  const handleSyncToCloud = async () => {
+    setSyncingCloud(true);
+    setFeedback({ type: '', message: '' });
+    try {
+      const res = await AdminDataService.syncAllToCloudFirestore(currentAdminEmail);
+      if (res.success) {
+        setFeedback({
+          type: 'success',
+          message: `Successfully synchronized ${res.counts.batches} batches, ${res.counts.students} students, and institutional data to Firebase Cloud Firestore!`
+        });
+      } else {
+        setFeedback({ type: 'error', message: res.reason || 'Cloud sync not available.' });
+      }
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message: err.message || 'Failed to sync to Cloud Firestore. Check security rules in Firebase Console.'
+      });
+    } finally {
+      setSyncingCloud(false);
     }
   };
 
@@ -609,6 +633,25 @@ export default function AdminSettingsPage() {
               >
                 <Upload className="w-4 h-4" />
                 <span>Open Restoration Center</span>
+              </button>
+            </div>
+
+            <div className="p-5 border border-blue-200 rounded-xl space-y-3 bg-blue-50/40">
+              <div className="flex items-center space-x-2">
+                <Database className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-sm text-[#0F172A]">Sync All Data to Cloud Firestore</h3>
+              </div>
+              <p className="text-xs text-slate-500">
+                Pushes all active batches, student profiles, fee obligations, and institutional configurations to your live Firebase Cloud Firestore database.
+              </p>
+              <button
+                type="button"
+                disabled={syncingCloud}
+                onClick={handleSyncToCloud}
+                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 ${syncingCloud ? 'animate-spin' : ''}`} />
+                <span>{syncingCloud ? 'Syncing to Cloud Firestore...' : 'Push All Data to Cloud Firestore'}</span>
               </button>
             </div>
           </div>
