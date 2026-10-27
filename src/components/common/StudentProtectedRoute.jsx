@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useStudentAuth } from '../../context/StudentAuthContext';
 
 export default function StudentProtectedRoute({ children }) {
-  const { user, loading, isAuthenticated } = useStudentAuth();
+  const { loading, isAuthenticated } = useStudentAuth();
   const location = useLocation();
 
   if (loading) {

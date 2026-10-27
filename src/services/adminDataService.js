@@ -654,17 +654,6 @@ const seedStore = () => ({
   tillSessions: []
 });
 
-const emptyStore = () => ({
-  batches: [],
-  students: [],
-  obligations: [],
-  payments: [],
-  reminders: [],
-  auditLogs: [],
-  settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
-  tillSessions: []
-});
-
 const uid = (prefix) => {
   const random = typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()
@@ -756,7 +745,7 @@ const HYDRATED_COLLECTIONS = {
 async function hydrateStore() {
   if (!isLive()) return loadLocalStore();
   try {
-    const entries = await Promise.all(
+    const results = await Promise.allSettled(
       Object.entries(HYDRATED_COLLECTIONS).map(async ([key, name]) => {
         const snap = await Promise.race([
           getDocs(collection(db, name)),
@@ -766,12 +755,21 @@ async function hydrateStore() {
       })
     );
     const store = loadLocalStore();
-    entries.forEach(([key, rows]) => {
-      if (rows && rows.length > 0) {
-        store[key] = rows;
+    let anySuccess = false;
+    results.forEach((res) => {
+      if (res.status === 'fulfilled') {
+        const [key, rows] = res.value;
+        if (rows && rows.length > 0) {
+          store[key] = rows;
+          anySuccess = true;
+        }
+      } else {
+        console.warn('Collection hydrate skipped or unavailable:', res.reason?.message || res.reason);
       }
     });
-    saveLocalStore(store);
+    if (anySuccess) {
+      saveLocalStore(store);
+    }
     return store;
   } catch (err) {
     console.warn('Firestore hydrate unavailable, using verified local store:', err);
@@ -1049,6 +1047,20 @@ export const AdminDataService = {
     }
     const store = await hydrateStore();
     return (store.auditLogs || []).slice(0, limitCount);
+  },
+
+  async getReservations() {
+    if (isLive()) {
+      try {
+        const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'reservations')), 8000);
+        if (snap && !snap.empty) {
+          return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+      } catch (err) {
+        console.warn('Firestore getReservations unavailable:', err);
+      }
+    }
+    return [];
   },
 
   async getBatches() {
@@ -3523,38 +3535,60 @@ export const AdminDataService = {
     return (store.tillSessions || []).sort((a, b) => (b.openedAt || '').localeCompare(a.openedAt || ''));
   },
 
-  async getDashboardMetrics() {
-    const [batches, students, obligations, payments, leads, enrollments] = await Promise.all([
-      this.getBatches().catch(() => []),
-      this.getStudents().catch(() => []),
-      this.getFeeObligations().catch(() => []),
-      this.getPayments().catch(() => []),
-      this.getLeads().catch(() => []),
-      this.getEnrollments().catch(() => [])
-    ]);
-    const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
+  async getDashboardMetrics(preloaded = null) {
+    let batches = preloaded?.batches;
+    let students = preloaded?.students;
+    let obligations = preloaded?.obligations;
+    let payments = preloaded?.payments;
+    let leads = preloaded?.leads;
+    let enrollments = preloaded?.enrollments;
 
+    if (!batches || !students || !obligations || !payments) {
+      const [b, s, o, p, l, enr] = await Promise.all([
+        batches ? Promise.resolve(batches) : this.getBatches().catch(() => []),
+        students ? Promise.resolve(students) : this.getStudents().catch(() => []),
+        obligations ? Promise.resolve(obligations) : this.getFeeObligations().catch(() => []),
+        payments ? Promise.resolve(payments) : this.getPayments().catch(() => []),
+        leads ? Promise.resolve(leads) : this.getLeads().catch(() => []),
+        enrollments ? Promise.resolve(enrollments) : this.getEnrollments().catch(() => [])
+      ]);
+      batches = batches || b;
+      students = students || s;
+      obligations = obligations || o;
+      payments = payments || p;
+      leads = leads || l;
+      enrollments = enrollments || enr;
+    }
+
+    const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
     const activeStudents = students.filter(s => s.status === 'active' || s.status === 'new_enrollment');
     const activeBatches = batches.filter(b => !b.isArchived);
 
     const now = new Date();
-    const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const today = now.toISOString().split('T')[0];
+    let istDateStr;
+    try {
+      istDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now);
+    } catch {
+      istDateStr = now.toISOString().split('T')[0];
+    }
+    const currentMonthPrefix = istDateStr.slice(0, 7);
+    const today = istDateStr;
 
     const feesCollectedThisMonth = activePayments
       .filter(p => p.paymentDate && p.paymentDate.startsWith(currentMonthPrefix))
       .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-    const totalFeesCharged = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
+    const activeObligations = obligations.filter(o => o.status !== 'archived');
+    const totalFeesCharged = activeObligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
     const totalAmountPaid = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-    const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
+    const totalWaived = activeObligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
     const totalOutstandingFees = Math.max(0, totalFeesCharged - totalAmountPaid - totalWaived);
 
-    const overdueObligations = obligations.filter(o => o.status === 'overdue' || (o.balance > 0 && today > o.dueDate));
+    const overdueObligations = activeObligations.filter(o => o.status === 'overdue' || (Number(o.balance || 0) > 0 && today > (o.dueDate || '')));
     const totalOverdueFees = overdueObligations.reduce((sum, o) => sum + Number(o.balance || 0), 0);
 
-    const paymentsDueToday = obligations.filter(o => o.balance > 0 && o.dueDate === today);
-    const upcomingPayments = obligations.filter(o => o.balance > 0 && o.dueDate > today);
+    const paymentsDueToday = activeObligations.filter(o => Number(o.balance || 0) > 0 && o.dueDate === today);
+    const upcomingPayments = activeObligations.filter(o => Number(o.balance || 0) > 0 && o.dueDate > today);
 
     const recentPayments = [...payments]
       .sort((a, b) => (b.paymentDate || '').localeCompare(a.paymentDate || ''))

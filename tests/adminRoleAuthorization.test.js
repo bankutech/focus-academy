@@ -5,7 +5,6 @@ import { AdminDataService } from '../src/services/adminDataService';
 import { setVerifiedAdmin, getVerifiedAdmin } from '../src/services/adminIdentity';
 
 const OWNER = 'director@focusacademyperambalur.com';
-const OTHER_OWNER = 'admin@focusacademyperambalur.com';
 const PRINCIPAL = 'principal@focusacademyperambalur.com';
 const TARGET = 'new.staff@focusacademyperambalur.com';
 

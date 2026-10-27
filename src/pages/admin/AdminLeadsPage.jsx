@@ -46,7 +46,7 @@ const enrollmentStatusBadge = (status) => {
 };
 
 export default function AdminLeadsPage() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const urlSource = searchParams.get('source') || 'all';
 
   const [leads, setLeads] = useState([]);
@@ -75,8 +75,8 @@ export default function AdminLeadsPage() {
 
   useEffect(() => {
     const s = searchParams.get('source');
-    if (s && s !== sourceFilter) {
-      setSourceFilter(s);
+    if (s) {
+      setSourceFilter(prev => (s !== prev ? s : prev));
     }
   }, [searchParams]);
 

@@ -43,9 +43,9 @@ export default function StudentDetailsPage() {
 
   useEffect(() => {
     if (studentProfile) {
-      if (!studentName && studentProfile.studentName) setStudentName(studentProfile.studentName);
-      if (!phone && studentProfile.mobile) setPhone(studentProfile.mobile);
-      if (!parentName && studentProfile.parentName) setParentName(studentProfile.parentName);
+      setStudentName(prev => (!prev && studentProfile.studentName ? studentProfile.studentName : prev));
+      setPhone(prev => (!prev && studentProfile.mobile ? studentProfile.mobile : prev));
+      setParentName(prev => (!prev && studentProfile.parentName ? studentProfile.parentName : prev));
       if (studentProfile.grade) setGrade(studentProfile.grade);
       if (studentProfile.board) setBoard(studentProfile.board);
     }

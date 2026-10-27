@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  GraduationCap, 
   BookOpen, 
   Clock, 
   MapPin, 
@@ -9,25 +8,21 @@ import {
   Calendar, 
   CheckCircle2, 
   AlertCircle, 
-  FileText, 
   LogOut, 
   User, 
   ShieldCheck, 
   ArrowRight, 
   MessageSquare, 
-  Sparkles, 
   CreditCard, 
   Edit3, 
   Save, 
-  ExternalLink,
-  HelpCircle,
   RefreshCw,
   Award
 } from 'lucide-react';
 import { useStudentAuth } from '../context/StudentAuthContext';
 import { useStudentFlow } from '../context/useAppContext';
 import { db, isFirebaseConfigured } from '../services/firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 
 export default function StudentDashboardPage() {
@@ -98,6 +93,7 @@ export default function StudentDashboardPage() {
         }
       } catch (err) {
         console.warn('Could not query enrollments collection:', err);
+        setEnrollmentError('Could not sync remote admissions records. Showing local records.');
       }
     }
 
@@ -388,6 +384,13 @@ export default function StudentDashboardPage() {
                 <span>Refresh</span>
               </button>
             </div>
+
+            {enrollmentError && (
+              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{enrollmentError}</span>
+              </div>
+            )}
 
             {loadingEnrollments ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">

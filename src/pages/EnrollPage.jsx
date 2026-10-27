@@ -48,7 +48,7 @@ export default function EnrollPage() {
   const { batchId } = useParams();
   const navigate = useNavigate();
   const { studentFlow, setStudentFlow, registerStudent, ensureVerifiedSession } = useStudentFlow();
-  const { user: studentUser, profile: studentProfile } = useStudentAuth();
+  const { user: studentUser } = useStudentAuth();
 
   const candidateBatch = BATCHES_DATA.find((b) => b.id === batchId) ||
     BATCHES_DATA.find((b) => b.id === studentFlow.selectedBatchId);
@@ -418,7 +418,6 @@ export default function EnrollPage() {
     const saved = registerStudent(enrollmentRecord);
 
     let firestoreWriteError = null;
-    let cloudEnrollmentSaved = false;
 
     const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift}${enrollmentRecord.schoolDismissalTime ? ` (Finish: ${formatTime12(enrollmentRecord.schoolDismissalTime)}, Travel: ${enrollmentRecord.travelDurationMinutes || 0}m)` : ''} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
 
@@ -467,7 +466,6 @@ export default function EnrollPage() {
           notes: notesSummary,
         };
         await setDoc(doc(db, 'enrollments', saved.id), directEnrollment, { merge: true });
-        cloudEnrollmentSaved = true;
 
         if (enrollmentRecord.reservationId) {
           try {

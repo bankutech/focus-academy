@@ -9,14 +9,13 @@ import {
   ArrowRight,
   MessageSquare,
   GraduationCap,
-  LogIn,
-  User
+  LogIn
 } from 'lucide-react';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { useStudentAuth } from '../context/StudentAuthContext';
 
 export default function Navbar() {
-  const { user, profile, isAuthenticated } = useStudentAuth();
+  const { profile, isAuthenticated } = useStudentAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();

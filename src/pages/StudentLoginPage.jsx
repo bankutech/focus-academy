@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, CheckCircle2, GraduationCap } from 'lucide-react';
 import { useStudentAuth } from '../context/StudentAuthContext';
-import StepProgress from '../components/common/StepProgress';
 
 export default function StudentLoginPage() {
   const navigate = useNavigate();

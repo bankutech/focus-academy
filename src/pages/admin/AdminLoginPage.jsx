@@ -302,15 +302,15 @@ export default function AdminLoginPage() {
           <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
         </div>
 
-        <main className="w-full max-w-[460px] sm:max-w-[490px] lg:max-w-[500px] xl:max-w-[530px] 2xl:max-w-[560px] mx-auto relative z-10 bg-slate-900/75 sm:bg-slate-900/85 border border-slate-800/90 rounded-2xl p-5 sm:p-6 lg:py-3 lg:px-6 xl:p-6 2xl:p-8 shadow-2xl shadow-black/60 backdrop-blur-md flex flex-col justify-center">
-          <div className="mb-3 sm:mb-4">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-xs sm:text-sm font-bold text-orange-400 uppercase tracking-wider mb-2">
+        <main className="w-full max-w-[460px] sm:max-w-[490px] lg:max-w-[500px] xl:max-w-[530px] 2xl:max-w-[560px] mx-auto relative z-10 bg-slate-900/75 sm:bg-slate-900/85 border border-slate-800/90 rounded-2xl p-5 sm:p-6 lg:py-2.5 lg:px-6 xl:p-6 2xl:p-8 shadow-2xl shadow-black/60 backdrop-blur-md flex flex-col justify-center">
+          <div className="mb-2 sm:mb-4">
+            <div className="inline-flex items-center space-x-2 px-3 py-0.5 sm:py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-xs sm:text-sm font-bold text-orange-400 uppercase tracking-wider mb-1.5 sm:mb-2">
               <ShieldCheck className="w-4 h-4 text-[#EA580C]" aria-hidden="true" />
               <span>Administrator Management Portal</span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl xl:text-4xl font-black text-white tracking-tight">{heading}</h2>
-            <p className="text-xs sm:text-sm xl:text-base text-slate-400 mt-1">{subheading}</p>
+            <p className="text-xs sm:text-sm xl:text-base text-slate-400 mt-0.5 sm:mt-1">{subheading}</p>
 
             {mode === 'login' && (
               <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
@@ -404,7 +404,7 @@ export default function AdminLoginPage() {
 
           {mode === 'register' && (
             <>
-              <form onSubmit={handleRegisterSubmit} className="space-y-2.5 sm:space-y-3" aria-label="Create administrator account">
+              <form onSubmit={handleRegisterSubmit} className="space-y-2 sm:space-y-3 lg:space-y-1.5 xl:space-y-2.5" aria-label="Create administrator account">
                 <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
                   <TextField id="reg-first-name" label="First name" value={firstName} onChange={setFirstName} autoComplete="given-name" icon={User} inputRef={firstFieldRef} disabled={loading} />
                   <TextField id="reg-last-name" label="Last name" value={lastName} onChange={setLastName} autoComplete="family-name" disabled={loading} />

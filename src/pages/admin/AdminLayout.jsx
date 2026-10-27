@@ -14,12 +14,11 @@ import {
   Menu, 
   X,
   ExternalLink,
-  Database,
   Settings as SettingsIcon,
   Keyboard,
   UserPlus
 } from 'lucide-react';
-import { logOutAdmin, isFirebaseConfigured } from '../../services/firebase';
+import { logOutAdmin } from '../../services/firebase';
 import { getVerifiedAdmin, setVerifiedAdmin } from '../../services/adminIdentity';
 
 export default function AdminLayout() {
@@ -29,11 +28,9 @@ export default function AdminLayout() {
     robots: 'noindex,nofollow',
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const hasFirebase = isFirebaseConfigured();
 
   const verified = getVerifiedAdmin();
   const userEmail = verified?.email || '';
@@ -50,11 +47,6 @@ export default function AdminLayout() {
   };
 
   React.useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
         if (e.key === 'Escape') {
@@ -85,8 +77,6 @@ export default function AdminLayout() {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [navigate]);
@@ -142,29 +132,6 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <div 
-              title="Cloud Firestore project: focus-academy-7efeb (Mumbai asia-south1)"
-              className={`hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${
-                isOnline && hasFirebase 
-                  ? 'bg-slate-800 border-emerald-500/30 text-slate-200' 
-                  : 'bg-amber-950/40 border-amber-600/40 text-amber-200'
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${isOnline && hasFirebase ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-              <Database className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{isOnline && hasFirebase ? 'Cloud Firestore Live' : 'Verified Local Sync'}</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShortcutsModalOpen(true)}
-              title="Desk POS Keyboard Shortcuts (?)"
-              className="hidden lg:flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-mono cursor-pointer transition-colors"
-            >
-              <span className="bg-slate-900 px-1 rounded text-[10px] text-orange-400 font-bold border border-slate-700">?</span>
-              <span className="text-[11px]">POS Keys</span>
-            </button>
-
             <div className="hidden sm:flex flex-col text-right">
               <span className="text-xs font-bold text-white leading-tight truncate max-w-[180px]">
                 {displayName}
@@ -215,7 +182,7 @@ export default function AdminLayout() {
                       key={item.name}
                       to={item.path}
                       end={item.end}
-                      className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      className={`flex items-center space-x-3 px-3 py-2.5 rounded text-xs font-bold transition-all cursor-pointer ${
                         active
                           ? 'bg-[#0F172A] text-white shadow-xs'
                           : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
@@ -266,7 +233,7 @@ export default function AdminLayout() {
                   </button>
                 </div>
 
-                <div className="mt-4 p-2.5 bg-slate-50 rounded-lg text-xs border border-slate-200 mb-4">
+                <div className="mt-4 p-2.5 bg-slate-50 rounded text-xs border border-slate-200 mb-4">
                   <p className="font-bold text-[#0F172A] truncate">{displayName}</p>
                   <p className="text-[11px] text-slate-500 truncate">{userEmail}</p>
                 </div>
@@ -284,7 +251,7 @@ export default function AdminLayout() {
                         to={item.path}
                         end={item.end}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                        className={`flex items-center space-x-3 px-3 py-2.5 rounded text-xs font-bold transition-colors cursor-pointer ${
                           active
                             ? 'bg-[#0F172A] text-white shadow-xs'
                             : 'text-slate-600 hover:text-[#0F172A] hover:bg-slate-100'
@@ -302,7 +269,7 @@ export default function AdminLayout() {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold cursor-pointer"
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
