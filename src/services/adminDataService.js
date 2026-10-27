@@ -88,6 +88,60 @@ function patchLocalEnrollmentRecords(enrollmentId, patch) {
   return found;
 }
 
+function removeLocalEnrollmentRecords(targetIds) {
+  if (typeof window === 'undefined') return false;
+  const idSet = new Set(
+    (Array.isArray(targetIds) ? targetIds : [targetIds])
+      .filter(Boolean)
+      .map(id => String(id).trim())
+  );
+  if (idSet.size === 0) return false;
+
+  const matchesAny = (row) => {
+    if (!row) return false;
+    return idSet.has(row.id) ||
+      (row.studentId && idSet.has(row.studentId)) ||
+      (row.leadId && idSet.has(row.leadId)) ||
+      (row.admissionId && idSet.has(row.admissionId)) ||
+      (row.reservationId && idSet.has(row.reservationId));
+  };
+
+  let removed = false;
+  ['focus_academy_submitted_leads_v1', 'focus_academy_pending_leads_v1'].forEach((key) => {
+    try {
+      const raw = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(key)) || localStorage.getItem(key);
+      if (!raw) return;
+      const rows = JSON.parse(raw);
+      if (!Array.isArray(rows)) return;
+      const next = rows.filter(row => !matchesAny(row));
+      if (next.length !== rows.length) {
+        const serialized = JSON.stringify(next);
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(key, serialized);
+        localStorage.setItem(key, serialized);
+        removed = true;
+      }
+    } catch {
+    }
+  });
+
+  try {
+    const raw = localStorage.getItem('focus_academy_students');
+    if (raw) {
+      const rows = JSON.parse(raw);
+      if (Array.isArray(rows)) {
+        const next = rows.filter(row => !matchesAny(row));
+        if (next.length !== rows.length) {
+          localStorage.setItem('focus_academy_students', JSON.stringify(next));
+          removed = true;
+        }
+      }
+    }
+  } catch {
+  }
+
+  return removed;
+}
+
 const STORAGE_KEY = 'focus_academy_admin_data_v1';
 
 export const ROLE_PERMISSIONS = {
@@ -167,9 +221,9 @@ const SEED_BATCHES = [
     timing: '6:00 PM – 7:30 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 9,
-    seatsRemaining: 3,
-    status: 'Admissions Open (3 Seats Left)',
+    enrolledCount: 1,
+    seatsRemaining: 11,
+    status: 'Admissions Open (11 Seats Left)',
     monthlyFee: 2200,
     classroom: 'Lecture Hall 101, First Floor, Thiripura Complex',
     subjects: ['Mathematics', 'Science (Physics, Chemistry, Biology)', 'Social Science'],
@@ -187,9 +241,9 @@ const SEED_BATCHES = [
     timing: '6:00 PM – 7:30 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 10,
-    seatsRemaining: 2,
-    status: 'High Demand (2 Seats Left)',
+    enrolledCount: 1,
+    seatsRemaining: 11,
+    status: 'Admissions Open (11 Seats Left)',
     monthlyFee: 2400,
     classroom: 'Lecture Hall 102, First Floor, Thiripura Complex',
     subjects: ['NCERT Mathematics (Standard/Basic)', 'NCERT Science (Phy/Chem/Bio)'],
@@ -207,9 +261,9 @@ const SEED_BATCHES = [
     timing: '6:00 PM – 7:30 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 8,
-    seatsRemaining: 4,
-    status: 'Admissions Open (4 Seats Left)',
+    enrolledCount: 0,
+    seatsRemaining: 12,
+    status: 'Admissions Open (12 Seats Left)',
     monthlyFee: 2500,
     classroom: 'Lecture Hall 103, First Floor, Thiripura Complex',
     subjects: ['ICSE Mathematics', 'Physics', 'Chemistry', 'Biology'],
@@ -227,9 +281,9 @@ const SEED_BATCHES = [
     timing: '7:30 PM – 9:00 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 10,
-    seatsRemaining: 2,
-    status: 'Limited Seats (2 Remaining)',
+    enrolledCount: 1,
+    seatsRemaining: 11,
+    status: 'Admissions Open (11 Seats Left)',
     monthlyFee: 2800,
     classroom: 'Senior Hall 103, First Floor, Thiripura Complex',
     subjects: ['Physics (Derivations & Numericals)', 'Chemistry (Organic & Physical)', 'Higher Mathematics (Calculus & Vectors)', 'Biology'],
@@ -247,9 +301,9 @@ const SEED_BATCHES = [
     timing: '4:30 PM – 6:00 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 8,
-    seatsRemaining: 4,
-    status: 'Admissions Open (4 Seats Left)',
+    enrolledCount: 1,
+    seatsRemaining: 11,
+    status: 'Admissions Open (11 Seats Left)',
     monthlyFee: 1800,
     classroom: 'Foundation Room 104, First Floor, Thiripura Complex',
     subjects: ['Mathematics Core & Arithmetic', 'General Science & Experiments', 'English Grammar & Vocabulary'],
@@ -267,9 +321,9 @@ const SEED_BATCHES = [
     timing: '4:30 PM – 6:00 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 7,
-    seatsRemaining: 5,
-    status: 'Admissions Open (5 Seats Left)',
+    enrolledCount: 0,
+    seatsRemaining: 12,
+    status: 'Admissions Open (12 Seats Left)',
     monthlyFee: 2000,
     classroom: 'Foundation Room 102, First Floor, Thiripura Complex',
     subjects: ['Algebra & Geometry', 'Physics & Chemistry Basics', 'Biology'],
@@ -287,9 +341,9 @@ const SEED_BATCHES = [
     timing: '7:30 PM – 9:00 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 8,
-    seatsRemaining: 4,
-    status: 'Admissions Open (4 Seats Left)',
+    enrolledCount: 0,
+    seatsRemaining: 12,
+    status: 'Admissions Open (12 Seats Left)',
     monthlyFee: 2600,
     classroom: 'Senior Hall 101, First Floor, Thiripura Complex',
     subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology'],
@@ -307,9 +361,9 @@ const SEED_BATCHES = [
     timing: '4:30 PM – 6:00 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 8,
-    seatsRemaining: 4,
-    status: 'Admissions Open (4 Seats Left)',
+    enrolledCount: 0,
+    seatsRemaining: 12,
+    status: 'Admissions Open (12 Seats Left)',
     monthlyFee: 1800,
     classroom: 'Problem Solving Clinic 105, First Floor, Thiripura Complex',
     subjects: ['Algebra Factoring', 'Geometry Theorems', 'Trigonometry Basics', 'Arithmetic Speed'],
@@ -328,9 +382,9 @@ const SEED_BATCHES = [
     timing: '4:30 PM – 6:00 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 7,
-    seatsRemaining: 5,
-    status: 'Admissions Open (5 Seats Left)',
+    enrolledCount: 0,
+    seatsRemaining: 12,
+    status: 'Admissions Open (12 Seats Left)',
     monthlyFee: 2500,
     classroom: 'Advanced Numerical Lab 104, First Floor, Thiripura Complex',
     subjects: ['Advanced Mathematics (HOTS)', 'Olympiad Physics & Chemistry', 'Logical & Numerical Reasoning'],
@@ -349,9 +403,9 @@ const SEED_BATCHES = [
     timing: '7:30 PM – 9:00 PM',
     days: 'Monday – Saturday',
     capacity: 12,
-    enrolledCount: 8,
-    seatsRemaining: 4,
-    status: 'Admissions Open (4 Seats Left)',
+    enrolledCount: 0,
+    seatsRemaining: 12,
+    status: 'Admissions Open (12 Seats Left)',
     monthlyFee: 2900,
     classroom: 'Problem Solving Lab 103, First Floor, Thiripura Complex',
     subjects: ['Physics Numericals & Dimensional Analysis', 'Organic & Physical Chemistry Problem Sets', 'Higher Mathematics / NEET Bio Drills'],
@@ -1064,11 +1118,12 @@ export const AdminDataService = {
   },
 
   async getBatches() {
+    let rawBatches = [];
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'batches')), 8000);
         if (snap && !snap.empty) {
-          return snap.docs.map(d => d.data());
+          rawBatches = snap.docs.map(d => d.data());
         }
         if (snap && snap.empty) {
           try {
@@ -1077,7 +1132,7 @@ export const AdminDataService = {
               batchWriter.set(doc(db, 'batches', b.id), b);
             });
             await batchWriter.commit();
-            return [...SEED_BATCHES];
+            rawBatches = [...SEED_BATCHES];
           } catch (bootErr) {
             console.warn('Auto-bootstrap batches to Cloud Firestore deferred:', bootErr);
           }
@@ -1086,8 +1141,38 @@ export const AdminDataService = {
         console.warn('Firestore getBatches unavailable, using verified local store:', err);
       }
     }
-    const store = await hydrateStore();
-    return store.batches || [];
+    if (!rawBatches || rawBatches.length === 0) {
+      const store = await hydrateStore();
+      rawBatches = store.batches || [];
+    }
+
+    try {
+      const students = await this.getStudents({ includeArchived: false });
+      const counts = {};
+      (students || []).forEach(s => {
+        if ((s.status === 'active' || s.status === 'new_enrollment') && s.batchId) {
+          counts[s.batchId] = (counts[s.batchId] || 0) + 1;
+        }
+      });
+
+      return rawBatches.map(b => {
+        const capacity = Math.max(1, Number(b.capacity) || 12);
+        const realCount = counts[b.id] !== undefined ? counts[b.id] : 0;
+        const seatsRemaining = Math.max(0, capacity - realCount);
+        const status = realCount >= capacity
+          ? 'Batch Full'
+          : `Admissions Open (${seatsRemaining} Seats Left)`;
+        return {
+          ...b,
+          capacity,
+          enrolledCount: realCount,
+          seatsRemaining,
+          status: b.isArchived ? 'Archived' : status
+        };
+      });
+    } catch {
+      return rawBatches;
+    }
   },
 
   async getBatchById(batchId) {
@@ -1835,6 +1920,142 @@ export const AdminDataService = {
     return this.updateEnrollmentStatus(enrollmentId, 'archived', { reason: cleanReason }, actor);
   },
 
+  async deleteEnrollment(enrollmentId, actor = 'admin', options = {}) {
+    this.verifyPermission(actor, 'canManageStudents', 'deleting enrollment record');
+    const actorEmail = normalizeActorEmail(actor);
+    const cleanId = String(enrollmentId || '').trim();
+    if (!cleanId) {
+      throw new Error('An enrollment ID is required to delete.');
+    }
+
+    let existingRecord = null;
+    try {
+      existingRecord = await this.getEnrollmentById(cleanId);
+    } catch {
+      const list = await this.getEnrollments().catch(() => []);
+      existingRecord = list.find(e => e.id === cleanId || e.studentId === cleanId);
+    }
+
+    if (existingRecord) {
+      const student = await this._resolveLinkedStudent(existingRecord).catch(() => null);
+      const payments = student ? await this.getPayments(student.id).catch(() => []) : await this.getPayments().catch(() => []);
+      const linkedPayments = student
+        ? payments
+        : payments.filter(p => p.enrollmentId === cleanId || (existingRecord.studentId && p.studentId === existingRecord.studentId));
+      const activePayments = linkedPayments.filter(p => !p.isReversed && !p.reversed);
+      const activeTotal = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      if (activeTotal > 0 && options.allowWithPayments !== true) {
+        throw new Error(
+          `Cannot delete this enrollment because ₹${activeTotal.toLocaleString('en-IN')} in verified payments ` +
+          `(${activePayments.map(p => p.receiptNumber).join(', ')}) are linked to it. ` +
+          `Reverse those receipts in Ledger & Payments first, or archive the record instead.`
+        );
+      }
+    }
+
+    const idsToPurge = [
+      cleanId,
+      existingRecord?.studentId,
+      existingRecord?.leadId,
+      existingRecord?.admissionId,
+      existingRecord?.reservationId
+    ].filter(Boolean);
+
+    if (isLive()) {
+      for (const id of idsToPurge) {
+        try {
+          await deleteDoc(doc(db, 'enrollments', id));
+        } catch {}
+        try {
+          await deleteDoc(doc(db, 'leads', id));
+        } catch {}
+      }
+      if (existingRecord?.reservationId) {
+        try {
+          await deleteDoc(doc(db, 'reservations', existingRecord.reservationId));
+        } catch {}
+      }
+    }
+
+    removeLocalEnrollmentRecords(idsToPurge);
+
+    try {
+      const store = await hydrateStore();
+      const initialLeadsLen = (store.leads || []).length;
+      store.leads = (store.leads || []).filter(l => !idsToPurge.includes(l.id));
+      if (store.leads.length !== initialLeadsLen) {
+        saveLocalStore(store);
+      }
+    } catch {}
+
+    const studentName = existingRecord?.studentName || cleanId;
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'ENROLLMENT_DELETED',
+      entityType: 'enrollment',
+      entityId: cleanId,
+      details: `Permanently deleted enrollment record '${cleanId}' for '${studentName}'.`
+    });
+
+    return { success: true, enrollmentId: cleanId, studentName };
+  },
+
+  async deleteLead(leadId, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageStudents', 'deleting lead');
+    const actorEmail = normalizeActorEmail(actor);
+    const cleanId = String(leadId || '').trim();
+    if (!cleanId) {
+      throw new Error('A lead ID is required to delete.');
+    }
+
+    let existingLead = null;
+    try {
+      const allLeads = await this.getLeads();
+      existingLead = allLeads.find(l => l.id === cleanId);
+    } catch {}
+
+    const idsToPurge = [
+      cleanId,
+      existingLead?.studentId,
+      existingLead?.reservationId
+    ].filter(Boolean);
+
+    if (isLive()) {
+      for (const id of idsToPurge) {
+        try {
+          await deleteDoc(doc(db, 'leads', id));
+        } catch {}
+        try {
+          await deleteDoc(doc(db, 'enrollments', id));
+        } catch {}
+      }
+      if (existingLead?.reservationId) {
+        try {
+          await deleteDoc(doc(db, 'reservations', existingLead.reservationId));
+        } catch {}
+      }
+    }
+
+    removeLocalEnrollmentRecords(idsToPurge);
+
+    try {
+      const store = await hydrateStore();
+      store.leads = (store.leads || []).filter(l => !idsToPurge.includes(l.id));
+      saveLocalStore(store);
+    } catch {}
+
+    const studentName = existingLead?.studentName || cleanId;
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'LEAD_DELETED',
+      entityType: 'lead',
+      entityId: cleanId,
+      details: `Permanently deleted inquiry lead '${cleanId}' for '${studentName}'.`
+    });
+
+    return { success: true, leadId: cleanId };
+  },
+
   async updateLeadStatus(leadId, status, actor = 'admin') {
     this.verifyPermission(actor, 'canManageStudents', 'updating lead status');
     const actorEmail = normalizeActorEmail(actor);
@@ -2325,19 +2546,42 @@ export const AdminDataService = {
     return this.updateStudentLifecycleStatus(studentId, { status: 'active', reason: 'Restored to active status by administrator' }, actor);
   },
 
-  async deleteStudent(studentId, actor = 'admin') {
+  async deleteStudent(studentId, actor = 'admin', options = {}) {
     this.verifyPermission(actor, 'canManageStudents', 'deleting student');
-    const store = await hydrateStore();
-    const sIdx = store.students.findIndex(s => s.id === studentId);
-    if (sIdx === -1) {
-      throw new Error(`Student not found with ID: ${studentId}`);
+    const cleanId = String(studentId || '').trim();
+    if (!cleanId) {
+      throw new Error('A student ID is required to delete.');
     }
 
-    const student = store.students[sIdx];
-    const batchId = student.batchId;
-    const isAttending = student.status === 'active' || student.status === 'new_enrollment';
+    let student = null;
+    try {
+      student = await this.getStudentById(cleanId);
+    } catch {}
 
+    if (!student) {
+      const allStudents = await this.getStudents({ includeArchived: true }).catch(() => []);
+      student = allStudents.find(s => s.id === cleanId);
+    }
+
+    if (!student) {
+      throw new Error(`Student not found with ID: ${cleanId}`);
+    }
+
+    const payments = await this.getPayments(cleanId).catch(() => []);
+    const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
+    const activeTotal = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    if (activeTotal > 0 && options.allowWithPayments !== true) {
+      throw new Error(
+        `Cannot delete student '${student.studentName}' because ₹${activeTotal.toLocaleString('en-IN')} in verified payments ` +
+        `(${activePayments.map(p => p.receiptNumber).join(', ')}) are linked to this record. ` +
+        `Reverse those receipts in Ledger & Payments first, or archive the student instead.`
+      );
+    }
+
+    const batchId = student.batchId;
+    const store = await hydrateStore();
     const bIdx = store.batches.findIndex(b => b.id === batchId);
+    const isAttending = student.status === 'active' || student.status === 'new_enrollment';
     if (bIdx !== -1 && isAttending) {
       const bCap = Math.max(1, Number(store.batches[bIdx].capacity) || 12);
       store.batches[bIdx].enrolledCount = Math.max(0, store.batches[bIdx].enrolledCount - 1);
@@ -2346,19 +2590,29 @@ export const AdminDataService = {
 
     if (isLive()) {
       try {
-        await deleteDoc(doc(db, 'students', studentId));
+        await deleteDoc(doc(db, 'students', cleanId));
         if (bIdx !== -1) {
-          await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
+          await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]).catch(() => {});
         }
       } catch (err) {
         console.error('Firestore deleteStudent error:', err);
         throw new Error(`Failed to delete student '${student.studentName}' from Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
       }
+      try {
+        const obs = await this.getFeeObligations(cleanId).catch(() => []);
+        for (const ob of obs) {
+          if (Number(ob.amountPaid || 0) === 0) {
+            await deleteDoc(doc(db, 'fee_obligations', ob.id)).catch(() => {});
+          }
+        }
+      } catch {}
     }
 
-    store.students.splice(sIdx, 1);
-    store.obligations = (store.obligations || []).filter(o => o.studentId !== studentId);
-
+    const sIdx = store.students.findIndex(s => s.id === cleanId);
+    if (sIdx !== -1) {
+      store.students.splice(sIdx, 1);
+    }
+    store.obligations = (store.obligations || []).filter(o => o.studentId !== cleanId || Number(o.amountPaid || 0) > 0);
     saveLocalStore(store);
 
     if (typeof window !== 'undefined') {
@@ -2366,21 +2620,23 @@ export const AdminDataService = {
         const raw = localStorage.getItem('focus_academy_students');
         if (raw) {
           const list = JSON.parse(raw);
-          const next = list.filter(s => s.id !== studentId && s.phone !== student.guardianPhone);
+          const next = list.filter(s => s.id !== cleanId && s.phone !== student.guardianPhone);
           localStorage.setItem('focus_academy_students', JSON.stringify(next));
         }
       } catch {}
     }
 
+    removeLocalEnrollmentRecords([cleanId, student.enrollmentId, student.leadId, student.reservationId]);
+
     await this.logAudit({
       actor: normalizeActorEmail(actor),
       action: 'STUDENT_DELETED',
       entityType: 'student',
-      entityId: studentId,
-      details: `Deleted student record for '${student.studentName}' (${studentId}). Released seat in batch '${student.batchName || batchId}'.`
+      entityId: cleanId,
+      details: `Deleted student record for '${student.studentName}' (${cleanId}). Released seat in batch '${student.batchName || batchId}'.`
     });
 
-    return { success: true, deletedId: studentId };
+    return { success: true, deletedId: cleanId };
   },
 
   async transferStudentBatch(studentId, newBatchId, reason = 'Academic progression', actor = 'admin') {
@@ -3728,13 +3984,15 @@ export const AdminDataService = {
       const netCollectible = Math.max(0, totalCharged - totalWaived);
       const collectionRatePct = netCollectible > 0 ? Math.round((totalCollected / netCollectible) * 100) : 0;
 
+      const realActiveCount = students.filter(s => s.batchId === batch.id && s.status !== 'archived').length;
+
       return {
         batchId: batch.id,
         batchName: batch.name,
         grade: batch.grade,
         board: batch.board,
-        enrolledCount: batch.enrolledCount,
-        studentCount: batch.enrolledCount,
+        enrolledCount: realActiveCount,
+        studentCount: realActiveCount,
         capacity: batch.capacity || 12,
         totalDue: totalCharged,
         totalCharged,
