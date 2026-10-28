@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { logOutAdmin } from '../../services/firebase';
 import { getVerifiedAdmin, setVerifiedAdmin } from '../../services/adminIdentity';
+import { AdminDataService } from '../../services/adminDataService';
 
 export default function AdminLayout() {
   usePageMeta({
@@ -81,17 +82,20 @@ export default function AdminLayout() {
     };
   }, [navigate]);
   const navItems = [
-    { name: 'Dashboard', path: '/admin-portal', icon: LayoutDashboard, end: true },
-    { name: 'Inquiries & Leads', path: '/admin-portal/leads', icon: UserPlus },
+    { name: 'Dashboard', path: '/admin-portal', icon: LayoutDashboard, end: true, permission: 'canRecordPayments' },
+    { name: 'Inquiries & Leads', path: '/admin-portal/leads', icon: UserPlus, permission: 'canManageStudents' },
     { name: 'Batches', path: '/admin-portal/batches', icon: Layers },
     { name: 'Students', path: '/admin-portal/students', icon: Users },
-    { name: 'Fee Schedules', path: '/admin-portal/fees', icon: CreditCard },
-    { name: 'Ledger & Payments', path: '/admin-portal/ledger', icon: Receipt },
-    { name: 'WhatsApp Reminders', path: '/admin-portal/reminders', icon: MessageSquare },
-    { name: 'Reports & Analytics', path: '/admin-portal/reports', icon: BarChart3 },
-    { name: 'Audit Logs', path: '/admin-portal/audit-logs', icon: ShieldAlert },
-    { name: 'Academy Settings', path: '/admin-portal/settings', icon: SettingsIcon }
+    { name: 'Fee Schedules', path: '/admin-portal/fees', icon: CreditCard, permission: 'canWaiveFees' },
+    { name: 'Ledger & Payments', path: '/admin-portal/ledger', icon: Receipt, permission: 'canRecordPayments' },
+    { name: 'WhatsApp Reminders', path: '/admin-portal/reminders', icon: MessageSquare, permission: 'canTriggerReminders' },
+    { name: 'Reports & Analytics', path: '/admin-portal/reports', icon: BarChart3, permission: 'canRecordPayments' },
+    { name: 'Audit Logs', path: '/admin-portal/audit-logs', icon: ShieldAlert, permission: 'canManageSettings' },
+    { name: 'Academy Settings', path: '/admin-portal/settings', icon: SettingsIcon, permission: 'canManageSettings' }
   ];
+  const visibleNavItems = navItems.filter(
+    (item) => !item.permission || AdminDataService.hasPermission(userEmail, item.permission)
+  );
 
   return (
     <div className="admin-portal-root min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body w-full max-w-full overflow-x-hidden">
@@ -171,7 +175,7 @@ export default function AdminLayout() {
                 Campus Navigation
               </div>
               <nav className="space-y-1">
-                {navItems.map((item) => {
+                {visibleNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = item.end 
                     ? location.pathname === item.path 
@@ -239,7 +243,7 @@ export default function AdminLayout() {
                 </div>
 
                 <nav className="space-y-1">
-                  {navItems.map((item) => {
+                  {visibleNavItems.map((item) => {
                     const Icon = item.icon;
                     const active = item.end 
                       ? location.pathname === item.path 

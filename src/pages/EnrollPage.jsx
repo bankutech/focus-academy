@@ -34,8 +34,6 @@ import { CAMPUS_CONFIG } from '../config/campusConfig';
 import { LeadService } from '../services/leadService';
 import { BatchService } from '../services/batchService';
 import { useStudentAuth } from '../context/StudentAuthContext';
-import { db, isFirebaseConfigured } from '../services/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 const getNowIsoString = () => new Date().toISOString();
 
@@ -47,7 +45,7 @@ export default function EnrollPage() {
   });
   const { batchId } = useParams();
   const navigate = useNavigate();
-  const { studentFlow, setStudentFlow, registerStudent, ensureVerifiedSession } = useStudentFlow();
+  const { studentFlow, setStudentFlow, ensureVerifiedSession } = useStudentFlow();
   const { user: studentUser } = useStudentAuth();
 
   const candidateBatch = BATCHES_DATA.find((b) => b.id === batchId) ||
@@ -357,21 +355,13 @@ export default function EnrollPage() {
         }
       }
       if (!reservation.success) {
-        const isAcademicMismatch = reservation.error && reservation.error.toLowerCase().includes('academic mismatch');
-        const isBatchFull = reservation.canWaitlist || (reservation.error && (reservation.error.includes('12-student') || reservation.error.includes('capacity')));
-        if (isAcademicMismatch || isBatchFull) {
-          setIsSubmitting(false);
-          setSubmissionResult({
-            success: false,
-            error: reservation.error || 'This batch is currently at maximum 12-student capacity. Please select an alternate evening slot.',
-          });
-          return;
-        }
-        reservation = {
-          success: true,
-          provisional: true,
-          reservationId: `PROV-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-        };
+        setIsSubmitting(false);
+        setSubmissionResult({
+          success: false,
+          partial: false,
+          error: reservation.error || 'We could not verify a seat for this batch. No admission was created. Please try again or call the campus desk on +91 98424 51220.',
+        });
+        return;
       }
     }
 
@@ -415,82 +405,20 @@ export default function EnrollPage() {
       createdAt: getNowIsoString(),
     };
 
-    const saved = registerStudent(enrollmentRecord);
+    const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift}${enrollmentRecord.schoolDismissalTime ? ` (Finish: ${formatTime12(enrollmentRecord.schoolDismissalTime)}, Travel: ${enrollmentRecord.travelDurationMinutes || 0}m)` : ''} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
 
-    let firestoreWriteError = null;
-
-    const notesSummary = `${reservation.waitlisted ? `Priority Waitlist (#${reservation.waitlistPosition}) | ` : ''}Slip: ${saved.id} | School: ${enrollmentRecord.schoolName} (${enrollmentRecord.educationBoard}, Target: ${enrollmentRecord.targetYear}) | Shift: ${enrollmentRecord.schoolShift}${enrollmentRecord.schoolDismissalTime ? ` (Finish: ${formatTime12(enrollmentRecord.schoolDismissalTime)}, Travel: ${enrollmentRecord.travelDurationMinutes || 0}m)` : ''} | Medium: ${enrollmentRecord.mediumOfInstruction} | Emergency: ${enrollmentRecord.emergencyContactName} (${enrollmentRecord.emergencyRelationship}: ${enrollmentRecord.emergencyPhone}) | ID: ${enrollmentRecord.studentIdNumber}${enrollmentRecord.gstin ? ` | GST: ${enrollmentRecord.gstin}` : ''}${includesPrintedMaterials ? ` | Dispatch: ${enrollmentRecord.addressStreet}, ${enrollmentRecord.addressCityState} - ${enrollmentRecord.addressPincode}` : ''}`;
-
-    if (isFirebaseConfigured() && db) {
+    let authToken = null;
+    if (studentUser?.getIdToken) {
       try {
-        const directEnrollment = {
-          id: saved.id,
-          enrollmentId: saved.id,
-          leadId: saved.id,
-          source: 'enrollment',
-          studentUid: studentUser?.uid || null,
-          email: studentUser?.email || null,
-          studentName: enrollmentRecord.studentName,
-          parentName: enrollmentRecord.parentName,
-          phone: enrollmentRecord.phone,
-          whatsappNumber: enrollmentRecord.whatsappNumber,
-          secondaryPhone: enrollmentRecord.secondaryPhone,
-          grade: enrollmentRecord.grade,
-          board: enrollmentRecord.board,
-          batchId: selectedBatch.id,
-          batchName: selectedBatch.name,
-          timing: selectedBatch.timing,
-          monthlyFee: selectedBatch.monthlyFee,
-          feeStatus: 'pending',
-          paymentStatus: 'unpaid',
-          reservationId: enrollmentRecord.reservationId,
-          status: reservation.waitlisted ? 'waitlisted' : 'pending',
-          enrolledAt: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          schoolName: enrollmentRecord.schoolName,
-          educationBoard: enrollmentRecord.educationBoard,
-          targetYear: enrollmentRecord.targetYear,
-          schoolShift: enrollmentRecord.schoolShift,
-          schoolDismissalTime: enrollmentRecord.schoolDismissalTime,
-          travelDurationMinutes: enrollmentRecord.travelDurationMinutes,
-          mediumOfInstruction: enrollmentRecord.mediumOfInstruction,
-          emergencyContactName: enrollmentRecord.emergencyContactName,
-          emergencyPhone: enrollmentRecord.emergencyPhone,
-          emergencyRelationship: enrollmentRecord.emergencyRelationship,
-          medicalAlert: enrollmentRecord.medicalAlert,
-          studentIdNumber: enrollmentRecord.studentIdNumber,
-          gstin: enrollmentRecord.gstin,
-          addressStreet: enrollmentRecord.addressStreet,
-          addressCityState: enrollmentRecord.addressCityState,
-          addressPincode: enrollmentRecord.addressPincode,
-          isWaitlisted: Boolean(reservation.waitlisted),
-          waitlistPosition: reservation.waitlistPosition || null,
-          notes: notesSummary,
-        };
-        await setDoc(doc(db, 'enrollments', saved.id), directEnrollment, { merge: true });
-
-        if (enrollmentRecord.reservationId) {
-          try {
-            await setDoc(doc(db, 'reservations', enrollmentRecord.reservationId), {
-              id: enrollmentRecord.reservationId,
-              batchId: selectedBatch.id,
-              studentName: enrollmentRecord.studentName,
-              phone: enrollmentRecord.phone,
-              status: reservation.waitlisted ? 'waitlisted' : 'held',
-              createdAt: new Date().toISOString(),
-              expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-            }, { merge: true });
-          } catch {
-          }
-        }
-      } catch (err) {
-        console.error('Direct Firestore enrollment write failed:', err);
-        firestoreWriteError = err;
+        authToken = await studentUser.getIdToken();
+      } catch {
+        authToken = null;
       }
     }
 
     const leadResult = await LeadService.submitLead({
       website_url: honeypot || undefined,
+      authToken,
       studentName: enrollmentRecord.studentName,
       parentName: enrollmentRecord.parentName,
       phone: enrollmentRecord.phone,
@@ -528,7 +456,6 @@ export default function EnrollPage() {
       guardianDeclarationAcceptedAt: new Date().toISOString(),
       optionalUpdatesConsent: optionalConsent === true,
       reservationId: enrollmentRecord.reservationId,
-      enrollmentId: saved.id,
       isWaitlisted: Boolean(enrollmentRecord.isWaitlisted),
       stepToken: session?.stepToken,
       timing: selectedBatch.timing,
@@ -536,26 +463,21 @@ export default function EnrollPage() {
       notes: notesSummary,
     });
 
-    const prefilledText = `Hello Focus Academy! I have completed admission registration for student: ${enrollmentRecord.studentName} (${enrollmentRecord.grade}, ${enrollmentRecord.board}). School: ${enrollmentRecord.schoolName}. Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Slip ID: ${saved.id}.`;
+    const prefilledText = `Hello Focus Academy! I have completed admission registration for student: ${enrollmentRecord.studentName} (${enrollmentRecord.grade}, ${enrollmentRecord.board}). School: ${enrollmentRecord.schoolName}. Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}).`;
     const whatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(prefilledText)}`;
 
     setIsSubmitting(false);
 
-    if (firestoreWriteError && isFirebaseConfigured() && db) {
+    if (!leadResult.success) {
       setSubmissionResult({
         success: false,
         partial: false,
-        error: `Database write could not be confirmed in Cloud Firestore: ${firestoreWriteError.message || 'Permission denied or network unreachable'}. Nothing was saved. Please try again or contact the campus desk.`,
-        retryable: true,
-      });
-      return;
-    }
-
-    if (!leadResult.success && !leadResult.offlineQueued && leadResult.status === 'invalid') {
-      setSubmissionResult({
-        success: false,
-        partial: false,
-        error: leadResult.message || 'Please check your information and try again.',
+        retryable: Boolean(leadResult.retryable),
+        retryPayload: leadResult.offlineQueued ? { ...enrollmentRecord, stepToken: session?.stepToken, authToken } : null,
+        error: leadResult.status === 'invalid'
+          ? (leadResult.message || 'Please check your information and try again.')
+          : 'Your admission was NOT saved at the campus database. Nothing has been confirmed, and no student ID or fee record was created. Please retry, or send your details to the campus desk so they can complete the admission manually.',
+        whatsappUrl,
       });
       return;
     }
@@ -573,16 +495,22 @@ export default function EnrollPage() {
       step: 5,
     }));
 
-    const directFirestoreSuccess = Boolean(isFirebaseConfigured() && db && !firestoreWriteError);
+    const enrolledRecord = leadResult.meta || {};
+    const persistedStatus = enrolledRecord.enrollmentStatus
+      || leadResult.data?.status
+      || (reservation.waitlisted ? 'waitlisted' : 'confirmed');
 
     setSubmissionResult({
       success: true,
-      leadDelivery: leadResult.success || directFirestoreSuccess ? 'delivered' : 'queued_locally',
-      data: saved,
+      leadDelivery: 'delivered',
+      data: leadResult.data,
       enrollmentRecord,
       whatsappUrl,
-      isProvisional: Boolean(reservation.provisional || (!directFirestoreSuccess && leadResult.offlineQueued)),
-      waitlisted: Boolean(reservation.waitlisted),
+      studentId: enrolledRecord.studentId || leadResult.data?.studentId || null,
+      feeObligationId: enrolledRecord.feeObligationId || leadResult.data?.feeObligationId || null,
+      enrollmentStatus: persistedStatus,
+      isProvisional: persistedStatus === 'pending',
+      waitlisted: persistedStatus === 'waitlisted',
       waitlistPosition: reservation.waitlistPosition,
     });
   };
@@ -598,7 +526,7 @@ export default function EnrollPage() {
             className="mb-6 bg-rose-50 border border-rose-200 rounded-lg p-5 text-left max-w-2xl mx-auto animate-in fade-in"
           >
             <h3 className="text-sm font-bold text-rose-900">
-              {submissionResult.partial ? 'Your seat is held, but your details were not sent' : 'Seat Reservation Notice'}
+              Admission Not Saved
             </h3>
             <p className="text-xs text-rose-700 mt-1">{submissionResult.error}</p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -611,13 +539,21 @@ export default function EnrollPage() {
                     const retry = await LeadService.retryLastAttempt(submissionResult.retryPayload);
                     setIsRetryingLead(false);
                     if (retry.success) {
+                      const retryMeta = retry.meta || {};
+                      const retryStatus = retryMeta.enrollmentStatus
+                        || retry.data?.status
+                        || (submissionResult.enrollmentRecord?.isWaitlisted ? 'waitlisted' : 'confirmed');
                       setSubmissionResult({
                         success: true,
                         leadDelivery: 'delivered',
-                        data: submissionResult.data,
+                        data: retry.data,
                         enrollmentRecord: submissionResult.enrollmentRecord,
                         whatsappUrl: submissionResult.whatsappUrl,
-                        waitlisted: Boolean(submissionResult.enrollmentRecord?.isWaitlisted),
+                        studentId: retryMeta.studentId || retry.data?.studentId || null,
+                        feeObligationId: retryMeta.feeObligationId || retry.data?.feeObligationId || null,
+                        enrollmentStatus: retryStatus,
+                        isProvisional: retryStatus === 'pending',
+                        waitlisted: retryStatus === 'waitlisted',
                         waitlistPosition: submissionResult.enrollmentRecord?.waitlistPosition,
                       });
                     }
@@ -668,20 +604,24 @@ export default function EnrollPage() {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
               {submissionResult.waitlisted
                 ? `Priority Waitlist Registered (#${submissionResult.waitlistPosition || 1})`
-                : 'Seat Reserved & Admission Slip Generated!'}
+                : submissionResult.isProvisional
+                  ? 'Enrollment Received — Pending Campus Review'
+                  : 'Admission Confirmed — Seat Reserved'}
             </h1>
 
             <p className="mt-2 text-sm text-slate-600 max-w-md mx-auto">
               {submissionResult.waitlisted
                 ? `Thank you, ${studentName}. You have been registered on the Priority Waitlist for ${selectedBatch.name}. Our campus desk will prioritize your admission if a slot opens.`
-                : `Thank you, ${studentName}. Your seat reservation has been queued for ${selectedBatch.name}.`}
+                : submissionResult.isProvisional
+                  ? `Thank you, ${studentName}. Your admission was saved at the campus, but the batch needs a desk review before a seat and student ID can be issued.`
+                  : `Thank you, ${studentName}. Your admission is confirmed centrally for ${selectedBatch.name}, and your first fee cycle is now on record.`}
             </p>
 
             {submissionResult.isProvisional && (
               <div className="mt-4 p-3.5 bg-amber-50 border border-amber-200 rounded-md text-xs text-amber-900 text-left flex items-start space-x-2.5">
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">Provisional Seat Hold:</span> Your admission slip has been created on this device. Please tap <strong>Notify Campus Desk on WhatsApp</strong> below to share your slip ID with our admissions desk for immediate priority verification.
+                  <span className="font-bold">Pending Review:</span> Your details are saved at the campus, but a seat, student ID and fee record have not been issued yet. Please tap <strong>Notify Campus Desk on WhatsApp</strong> below so the admissions desk can complete your review.
                 </div>
               </div>
             )}
@@ -689,7 +629,13 @@ export default function EnrollPage() {
             <div className="mt-6 p-5 bg-slate-50 rounded-md border border-[#E2E8F0] text-xs text-left space-y-2.5 max-w-md mx-auto">
               <div className="flex justify-between pb-2 border-b border-[#E2E8F0]">
                 <span className="text-slate-500 font-medium">Admission Slip No:</span>
-                <span className="font-bold text-[#0F172A]">{submissionResult.data?.id || 'FA-2026-ENR'}</span>
+                <span className="font-bold text-[#0F172A]">{submissionResult.data?.id || 'Pending'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-medium">Student ID:</span>
+                <span className="font-bold text-[#0F172A]">
+                  {submissionResult.studentId || (submissionResult.waitlisted ? 'Waitlist — not issued' : 'Assigned after campus review')}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-medium">Batch:</span>
@@ -754,19 +700,23 @@ export default function EnrollPage() {
 
             <div className="mt-6 p-4 bg-brand/5 border border-brand/20 rounded-md text-xs text-left max-w-md mx-auto space-y-2">
               <div className="font-bold text-brand flex items-center justify-between">
-                <span>Student Portal Account Details</span>
-                <span className="text-[10px] bg-brand text-white px-1.5 py-0.5 rounded font-mono uppercase">Active</span>
+                <span>Student Portal Account Activation</span>
+                <span className="text-[10px] bg-slate-700 text-white px-1.5 py-0.5 rounded font-mono uppercase">
+                  {studentUser ? 'Signed in' : 'Action needed'}
+                </span>
               </div>
               <p className="text-slate-600">
-                Your admission record has been linked to your registered mobile number (<span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.phone}</span>). Use this number to log in securely to access your schedule, monthly fee receipts, and official slip.
+                {studentUser
+                  ? 'This admission is linked to your signed-in student account. Open your dashboard to see the verified student ID, fee ledger and due dates.'
+                  : <>No password is printed here or sent by URL. Create your own student account with the guardian mobile number <span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.phone}</span> and the student name used above; the dashboard will link your admission automatically.</>}
               </p>
               <div className="pt-2">
                 <Link
-                  to={studentUser ? '/student-dashboard' : '/student-login'}
+                  to={studentUser ? '/student-dashboard' : '/student-register'}
                   className="w-full py-2.5 bg-brand hover:bg-brand-strong text-white font-bold text-xs rounded shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   <GraduationCap className="w-4 h-4" />
-                  <span>{studentUser ? 'Go to Student Dashboard →' : 'Log In to Student Portal →'}</span>
+                  <span>{studentUser ? 'Go to Student Dashboard →' : 'Create Student Account →'}</span>
                 </Link>
               </div>
             </div>

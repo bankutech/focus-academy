@@ -385,7 +385,7 @@ export default function AdminLoginPage() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-4 h-4 rounded-sm border-slate-700 bg-slate-900 text-[#EA580C] focus:ring-[#EA580C] focus:ring-offset-slate-900"
                     />
-                    <span>Keep me signed in <span className="text-slate-500">(not on shared computers)</span></span>
+                    <span>Keep me signed in <span className="text-slate-400">(not on shared computers)</span></span>
                   </label>
                   <button type="button" onClick={() => switchMode('forgot')} className="text-orange-400 hover:text-orange-300 font-medium cursor-pointer transition-colors whitespace-nowrap rounded-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#EA580C]">
                     Forgot password?

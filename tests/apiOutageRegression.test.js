@@ -13,6 +13,8 @@ const holder = vi.hoisted(() => ({
 vi.mock('../api/_lib/firebaseAdmin.js', () => ({
   getServices: async () => holder.current?.services || null,
   getServiceStatus: () => holder.status,
+  getServiceAccountProjectId: () => holder.status.projectId || null,
+  expectedProjectId: () => 'focus-academy-7efeb',
   missingEnvironment: () => [],
   resetServiceCache: () => {},
 }));
@@ -53,7 +55,7 @@ describe('GET /api/health', () => {
   beforeEach(() => {
     process.env.SESSION_SECRET = 'k'.repeat(48);
     holder.current = createFakeServices();
-    holder.status = { ready: true, reason: 'ready' };
+    holder.status = { ready: true, reason: 'ready', projectId: 'focus-academy-7efeb', credentialFormat: 'json' };
   });
 
   afterEach(() => {

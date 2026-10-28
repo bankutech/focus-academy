@@ -8,8 +8,8 @@ Verification commands run:
 
 | Gate | Command | Result |
 | --- | --- | --- |
-| Unit / component tests | `npm test` | **24 files, 308 tests passed** (baseline before this work: 23 files / 296 tests) |
-| Lint | `npm run lint` | **0 errors**, 21 warnings (same 21 warnings existed before these changes) |
+| Unit / component tests | `npm test` | **31 files, 391 tests passed** |
+| Lint | `npm run lint` | **0 errors, 0 warnings** after this pass |
 | Type check | `npm run typecheck` | **Passed**, no errors |
 | Production build | `npm run build` | **Passed** (`dist/` produced) |
 | End-to-end (chromium) | `npx playwright test --project=chromium` | **34 passed, 2 failed** — both failures pre-existing and unrelated (see "Remaining defects") |
@@ -82,10 +82,10 @@ Verification commands run:
 | --- | --- |
 | **Feature** | Admin access control |
 | **Original problem** | Not broken; verified rather than changed. |
-| **Verification** | `AdminProtectedRoute` redirects unauthenticated users to the login route and shows an Access Denied screen for non-allowlisted accounts; `verifyPermission()` enforces roles (`owner` / `administrator` / `fee_manager`) inside every privileged service method; `firestore.rules` enforces the same server-side (students/leads/enrollments writes = administrator, payments/obligations = fee manager, payment update keys constrained, deletes forbidden); `api/whatsapp.js` and `api/enrollments.js` authenticate with `authenticateAdmin()`; student and admin sessions use separate collections (`student_profiles` vs allowlist + Firebase claims). |
-| **Tests performed** | `tests/adminRoleAuthorization.test.js` (17), `tests/securityAudit.test.js` (11) pass; e2e verifies unauthenticated redirect and rejected non-allowlisted login. |
-| **Result** | Working. New enrollment/payment code paths all call `verifyPermission()` first. |
-| **Remaining blocker** | Role checks in the UI are service-side only: a `fee_manager` who forces the enrollment edit form gets a clear unauthorized error rather than a hidden button. |
+| **Verification** | `AdminProtectedRoute` redirects unauthenticated users to the login route and shows an Access Denied screen for non-allowlisted accounts; `verifyPermission()` enforces six roles (`owner` / `administrator` / `admissions` / `fee_manager` / `teacher` / `read_only`) inside every privileged service method; `firestore.rules` enforces owner, admissions and finance scopes server-side; `api/payments.js` requires `canRecordPayments`, `api/whatsapp.js` requires `canTriggerReminders`, and `api/admin/ops-health.js` requires `canManageSettings`; admin navigation hides modules the role cannot use. |
+| **Tests performed** | `tests/adminRoleAuthorization.test.js` (17), `tests/securityAudit.test.js` (11), and `tests/operationalControls.test.js` (20) pass. |
+| **Result** | **Fixed.** The previous rules treated every allow-listed staff email as an owner; owner access is now limited to the three owner addresses (or an owner claim). Admissions can manage student/admission records but not money, reconciliation, roles or settings. Teachers and read-only accounts can view the roster/batches only. Audit entries must carry the authenticated actor's email, and payments must carry the authenticated recorder's email. |
+| **Remaining blocker** | A user who navigates directly to a hidden module still reaches the page shell; every read/write is denied by Firestore rules or the service permission gate, so no data is exposed or changed. Server-side role claims must match the `authorizedAdmins` record for full separation. |
 
 ## 7. Section-by-section navigation status
 
@@ -101,6 +101,26 @@ Verification commands run:
 | Reports & Analytics | Works | Exports, reconciliation, collection reports; load failures now shown with Retry. |
 | Audit Logs | Works | JSON/CSV export; load failures now shown with Retry. |
 | Academy Settings | Works | Persists to `academy_settings/main_config`; role changes run in a transaction with read-back verification; `authorizedAdmins` only editable by owners (rules + service). |
+
+## 8. Operational controls added in this pass (28 October 2026)
+
+| Control | Implementation | Verification | Honest status |
+| --- | --- | --- | --- |
+| **Student lifecycle** | `withdrawStudent()` archives the student, releases the seat and requires a written reason. Fee obligations, receipts, waivers and audit entries are left untouched. Lifecycle status + batch occupancy now commit in one Firestore transaction; a failure rolls both back. Re-enrolment uses `restoreStudent()`, which re-checks capacity. | `tests/operationalControls.test.js` (archive preserves obligations/payments, reason required, teacher blocked, restore works) and `tests/livePaymentLedger.test.js` (transactional archive). | **Tested locally with a mocked Firestore transaction.** Not exercised against production. |
+| **Batch transfer atomicity** | The live path previously updated only the student and swallowed batch-counter failures. It now writes the student plus both batch counters in one transaction and throws on failure. | `tests/livePaymentLedger.test.js` asserts both counters move and a simulated transaction failure leaves all three documents unchanged. | **Tested locally with mocks.** The production Firestore path is the same SDK call, but has not been run against the live project. |
+| **Daily collection reconciliation** | New `collection_reconciliations` collection. An authorised finance user records independently counted cash, UPI, bank, card and cheque totals against the ledger's recorded net receipts for one business date. The record stores method-level differences, status (`reconciled` / `discrepancy`), verifier, explanation and revision history. Payments and obligations are never modified. | `tests/operationalControls.test.js` (match, discrepancy, reversed/refunded exclusion, revision history, authorisation, future/negative rejection) and `tests/livePaymentLedger.test.js` (persists centrally; a failed write records no audit entry). | **Tested locally and against a mocked live Firestore.** Production API/collection not deployed by this pass. |
+| **Action-required dashboard** | `src/components/admin/actionItems.js` derives alerts only from loaded records: pending admissions, overdue fees, 7-day upcoming dues, data-source failures, unactivated accounts, near-capacity batches, missing/discrepant reconciliations, failed notifications and stale backups. Every item links to the working module. | `tests/operationalControls.test.js` checks each source item and that clean records produce no alerts. | **Tested locally (pure function + loaded dashboard data).** |
+| **Operational health** | New admin-only `GET /api/admin/ops-health` returns aggregate counts/timestamps for Firestore latency, pending admissions, failed sync records, failed/pending notifications, reconciliation state, open till sessions and backup age. It returns no names, phones, amounts or secrets. | `tests/apiEndpoints.test.js` verifies admin access, 403 for admissions, aggregate values and absence of student data. | **Tested locally with a mocked Firestore/API.** Not deployed or probed on production. |
+| **Backup integrity** | Snapshots are version 2 with a checksum over the complete payload. Restore refuses missing/mismatched checksums, validates record IDs and fails loudly instead of warning when a central write fails. The UI no longer claims the download is encrypted. | `tests/operationalControls.test.js` (checksum, tamper rejection, owner-only restore, successful restore). | **Local restore verified with non-production seed data. No off-site production backup or restore drill exists.** |
+| **Report accuracy** | Reports now exclude reversed/refunded receipts from collections, collection rate and method split; financial CSV exports label reversed rows explicitly. Every CSV export now checks `canExportData` before generating data. | Full unit suite + build; report totals share the same valid-payment predicate as chart helpers. | **Tested locally.** |
+
+### Remaining owner decisions and production gaps
+
+1. **No off-site backup**: the checksum-verified JSON snapshot is downloaded by an owner and must be stored in an approved encrypted location. Firestore scheduled exports are not configured in this repository and were not tested.
+2. **`FIREBASE_SERVICE_ACCOUNT` is still absent from Vercel**, so production Firestore, the new ops-health endpoint and the reconciliation collection remain unverified live. Only code-level and mocked-Firestore verification was possible.
+3. **Server custom claims**: Firestore rules fall back to a fixed email list for owner/administrator/finance access. If staff are added in `authorizedAdmins` without matching Firebase custom claims, the client SDK will deny their writes even though the service allowlist recognises them. Set `role` claims when provisioning staff or keep the email list aligned.
+4. **No advance-payment, refund-after-reversal or automatic sibling-discount rule** has been invented; these remain explicit owner decisions.
+5. **Reconciliation is desk verification, not a bank feed**: an administrator enters figures from the bank/UPI statement and cash count. There is no automated bank integration.
 
 ## Remaining defects and blockers (honest list)
 

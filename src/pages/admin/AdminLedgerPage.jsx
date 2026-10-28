@@ -134,8 +134,14 @@ export default function AdminLedgerPage() {
       setFormError('Please select an active fee obligation.');
       return;
     }
-    if (!paymentForm.amount || Number(paymentForm.amount) <= 0) {
-      setFormError('Payment amount must be greater than zero.');
+    const paymentAmount = Number(paymentForm.amount);
+    if (!paymentForm.amount || Number.isNaN(paymentAmount) || paymentAmount <= 0) {
+      setFormError('Payment amount must be a valid number greater than zero.');
+      return;
+    }
+    const isCash = paymentForm.paymentMethod === 'cash';
+    if (!isCash && !String(paymentForm.referenceNumber || '').trim()) {
+      setFormError('A UPI / bank transaction reference is required for non-cash collections.');
       return;
     }
 
@@ -144,10 +150,13 @@ export default function AdminLedgerPage() {
 
       const result = await AdminDataService.recordPayment({
         ...paymentForm,
-        amount: Number(paymentForm.amount)
+        amount: paymentAmount
       }, currentAdmin);
 
-      setFormSuccess(`Recorded payment ₹${paymentForm.amount}. Receipt: ${result.payment.receiptNumber}`);
+      setFormSuccess(
+        `Recorded payment ₹${paymentForm.amount}. Receipt: ${result.payment.receiptNumber}`
+        + (result.nextDueDate ? ` • Next due date: ${result.nextDueDate}` : ' • Next due date: not scheduled')
+      );
       setRecordModalOpen(false);
       setReceiptModalPayment(result.payment);
       await loadData();
@@ -363,7 +372,7 @@ export default function AdminLedgerPage() {
       </div>
 
       {formSuccess && (
-        <div className="p-3 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-md text-emerald-800 text-xs flex items-center justify-between">
+        <div role="status" aria-live="polite" className="p-3 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-md text-emerald-800 text-xs flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{formSuccess}</span>
@@ -375,7 +384,7 @@ export default function AdminLedgerPage() {
       )}
 
       {formError && (
-        <div className="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-md text-red-800 text-xs flex items-center justify-between">
+        <div role="alert" className="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-md text-red-800 text-xs flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
             <span>{formError}</span>
@@ -676,12 +685,15 @@ export default function AdminLedgerPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Reference / UTR Number</label>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Reference / UTR Number {paymentForm.paymentMethod !== 'cash' && <span className="text-rose-600">*</span>}
+                  </label>
                   <input
                     type="text"
                     value={paymentForm.referenceNumber}
                     onChange={(e) => setPaymentForm({ ...paymentForm, referenceNumber: e.target.value })}
-                    placeholder="e.g. UPI/62918291..."
+                    placeholder={paymentForm.paymentMethod === 'cash' ? 'Optional for cash' : 'e.g. UPI/62918291...'}
+                    required={paymentForm.paymentMethod !== 'cash'}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono"
                   />
                 </div>

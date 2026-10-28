@@ -195,11 +195,27 @@ describe('Server-Side Payments API (api/payments.js)', () => {
       guardianPhone: '9842451222',
       feeConfig: { monthlyFee: 2200, nextDueDate: '2026-10-05' }
     });
+    fake.seed('academy_settings', 'main_config', {
+      authorizedAdmins: [{ email: 'coordinator@focusacademyperambalur.com', role: 'fee_manager', active: true }]
+    });
+    fake.addAccount('fee-desk', { uid: 'u-fee', email: 'coordinator@focusacademyperambalur.com', email_verified: true });
   });
 
   afterEach(() => {
     delete process.env.SESSION_SECRET;
     holder.current = null;
+  });
+
+  const deskAuth = { headers: { authorization: 'Bearer fee-desk' } };
+
+  it('refuses anonymous payment writes so nobody can credit a fee without authorisation', async () => {
+    const res = await call(paymentsHandler, {
+      action: 'verify',
+      obligationId: 'OBL-TEST-01',
+      amount: 2200
+    });
+    expect(res.statusCode).toBe(401);
+    expect(fake.read('fee_obligations', 'OBL-TEST-01').amountPaid).toBe(0);
   });
 
   it('initiates payment and generates reference ID with validated amount', async () => {
@@ -208,7 +224,7 @@ describe('Server-Side Payments API (api/payments.js)', () => {
       obligationId: 'OBL-TEST-01',
       amount: 2200,
       paymentMethod: 'upi_online'
-    });
+    }, deskAuth);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
@@ -222,7 +238,7 @@ describe('Server-Side Payments API (api/payments.js)', () => {
       action: 'initiate',
       obligationId: 'OBL-TEST-01',
       amount: 5000
-    });
+    }, deskAuth);
 
     expect(res.statusCode).toBe(400);
     expect(res.body.error).toContain('exceeds the remaining balance');
@@ -233,7 +249,7 @@ describe('Server-Side Payments API (api/payments.js)', () => {
       action: 'initiate',
       obligationId: 'OBL-TEST-01',
       amount: 2200
-    });
+    }, deskAuth);
     const referenceId = initRes.body.referenceId;
 
     const verify1 = await call(paymentsHandler, {
@@ -241,7 +257,7 @@ describe('Server-Side Payments API (api/payments.js)', () => {
       referenceId,
       providerRef: 'PG-TXN-998877',
       amount: 2200
-    });
+    }, deskAuth);
 
     expect(verify1.statusCode).toBe(200);
     expect(verify1.body.success).toBe(true);
@@ -253,7 +269,7 @@ describe('Server-Side Payments API (api/payments.js)', () => {
       referenceId,
       providerRef: 'PG-TXN-998877',
       amount: 2200
-    });
+    }, deskAuth);
 
     expect(verify2.statusCode).toBe(200);
     expect(verify2.body.idempotent).toBe(true);

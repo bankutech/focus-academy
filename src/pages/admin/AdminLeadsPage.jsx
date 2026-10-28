@@ -399,7 +399,7 @@ export default function AdminLeadsPage() {
       </div>
 
       {formSuccess && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-bold text-emerald-800 flex items-center justify-between">
+        <div role="status" aria-live="polite" className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-bold text-emerald-800 flex items-center justify-between">
           <span>{formSuccess}</span>
           <button type="button" onClick={() => setFormSuccess('')} className="cursor-pointer">
             <X className="w-4 h-4" />
@@ -407,7 +407,7 @@ export default function AdminLeadsPage() {
         </div>
       )}
       {formError && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-xs font-bold text-rose-800 flex items-center justify-between">
+        <div role="alert" className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-xs font-bold text-rose-800 flex items-center justify-between">
           <span>{formError}</span>
           <button type="button" onClick={() => setFormError('')} className="cursor-pointer">
             <X className="w-4 h-4" />

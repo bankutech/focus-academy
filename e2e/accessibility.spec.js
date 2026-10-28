@@ -13,6 +13,11 @@ const PUBLIC_ROUTES = [
   { path: '/fees', name: 'fees' },
   { path: '/contact', name: 'contact' },
   { path: '/student-details', name: 'student-details' },
+  { path: '/exam-prep', name: 'exam-prep' },
+  { path: '/batches', name: 'batches' },
+  { path: '/login', name: 'student-login' },
+  { path: '/signup', name: 'student-signup' },
+  { path: '/admin-portal/login', name: 'admin-login' },
   { path: '/privacy', name: 'privacy' },
   { path: '/this-page-does-not-exist', name: 'not-found' },
 ];

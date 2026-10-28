@@ -6,46 +6,61 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-
-    function isStaffEmail() {
-      return isAuthenticated() && request.auth.token.email != null && request.auth.token.email.lower() in [
-        'admin@focusacademyperambalur.com',
-        'director@focusacademyperambalur.com',
-        'principal@focusacademyperambalur.com',
-        'coordinator@focusacademyperambalur.com',
-        'focusacademy.perambalur@gmail.com',
-        'sagnikmitra1302@gmail.com'
-      ];
+    function hasEmail(emails) {
+      return isAuthenticated()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() in emails;
     }
 
+    function hasRole(roles) {
+      return isAuthenticated() && request.auth.token.role in roles;
+    }
+
+    // Only institute owners may change roles, settings ownership or restore backups.
     function isOwner() {
-      return isAuthenticated() && (
-        request.auth.token.role == 'owner' ||
-        isStaffEmail()
-      );
+      return isOwnerEmail() || hasRole(['owner']);
+    }
+
+    function isOwnerEmail() {
+      return hasEmail([
+        'director@focusacademyperambalur.com',
+        'focusacademy.perambalur@gmail.com',
+        'sagnikmitra1302@gmail.com'
+      ]);
     }
 
     function isAdministrator() {
-      return isOwner() || (
-        isAuthenticated() && (
-          request.auth.token.admin == true ||
-          request.auth.token.role in ['admin', 'administrator'] ||
-          isStaffEmail()
-        )
-      );
+      return isOwner()
+        || hasRole(['admin', 'administrator'])
+        || (isAuthenticated() && request.auth.token.admin == true)
+        || hasEmail([
+          'admin@focusacademyperambalur.com',
+          'principal@focusacademyperambalur.com'
+        ]);
     }
 
     function isAdmin() {
       return isAdministrator();
     }
 
+    // Admissions staff may work on inquiries, admissions and student profiles,
+    // but must not record payments, apply waivers or alter academy settings.
+    function isAdmissions() {
+      return isAdministrator()
+        || hasRole(['admissions'])
+        || hasEmail(['admissions@focusacademyperambalur.com']);
+    }
+
     function isFeeManager() {
-      return isAdministrator() || (
-        isAuthenticated() && (
-          request.auth.token.role == 'fee_manager' ||
-          isStaffEmail()
-        )
-      );
+      return isAdministrator()
+        || hasRole(['fee_manager'])
+        || hasEmail(['coordinator@focusacademyperambalur.com']);
+    }
+
+    function isTeachingStaff() {
+      return isFeeManager()
+        || isAdmissions()
+        || hasRole(['teacher', 'read_only', 'viewer']);
     }
 
     match /batches/{batchId} {
@@ -54,13 +69,15 @@ service cloud.firestore {
     }
 
     match /students/{studentId} {
-      allow read: if isAdministrator() || (
+      allow read: if isTeachingStaff() || (
         isAuthenticated() && (
           resource.data.studentUid == request.auth.uid ||
           (request.auth.token.email != null && resource.data.email == request.auth.token.email)
         )
       );
-      allow create, update, delete: if isAdministrator();
+      // Financial and lifecycle history must never be hard-deleted from the client.
+      allow create, update: if isAdmissions();
+      allow delete: if false;
     }
 
     match /fee_obligations/{obligationId} {
@@ -83,11 +100,19 @@ service cloud.firestore {
       allow create: if isFeeManager()
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
-        && request.resource.data.keys().hasAll(['id', 'receiptNumber', 'obligationId', 'studentId', 'amount', 'recordedBy']);
+        && request.resource.data.keys().hasAll(['id', 'receiptNumber', 'obligationId', 'studentId', 'amount', 'recordedBy'])
+        && request.resource.data.recordedBy == request.auth.token.email.lower();
       allow update: if isFeeManager()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(
           ['isReversed', 'reversed', 'reversalReason', 'reversedBy', 'reversedAt', 'status', 'refundStatus']
         );
+      allow delete: if false;
+    }
+
+    match /collection_reconciliations/{reconciliationId} {
+      allow read, update: if isFeeManager();
+      allow create: if isFeeManager()
+        && request.resource.data.reconciledBy == request.auth.token.email.lower();
       allow delete: if false;
     }
 
@@ -97,13 +122,15 @@ service cloud.firestore {
 
     match /audit_logs/{logId} {
       allow read: if isAdministrator();
-      allow create: if isAuthenticated() || isStaffEmail();
+      // Students must never be able to forge or erase an audit entry.
+      allow create: if (isFeeManager() || isAdmissions())
+        && request.resource.data.actor == request.auth.token.email.lower();
       allow update, delete: if false;
     }
 
     match /leads/{leadId} {
-      allow read, update, delete: if isAdministrator();
-      allow create: if isAdministrator() || (
+      allow read, update, delete: if isAdmissions();
+      allow create: if isAdmissions() || (
         request.resource.data.keys().hasAll(['studentName', 'phone', 'grade'])
         && request.resource.data.studentName is string && request.resource.data.studentName.size() >= 2
         && request.resource.data.phone is string && request.resource.data.phone.size() >= 10
@@ -155,18 +182,18 @@ service cloud.firestore {
     }
 
     match /enrollments/{enrollmentId} {
-      allow read: if isAdministrator() || (
+      allow read: if isAdmissions() || isFeeManager() || (
         isAuthenticated() && (
           resource.data.studentUid == request.auth.uid ||
           (request.auth.token.email != null && resource.data.email == request.auth.token.email)
         )
       );
-      allow create: if isAdministrator() || (
+      allow create: if isAdmissions() || (
         request.resource.data.keys().hasAll(['id', 'studentName', 'phone', 'grade', 'board', 'batchId'])
         && request.resource.data.studentName is string && request.resource.data.studentName.size() >= 2
         && request.resource.data.phone is string && request.resource.data.phone.size() >= 10
       );
-      allow update, delete: if isAdministrator();
+      allow update, delete: if isAdmissions();
     }
 
     match /{document=**} {

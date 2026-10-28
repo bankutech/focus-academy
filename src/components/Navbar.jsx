@@ -5,7 +5,6 @@ import {
   X, 
   Calculator, 
   Phone,
-  Clock,
   ArrowRight,
   MessageSquare,
   GraduationCap,
@@ -84,7 +83,7 @@ export default function Navbar() {
 
   return (
     <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${isScrolled ? 'shadow-md' : ''}`}>
-      <div className="bg-[#0F172A] text-slate-200 text-xs py-2 px-4 border-b border-[#1E293B] tracking-wide">
+      <div className="relative z-[60] bg-[#0F172A] text-slate-200 text-xs py-2 px-4 border-b border-[#1E293B] tracking-wide">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 flex items-center justify-between">
           <div className="flex items-center space-x-3 overflow-hidden text-ellipsis whitespace-nowrap">
             <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-100 text-xs uppercase font-bold border border-orange-500/30">
@@ -131,7 +130,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <nav aria-label="Main Navigation" className={`w-full bg-white/95 backdrop-blur-md transition-all duration-300 border-b ${
+      <nav aria-label="Main Navigation" className={`relative z-[60] w-full bg-white/95 backdrop-blur-md transition-all duration-300 border-b ${
         isScrolled 
           ? 'border-[#E2E8F0] shadow-xs py-3' 
           : 'border-[#E2E8F0]/80 py-3.5 sm:py-4'
@@ -237,17 +236,8 @@ export default function Navbar() {
           <div 
             role="dialog"
             aria-label="Mobile Navigation Menu"
-            className="absolute top-full left-0 right-0 max-h-[calc(100vh-100%)] max-h-[calc(100dvh-100%)] overflow-y-auto overscroll-contain z-50 lg:hidden bg-[#F8FAFC] border-b border-[#E2E8F0] shadow-md px-4 pt-3 pb-28 sm:pb-12 animate-in slide-in-from-top duration-200 space-y-4 text-left"
+            className="absolute top-full left-0 right-0 z-[55] lg:hidden bg-[#F8FAFC] border-b border-[#E2E8F0] shadow-md px-4 pt-3 pb-5 animate-in slide-in-from-top duration-200 space-y-4 text-left"
           >
-            <div className="p-3.5 bg-white rounded-md border border-[#E2E8F0] shadow-xs">
-              <div className="flex items-center space-x-2 text-xs uppercase text-brand font-bold">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Evening Batches: 4:00 PM – 9:00 PM</span>
-              </div>
-              <p className="text-xs text-slate-600 mt-1 leading-snug">
-                Thiripura Complex, Main Road (via Four Roads), Near Malar Hospital, Perambalur.
-              </p>
-            </div>
 
             <div className="space-y-1.5">
               {navLinks.map((link) => {

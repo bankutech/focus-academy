@@ -17,8 +17,10 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { getVerifiedAdminEmail } from '../../services/adminIdentity';
 import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
 import { feeStatusBreakdown, batchOccupancy, monthlyCollections, rupees } from '../../components/admin/chartData';
+import { buildActionItems, unmetActionCount } from '../../components/admin/actionItems';
 
 export default function AdminDashboardPage() {
   const [metrics, setMetrics] = useState(null);
@@ -27,6 +29,9 @@ export default function AdminDashboardPage() {
   const [payments, setPayments] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [reservations, setReservations] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  const [reconciliations, setReconciliations] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [dataErrors, setDataErrors] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,6 +39,7 @@ export default function AdminDashboardPage() {
     setLoading(true);
     setDataErrors([]);
     const errors = [];
+    const canViewAudit = AdminDataService.hasPermission(getVerifiedAdminEmail() || '', 'canManageSettings');
     const safeGet = async (label, fn) => {
       try { 
         return await fn(); 
@@ -44,7 +50,7 @@ export default function AdminDashboardPage() {
     };
 
     // Single-pass parallel retrieval to prevent redundant database roundtrips
-    const [b, o, p, enr, st, ld, res] = await Promise.all([
+    const [b, o, p, enr, st, ld, res, rem, rec, logs] = await Promise.all([
       safeGet('Batches', () => AdminDataService.getBatches()),
       safeGet('Fee Obligations', () => AdminDataService.getFeeObligations()),
       safeGet('Payments', () => AdminDataService.getPayments()),
@@ -52,6 +58,9 @@ export default function AdminDashboardPage() {
       safeGet('Students', () => AdminDataService.getStudents()),
       safeGet('Leads', () => AdminDataService.getLeads()),
       safeGet('Reservations', () => AdminDataService.getReservations()),
+      safeGet('Reminders', () => AdminDataService.getReminders()),
+      safeGet('Reconciliations', () => AdminDataService.getCollectionReconciliations()),
+      canViewAudit ? safeGet('Audit Logs', () => AdminDataService.getAuditLogs()) : Promise.resolve([]),
     ]);
 
     // Compute metrics from preloaded dataset to eliminate duplicate hydration queries
@@ -70,6 +79,9 @@ export default function AdminDashboardPage() {
     if (p) setPayments(p);
     if (enr) setEnrollments(enr);
     if (res) setReservations(res);
+    if (rem) setReminders(rem);
+    if (rec) setReconciliations(rec);
+    if (logs) setAuditLogs(logs);
 
     setDataErrors(errors);
     setLoading(false);
@@ -89,6 +101,22 @@ export default function AdminDashboardPage() {
       return acc;
     }, {});
   }, [reservations]);
+
+  const canViewAuditRecords = AdminDataService.hasPermission(getVerifiedAdminEmail() || '', 'canManageSettings');
+
+  const actionItems = useMemo(
+    () => buildActionItems({
+      batches,
+      obligations,
+      enrollments,
+      reminders,
+      reconciliations,
+      auditLogs: canViewAuditRecords ? auditLogs : null,
+      dataErrors,
+      reservations,
+    }),
+    [batches, obligations, enrollments, reminders, reconciliations, auditLogs, dataErrors, reservations, canViewAuditRecords]
+  );
 
   if (loading) {
     return (
@@ -225,8 +253,61 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
+      {actionItems.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-none p-4 sm:p-5 flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-slate-200">
+            <div>
+              <h2 className="text-sm font-bold text-[#0F172A]">Action Required</h2>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Generated from saved admissions, ledgers, reconciliations, reminders and audit records.
+              </p>
+            </div>
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none text-[11px] font-bold border shrink-0 ${
+              unmetActionCount(actionItems) > 0
+                ? 'bg-rose-50 text-rose-800 border-rose-200'
+                : 'bg-slate-50 text-slate-700 border-slate-200'
+            }`}>
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>{unmetActionCount(actionItems)} needing attention</span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {actionItems.map((item) => (
+              <Link
+                key={item.id}
+                to={item.to}
+                className={`border rounded-none p-3 flex flex-col justify-between gap-2 hover:bg-slate-50 transition-colors ${
+                  item.severity === 'critical'
+                    ? 'border-rose-200 bg-rose-50/40'
+                    : item.severity === 'warning'
+                    ? 'border-amber-200 bg-amber-50/30'
+                    : 'border-slate-200'
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-xs font-bold text-[#0F172A]">{item.title}</span>
+                    {item.amount !== undefined && (
+                      <span className="font-mono text-[11px] font-bold text-rose-700 shrink-0">
+                        ₹{Number(item.amount).toLocaleString('en-IN')}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-1">{item.detail}</p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-brand">
+                  <span>{item.linkLabel}</span>
+                  <ArrowRight className="w-3 h-3" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {dataErrors.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-none p-4 text-xs text-amber-900">
+        <div role="status" className="bg-amber-50 border border-amber-200 rounded-none p-4 text-xs text-amber-900">
           <div className="flex items-start space-x-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <div>

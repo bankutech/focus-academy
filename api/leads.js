@@ -12,8 +12,20 @@ const ACADEMIC_SESSION = '2025-2026';
 
 const normalizeName = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const dateStr = (input = new Date()) => (input instanceof Date ? input : new Date(input)).toISOString().split('T')[0];
-const shiftDate = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-const monthCycle = (input = new Date()) => new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' }).format(input);
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+const firstBillingCycle = (input = new Date()) => {
+  const ist = new Date((input instanceof Date ? input : new Date(input)).getTime() + IST_OFFSET_MS);
+  let month = ist.getUTCMonth();
+  if (ist.getUTCDate() > 5) month += 1;
+  const due = new Date(Date.UTC(ist.getUTCFullYear(), month, 5));
+  return {
+    dueDate: due.toISOString().split('T')[0],
+    cycleLabel: new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+      new Date(Date.UTC(due.getUTCFullYear(), due.getUTCMonth(), 1))
+    ),
+  };
+};
 
 const sanitizeId = (value, max = 40) => String(value || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, max);
 const sanitizeKey = (value, max = 80) => String(value || '').replace(/[^\w:.-]/g, '').slice(0, max);
@@ -65,7 +77,11 @@ async function finalizeEnrollment(db, { record, waitlisted }) {
   const enrollmentRef = db.collection('enrollments').doc(enrollmentId);
   const existingEnrollment = await enrollmentRef.get();
   if (existingEnrollment.exists) {
-    return { ...(existingEnrollment.data() || {}), id: enrollmentId, alreadyFinalized: true };
+    const existing = existingEnrollment.data() || {};
+    const completeForAdmission = waitlisted ? Boolean(existing.status === 'waitlisted') : Boolean(existing.studentId);
+    if (completeForAdmission) {
+      return { ...existing, id: enrollmentId, alreadyFinalized: true };
+    }
   }
 
   const batchId = record.batchId;
@@ -165,7 +181,8 @@ async function finalizeEnrollment(db, { record, waitlisted }) {
   const year = new Date().getFullYear();
   const admissionCounterRef = db.collection('counters').doc(`admissions-${year}`);
   const obligationId = `OBL-${sanitizeId(enrollmentId, 32)}-${String(year)}`;
-  const nextDueDate = dateStr(shiftDate(30));
+  const billing = firstBillingCycle(record.timestamp);
+  const nextDueDate = billing.dueDate;
   const amountDue = Math.max(0, Number(batch.monthlyFee) || 0);
 
   const result = await db.runTransaction(async (tx) => {
@@ -250,7 +267,7 @@ async function finalizeEnrollment(db, { record, waitlisted }) {
           studentId,
           studentName: record.studentName,
           batchId: liveBatch.id || batchId,
-          billingCycle: monthCycle(),
+          billingCycle: billing.cycleLabel,
           dueDate: nextDueDate,
           amountDue,
           amountPaid: 0,
@@ -309,7 +326,7 @@ export default async function handler(req, res) {
 
   const services = await getServices();
   if (!services) return unavailable(res);
-  const { db } = services;
+  const { db, auth } = services;
 
   try {
     if (!(await withinRate(db, 'lead', clientIp(req), 10, 60 * 1000))) {
@@ -321,6 +338,18 @@ export default async function handler(req, res) {
 
     if (body.website_url || body.faxNumber || body.company_fax) {
       return fail(res, 400, 'Automated submission rejected.');
+    }
+
+    const authHeader = String(req.headers.authorization || '');
+    const studentToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    let verifiedStudent = null;
+    if (studentToken) {
+      try {
+        const decoded = await auth.verifyIdToken(studentToken);
+        verifiedStudent = { uid: decoded.uid, email: String(decoded.email || '').toLowerCase().trim() || null };
+      } catch {
+        verifiedStudent = null;
+      }
     }
 
     const studentName = clean(body.studentName, 80);
@@ -368,7 +397,7 @@ export default async function handler(req, res) {
 
     if (existing && !existing.conflict) {
       const stored = existing.record;
-      if (stored.source === 'enrollment') {
+      if (stored.batchId && (stored.reservationId || stored.source === 'enrollment')) {
         try {
           const proof = readToken(String(body.stepToken || ''));
           const reservationRef = proof
@@ -381,21 +410,45 @@ export default async function handler(req, res) {
           console.warn('[api:leads] duplicate healing failed:', healErr?.code || healErr?.name || 'unknown');
         }
       }
+      let enrollmentRecord = null;
+      try {
+        const enrollmentSnap = await db.collection('enrollments').doc(stored.id).get();
+        enrollmentRecord = enrollmentSnap.exists ? enrollmentSnap.data() : null;
+      } catch {
+        enrollmentRecord = null;
+      }
+
       return res.status(200).json({
         success: true,
         duplicate: true,
-        data: stored,
+        data: { ...stored, ...(enrollmentRecord || {}) },
         meta: {
           id: stored.id,
           duplicate: true,
           duplicateReason: existing.reason,
-          receivedAt: stored.timestamp || stored.enrolledAt || new Date().toISOString()
+          receivedAt: stored.timestamp || stored.enrolledAt || new Date().toISOString(),
+          studentId: enrollmentRecord?.studentId || stored.studentId || null,
+          feeObligationId: enrollmentRecord?.feeObligationId || stored.feeObligationId || null,
+          enrollmentStatus: enrollmentRecord?.status || stored.enrollmentStatus || null
         }
       });
     }
 
+    let recordId = requestedEnrollmentId && !existing?.conflict ? requestedEnrollmentId : null;
+    if (!recordId) {
+      for (let attempt = 0; attempt < 5 && !recordId; attempt += 1) {
+        const candidate = newId('FA');
+        const [leadSnap, enrollmentSnap] = await Promise.all([
+          db.collection('leads').doc(candidate).get(),
+          db.collection('enrollments').doc(candidate).get(),
+        ]);
+        if (!leadSnap.exists && !enrollmentSnap.exists) recordId = candidate;
+      }
+      if (!recordId) return fail(res, 503, 'We could not allocate a unique admission slip. Please retry in a moment.');
+    }
+
     const record = {
-      id: requestedEnrollmentId && !existing?.conflict ? requestedEnrollmentId : newId('FA'),
+      id: recordId,
       timestamp: new Date().toISOString(),
       studentName,
       parentName: clean(body.parentName, 80),
@@ -428,8 +481,8 @@ export default async function handler(req, res) {
       timing: clean(body.timing, 50) || null,
       subjects: clean(body.subjects, 150),
       notes: clean(body.notes, 500),
-      studentUid: clean(body.studentUid, 128) || null,
-      email: clean(body.email, 120) || null,
+      studentUid: verifiedStudent?.uid || null,
+      email: verifiedStudent?.email || null,
       source: isEnrollmentSubmission ? 'enrollment' : 'inquiry',
       status: 'new',
       idempotencyKey: idempotencyKey || null,

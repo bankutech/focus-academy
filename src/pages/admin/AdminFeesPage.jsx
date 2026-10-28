@@ -155,7 +155,7 @@ export default function AdminFeesPage() {
       </div>
 
       {formSuccess && (
-        <div className="p-3 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-md text-emerald-800 text-xs flex items-center justify-between">
+        <div role="status" aria-live="polite" className="p-3 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-md text-emerald-800 text-xs flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>{formSuccess}</span>
@@ -167,7 +167,7 @@ export default function AdminFeesPage() {
       )}
 
       {formError && (
-        <div className="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-md text-red-800 text-xs flex items-center justify-between">
+        <div role="alert" className="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-md text-red-800 text-xs flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
             <span>{formError}</span>

@@ -156,6 +156,7 @@ export const ROLE_PERMISSIONS = {
     'canManageBatches',
     'canManageStudents',
     'canRecordPayments',
+    'canReconcileCollections',
     'canTriggerReminders',
     'canRestoreBackup'
   ],
@@ -168,14 +169,35 @@ export const ROLE_PERMISSIONS = {
     'canManageBatches',
     'canManageStudents',
     'canRecordPayments',
+    'canReconcileCollections',
     'canTriggerReminders'
+  ],
+  admissions: [
+    'canManageStudents',
+    'canExportData'
   ],
   fee_manager: [
     'canWaiveFees',
     'canRecordPayments',
+    'canReconcileCollections',
     'canTriggerReminders',
     'canExportData'
-  ]
+  ],
+  teacher: [],
+  read_only: [],
+  viewer: []
+};
+
+export const ADMIN_ROLES = ['owner', 'administrator', 'admissions', 'fee_manager', 'teacher', 'read_only'];
+
+const ROLE_RANK = {
+  viewer: 0,
+  read_only: 0,
+  teacher: 1,
+  fee_manager: 3,
+  admissions: 3,
+  administrator: 4,
+  owner: 5
 };
 
 export const SEED_SETTINGS = {
@@ -706,8 +728,24 @@ const seedStore = () => ({
   reminders: JSON.parse(JSON.stringify(SEED_REMINDERS)),
   auditLogs: JSON.parse(JSON.stringify(SEED_AUDIT_LOGS)),
   settings: JSON.parse(JSON.stringify(SEED_SETTINGS)),
-  tillSessions: []
+  tillSessions: [],
+  reconciliations: []
 });
+
+export const computeBackupChecksum = (snapshot) => {
+  const payload = { ...(snapshot || {}) };
+  delete payload.checksum;
+  const text = JSON.stringify(payload);
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < text.length; i += 1) {
+    const code = text.charCodeAt(i);
+    h1 ^= code;
+    h1 = Math.imul(h1, 0x01000193) >>> 0;
+    h2 = Math.imul(h2 ^ code, 0x85ebca6b) >>> 0;
+  }
+  return `fnv1a-${h1.toString(16).padStart(8, '0')}${h2.toString(16).padStart(8, '0')}`;
+};
 
 const uid = (prefix) => {
   const random = typeof crypto !== 'undefined' && crypto.randomUUID
@@ -725,6 +763,88 @@ const buildAudit = ({ actor, action, entityType, entityId, details }) => ({
   entityId,
   details
 });
+
+const PAYMENT_METHOD_ALIASES = {
+  cash: 'cash',
+  counter_cash: 'cash',
+  upi: 'upi_online',
+  gpay: 'upi_online',
+  phonepe: 'upi_online',
+  paytm: 'upi_online',
+  upi_online: 'upi_online',
+  upi_id: 'upi_online',
+  bank: 'bank_transfer',
+  bank_transfer: 'bank_transfer',
+  neft: 'bank_transfer',
+  imps: 'bank_transfer',
+  card: 'card',
+  debit_card: 'card',
+  credit_card: 'card',
+  cheque: 'cheque',
+  check: 'cheque',
+  dd: 'demand_draft',
+  demand_draft: 'demand_draft'
+};
+
+const APPROVED_PAYMENT_METHODS = new Set(Object.values(PAYMENT_METHOD_ALIASES));
+
+export const normalizePaymentMethod = (value) => {
+  const key = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const method = PAYMENT_METHOD_ALIASES[key];
+  if (!method || !APPROVED_PAYMENT_METHODS.has(method)) {
+    throw new Error('Select an approved collection method: cash, UPI, bank transfer, card, cheque or demand draft.');
+  }
+  return method;
+};
+
+export const isVoidedPayment = (payment = {}) => Boolean(
+  payment.isReversed ||
+  payment.reversed ||
+  payment.status === 'reversed' ||
+  payment.refundStatus === 'refunded'
+);
+
+export const summariseRecordedCollections = (payments = [], date) => {
+  const rows = (Array.isArray(payments) ? payments : []).filter(p => p && p.paymentDate === date);
+  const byMethod = { cash: 0, upi_online: 0, bank_transfer: 0, card: 0, cheque: 0, demand_draft: 0, other: 0 };
+  const reversedByMethod = { cash: 0, upi_online: 0, bank_transfer: 0, card: 0, cheque: 0, demand_draft: 0, other: 0 };
+  let grossTotal = 0;
+  let reversedTotal = 0;
+  let validReceipts = 0;
+  let reversedReceipts = 0;
+
+  rows.forEach((payment) => {
+    const amount = Number(payment.amount) || 0;
+    const rawKey = String(payment.paymentMethod || 'other').trim().toLowerCase().replace(/[\s-]+/g, '_');
+    const method = PAYMENT_METHOD_ALIASES[rawKey] || (Object.prototype.hasOwnProperty.call(byMethod, rawKey) ? rawKey : 'other');
+    grossTotal += amount;
+
+    if (isVoidedPayment(payment)) {
+      reversedTotal += amount;
+      reversedReceipts += 1;
+      reversedByMethod[method] = (reversedByMethod[method] || 0) + amount;
+      return;
+    }
+    validReceipts += 1;
+    byMethod[method] = (byMethod[method] || 0) + amount;
+  });
+
+  const round = (n) => Math.round(n * 100) / 100;
+  Object.keys(byMethod).forEach((k) => { byMethod[k] = round(byMethod[k]); });
+  Object.keys(reversedByMethod).forEach((k) => { reversedByMethod[k] = round(reversedByMethod[k]); });
+
+  return {
+    date,
+    grossTotal: round(grossTotal),
+    reversedTotal: round(reversedTotal),
+    netTotal: round(grossTotal - reversedTotal),
+    byMethod,
+    reversedByMethod,
+    receiptCount: rows.length,
+    validReceipts,
+    reversedReceipts
+  };
+};
 
 const isLive = () => isFirebaseConfigured() && Boolean(db) && !(typeof window !== 'undefined' && window.__E2E_SEED__);
 
@@ -764,7 +884,8 @@ function loadLocalStore() {
       reminders: parsed.reminders && parsed.reminders.length > 0 ? parsed.reminders : seed.reminders,
       auditLogs: parsed.auditLogs || seed.auditLogs,
       settings: parsed.settings || seed.settings,
-      tillSessions: parsed.tillSessions || []
+      tillSessions: parsed.tillSessions || [],
+      reconciliations: parsed.reconciliations || []
     };
     if (isLive()) sessionCache = loaded;
     return loaded;
@@ -791,7 +912,8 @@ const HYDRATED_COLLECTIONS = {
   obligations: 'fee_obligations',
   payments: 'payments',
   reminders: 'reminders',
-  tillSessions: 'till_sessions'
+  tillSessions: 'till_sessions',
+  reconciliations: 'collection_reconciliations'
 };
 
 async function hydrateStore() {
@@ -867,6 +989,7 @@ export const AdminDataService = {
       'WAIVE_FEES': 'canWaiveFees',
       'APPLY_DISCOUNTS': 'canApplyDiscounts',
       'RECORD_PAYMENTS': 'canRecordPayments',
+      'RECONCILE_COLLECTIONS': 'canReconcileCollections',
       'TRIGGER_REMINDERS': 'canTriggerReminders'
     };
     if (aliases[permission] && permissions.includes(aliases[permission])) {
@@ -958,7 +1081,7 @@ export const AdminDataService = {
 
   async updateAdminRole(email, newRole, actor = 'admin') {
     this.verifyPermission(actor, 'canManageAdmins', 'updating administrator roles');
-    const validRoles = ['owner', 'administrator', 'fee_manager'];
+    const validRoles = ADMIN_ROLES;
     if (!validRoles.includes(newRole)) {
       throw new Error(`Invalid role '${newRole}'. Allowed roles: ${validRoles.join(', ')}.`);
     }
@@ -970,7 +1093,6 @@ export const AdminDataService = {
 
     const actorEmail = String(normalizeActorEmail(actor) || '').toLowerCase().trim();
     const actorRole = this.getUserRole(actor);
-    const ROLE_RANK = { viewer: 0, fee_manager: 1, administrator: 2, owner: 3 };
 
     if (cleanEmail === actorEmail) {
       throw new Error('You cannot change your own permission role. Ask another owner to do this.');
@@ -1018,7 +1140,7 @@ export const AdminDataService = {
       try {
         await runTransaction(db, async (tx) => {
           const snap = await tx.get(settingsRef);
-          const current = snap.exists
+          const current = snap.exists()
             ? snap.data()
             : { ...SEED_SETTINGS, authorizedAdmins: [...SEED_SETTINGS.authorizedAdmins] };
           const { admins, oldRole } = applyRoleChange(current);
@@ -1333,33 +1455,21 @@ export const AdminDataService = {
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'students')), 8000);
-        if (snap && !snap.empty) {
-          list = snap.docs.map(d => d.data());
-        }
+        list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       } catch (err) {
-        console.warn('Firestore getStudents unavailable, using verified local store:', err);
+        throw dataUnavailable(err);
       }
-    }
-    const store = await hydrateStore();
-    if (!list) {
-      list = [...(store.students || [])];
     } else {
-      const liveIds = new Set(list.map(s => s.id));
-      (store.students || []).forEach(localStudent => {
-        if (!liveIds.has(localStudent.id)) {
-          liveIds.add(localStudent.id);
-          list.push(localStudent);
-        }
-      });
-    }
+      const store = await hydrateStore();
+      list = [...(store.students || [])];
 
-    try {
-      const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
-      const existingIds = new Set(list.map(s => s.id));
-      const existingPhones = new Set(list.map(s => s.guardianPhone || s.phone));
-      registered.forEach(r => {
-        if (!existingIds.has(r.id) && !existingPhones.has(r.phone)) {
-          existingIds.add(r.id);
+      try {
+        const registered = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
+        const existingIds = new Set(list.map(s => s.id));
+        const existingPhones = new Set(list.map(s => s.guardianPhone || s.phone));
+        registered.forEach(r => {
+          if (!existingIds.has(r.id) && !existingPhones.has(r.phone)) {
+            existingIds.add(r.id);
             list.push({
               id: r.id,
               studentName: r.studentName,
@@ -1395,6 +1505,7 @@ export const AdminDataService = {
         });
       } catch {
       }
+    }
 
     if (!options.includeArchived) {
       list = list.filter(s => s.status !== 'archived');
@@ -2593,6 +2704,9 @@ export const AdminDataService = {
     if (!validStatuses.includes(status)) {
       throw new Error(`Invalid lifecycle status '${status}'. Must be one of: ${validStatuses.join(', ')}.`);
     }
+    if (['archived', 'paused'].includes(status) && String(reason || '').trim().length < 5) {
+      throw new Error('A written reason of at least 5 characters is required to pause, withdraw or archive a student.');
+    }
 
     const store = await hydrateStore();
     const sIdx = store.students.findIndex(s => s.id === studentId);
@@ -2643,10 +2757,12 @@ export const AdminDataService = {
 
     if (isLive()) {
       try {
-        await updateDoc(doc(db, 'students', studentId), updated);
-        if (bIdx !== -1) {
-          await updateDoc(doc(db, 'batches', batchId), store.batches[bIdx]);
-        }
+        await runTransaction(db, async (tx) => {
+          tx.update(doc(db, 'students', studentId), updated);
+          if (bIdx !== -1) {
+            tx.update(doc(db, 'batches', batchId), store.batches[bIdx]);
+          }
+        });
       } catch (err) {
         console.error('Firestore updateStudentLifecycleStatus error:', err);
         throw new Error(`Failed to update student lifecycle in Cloud Firestore: ${err.message || 'Permission denied or network unreachable'}`);
@@ -2676,6 +2792,18 @@ export const AdminDataService = {
 
   async archiveStudent(studentId, actor = 'admin') {
     return this.updateStudentLifecycleStatus(studentId, { status: 'archived', reason: 'Archived by administrator' }, actor);
+  },
+
+  async withdrawStudent(studentId, { reason, effectiveDate } = {}, actor = 'admin') {
+    const cleanReason = String(reason || '').trim();
+    if (cleanReason.length < 5) {
+      throw new Error('A withdrawal reason of at least 5 characters is required.');
+    }
+    return this.updateStudentLifecycleStatus(
+      studentId,
+      { status: 'archived', reason: cleanReason, courseEndDate: effectiveDate || new Date().toISOString().split('T')[0] },
+      actor
+    );
   },
 
   async restoreStudent(studentId, actor = 'admin') {
@@ -2828,19 +2956,24 @@ export const AdminDataService = {
       store.students[sIdx].updatedAt = new Date().toISOString();
     }
 
-    saveLocalStore(store);
-
     if (isLive()) {
       try {
-        await updateDoc(doc(db, 'students', studentId), {
-          batchId: targetBatch.id,
-          batchName: targetBatch.name,
-          updatedAt: new Date().toISOString()
+        await runTransaction(db, async (tx) => {
+          tx.update(doc(db, 'students', studentId), {
+            batchId: targetBatch.id,
+            batchName: targetBatch.name,
+            updatedAt: new Date().toISOString()
+          });
+          if (oldBIdx !== -1) tx.update(doc(db, 'batches', oldBatchId), store.batches[oldBIdx]);
+          if (newBIdx !== -1) tx.update(doc(db, 'batches', newBatchId), store.batches[newBIdx]);
         });
       } catch (err) {
-        console.warn('Firestore transferStudentBatch error (local transfer preserved):', err);
+        console.error('Firestore transferStudentBatch error:', err);
+        throw new Error(`The batch transfer could not be saved centrally. No transfer was confirmed: ${err.message || 'Permission denied or network unreachable'}`);
       }
     }
+
+    saveLocalStore(store);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -2996,44 +3129,41 @@ export const AdminDataService = {
   },
 
   async getFeeObligations(studentId = null) {
+    const withStatus = (rows) => {
+      const today = new Date().toISOString().split('T')[0];
+      return rows.map(obl => {
+        const balance = Math.max(0, Number(obl.amountDue) - Number(obl.amountPaid || 0) - Number(obl.waivedAmount || 0));
+        let status = obl.status;
+        if (obl.status !== 'waived' && obl.status !== 'cancelled') {
+          if (balance === 0) {
+            status = 'paid';
+          } else if (Number(obl.amountPaid || 0) > 0) {
+            status = 'partially_paid';
+          } else if (today > obl.dueDate) {
+            status = 'overdue';
+          } else {
+            status = 'pending';
+          }
+        }
+        return { ...obl, balance, status };
+      });
+    };
+
     if (isLive()) {
       try {
-        let q;
-        if (studentId) {
-          q = query(collection(db, 'fee_obligations'), where('studentId', '==', studentId));
-        } else {
-          q = collection(db, 'fee_obligations');
-        }
+        const q = studentId
+          ? query(collection(db, 'fee_obligations'), where('studentId', '==', studentId))
+          : collection(db, 'fee_obligations');
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) {
-          return snap.docs.map(d => d.data());
-        }
+        return withStatus(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       } catch (err) {
-        console.warn('Firestore getFeeObligations unavailable, using cached store:', err);
+        throw dataUnavailable(err);
       }
     }
-    const store = await hydrateStore();
-    const obligations = store.obligations.map(obl => {
-      const today = new Date().toISOString().split('T')[0];
-      const balance = Math.max(0, Number(obl.amountDue) - Number(obl.amountPaid || 0) - Number(obl.waivedAmount || 0));
-      let status = obl.status;
-      if (obl.status !== 'waived' && obl.status !== 'cancelled') {
-        if (balance === 0) {
-          status = 'paid';
-        } else if (obl.amountPaid > 0) {
-          status = 'partially_paid';
-        } else if (today > obl.dueDate) {
-          status = 'overdue';
-        } else {
-          status = 'pending';
-        }
-      }
-      return { ...obl, balance, status };
-    });
 
-    if (studentId) {
-      return obligations.filter(o => o.studentId === studentId);
-    }
+    const store = await hydrateStore();
+    const obligations = withStatus(store.obligations || []);
+    if (studentId) return obligations.filter(o => o.studentId === studentId);
     return obligations;
   },
 
@@ -3259,18 +3389,13 @@ export const AdminDataService = {
   async getPayments(studentId = null) {
     if (isLive()) {
       try {
-        let q;
-        if (studentId) {
-          q = query(collection(db, 'payments'), where('studentId', '==', studentId));
-        } else {
-          q = collection(db, 'payments');
-        }
+        const q = studentId
+          ? query(collection(db, 'payments'), where('studentId', '==', studentId))
+          : collection(db, 'payments');
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
-        if (snap && !snap.empty) {
-          return snap.docs.map(d => d.data());
-        }
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
       } catch (err) {
-        console.warn('Firestore getPayments unavailable, using cached store:', err);
+        throw dataUnavailable(err);
       }
     }
     const store = await hydrateStore();
@@ -3352,7 +3477,7 @@ export const AdminDataService = {
       enrollmentId: paymentData.enrollmentId || obligation.enrollmentId || null,
       amount,
       paymentDate: paymentData.paymentDate || new Date().toISOString().split('T')[0],
-      paymentMethod: paymentData.paymentMethod || 'cash',
+      paymentMethod: normalizePaymentMethod(paymentData.paymentMethod),
       referenceNumber: paymentData.referenceNumber || `REF-${Date.now().toString(36).toUpperCase()}`,
       gatewayTransactionId: paymentData.gatewayTransactionId ||
         (paymentData.referenceNumber && !String(paymentData.referenceNumber).startsWith('REF-') ? String(paymentData.referenceNumber) : null),
@@ -3430,7 +3555,11 @@ export const AdminDataService = {
       details: `Recorded payment ₹${amount} for '${obligation.studentName}' (${obligation.billingCycle}). Receipt: ${receiptNumber}`
     });
 
-    Object.assign(newPayment, { payment: newPayment, obligation });
+    Object.assign(newPayment, {
+      payment: newPayment,
+      obligation,
+      nextDueDate: studentIdx !== -1 ? store.students[studentIdx].feeConfig?.nextDueDate || null : null
+    });
     return newPayment;
   },
 
@@ -3473,6 +3602,7 @@ export const AdminDataService = {
         if (amount > currentBalance) {
           throw new Error(`Payment amount (₹${amount}) exceeds the remaining balance of ₹${currentBalance}.`);
         }
+        const paymentMethod = normalizePaymentMethod(paymentData.paymentMethod);
 
         const nextNumber = (counterSnap.exists() ? counterSnap.data().value : 0) + 1;
         const receiptNumber = `${prefix}-${year}-${String(nextNumber).padStart(4, '0')}`;
@@ -3488,7 +3618,7 @@ export const AdminDataService = {
           enrollmentId: paymentData.enrollmentId || obligation.enrollmentId || null,
           amount,
           paymentDate: paymentData.paymentDate || now.split('T')[0],
-          paymentMethod: paymentData.paymentMethod || 'cash',
+          paymentMethod,
           referenceNumber: refText || uid('REF'),
           gatewayTransactionId: paymentData.gatewayTransactionId || (refText && !refText.startsWith('REF-') ? refText : null),
           verificationStatus: paymentData.verificationStatus || 'verified',
@@ -3524,7 +3654,49 @@ export const AdminDataService = {
         if (refDoc) tx.set(refDoc, { paymentId, receiptNumber });
         tx.set(doc(db, 'audit_logs', audit.id), audit);
 
-        return Object.assign({}, newPayment, { payment: newPayment, obligation: updatedObligation });
+        let nextDueDate = null;
+        const studentRef = doc(db, 'students', String(obligation.studentId));
+        const [studentSnap, studentObligationsSnap, studentPaymentsSnap] = await Promise.all([
+          tx.get(studentRef),
+          tx.get(query(collection(db, 'fee_obligations'), where('studentId', '==', obligation.studentId))),
+          tx.get(query(collection(db, 'payments'), where('studentId', '==', obligation.studentId)))
+        ]);
+        const student = studentSnap.exists() ? studentSnap.data() : null;
+        const allObligations = studentObligationsSnap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .map((row) => (row.id === obligation.id ? updatedObligation : row));
+        const allPayments = studentPaymentsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        allPayments.push(newPayment);
+        const schedule = calculateNextPaymentDueDate({ student, obligations: allObligations, payments: allPayments });
+        nextDueDate = schedule.dueDate || null;
+
+        if (studentSnap.exists()) {
+          tx.set(studentRef, {
+            feeConfig: {
+              ...(student.feeConfig || {}),
+              lastPaymentDate: newPayment.paymentDate,
+              lastPaymentAmount: amount,
+              nextDueDate: nextDueDate || student.feeConfig?.nextDueDate || null
+            },
+            updatedAt: now
+          }, { merge: true });
+        }
+
+        const linkedEnrollmentId = newPayment.enrollmentId || obligation.enrollmentId;
+        if (linkedEnrollmentId) {
+          const enrollmentRef = doc(db, 'enrollments', String(linkedEnrollmentId));
+          const enrollmentSnap = await tx.get(enrollmentRef);
+          if (enrollmentSnap.exists()) {
+            tx.set(enrollmentRef, {
+              paymentStatus: balance === 0 ? 'paid' : 'partial',
+              amountPaid,
+              paymentReference: receiptNumber,
+              updatedAt: now
+            }, { merge: true });
+          }
+        }
+
+        return Object.assign({}, newPayment, { payment: newPayment, obligation: updatedObligation, nextDueDate });
       });
     } catch (err) {
       if (err.code === 'unavailable' || err.code === 'deadline-exceeded' || err.code === 'permission-denied') {
@@ -3577,7 +3749,47 @@ export const AdminDataService = {
         if (refDoc && refSnap && refSnap.exists()) tx.delete(refDoc);
         tx.set(doc(db, 'audit_logs', audit.id), audit);
 
-        return { success: true, payment: updatedPayment, obligation: updatedObligation };
+        let nextDueDate = null;
+        const studentRef = doc(db, 'students', String(obligation.studentId));
+        const [studentSnap, studentObligationsSnap, studentPaymentsSnap] = await Promise.all([
+          tx.get(studentRef),
+          tx.get(query(collection(db, 'fee_obligations'), where('studentId', '==', obligation.studentId))),
+          tx.get(query(collection(db, 'payments'), where('studentId', '==', obligation.studentId)))
+        ]);
+        const student = studentSnap.exists() ? studentSnap.data() : null;
+        const allObligations = studentObligationsSnap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .map((row) => (row.id === obligation.id ? updatedObligation : row));
+        const validPayments = studentPaymentsSnap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .filter((row) => row.id !== paymentId && !row.isReversed && !row.reversed);
+        const schedule = calculateNextPaymentDueDate({ student, obligations: allObligations, payments: validPayments });
+        nextDueDate = schedule.dueDate || null;
+
+        if (studentSnap.exists()) {
+          tx.set(studentRef, {
+            feeConfig: {
+              ...(student.feeConfig || {}),
+              nextDueDate: nextDueDate || student.feeConfig?.nextDueDate || null
+            },
+            updatedAt: now
+          }, { merge: true });
+        }
+
+        const linkedEnrollmentId = payment.enrollmentId || obligation.enrollmentId;
+        if (linkedEnrollmentId) {
+          const enrollmentRef = doc(db, 'enrollments', String(linkedEnrollmentId));
+          const enrollmentSnap = await tx.get(enrollmentRef);
+          if (enrollmentSnap.exists()) {
+            tx.set(enrollmentRef, {
+              paymentStatus: balance === 0 ? 'paid' : amountPaid > 0 ? 'partial' : 'unpaid',
+              amountPaid,
+              updatedAt: now
+            }, { merge: true });
+          }
+        }
+
+        return { success: true, payment: updatedPayment, obligation: updatedObligation, nextDueDate };
       });
     } catch (err) {
       if (err.code === 'unavailable' || err.code === 'deadline-exceeded' || err.code === 'permission-denied') {
@@ -3998,7 +4210,7 @@ export const AdminDataService = {
       .filter(p => p.paymentDate && p.paymentDate.startsWith(currentMonthPrefix))
       .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-    const activeObligations = obligations.filter(o => o.status !== 'archived');
+    const activeObligations = obligations.filter(o => o.status !== 'archived' && o.status !== 'cancelled');
     const totalFeesCharged = activeObligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
     const totalAmountPaid = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
     const totalWaived = activeObligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
@@ -4237,6 +4449,120 @@ export const AdminDataService = {
     };
   },
 
+  async getCollectionReconciliations(date = null) {
+    if (isLive()) {
+      try {
+        const q = date
+          ? query(collection(db, 'collection_reconciliations'), where('date', '==', date))
+          : collection(db, 'collection_reconciliations');
+        const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (err) {
+        throw dataUnavailable(err);
+      }
+    }
+    const store = await hydrateStore();
+    const rows = store.reconciliations || [];
+    return date ? rows.filter(r => r.date === date) : rows;
+  },
+
+  async recordCollectionReconciliation(input = {}, actor = 'admin') {
+    this.verifyPermission(actor, 'canReconcileCollections', 'recording independently verified daily collections');
+
+    const date = String(input.date || '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new Error('A valid reconciliation date (YYYY-MM-DD) is required.');
+    }
+    if (date > new Date().toISOString().split('T')[0]) {
+      throw new Error('Collections cannot be reconciled for a future date.');
+    }
+
+    const readAmount = (value, label) => {
+      if (value === '' || value === null || value === undefined) return 0;
+      const amount = Number(value);
+      if (!Number.isFinite(amount) || amount < 0) {
+        throw new Error(`${label} must be a non-negative amount.`);
+      }
+      return Math.round(amount * 100) / 100;
+    };
+
+    const verified = {
+      cash: readAmount(input.verifiedCash, 'Verified cash'),
+      upi: readAmount(input.verifiedUpi, 'Verified UPI'),
+      bank: readAmount(input.verifiedBank, 'Verified bank transfer'),
+      card: readAmount(input.verifiedCard, 'Verified card'),
+      cheque: readAmount(input.verifiedCheque, 'Verified cheque'),
+      other: readAmount(input.verifiedOther, 'Verified other collections')
+    };
+    const verifiedTotal = Object.values(verified).reduce((sum, n) => sum + n, 0);
+
+    const payments = await this.getPayments();
+    const recorded = summariseRecordedCollections(payments, date);
+    const difference = Math.round((verifiedTotal - recorded.netTotal) * 100) / 100;
+    const methodDifferences = {
+      cash: Math.round((verified.cash - recorded.byMethod.cash) * 100) / 100,
+      upi: Math.round((verified.upi - recorded.byMethod.upi_online) * 100) / 100,
+      bank: Math.round((verified.bank - recorded.byMethod.bank_transfer) * 100) / 100,
+      card: Math.round((verified.card - recorded.byMethod.card) * 100) / 100,
+      cheque: Math.round((verified.cheque - recorded.byMethod.cheque) * 100) / 100
+    };
+    const hasDiscrepancy = difference !== 0 || Object.values(methodDifferences).some(v => v !== 0);
+
+    const existing = (await this.getCollectionReconciliations(date))[0] || null;
+    const now = new Date().toISOString();
+    const record = {
+      id: date,
+      date,
+      status: hasDiscrepancy ? 'discrepancy' : 'reconciled',
+      recorded,
+      verified,
+      verifiedTotal,
+      difference,
+      methodDifferences,
+      notes: String(input.notes || '').trim().slice(0, 500),
+      discrepanciesExplained: String(input.discrepanciesExplained || '').trim().slice(0, 500),
+      reconciledBy: normalizeActorEmail(actor),
+      reconciledAt: now,
+      revision: existing ? Number(existing.revision || 1) + 1 : 1,
+      history: existing
+        ? [...(existing.history || []), {
+            revision: existing.revision || 1,
+            status: existing.status,
+            difference: existing.difference,
+            reconciledBy: existing.reconciledBy,
+            reconciledAt: existing.reconciledAt
+          }]
+        : []
+    };
+
+    if (isLive()) {
+      try {
+        await this.withFirestoreTimeout(setDoc(doc(db, 'collection_reconciliations', date), record), 8000);
+      } catch (err) {
+        console.error('Firestore recordCollectionReconciliation error:', err);
+        throw new Error('The reconciliation could not be saved. No verified totals were recorded; please retry.');
+      }
+    }
+
+    const store = await hydrateStore();
+    const rows = store.reconciliations || [];
+    const idx = rows.findIndex(r => r.id === date);
+    if (idx === -1) rows.push(record);
+    else rows[idx] = record;
+    store.reconciliations = rows;
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: normalizeActorEmail(actor),
+      action: 'COLLECTIONS_RECONCILED',
+      entityType: 'collection_reconciliation',
+      entityId: date,
+      details: `Daily reconciliation for ${date}: recorded ₹${recorded.netTotal}, independently verified ₹${verifiedTotal}, difference ₹${difference}. Status: ${record.status}.`
+    });
+
+    return record;
+  },
+
   async getReminders() {
     if (isLive()) {
       try {
@@ -4390,7 +4716,8 @@ export const AdminDataService = {
     const settings = this.getSettingsSync();
 
     const snapshot = {
-      version: '1.0.0',
+      version: '2.0.0',
+      schemaVersion: 2,
       campus: 'Focus Academy Thiripura Complex Perambalur',
       exportedAt: new Date().toISOString(),
       exportedBy: normalizeActorEmail(actor),
@@ -4402,7 +4729,9 @@ export const AdminDataService = {
         obligations: store.obligations.length,
         payments: store.payments.length,
         reminders: store.reminders.length,
-        auditLogs: store.auditLogs.length
+        auditLogs: store.auditLogs.length,
+        reconciliations: (store.reconciliations || []).length,
+        tillSessions: (store.tillSessions || []).length
       },
       data: {
         batches: store.batches,
@@ -4411,9 +4740,12 @@ export const AdminDataService = {
         payments: store.payments,
         reminders: store.reminders,
         auditLogs: store.auditLogs,
+        reconciliations: store.reconciliations || [],
+        tillSessions: store.tillSessions || [],
         settings
       }
     };
+    snapshot.checksum = computeBackupChecksum(snapshot);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
@@ -4432,10 +4764,20 @@ export const AdminDataService = {
     if (!snapshot || !snapshot.data) {
       throw new Error('Corrupted or invalid backup file: Missing snapshot data block.');
     }
+    if (!snapshot.checksum) {
+      throw new Error('This backup has no integrity checksum and cannot be trusted. Download a fresh snapshot before restoring.');
+    }
+    if (computeBackupChecksum(snapshot) !== snapshot.checksum) {
+      throw new Error('Backup integrity check failed: the file was modified or corrupted after export. Nothing was restored.');
+    }
 
-    const { batches, students, obligations, payments, reminders, auditLogs, settings } = snapshot.data;
+    const { batches, students, obligations, payments, reminders, auditLogs, reconciliations, tillSessions, settings } = snapshot.data;
     if (!Array.isArray(batches) || !Array.isArray(students) || !Array.isArray(obligations) || !Array.isArray(payments)) {
       throw new Error('Invalid backup schema: Missing required collections (batches, students, obligations, payments).');
+    }
+    const missingId = [...batches, ...students, ...obligations, ...payments].find(row => !row || typeof row !== 'object' || !row.id);
+    if (missingId !== undefined) {
+      throw new Error('Invalid backup schema: every restored record requires a stable document ID.');
     }
 
     const restoredStore = {
@@ -4445,33 +4787,52 @@ export const AdminDataService = {
       payments: [...payments],
       reminders: Array.isArray(reminders) ? [...reminders] : [],
       auditLogs: Array.isArray(auditLogs) ? [...auditLogs] : [],
+      reconciliations: Array.isArray(reconciliations) ? [...reconciliations] : [],
+      tillSessions: Array.isArray(tillSessions) ? [...tillSessions] : [],
       settings: settings || this.getSettingsSync()
     };
 
-    saveLocalStore(restoredStore);
-
     if (isLive()) {
+      const collections = [
+        ['batches', batches],
+        ['students', students],
+        ['fee_obligations', obligations],
+        ['payments', payments],
+        ['reminders', restoredStore.reminders],
+        ['collection_reconciliations', restoredStore.reconciliations],
+        ['till_sessions', restoredStore.tillSessions]
+      ];
       try {
-        for (const b of batches) await setDoc(doc(db, 'batches', b.id), b);
-        for (const s of students) await setDoc(doc(db, 'students', s.id), s);
-        for (const o of obligations) await setDoc(doc(db, 'fee_obligations', o.id), o);
-        for (const p of payments) await setDoc(doc(db, 'payments', p.id), p);
+        for (const [name, rows] of collections) {
+          for (let i = 0; i < rows.length; i += 400) {
+            const batch = writeBatch(db);
+            rows.slice(i, i + 400).forEach((row) => batch.set(doc(db, name, String(row.id)), row));
+            await batch.commit();
+          }
+        }
         if (settings) await setDoc(doc(db, 'academy_settings', 'main_config'), settings);
       } catch (err) {
-        console.warn('Firestore restoreFromBackupSnapshot sync error (local backup preserved):', err);
+        console.error('Firestore restoreFromBackupSnapshot error:', err);
+        throw new Error(
+          'The central restore did not complete. Some collections may have been written; do not treat this as a successful restoration. ' +
+          'Review the data with an owner before retrying. ' + (err.message || '')
+        );
       }
     }
+
+    saveLocalStore(restoredStore);
 
     await this.logAudit({
       actor: normalizeActorEmail(actor),
       action: 'BACKUP_RESTORED',
       entityType: 'system_backup',
       entityId: `RESTORE-${Date.now().toString(36).toUpperCase()}`,
-      details: `Restored institutional snapshot exported at ${snapshot.exportedAt || 'Unknown'}: ${batches.length} batches, ${students.length} students, ${payments.length} payments.`
+      details: `Restored checksum-verified snapshot exported at ${snapshot.exportedAt || 'Unknown'}: ${batches.length} batches, ${students.length} students, ${payments.length} payments.`
     });
 
     return {
       success: true,
+      checksumVerified: true,
       counts: snapshot.counts || {
         batches: batches.length,
         students: students.length,

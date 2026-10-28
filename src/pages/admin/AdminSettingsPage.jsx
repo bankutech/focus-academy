@@ -528,6 +528,9 @@ export default function AdminSettingsPage() {
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         adm.role === 'owner' ? 'bg-purple-100 text-purple-800' :
                         adm.role === 'administrator' ? 'bg-blue-100 text-blue-800' :
+                        adm.role === 'admissions' ? 'bg-emerald-100 text-emerald-800' :
+                        adm.role === 'teacher' ? 'bg-sky-100 text-sky-800' :
+                        adm.role === 'read_only' ? 'bg-slate-100 text-slate-700' :
                         'bg-amber-100 text-amber-800'
                       }`}>
                         {adm.role.toUpperCase()}
@@ -542,7 +545,10 @@ export default function AdminSettingsPage() {
                         >
                           <option value="owner">Owner</option>
                           <option value="administrator">Administrator</option>
+                          <option value="admissions">Admissions</option>
                           <option value="fee_manager">Fee Manager</option>
+                          <option value="teacher">Teacher (read-only)</option>
+                          <option value="read_only">Read-only</option>
                         </select>
                       ) : (
                         <span className="text-[11px] text-slate-400">Owner Access Required</span>
@@ -559,7 +565,7 @@ export default function AdminSettingsPage() {
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Permission Entitlements Matrix</span>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               <div className="p-3 bg-white rounded-lg border border-slate-200">
                 <span className="font-bold text-purple-700 block mb-1">Owner</span>
                 <p className="text-[11px] text-slate-500">
@@ -575,7 +581,19 @@ export default function AdminSettingsPage() {
               <div className="p-3 bg-white rounded-lg border border-slate-200">
                 <span className="font-bold text-amber-700 block mb-1">Fee Manager</span>
                 <p className="text-[11px] text-slate-500">
-                  Finance desk: Fee schedules, payment collection recording, receipt issuance, WhatsApp reminder dispatch, and collection exports.
+                  Finance desk: Fee schedules, payment collection recording, receipt issuance, daily reconciliation, WhatsApp reminder dispatch, and collection exports.
+                </p>
+              </div>
+              <div className="p-3 bg-white rounded-lg border border-slate-200">
+                <span className="font-bold text-emerald-700 block mb-1">Admissions</span>
+                <p className="text-[11px] text-slate-500">
+                  Admissions desk: Inquiry follow-up, enrollment review, admission approval, student records and batch allocation. No payment, waiver, role or settings access.
+                </p>
+              </div>
+              <div className="p-3 bg-white rounded-lg border border-slate-200">
+                <span className="font-bold text-sky-700 block mb-1">Teacher / Read-only</span>
+                <p className="text-[11px] text-slate-500">
+                  Classroom access only: can view the roster and batches. Cannot record money, edit records, export personal data, change roles or restore backups.
                 </p>
               </div>
             </div>
@@ -588,7 +606,7 @@ export default function AdminSettingsPage() {
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-sm font-bold uppercase tracking-wide text-[#0F172A]">Institutional Backup &amp; Disaster Recovery</h2>
             <p className="text-xs text-slate-500 mt-1">
-              Maintain institutional continuity. Export encrypted snapshots of student ledgers, batches, and transactions.
+              Maintain institutional continuity. Export checksum-verified JSON snapshots of student ledgers, batches, and transactions. These files contain personal data and must be stored in an approved encrypted location — the download itself is not encrypted.
             </p>
           </div>
 

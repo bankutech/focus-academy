@@ -1,4 +1,15 @@
-# Focus Academy — Product Requirements & Acceptance Criteria
+# Focus Academy — Product Requirements
+
+## Billing & Due-Date Policy (authoritative)
+
+- Tuition is billed per cycle with a default frequency of **monthly** (`student.feeConfig.billingFrequency` may be `monthly`, `quarterly`, `half-yearly` or `yearly`).
+- The billing anchor is the **5th of the month in Asia/Kolkata**. A student enrolled on or before the 5th is billed for that month; a student enrolled after the 5th starts with the following month.
+- The next due date is derived from the **last settled billing period**, preserving the anchor day and advancing by the configured frequency. A payment does **not** reset the due date to “payment date + 30 days”.
+- `amountDue` is the charge for the cycle. The ledger invariant is:
+  `outstanding = max(0, sum(amountDue) − sum(valid payments) − sum(approved waivers))`.
+- Reversed or refunded transactions are excluded from collections. A waiver reduces the obligation but is never counted as cash collected.
+- If no billing cycle or due date exists, the UI must show “Not scheduled” rather than inventing a date.
+- Payments are collected at the campus desk (cash, UPI, bank transfer, card, cheque, demand draft). No online payment gateway is part of this workflow; a non-cash collection requires a transaction reference. & Acceptance Criteria
 
 **Document ID:** FA-REQ-2026.1  
 **Project:** Focus Academy Educational Coaching Institute  

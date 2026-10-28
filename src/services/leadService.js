@@ -31,8 +31,10 @@ export const LeadService = {
     }
 
     const stepToken = rawLeadData.stepToken;
+    const authToken = rawLeadData.authToken;
     const payload = validation.sanitized;
     delete payload.stepToken;
+    delete payload.authToken;
 
     const recentDuplicate = this.getAllSubmissions().find(
       (sub) =>
@@ -71,7 +73,11 @@ export const LeadService = {
       const timeoutId = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
       const response = await fetch(webhookUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': payload.idempotencyKey },
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': payload.idempotencyKey,
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({ ...payload, stepToken }),
         signal: controller.signal,
       });
@@ -89,6 +95,7 @@ export const LeadService = {
         success: true,
         status: 'delivered',
         data: stored,
+        meta: body.meta || null,
         offlineQueued: false,
         message: 'Inquiry received. Campus counselor will contact you within 2 hours.',
         whatsappUrl: this.generateWhatsAppUrl(stored),

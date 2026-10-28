@@ -252,7 +252,9 @@ export default function StudentRegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -282,7 +284,7 @@ export default function StudentRegisterPage() {
             {/* Academic Class & Board */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label htmlFor="signup-grade" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Class / Grade <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
@@ -290,6 +292,7 @@ export default function StudentRegisterPage() {
                     <BookOpen className="w-4 h-4" />
                   </div>
                   <select
+                    id="signup-grade"
                     value={grade}
                     onChange={(e) => setGrade(e.target.value)}
                     className="w-full pl-10 pr-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all cursor-pointer"
@@ -304,10 +307,11 @@ export default function StudentRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                <label htmlFor="signup-board" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   School Board <span className="text-rose-500">*</span>
                 </label>
                 <select
+                  id="signup-board"
                   value={board}
                   onChange={(e) => setBoard(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-brand focus:border-transparent transition-all cursor-pointer"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Download, 
   Printer, 
@@ -15,7 +15,8 @@ import {
   Lock,
   X
 } from 'lucide-react';
-import { AdminDataService } from '../../services/adminDataService';
+import { AdminDataService, summariseRecordedCollections } from '../../services/adminDataService';
+import { requireAdminEmail } from '../../services/adminIdentity';
 import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
 import { paymentMethodSplit, studentsByGrade, outstandingByBatch, monthlyCollections, rupees } from '../../components/admin/chartData';
 
@@ -30,6 +31,11 @@ export default function AdminReportsPage() {
   const [batchSummaries, setBatchSummaries] = useState([]);
   const [reconciliationResult, setReconciliationResult] = useState(null);
   const [reconciling, setReconciling] = useState(false);
+  const [reconciliations, setReconciliations] = useState([]);
+  const [reconDate, setReconDate] = useState(() => new Date(Date.now() - 86400000).toISOString().slice(0, 10));
+  const [reconForm, setReconForm] = useState({ cash: '', upi: '', bank: '', card: '', cheque: '', notes: '', explanation: '' });
+  const [reconError, setReconError] = useState('');
+  const [reconSuccess, setReconSuccess] = useState('');
   const [loading, setLoading] = useState(true);
 
   const [tillSessions, setTillSessions] = useState([]);
@@ -50,7 +56,7 @@ export default function AdminReportsPage() {
   async function loadReportData() {
     try {
       setLoading(true);
-      const [b, s, o, p, m, ac, dc, bs, ts, ats] = await Promise.all([
+      const [b, s, o, p, m, ac, dc, bs, ts, ats, recs] = await Promise.all([
         AdminDataService.getBatches(),
         AdminDataService.getStudents(),
         AdminDataService.getFeeObligations(),
@@ -60,7 +66,8 @@ export default function AdminReportsPage() {
         AdminDataService.getDailyCollectionReport(),
         AdminDataService.getBatchCollectionSummary(),
         AdminDataService.getTillSessions(),
-        AdminDataService.getActiveTillSession()
+        AdminDataService.getActiveTillSession(),
+        AdminDataService.getCollectionReconciliations()
       ]);
       setBatches(b);
       setStudents(s);
@@ -72,6 +79,7 @@ export default function AdminReportsPage() {
       setBatchSummaries(bs);
       setTillSessions(ts);
       setActiveTillSession(ats);
+      setReconciliations(recs);
       if (ats) {
         const sum = await AdminDataService.getTillSessionSummary(ats.id);
         setTillSummary(sum);
@@ -102,6 +110,42 @@ export default function AdminReportsPage() {
     }
   };
 
+  const recordedForReconDate = useMemo(
+    () => summariseRecordedCollections(payments, reconDate),
+    [payments, reconDate]
+  );
+  const existingRecon = useMemo(
+    () => reconciliations.find(row => row.date === reconDate) || null,
+    [reconciliations, reconDate]
+  );
+  const verifiedTotalForDate = useMemo(
+    () => ['cash', 'upi', 'bank', 'card', 'cheque'].reduce((sum, key) => sum + Number(reconForm[key] || 0), 0),
+    [reconForm]
+  );
+
+  const handleRecordReconciliation = async (e) => {
+    e.preventDefault();
+    setReconError('');
+    setReconSuccess('');
+    try {
+      await AdminDataService.recordCollectionReconciliation({
+        date: reconDate,
+        verifiedCash: reconForm.cash,
+        verifiedUpi: reconForm.upi,
+        verifiedBank: reconForm.bank,
+        verifiedCard: reconForm.card,
+        verifiedCheque: reconForm.cheque,
+        notes: reconForm.notes,
+        discrepanciesExplained: reconForm.explanation
+      }, requireAdminEmail());
+      const recs = await AdminDataService.getCollectionReconciliations();
+      setReconciliations(recs);
+      setReconSuccess(`Independent verification for ${reconDate} saved. Ledger receipts were not modified.`);
+    } catch (err) {
+      setReconError(err.message || 'Failed to save reconciliation.');
+    }
+  };
+
   const activeBatches = batches.filter(b => !b.isArchived);
   const activeStudents = students.filter(s => s.status === 'active' || s.status === 'new_enrollment');
 
@@ -109,9 +153,11 @@ export default function AdminReportsPage() {
   const totalEnrolled = activeBatches.reduce((sum, b) => sum + (b.enrolledCount || 0), 0);
   const overallOccupancyPct = totalCapacity > 0 ? Math.round((totalEnrolled / totalCapacity) * 100) : 0;
 
-  const totalFeesCharged = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
-  const totalAmountPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-  const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
+  const reportableObligations = obligations.filter(o => o.status !== 'cancelled');
+  const validPayments = payments.filter(p => !(p.isReversed || p.reversed || p.status === 'reversed' || p.refundStatus === 'refunded'));
+  const totalFeesCharged = reportableObligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
+  const totalAmountPaid = validPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const totalWaived = reportableObligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
   const netCollectible = Math.max(0, totalFeesCharged - totalWaived);
   const collectionRate = netCollectible > 0 ? Math.round((totalAmountPaid / netCollectible) * 100) : 0;
 
@@ -127,7 +173,7 @@ export default function AdminReportsPage() {
     return acc;
   }, {});
 
-  const paymentMethodBreakdown = payments.reduce((acc, p) => {
+  const paymentMethodBreakdown = validPayments.reduce((acc, p) => {
     const method = p.paymentMethod || 'cash';
     acc[method] = (acc[method] || 0) + Number(p.amount || 0);
     return acc;
@@ -166,7 +212,18 @@ export default function AdminReportsPage() {
     }
   };
 
+  const ensureExportAllowed = () => {
+    try {
+      AdminDataService.verifyPermission(requireAdminEmail(), 'canExportData', 'exporting institutional reports');
+      return true;
+    } catch (err) {
+      setLoadError(err.message || 'You are not authorized to export institutional data.');
+      return false;
+    }
+  };
+
   const exportStudentsCSV = () => {
+    if (!ensureExportAllowed()) return;
     const headers = ['ID', 'Student Name', 'Grade', 'Board', 'Batch', 'Guardian Phone', 'Status', 'Enrollment Date', 'Course End Date'];
     const rows = students.map(s => {
       let phone = s.guardianPhone || '';
@@ -190,7 +247,8 @@ export default function AdminReportsPage() {
   };
 
   const exportFinancialsCSV = () => {
-    const headers = ['Receipt No', 'Date', 'Student ID', 'Student Name', 'Amount (INR)', 'Payment Mode', 'Reference / UTR', 'Recorded By'];
+    if (!ensureExportAllowed()) return;
+    const headers = ['Receipt No', 'Date', 'Student ID', 'Student Name', 'Amount (INR)', 'Payment Mode', 'Reference / UTR', 'Recorded By', 'Ledger Status'];
     const rows = payments.map(p => [
       p.receiptNumber,
       p.paymentDate,
@@ -199,13 +257,15 @@ export default function AdminReportsPage() {
       p.amount,
       p.paymentMethod,
       `"${(p.referenceNumber || '').replace(/"/g, '""')}"`,
-      `"${(p.recordedBy || 'admin').replace(/"/g, '""')}"`
+      `"${(p.recordedBy || 'admin').replace(/"/g, '""')}"`,
+      (p.isReversed || p.reversed || p.status === 'reversed' || p.refundStatus === 'refunded') ? 'reversed/refunded (excluded)' : 'valid'
     ]);
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     downloadCSV(csvContent, `Focus_Academy_Collections_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
   const exportDailyCollectionsCSV = () => {
+    if (!ensureExportAllowed()) return;
     const headers = ['Collection Date', 'Total Amount (INR)', 'Receipts Count', 'Cash (INR)', 'UPI (INR)', 'Bank (INR)', 'Card (INR)'];
     const rows = dailyCollections.map(d => [
       d.date,
@@ -221,6 +281,7 @@ export default function AdminReportsPage() {
   };
 
   const exportAdminCollectionsCSV = () => {
+    if (!ensureExportAllowed()) return;
     const headers = ['Administrator', 'Total Amount Collected (INR)', 'Receipts Issued', 'Cash (INR)', 'UPI (INR)', 'Bank (INR)', 'Last Collected Date'];
     const rows = adminCollections.map(a => [
       `"${(a.adminEmail || '').replace(/"/g, '""')}"`,
@@ -236,6 +297,7 @@ export default function AdminReportsPage() {
   };
 
   const exportBatchSummariesCSV = () => {
+    if (!ensureExportAllowed()) return;
     const headers = ['Batch ID', 'Batch Name', 'Grade', 'Board', 'Enrolled / Cap', 'Total Charged (INR)', 'Total Collected (INR)', 'Total Pending (INR)', 'Total Overdue (INR)', 'Collection Rate %'];
     const rows = batchSummaries.map(b => [
       b.batchId,
@@ -277,7 +339,7 @@ export default function AdminReportsPage() {
   return (
     <div className="space-y-6">
       {loadError && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-xs font-bold text-rose-800 flex items-center justify-between gap-3">
+        <div role="alert" className="p-4 bg-rose-50 border border-rose-200 rounded-lg text-xs font-bold text-rose-800 flex items-center justify-between gap-3">
           <span>{loadError}</span>
           <button
             type="button"
@@ -582,6 +644,177 @@ export default function AdminReportsPage() {
                 <tr>
                   <td colSpan="6" className="py-6 text-center text-slate-400">No daily collection records found.</td>
                 </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="daily-collection-reconciliation" className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 scroll-mt-20">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <div className="flex items-center space-x-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              <h2 className="text-sm font-black text-[#0F172A] uppercase tracking-wide">
+                Daily Collection Reconciliation
+              </h2>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Compare recorded ledger receipts with independently counted cash and verified UPI / bank settlements. Differences are flagged; ledger receipts are never altered.
+            </p>
+          </div>
+        </div>
+
+        {(reconError || reconSuccess) && (
+          <div className={`mb-4 p-3 border text-xs rounded-lg ${reconError ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+            {reconError || reconSuccess}
+          </div>
+        )}
+
+        <form onSubmit={handleRecordReconciliation} className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+          <div className="lg:col-span-2 space-y-3">
+            <div className="flex flex-wrap items-end gap-2">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Business Date</label>
+                <input
+                  type="date"
+                  value={reconDate}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => { setReconDate(e.target.value); setReconError(''); setReconSuccess(''); }}
+                  className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setReconForm({
+                  cash: String(recordedForReconDate.byMethod.cash || ''),
+                  upi: String(recordedForReconDate.byMethod.upi_online || ''),
+                  bank: String(recordedForReconDate.byMethod.bank_transfer || ''),
+                  card: String(recordedForReconDate.byMethod.card || ''),
+                  cheque: String(recordedForReconDate.byMethod.cheque || ''),
+                  notes: reconForm.notes,
+                  explanation: reconForm.explanation
+                })}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200 cursor-pointer"
+              >
+                Prefill from ledger
+              </button>
+              <span className="text-[11px] text-slate-500 pb-1.5">
+                Recorded net: <strong className="font-mono text-slate-800">₹{recordedForReconDate.netTotal.toLocaleString('en-IN')}</strong>
+                {' '}({recordedForReconDate.validReceipts} valid, {recordedForReconDate.reversedReceipts} reversed)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {[
+                ['cash', 'Verified cash'],
+                ['upi', 'Verified UPI'],
+                ['bank', 'Bank settlement'],
+                ['card', 'Card settlement'],
+                ['cheque', 'Cheque / DD']
+              ].map(([key, label]) => (
+                <label key={key} className="block">
+                  <span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">{label}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={reconForm[key]}
+                    onChange={(e) => setReconForm(prev => ({ ...prev, [key]: e.target.value }))}
+                    placeholder="0"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono"
+                  />
+                </label>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <label className="block">
+                <span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Verification notes</span>
+                <input
+                  type="text"
+                  value={reconForm.notes}
+                  onChange={(e) => setReconForm(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Bank statement ref, cash count sheet no..."
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"
+                />
+              </label>
+              <label className="block">
+                <span className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Explanation for any difference</span>
+                <input
+                  type="text"
+                  value={reconForm.explanation}
+                  onChange={(e) => setReconForm(prev => ({ ...prev, explanation: e.target.value }))}
+                  placeholder="Required when totals differ"
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col justify-between gap-3">
+            <div className="text-xs space-y-1.5">
+              <div className="flex justify-between"><span className="text-slate-500">Recorded net</span><span className="font-mono font-bold">₹{recordedForReconDate.netTotal.toLocaleString('en-IN')}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Independently verified</span><span className="font-mono font-bold">₹{verifiedTotalForDate.toLocaleString('en-IN')}</span></div>
+              <div className="flex justify-between pt-1.5 border-t border-slate-200">
+                <span className="font-bold text-slate-700">Difference</span>
+                <span className={`font-mono font-extrabold ${verifiedTotalForDate - recordedForReconDate.netTotal === 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  ₹{(verifiedTotalForDate - recordedForReconDate.netTotal).toLocaleString('en-IN')}
+                </span>
+              </div>
+              {existingRecon && (
+                <p className="text-[10px] text-slate-500 pt-1.5 border-t border-slate-200">
+                  Existing record: <strong>{existingRecon.status}</strong> (revision {existingRecon.revision || 1}, by {existingRecon.reconciledBy}). Saving again preserves the prior revision in history.
+                </p>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 bg-[#0F172A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold cursor-pointer"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Save Independent Verification</span>
+            </button>
+          </div>
+        </form>
+
+        <div className="overflow-x-auto text-xs">
+          <div className="text-[10px] uppercase font-bold text-slate-400 mb-2">Reconciliation History</div>
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] border-b border-slate-200">
+              <tr>
+                <th className="py-2.5 px-4 font-bold">Date</th>
+                <th className="py-2.5 px-4 font-bold">Recorded Net</th>
+                <th className="py-2.5 px-4 font-bold">Verified</th>
+                <th className="py-2.5 px-4 font-bold">Difference</th>
+                <th className="py-2.5 px-4 font-bold">Status</th>
+                <th className="py-2.5 px-4 font-bold">Verified By</th>
+                <th className="py-2.5 px-4 font-bold">Notes</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {[...reconciliations].sort((a, b) => String(b.date).localeCompare(String(a.date))).map((row) => (
+                <tr key={row.id || row.date} className="hover:bg-slate-50">
+                  <td className="py-2.5 px-4 font-mono font-bold text-slate-900">{row.date}</td>
+                  <td className="py-2.5 px-4 font-mono">₹{Number(row.recorded?.netTotal || 0).toLocaleString('en-IN')}</td>
+                  <td className="py-2.5 px-4 font-mono">₹{Number(row.verifiedTotal || 0).toLocaleString('en-IN')}</td>
+                  <td className={`py-2.5 px-4 font-mono font-bold ${Number(row.difference || 0) === 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    ₹{Number(row.difference || 0).toLocaleString('en-IN')}
+                  </td>
+                  <td className="py-2.5 px-4">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${row.status === 'reconciled' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                      {row.status}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-4 font-mono text-[10px] text-slate-600 truncate max-w-[180px]" title={row.reconciledBy}>{row.reconciledBy}</td>
+                  <td className="py-2.5 px-4 text-[11px] text-slate-600 max-w-[240px] truncate" title={[row.notes, row.discrepanciesExplained].filter(Boolean).join(' — ')}>
+                    {[row.notes, row.discrepanciesExplained].filter(Boolean).join(' — ') || '—'}
+                  </td>
+                </tr>
+              ))}
+              {reconciliations.length === 0 && (
+                <tr><td colSpan="7" className="py-5 text-center text-slate-400">No independently verified daily reconciliation has been recorded yet.</td></tr>
               )}
             </tbody>
           </table>

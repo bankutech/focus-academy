@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const { db } = services;
 
   try {
-    const access = await authenticateAdmin(req, services, 'fee_manager');
+    const access = await authenticateAdmin(req, services, { permission: 'canTriggerReminders' });
     if (!access.ok) return fail(res, access.status, access.error);
 
     const cloudApiToken = process.env.WHATSAPP_CLOUD_API_TOKEN;

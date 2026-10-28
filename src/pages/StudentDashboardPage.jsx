@@ -23,11 +23,8 @@ import {
 } from 'lucide-react';
 import { useStudentAuth } from '../context/StudentAuthContext';
 import { useStudentFlow } from '../context/useAppContext';
-import { db, isFirebaseConfigured } from '../services/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
-import { AdminDataService } from '../services/adminDataService';
-import { calculateNextPaymentDueDate } from '../types/schemas';
+import { buildReceiptHtml, buildAdmissionSlipHtml, openPrintableDocument } from '../utils/printableDocuments';
 
 export default function StudentDashboardPage() {
   const navigate = useNavigate();
@@ -71,189 +68,93 @@ export default function StudentDashboardPage() {
     }
   }, [profile, user]);
 
-  const fetchEnrollments = useCallback(async () => {
+  const fetchPortalData = useCallback(async () => {
     if (!user) return;
     setLoadingEnrollments(true);
-    setEnrollmentError('');
-
-    const records = [];
-
-    // 1. Try fetching from Firestore enrollments collection
-    if (isFirebaseConfigured() && db) {
-      try {
-        const enrollmentsRef = collection(db, 'enrollments');
-        // Match by studentUid
-        const qUid = query(enrollmentsRef, where('studentUid', '==', user.uid));
-        const snapUid = await getDocs(qUid);
-        snapUid.forEach(doc => {
-          records.push({ id: doc.id, ...doc.data(), source: 'firestore_enrollment' });
-        });
-
-        // Also match by email if studentUid query didn't return
-        if (records.length === 0 && user.email) {
-          const qEmail = query(enrollmentsRef, where('email', '==', user.email));
-          const snapEmail = await getDocs(qEmail);
-          snapEmail.forEach(doc => {
-            if (!records.find(r => r.id === doc.id)) {
-              records.push({ id: doc.id, ...doc.data(), source: 'firestore_enrollment' });
-            }
-          });
-        }
-      } catch (err) {
-        console.warn('Could not query enrollments collection:', err);
-        setEnrollmentError('Could not sync remote admissions records. Showing local records.');
-      }
-    }
-
-    // 2. Check local admission submissions in storage as fallback/supplement
-    try {
-      const localLogs = JSON.parse(
-        (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('focus_academy_submitted_leads_v1')) ||
-        localStorage.getItem('focus_academy_submitted_leads_v1') || '[]'
-      );
-      const studentStorage = JSON.parse(localStorage.getItem('focus_academy_students') || '[]');
-
-      localLogs.forEach(log => {
-        const matchesUser = 
-          (profile?.mobile && log.phone === profile.mobile) || 
-          (user.email && log.email === user.email) ||
-          (profile?.studentName && log.studentName?.toLowerCase() === profile.studentName.toLowerCase());
-        
-        if (matchesUser && !records.find(r => r.id === log.id || (r.batchId === log.batchId && r.timestamp === log.timestamp))) {
-          records.push({
-            id: log.id || `lead-${Date.now()}`,
-            studentName: log.studentName || profile?.studentName || user.displayName,
-            batchId: log.batchId,
-            batchName: log.selectedBatchName || log.subjects || 'Focus Evening Batch',
-            timing: log.timing || 'Evening Session (4:00 PM – 8:30 PM)',
-            grade: log.grade || profile?.grade,
-            board: log.board || profile?.board,
-            status: log.serverConfirmed ? 'confirmed' : 'pending_review',
-            reservationId: log.reservationId,
-            enrolledAt: log.submittedAt || log.timestamp || new Date().toISOString(),
-            source: 'local_record',
-            details: log
-          });
-        }
-      });
-
-      studentStorage.forEach(s => {
-        if (s.phone === profile?.mobile && !records.find(r => r.id === s.id)) {
-          records.push({
-            id: s.id || `FA-${Date.now()}`,
-            studentName: s.studentName,
-            batchId: s.selectedBatchId,
-            batchName: s.selectedBatchName || 'Focus Evening Batch',
-            timing: s.timing || 'Mon-Sat Evening',
-            grade: s.grade,
-            board: s.board,
-            status: 'confirmed',
-            reservationId: s.reservationId,
-            enrolledAt: s.createdAt || new Date().toISOString(),
-            source: 'student_slip',
-            details: s
-          });
-        }
-      });
-    } catch {
-      // Local storage read error
-    }
-
-    // Sort by enrollment date (newest first)
-    records.sort((a, b) => new Date(b.enrolledAt || 0) - new Date(a.enrolledAt || 0));
-
-    setEnrollments(records);
-    setLoadingEnrollments(false);
-  }, [user, profile]);
-
-  const fetchFinancials = useCallback(async () => {
-    if (!user) return;
     setLoadingFinancials(true);
+    setEnrollmentError('');
     setFinancialsError('');
 
     try {
-      const allStudents = await AdminDataService.getStudents({ includeArchived: true }).catch(() => []);
-      const matchedStudent = allStudents.find(s => 
-        (s.studentUid && s.studentUid === user.uid) ||
-        (user.email && s.email && s.email.toLowerCase() === user.email.toLowerCase()) ||
-        (profile?.mobile && s.guardianPhone && s.guardianPhone.replace(/\D/g, '').slice(-10) === profile.mobile.replace(/\D/g, '').slice(-10)) ||
-        (profile?.studentName && s.studentName && s.studentName.toLowerCase().trim() === profile.studentName.toLowerCase().trim())
-      );
-
-      const studentId = matchedStudent?.id || null;
-      let obligations = [];
-      let payments = [];
-
-      if (studentId) {
-        const ledger = await AdminDataService.getStudentLedger(studentId).catch(() => null);
-        if (ledger) {
-          obligations = ledger.obligations || [];
-          payments = ledger.payments || [];
-        }
-      }
-
-      if (isFirebaseConfigured() && db) {
-        try {
-          if (studentId) {
-            const oblSnap = await getDocs(query(collection(db, 'fee_obligations'), where('studentId', '==', studentId)));
-            if (!oblSnap.empty) {
-              obligations = oblSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            }
-            const paySnap = await getDocs(query(collection(db, 'payments'), where('studentId', '==', studentId)));
-            if (!paySnap.empty) {
-              payments = paySnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            }
-          }
-        } catch (err) {
-          console.warn('Could not query remote ledger:', err);
-        }
-      }
-
-      const activePayments = payments.filter(p => !p.isReversed && !p.reversed);
-      const totalFeesCharged = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
-      const totalAmountPaid = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-      const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
-      const balance = Math.max(0, totalFeesCharged - totalAmountPaid - totalWaived);
-
-      const schedule = calculateNextPaymentDueDate({
-        student: matchedStudent,
-        obligations,
-        payments: activePayments
+      const token = await user.getIdToken();
+      const response = await fetch('/api/student-portal', {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store'
       });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || payload.success === false) {
+        throw new Error(payload.error || 'The campus database could not be reached. No figures are shown until the authoritative ledger loads.');
+      }
 
+      const rows = (payload.enrollments || []).map((row) => ({
+        id: row.id,
+        studentName: row.studentName,
+        batchId: row.batchId,
+        batchName: row.batchName || row.subjects || 'Focus Evening Batch',
+        timing: row.timing || 'Evening Session',
+        grade: row.grade,
+        board: row.board,
+        status: row.status,
+        reservationId: row.reservationId,
+        enrolledAt: row.enrolledAt || row.createdAt || null,
+        source: 'central_record',
+        details: row
+      }));
+      setEnrollments(rows);
+
+      if (!payload.linked) {
+        setFinancials({
+          linked: false,
+          reason: payload.reason,
+          studentId: null,
+          enrollmentId: rows[0]?.id || null
+        });
+        return;
+      }
+
+      const fee = payload.fee || {};
+      const billing = payload.billing || {};
       setFinancials({
-        studentId: studentId || (matchedStudent ? matchedStudent.id : 'STD-PENDING'),
-        studentName: matchedStudent?.studentName || profile?.studentName || user.displayName || 'Student',
-        admissionId: matchedStudent?.admissionId || (enrollments[0]?.id) || 'ADM-FA-2026',
-        batchName: matchedStudent?.batchName || enrollments[0]?.batchName || 'Focus Evening Batch',
-        batchTiming: matchedStudent?.timing || enrollments[0]?.timing || '6:00 PM – 7:30 PM',
-        monthlyFee: matchedStudent?.feeConfig?.amountPerCycle || (enrollments[0]?.monthlyFee) || 2200,
-        totalFeesCharged,
-        totalAmountPaid,
-        balance,
-        status: schedule.status,
-        isOverdue: schedule.isOverdue,
-        nextDueDate: schedule.dueDate,
-        nextDueDateFormatted: schedule.formatted,
-        scheduleExplanation: schedule.explanation,
-        obligations,
-        payments: activePayments
+        linked: true,
+        studentId: payload.student?.id || null,
+        studentName: payload.student?.studentName || profile?.studentName || user.displayName || 'Student',
+        admissionId: rows[0]?.id || payload.student?.enrollmentId || null,
+        admissionStatus: payload.student?.admissionStatus || null,
+        batchName: payload.student?.batchName || rows[0]?.batchName || null,
+        batchTiming: rows[0]?.timing || null,
+        monthlyFee: Number(billing.amountPerCycle || rows[0]?.monthlyFee || 0),
+        billingFrequency: billing.frequency || 'monthly',
+        totalFeesCharged: Number(fee.totalCharged || 0),
+        totalAmountPaid: Number(fee.totalPaid || 0),
+        totalWaived: Number(fee.totalWaived || 0),
+        balance: Number(fee.outstanding || 0),
+        overdueAmount: Number(fee.overdueAmount || 0),
+        status: fee.status || 'pending',
+        paymentStatus: fee.paymentStatus || 'unpaid',
+        isOverdue: Boolean(fee.isOverdue),
+        nextDueDate: fee.dueDate || null,
+        nextDueDateFormatted: fee.dueDate || 'Not scheduled',
+        scheduleExplanation: fee.explanation || null,
+        obligations: payload.obligations || [],
+        payments: payload.payments || [],
+        syncedAt: payload.syncedAt
       });
     } catch (err) {
-      console.warn('Failed to fetch student financials:', err);
-      setFinancialsError('Unable to load authoritative fee ledger.');
+      const message = err?.message || 'Could not load your admission records from the campus database.';
+      setEnrollmentError(message);
+      setFinancialsError(message);
+      setFinancials(null);
     } finally {
+      setLoadingEnrollments(false);
       setLoadingFinancials(false);
     }
-  }, [user, profile, enrollments]);
+  }, [user, profile]);
+
+  const fetchFinancials = fetchPortalData;
 
   useEffect(() => {
-    fetchEnrollments();
-  }, [fetchEnrollments]);
-
-  useEffect(() => {
-    fetchFinancials();
-  }, [fetchFinancials]);
+    fetchPortalData();
+  }, [fetchPortalData]);
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -292,7 +193,7 @@ export default function StudentDashboardPage() {
   const studentDisplayName = profile?.studentName || user?.displayName || 'Student';
   const studentGrade = profile?.grade || 'Class 10';
   const studentBoard = profile?.board || 'TN State Board (Samacheer)';
-  const studentSlipId = `FA-STU-${(user?.uid || '000000').slice(0, 6).toUpperCase()}`;
+  const studentSlipId = financials?.studentId || 'Student ID pending';
 
   // Incomplete enrollment detection
   const hasIncompleteFunnel = studentFlow && studentFlow.step >= 2 && studentFlow.step < 5 && studentFlow.selectedBatchId;
@@ -469,7 +370,7 @@ export default function StudentDashboardPage() {
               </div>
               <button
                 type="button"
-                onClick={fetchEnrollments}
+                onClick={fetchPortalData}
                 disabled={loadingEnrollments}
                 className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
               >
@@ -479,7 +380,7 @@ export default function StudentDashboardPage() {
             </div>
 
             {enrollmentError && (
-              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-center gap-2">
+              <div role="alert" className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>{enrollmentError}</span>
               </div>
@@ -896,8 +797,31 @@ export default function StudentDashboardPage() {
                 <p className="text-xs font-semibold">Loading verified campus financial records...</p>
               </div>
             ) : financialsError ? (
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
+              <div role="alert" className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
                 {financialsError}
+              </div>
+            ) : financials && financials.linked === false ? (
+              <div className="p-5 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+                <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                  <AlertCircle className="w-4 h-4 text-amber-600" />
+                  <span>Fee ledger pending synchronization</span>
+                </div>
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  {financials.reason === 'name_mismatch' || financials.reason === 'ambiguous_student_record'
+                    ? 'Your account mobile number matches more than one academy record, so no ledger is shown. Ask the campus desk to link your student ID to this account.'
+                    : financials.reason === 'account_mismatch'
+                      ? 'The academy record for this mobile number is already linked to another account. Please contact the campus desk for help.'
+                      : 'No fee ledger is linked to this account yet. It will appear here after the campus desk completes your admission and links your student record. No amounts are estimated.'}
+                </p>
+                <a
+                  href={`https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent('Hello Focus Academy, my student portal does not show my fee ledger yet. Please link my admission record.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded-lg"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Ask the Campus Desk</span>
+                </a>
               </div>
             ) : (
               <>
@@ -906,9 +830,9 @@ export default function StudentDashboardPage() {
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-slate-400 block font-medium">Monthly Tuition Fee</span>
                     <span className="font-extrabold text-[#0F172A] text-lg font-mono mt-1 block">
-                      ₹{Number(financials?.monthlyFee || 2200).toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-400">/mo</span>
+                      ₹{Number(financials?.monthlyFee || 0).toLocaleString('en-IN')}<span className="text-xs font-normal text-slate-400">/{financials?.billingFrequency === 'monthly' ? 'mo' : financials?.billingFrequency || 'cycle'}</span>
                     </span>
-                    <p className="text-[11px] text-slate-500 mt-1 truncate">{financials?.batchName || 'Focus Evening Batch'}</p>
+                    <p className="text-[11px] text-slate-500 mt-1 truncate">{financials?.batchName || 'Batch not assigned yet'}</p>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
@@ -981,7 +905,7 @@ export default function StudentDashboardPage() {
                     </span>
                   </div>
                   <p className="text-xs mt-0.5 opacity-90">
-                    {financials?.scheduleExplanation || 'Official tuition schedule governed by 5th-of-month institutional billing.'}
+                    {financials?.scheduleExplanation || 'No billing schedule has been assigned yet. Please contact the campus desk.'}
                   </p>
                 </div>
               </div>
@@ -996,7 +920,7 @@ export default function StudentDashboardPage() {
                   className="px-4 py-2 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded-xl whitespace-nowrap self-start sm:self-auto flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Pay Tuition Online</span>
+                  <span>Arrange Payment at Desk</span>
                 </a>
               )}
             </div>
@@ -1036,48 +960,23 @@ export default function StudentDashboardPage() {
                           <td className="py-2.5 px-3 capitalize text-slate-700">{String(p.paymentMethod || '').replace('_', ' ')}</td>
                           <td className="py-2.5 px-3 font-mono text-slate-500 text-[11px]">{p.referenceNumber || p.id}</td>
                           <td className="py-2.5 px-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 w-fit">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                              <span>Verified</span>
-                            </span>
+                            {p.isReversed || p.reversed ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1 w-fit">
+                                <AlertCircle className="w-3 h-3 text-rose-600" />
+                                <span>Reversed</span>
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 w-fit">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                <span>Verified</span>
+                              </span>
+                            )}
                           </td>
                           <td className="py-2.5 px-3 text-right">
                             <button
                               type="button"
                               onClick={() => {
-                                window.open('', '_blank')?.document.write(`
-                                  <html>
-                                    <head><title>Receipt ${p.receiptNumber} - Focus Academy</title>
-                                    <style>
-                                      body { font-family: sans-serif; padding: 40px; color: #0F172A; }
-                                      .receipt { border: 2px solid #0F172A; padding: 30px; max-width: 600px; margin: 0 auto; }
-                                      h1 { margin: 0 0 5px 0; color: #C2410C; font-size: 24px; }
-                                      .meta { color: #64748B; font-size: 12px; margin-bottom: 20px; }
-                                      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                                      th, td { border: 1px solid #E2E8F0; padding: 10px; font-size: 13px; text-align: left; }
-                                      th { background: #F8FAFC; }
-                                      .footer { margin-top: 30px; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; }
-                                    </style>
-                                    </head>
-                                    <body>
-                                      <div class="receipt">
-                                        <h1>FOCUS ACADEMY</h1>
-                                        <div class="meta">Thiripura Complex, Thoramangalam, Perambalur — 621220 • Official Receipt</div>
-                                        <table>
-                                          <tr><th>Receipt No</th><td><strong>${p.receiptNumber}</strong></td></tr>
-                                          <tr><th>Student Name</th><td>${p.studentName || financials.studentName}</td></tr>
-                                          <tr><th>Date</th><td>${p.paymentDate}</td></tr>
-                                          <tr><th>Amount Paid</th><td><strong>₹${Number(p.amount).toLocaleString('en-IN')}</strong></td></tr>
-                                          <tr><th>Payment Mode</th><td style="text-transform: capitalize;">${String(p.paymentMethod || '').replace('_', ' ')}</td></tr>
-                                          <tr><th>Transaction Ref</th><td>${p.referenceNumber || p.id}</td></tr>
-                                          <tr><th>Status</th><td>VERIFIED & CREDITED TO ACADEMY LEDGER</td></tr>
-                                        </table>
-                                        <div class="footer">Computer generated official receipt issued by Focus Academy Finance Desk.</div>
-                                      </div>
-                                      <script>window.print();</script>
-                                    </body>
-                                  </html>
-                                `);
+                                openPrintableDocument(buildReceiptHtml(p, { studentName: financials?.studentName }));
                               }}
                               className="px-2.5 py-1 text-[11px] font-bold text-brand hover:underline cursor-pointer"
                             >
@@ -1093,7 +992,7 @@ export default function StudentDashboardPage() {
                 <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl">
                   <p className="text-xs text-slate-500 font-semibold">No verified payment receipts found yet.</p>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Receipts issued at the campus counter or online gateway will automatically reflect here.
+                    Receipts issued by the campus fee desk will automatically reflect here.
                   </p>
                 </div>
               )}
@@ -1104,50 +1003,24 @@ export default function StudentDashboardPage() {
               <div>
                 <span className="font-bold text-xs text-[#0F172A] block">Official Admission Slip & Batch Pass</span>
                 <span className="text-[11px] text-slate-500 block mt-0.5">
-                  Admission ID: <strong className="text-brand font-mono">{financials?.admissionId || enrollments[0]?.id || 'ADM-FA-2026'}</strong> • Seat Status: <strong>1:12 Guaranteed Reserved</strong>
+                  Admission ID: <strong className="text-brand font-mono">{financials?.admissionId || enrollments[0]?.id || 'Pending'}</strong> • Admission Status: <strong className="capitalize">{(financials?.admissionStatus || enrollments[0]?.status || 'pending review').replace('_', ' ')}</strong>
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  window.open('', '_blank')?.document.write(`
-                    <html>
-                      <head><title>Official Admission Slip - Focus Academy</title>
-                      <style>
-                        body { font-family: sans-serif; padding: 40px; color: #0F172A; }
-                        .slip { border: 2px solid #C2410C; padding: 30px; max-width: 650px; margin: 0 auto; }
-                        h1 { margin: 0 0 5px 0; color: #C2410C; font-size: 26px; }
-                        .badge { background: #EA580C; color: white; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; display: inline-block; margin-bottom: 15px; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { border: 1px solid #E2E8F0; padding: 10px; font-size: 13px; text-align: left; }
-                        th { background: #F8FAFC; width: 40%; }
-                        .footer { margin-top: 30px; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; text-align: center; }
-                      </style>
-                      </head>
-                      <body>
-                        <div class="slip">
-                          <h1>FOCUS ACADEMY</h1>
-                          <div class="badge">OFFICIAL ADMISSION SLIP (SESSION 2025–2026)</div>
-                          <div>Thiripura Complex, Main Road, Thoramangalam, Perambalur — 621220</div>
-                          <table>
-                            <tr><th>Admission Slip No</th><td><strong>${financials?.admissionId || enrollments[0]?.id || 'FA-2026-ADM'}</strong></td></tr>
-                            <tr><th>Student Name</th><td><strong>${financials?.studentName || profile?.studentName || user?.displayName}</strong></td></tr>
-                            <tr><th>Student ID</th><td>${financials?.studentId || 'STD-2026-REG'}</td></tr>
-                            <tr><th>Class & Board</th><td>${profile?.grade || studentGrade} • ${profile?.board || studentBoard}</td></tr>
-                            <tr><th>Enrolled Batch</th><td><strong>${financials?.batchName || enrollments[0]?.batchName || 'Focus Evening Batch'}</strong></td></tr>
-                            <tr><th>Session Timing</th><td>${financials?.batchTiming || enrollments[0]?.timing || 'Evening Session (4:00 PM – 8:30 PM)'}</td></tr>
-                            <tr><th>Classroom Ratio</th><td>1:12 Strict Faculty Supervision Capped</td></tr>
-                            <tr><th>Parent / Contact</th><td>${profile?.parentName || 'Parent'} (+91 ${profile?.mobile || user?.email})</td></tr>
-                            <tr><th>Admission Status</th><td>CONFIRMED & SEAT RESERVED</td></tr>
-                          </table>
-                          <div class="footer">
-                            Please present this slip at Thiripura Complex reception for textbook workbook issuance.
-                          </div>
-                        </div>
-                        <script>window.print();</script>
-                      </body>
-                    </html>
-                  `);
+                  openPrintableDocument(buildAdmissionSlipHtml({
+                    admissionId: financials?.admissionId || enrollments[0]?.id || 'Pending',
+                    studentName: financials?.studentName || profile?.studentName || user?.displayName || '',
+                    studentId: financials?.studentId || 'Pending central assignment',
+                    grade: profile?.grade || studentGrade,
+                    board: profile?.board || studentBoard,
+                    batchName: financials?.batchName || enrollments[0]?.batchName || 'Focus Evening Batch',
+                    batchTiming: financials?.batchTiming || enrollments[0]?.timing || 'Evening Session (4:00 PM – 8:30 PM)',
+                    parentName: profile?.parentName || 'Parent',
+                    contact: profile?.mobile || user?.email ? `+91 ${profile?.mobile || user?.email}` : '',
+                    admissionStatus: financials?.admissionStatus || enrollments[0]?.status || 'pending review'
+                  }));
                 }}
                 className="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs whitespace-nowrap"
               >

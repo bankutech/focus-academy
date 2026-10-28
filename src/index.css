@@ -137,6 +137,14 @@
   --admin-radius: 0px;
 }
 
+@media (max-width: 640px) {
+  #main-content input,
+  #main-content select,
+  #main-content textarea {
+    font-size: 16px;
+  }
+}
+
 .admin-portal-root,
 .admin-portal-root .rounded,
 .admin-portal-root .rounded-sm,

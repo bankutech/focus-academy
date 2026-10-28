@@ -521,14 +521,16 @@ describe('AdminDataService & Institutional Management Tests', () => {
 
       const p1 = await AdminDataService.recordPayment({
         obligationId: obl.id,
-        amount: remaining
+        amount: remaining,
+        paymentMethod: 'cash'
       });
       expect(p1.obligation.balance).toBe(0);
 
       await expect(
         AdminDataService.recordPayment({
           obligationId: obl.id,
-          amount: 100
+          amount: 100,
+          paymentMethod: 'cash'
         })
       ).rejects.toThrow(/exceeds the remaining balance of ₹0/i);
     });

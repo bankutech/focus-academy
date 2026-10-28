@@ -1,6 +1,15 @@
 import { getServices } from './_lib/firebaseAdmin.js';
 import { prepare, fail, unavailable, crashed, clean, clientIp, withinRate, newId } from './_lib/http.js';
 import { authenticateAdmin } from './_lib/adminAuth.js';
+import { calculateNextPaymentDueDate } from '../src/types/schemas.js';
+
+const APPROVED_METHODS = ['cash', 'upi_online', 'bank_transfer', 'card', 'cheque', 'demand_draft'];
+const normalizeMethod = (value, fallback = 'cash') => {
+  const method = String(value || fallback).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const aliases = { upi: 'upi_online', gpay: 'upi_online', phonepe: 'upi_online', bank: 'bank_transfer', neft: 'bank_transfer', imps: 'bank_transfer', dd: 'demand_draft' };
+  const resolved = aliases[method] || method;
+  return APPROVED_METHODS.includes(resolved) ? resolved : null;
+};
 
 export default async function handler(req, res) {
   prepare(res, ['GET', 'POST']);
@@ -8,6 +17,14 @@ export default async function handler(req, res) {
   const services = await getServices();
   if (!services) return unavailable(res);
   const { db, auth } = services;
+
+  if (req.method === 'POST') {
+    // Recording money is an authorised desk operation. Without this check any anonymous
+    // caller could credit a payment against a real student's fee obligation.
+    const actor = await authenticateAdmin(req, services, { permission: 'canRecordPayments' });
+    if (!actor.ok) return fail(res, actor.status, actor.error);
+    req.adminActor = actor;
+  }
 
   try {
     if (!(await withinRate(db, 'payments_api', clientIp(req), 60, 60 * 1000))) {
@@ -25,7 +42,7 @@ export default async function handler(req, res) {
         }
       }
 
-      const adminCheck = await authenticateAdmin(req, services, 'fee_manager');
+      const adminCheck = await authenticateAdmin(req, services, { permission: 'canRecordPayments' });
       const isAdmin = adminCheck.ok;
 
       let queryRef = db.collection('payments');
@@ -107,6 +124,9 @@ export default async function handler(req, res) {
           return fail(res, 400, `Requested payment amount (₹${requestedAmount}) exceeds the remaining balance of ₹${balance}.`);
         }
 
+        const method = normalizeMethod(req.body?.paymentMethod, 'upi_online');
+        if (!method) return fail(res, 400, 'Select an approved collection method.');
+
         const referenceId = newId('PAY-INTENT');
         const now = new Date().toISOString();
 
@@ -118,7 +138,7 @@ export default async function handler(req, res) {
           amount: requestedAmount,
           currency: 'INR',
           status: 'pending',
-          paymentMethod: clean(req.body?.paymentMethod || 'upi_online', 30),
+          paymentMethod: method,
           createdAt: now,
           expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString()
         });
@@ -202,7 +222,8 @@ export default async function handler(req, res) {
           const paymentId = newId('TXN');
           const now = new Date().toISOString();
 
-          const paymentMethod = clean(req.body?.paymentMethod || intentData?.paymentMethod || 'upi_online', 30);
+          const paymentMethod = normalizeMethod(req.body?.paymentMethod || intentData?.paymentMethod, 'cash');
+          if (!paymentMethod) return fail(res, 400, 'Select an approved collection method.');
 
           const newPayment = {
             id: paymentId,
@@ -218,12 +239,12 @@ export default async function handler(req, res) {
             paymentMethod,
             referenceNumber: providerRef || referenceId || newId('REF'),
             gatewayTransactionId: providerRef || referenceId,
-            verificationStatus: 'verified',
+            verificationStatus: 'verified_by_staff',
             status: 'verified',
             receiptStatus: 'issued',
             refundStatus: 'none',
-            recordedBy: 'payment_gateway_verified',
-            notes: clean(req.body?.notes || 'Server-verified online transaction', 200),
+            recordedBy: req.adminActor.email,
+            notes: clean(req.body?.notes || 'Recorded at the fee desk by an authorised administrator', 200),
             createdAt: now
           };
 
@@ -251,20 +272,32 @@ export default async function handler(req, res) {
 
           if (obligation.studentId) {
             const studentRef = db.collection('students').doc(obligation.studentId);
-            const studentSnap = await tx.get(studentRef);
+            const [studentSnap, obligationListSnap, paymentListSnap] = await Promise.all([
+              tx.get(studentRef),
+              tx.get(db.collection('fee_obligations').where('studentId', '==', obligation.studentId)),
+              tx.get(db.collection('payments').where('studentId', '==', obligation.studentId))
+            ]);
             if (studentSnap.exists) {
-              const nextMonth = new Date(Date.now());
-              nextMonth.setMonth(nextMonth.getMonth() + 1);
-              const nextDueStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-05`;
-              const studentUpdate = {
-                'feeConfig.lastPaymentDate': now.split('T')[0],
-                'feeConfig.lastPaymentAmount': verifiedAmount,
+              const student = studentSnap.data();
+              const ledgerObligations = obligationListSnap.docs
+                .map((d) => ({ id: d.id, ...d.data() }))
+                .map((row) => (row.id === obligation.id ? updatedObligation : row));
+              const ledgerPayments = paymentListSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+              ledgerPayments.push(newPayment);
+              const schedule = calculateNextPaymentDueDate({
+                student,
+                obligations: ledgerObligations,
+                payments: ledgerPayments
+              });
+              tx.set(studentRef, {
+                feeConfig: {
+                  ...(student.feeConfig || {}),
+                  lastPaymentDate: newPayment.paymentDate,
+                  lastPaymentAmount: verifiedAmount,
+                  nextDueDate: schedule.dueDate || student.feeConfig?.nextDueDate || null
+                },
                 updatedAt: now
-              };
-              if (newBalance === 0) {
-                studentUpdate['feeConfig.nextDueDate'] = nextDueStr;
-              }
-              tx.update(studentRef, studentUpdate);
+              }, { merge: true });
             }
           }
 
@@ -285,11 +318,11 @@ export default async function handler(req, res) {
           const auditId = newId('AUDIT');
           tx.set(db.collection('audit_logs').doc(auditId), {
             id: auditId,
-            actor: 'payment_gateway',
-            action: 'PAYMENT_VERIFIED',
+            actor: req.adminActor.email,
+            action: 'PAYMENT_RECORDED',
             entityType: 'payment',
             entityId: paymentId,
-            details: `Gateway verified ₹${verifiedAmount} for '${obligation.studentName}' (${obligation.billingCycle || 'Tuition'}). Receipt: ${receiptNumber}`,
+            details: `Recorded ₹${verifiedAmount} for '${obligation.studentName}' (${obligation.billingCycle || 'Tuition'}) via ${paymentMethod}. Receipt: ${receiptNumber}`,
             timestamp: now
           });
 

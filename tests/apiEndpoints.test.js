@@ -8,6 +8,8 @@ import sessionHandler from '../api/session.js';
 import batchesHandler from '../api/batches.js';
 import leadsHandler from '../api/leads.js';
 import whatsappHandler from '../api/whatsapp.js';
+import paymentsHandler from '../api/payments.js';
+import opsHealthHandler from '../api/admin/ops-health.js';
 
 const call = async (handler, body, { method = 'POST', ip = '10.0.0.1', headers = {} } = {}) => {
   const res = mockResponse();
@@ -226,6 +228,8 @@ describe('Lead API', () => {
     expect(obligation.amountPaid).toBe(0);
     expect(obligation.balance).toBe(2200);
     expect(obligation.status).toBe('pending');
+    expect(obligation.dueDate).toMatch(/^\d{4}-\d{2}-05$/);
+    expect(obligation.billingCycle).toMatch(/^[A-Z][a-z]+ \d{4}$/);
 
     // No payment is invented because no money changed hands.
     expect(fake.all('payments')).toHaveLength(0);
@@ -255,6 +259,9 @@ describe('Lead API', () => {
     expect(second.statusCode).toBe(200);
     expect(second.body.duplicate).toBe(true);
     expect(second.body.data.id).toBe(first.res.body.data.id);
+    expect(second.body.meta.studentId).toBe(first.res.body.meta.studentId);
+    expect(second.body.meta.feeObligationId).toBe(first.res.body.meta.feeObligationId);
+    expect(second.body.meta.enrollmentStatus).toBe('confirmed');
     expect(fake.all('leads')).toHaveLength(1);
     expect(fake.all('enrollments')).toHaveLength(1);
     expect(fake.all('students')).toHaveLength(1);
@@ -350,6 +357,155 @@ describe('Lead API', () => {
     expect(res.statusCode).toBe(409);
     const noToken = await call(leadsHandler, { ...p, batchId: 'batch-10-state-board', reservationId: 'RES-FAKE' }, { ip: '10.3.0.3' });
     expect(noToken.statusCode).toBe(401);
+  });
+
+  it('completes a half-saved enrollment left behind by an older browser flow', async () => {
+    const p = person(9);
+    const { token } = await reachStep4(p, '10.3.0.9');
+    const hold = await call(batchesHandler, { batchId: 'batch-10-state-board', ...p, stepToken: token }, { ip: '10.3.0.9' });
+
+    fake.seed('enrollments', 'FA-LEGACY-001', {
+      id: 'FA-LEGACY-001',
+      studentName: p.studentName,
+      phone: p.phone,
+      grade: p.grade,
+      board: p.board,
+      batchId: 'batch-10-state-board',
+      status: 'pending',
+      reservationId: hold.body.reservationId
+    });
+
+    const res = await call(leadsHandler, {
+      ...p,
+      parentName: 'Parent',
+      batchId: 'batch-10-state-board',
+      reservationId: hold.body.reservationId,
+      stepToken: token,
+      enrollmentId: 'FA-LEGACY-001'
+    }, { ip: '10.3.0.9' });
+
+    expect(res.statusCode).toBe(200);
+    const enrollment = fake.read('enrollments', 'FA-LEGACY-001');
+    expect(enrollment.status).toBe('confirmed');
+    expect(enrollment.studentId).toBeTruthy();
+    expect(enrollment.feeObligationId).toBeTruthy();
+
+    const student = fake.read('students', enrollment.studentId);
+    expect(student.studentName).toBe(p.studentName);
+    expect(student.enrollmentId).toBe('FA-LEGACY-001');
+
+    const obligation = fake.read('fee_obligations', enrollment.feeObligationId);
+    expect(obligation.amountDue).toBe(2200);
+    expect(obligation.amountPaid).toBe(0);
+    expect(obligation.balance).toBe(2200);
+    expect(fake.all('payments')).toHaveLength(0);
+  });
+
+  it('ignores a client-supplied studentUid so an admission cannot be attached to another account', async () => {
+    const p = person(13);
+    const { token } = await reachStep4(p, '10.3.1.3');
+    const hold = await call(batchesHandler, { batchId: 'batch-10-state-board', ...p, stepToken: token }, { ip: '10.3.1.3' });
+
+    const res = await call(leadsHandler, {
+      ...p,
+      parentName: 'Parent',
+      batchId: 'batch-10-state-board',
+      reservationId: hold.body.reservationId,
+      stepToken: token,
+      studentUid: 'uid-victim-account',
+      email: 'victim@example.com'
+    }, { ip: '10.3.1.3' });
+
+    expect(res.statusCode).toBe(200);
+    const enrollment = fake.read('enrollments', res.body.data.id);
+    expect(enrollment.studentUid).toBeNull();
+    expect(enrollment.email).toBeNull();
+    const student = fake.read('students', enrollment.studentId);
+    expect(student.studentUid).toBeNull();
+  });
+
+  it('links a signed-in student identity only when the token verifies', async () => {
+    fake.addAccount('student-token', { uid: 'uid-verified-student', email: 'student@example.com', email_verified: true });
+    const p = person(14);
+    const { token } = await reachStep4(p, '10.3.1.4');
+    const hold = await call(batchesHandler, { batchId: 'batch-10-state-board', ...p, stepToken: token }, { ip: '10.3.1.4' });
+
+    const res = await call(leadsHandler, {
+      ...p,
+      parentName: 'Parent',
+      batchId: 'batch-10-state-board',
+      reservationId: hold.body.reservationId,
+      stepToken: token
+    }, { ip: '10.3.1.4', headers: { authorization: 'Bearer student-token' } });
+
+    expect(res.statusCode).toBe(200);
+    const enrollment = fake.read('enrollments', res.body.data.id);
+    expect(enrollment.studentUid).toBe('uid-verified-student');
+    expect(enrollment.email).toBe('student@example.com');
+    const student = fake.read('students', enrollment.studentId);
+    expect(student.studentUid).toBe('uid-verified-student');
+  });
+
+  it('assigns unique server-generated admission slip numbers per submission', async () => {
+    const first = await submitEnrollment(person(11), '10.3.1.1');
+    const second = await submitEnrollment(person(12), '10.3.1.2');
+    expect(first.res.statusCode).toBe(200);
+    expect(second.res.statusCode).toBe(200);
+
+    const ids = [first.res.body.data.id, second.res.body.data.id];
+    expect(ids[0]).not.toBe(ids[1]);
+    ids.forEach((id) => expect(id).toMatch(/^FA-[0-9A-F]+$/));
+    expect(fake.all('students')).toHaveLength(2);
+  });
+});
+
+describe('Role-based financial API authorization', () => {
+  const auth = (token) => ({ headers: { authorization: `Bearer ${token}` }, ip: '10.5.0.1' });
+
+  beforeEach(() => {
+    fake.seed('academy_settings', 'main_config', {
+      authorizedAdmins: [
+        { email: 'admissions@focusacademyperambalur.com', role: 'admissions', active: true },
+        { email: 'teacher@focusacademyperambalur.com', role: 'teacher', active: true },
+        { email: 'coordinator@focusacademyperambalur.com', role: 'fee_manager', active: true }
+      ],
+    });
+    fake.addAccount('admissions', { uid: 'u-adm', email: 'admissions@focusacademyperambalur.com', email_verified: true, role: 'admissions' });
+    fake.addAccount('teacher', { uid: 'u-t', email: 'teacher@focusacademyperambalur.com', email_verified: true, role: 'teacher' });
+    fake.addAccount('finance', { uid: 'u-f', email: 'coordinator@focusacademyperambalur.com', email_verified: true, role: 'fee_manager' });
+  });
+
+  it('exposes aggregate operational health to administrators without leaking student data', async () => {
+    fake.seed('academy_settings', 'main_config', {
+      authorizedAdmins: [
+        { email: 'principal@focusacademyperambalur.com', role: 'administrator', active: true },
+        { email: 'admissions@focusacademyperambalur.com', role: 'admissions', active: true },
+      ],
+    });
+    fake.addAccount('principal', { uid: 'u-p', email: 'principal@focusacademyperambalur.com', email_verified: true });
+    fake.seed('enrollments', 'E-1', { status: 'pending', studentName: 'Private Student', phone: '9842451220' });
+    fake.seed('reminders', 'R-1', { deliveryStatus: 'failed', studentName: 'Private Student' });
+    fake.seed('collection_reconciliations', '2026-10-27', { date: '2026-10-27', status: 'discrepancy', difference: 200 });
+    fake.seed('audit_logs', 'L-1', { action: 'BACKUP_CREATED', timestamp: '2026-10-20T10:00:00.000Z' });
+
+    const denied = await call(opsHealthHandler, undefined, { method: 'GET', headers: { authorization: 'Bearer admissions' } });
+    expect(denied.statusCode).toBe(403);
+
+    const res = await call(opsHealthHandler, undefined, { method: 'GET', headers: { authorization: 'Bearer principal' } });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.firestore.ok).toBe(true);
+    expect(res.body.queues.pendingAdmissions).toBe(1);
+    expect(res.body.notifications.failed).toBe(1);
+    expect(res.body.collections.latestReconciliationStatus).toBe('discrepancy');
+    expect(JSON.stringify(res.body)).not.toContain('Private Student');
+    expect(JSON.stringify(res.body)).not.toContain('9842451220');
+  });
+
+  it('rejects admissions and teacher accounts from recording a payment', async () => {
+    const body = { action: 'verify', obligationId: 'OBL-1', amount: 100, paymentMethod: 'cash' };
+    expect((await call(paymentsHandler, body, auth('admissions'))).statusCode).toBe(403);
+    expect((await call(paymentsHandler, body, auth('teacher'))).statusCode).toBe(403);
+    expect((await call(paymentsHandler, body)).statusCode).toBe(401);
   });
 });
 

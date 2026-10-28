@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     }
 
     // Check if requester is an admin
-    const adminCheck = await authenticateAdmin(req, services, 'fee_manager');
+    const adminCheck = await authenticateAdmin(req, services, { permission: 'canManageStudents' });
     const isAdmin = adminCheck.ok;
 
     const studentUid = clean(req.query.studentUid, 128);
