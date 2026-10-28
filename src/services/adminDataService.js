@@ -925,7 +925,7 @@ async function hydrateStore() {
           getDocs(collection(db, name)),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), 10000))
         ]);
-        return [key, snap.docs.map((d) => d.data())];
+        return [key, snap.docs.map((d) => ({ id: d.id, ...d.data() }))];
       })
     );
     const store = loadLocalStore();
@@ -1213,7 +1213,7 @@ export const AdminDataService = {
         const q = query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'), limit(limitCount));
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
         if (snap && !snap.empty) {
-          return snap.docs.map(d => d.data());
+          return snap.docs.map(d => ({ id: d.id, ...d.data() }));
         }
       } catch (err) {
         console.warn('Firestore getAuditLogs unavailable, using verified local store:', err);
@@ -1243,7 +1243,7 @@ export const AdminDataService = {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'batches')), 8000);
         if (snap && !snap.empty) {
-          rawBatches = snap.docs.map(d => d.data());
+          rawBatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         }
         if (snap && snap.empty) {
           try {
@@ -2506,6 +2506,29 @@ export const AdminDataService = {
     }
 
     const cleanSecondaryPhone = studentData.secondaryPhone ? String(studentData.secondaryPhone).replace(/\D/g, '').slice(-10) : null;
+
+    if (isLive()) {
+      try {
+        const dupSnap = await this.withFirestoreTimeout(
+          getDocs(query(collection(db, 'students'), where('guardianPhone', '==', cleanPhone))),
+          4000
+        );
+        const match = dupSnap.docs.find(d => normalizeName(d.data().studentName) === normalizeName(studentData.studentName));
+        if (match) {
+          const existing = { id: match.id, ...match.data() };
+          if (existing.status !== 'archived') {
+            if (existing.batchId === targetBatch.id) {
+              return existing;
+            }
+            throw new Error(`Student '${existing.studentName}' is already enrolled with ID ${existing.id} in batch '${existing.batchName || existing.batchId}'. Use 'Transfer Batch' instead of creating a duplicate student.`);
+          }
+        }
+      } catch (dupErr) {
+        if (dupErr.message && dupErr.message.includes('already enrolled')) {
+          throw dupErr;
+        }
+      }
+    }
 
     const store = await hydrateStore();
     const year = new Date().getFullYear();
@@ -4567,7 +4590,7 @@ export const AdminDataService = {
     if (isLive()) {
       try {
         const snap = await this.withFirestoreTimeout(getDocs(collection(db, 'reminders')), 8000);
-        if (snap && !snap.empty) return snap.docs.map(d => d.data());
+        if (snap && !snap.empty) return snap.docs.map(d => ({ id: d.id, ...d.data() }));
       } catch (err) {
         console.warn('Firestore getReminders unavailable, using verified local store:', err);
       }

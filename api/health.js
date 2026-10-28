@@ -19,7 +19,6 @@ export default async function handler(req, res) {
   try {
     services = await getServices();
   } catch {
-    // getServiceStatus will report the failure reason
   }
 
   const status = getServiceStatus();

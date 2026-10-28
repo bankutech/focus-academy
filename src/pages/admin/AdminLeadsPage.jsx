@@ -20,6 +20,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { AdminDataService, ENROLLMENT_STATUSES } from '../../services/adminDataService';
+import { LeadService } from '../../services/leadService';
 import { requireAdminEmail } from '../../services/adminIdentity';
 import { formatTime12 } from '../../types/schemas';
 
@@ -97,6 +98,7 @@ export default function AdminLeadsPage() {
   const loadData = async () => {
     setLoading(true);
     try {
+      await LeadService.syncOfflineQueue().catch(() => {});
       const [leadsList, batchesList, enrollmentList] = await Promise.all([
         AdminDataService.getLeads(),
         AdminDataService.getBatches(),

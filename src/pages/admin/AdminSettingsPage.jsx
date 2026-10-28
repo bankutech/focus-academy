@@ -660,10 +660,10 @@ export default function AdminSettingsPage() {
             <div className="p-5 border border-blue-200 rounded-xl space-y-3 bg-blue-50/40">
               <div className="flex items-center space-x-2">
                 <Database className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-sm text-[#0F172A]">Sync All Data to Cloud Firestore</h3>
+                <h3 className="font-bold text-sm text-[#0F172A]">Cloud Firestore Live Synchronization</h3>
               </div>
               <p className="text-xs text-slate-500">
-                Pushes all active batches, student profiles, fee obligations, and institutional configurations to your live Firebase Cloud Firestore database.
+                All records, student profiles, fee transactions, and batch statuses are automatically synchronized to your live Firebase Cloud Firestore database in real-time. Use the button below to run an instant full-database integrity check and force-audit.
               </p>
               <button
                 type="button"
@@ -672,7 +672,7 @@ export default function AdminSettingsPage() {
                 className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
               >
                 <RefreshCw className={`w-4 h-4 ${syncingCloud ? 'animate-spin' : ''}`} />
-                <span>{syncingCloud ? 'Syncing to Cloud Firestore...' : 'Push All Data to Cloud Firestore'}</span>
+                <span>{syncingCloud ? 'Auditing Cloud Firestore...' : 'Run Full Cloud Integrity Check'}</span>
               </button>
             </div>
 
