@@ -47,10 +47,21 @@ export const SessionAuthService = {
     let applicationId = samePerson ? flow.applicationId : undefined;
     let current = samePerson ? Number(flow.syncedStep) || 1 : 1;
     let result = { applicationId, stepToken: samePerson ? flow.stepToken : undefined, step: current };
+    let hasRecovered = false;
     while (current < target) {
-      result = await this.syncStep(current + 1, flow, applicationId);
-      applicationId = result.applicationId;
-      current = result.step;
+      try {
+        result = await this.syncStep(current + 1, flow, applicationId);
+        applicationId = result.applicationId;
+        current = result.step;
+      } catch (err) {
+        if (applicationId && !hasRecovered && (err.status === 403 || err.status === 409)) {
+          hasRecovered = true;
+          applicationId = undefined;
+          current = 1;
+          continue;
+        }
+        throw err;
+      }
     }
     return {
       applicationId: result.applicationId,

@@ -115,12 +115,13 @@ export function AppProvider({ children }) {
   const syncInFlight = useRef(null);
   const [syncError, setSyncError] = useState('');
 
-  const ensureVerifiedSession = useCallback(async (targetStep = 4) => {
+  const ensureVerifiedSession = useCallback(async (targetStep = 4, overrides = {}) => {
     if (syncInFlight.current) {
       await syncInFlight.current.catch(() => {});
     }
+    const currentFlow = { ...flowRef.current, ...overrides };
     const run = (async () => {
-      const result = await SessionAuthService.syncUpTo(targetStep, flowRef.current);
+      const result = await SessionAuthService.syncUpTo(targetStep, currentFlow);
       setStudentFlowWithStorage((prev) => ({ ...prev, ...result }));
       return result;
     })();

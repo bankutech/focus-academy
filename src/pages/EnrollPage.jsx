@@ -312,31 +312,56 @@ export default function EnrollPage() {
       return;
     }
 
-    if (!isBatchCompatible(selectedBatch, studentFlow.grade || selectedBatch.grade, board)) {
+    const targetGrade = isBatchCompatible(selectedBatch, studentFlow.grade, board)
+      ? (studentFlow.grade || selectedBatch.grade)
+      : selectedBatch.grade;
+    const targetBoard = isBatchCompatible(selectedBatch, targetGrade, board)
+      ? board
+      : selectedBatch.board;
+
+    if (!isBatchCompatible(selectedBatch, targetGrade, targetBoard)) {
       setSubmissionResult({
         success: false,
-        error: `Incompatible batch selection: ${selectedBatch.name} (${selectedBatch.grade}, ${selectedBatch.board}) does not match student profile (${studentFlow.grade || 'N/A'}, ${board || 'N/A'}). Please select an eligible batch.`,
+        error: `Incompatible batch selection: ${selectedBatch.name} (${selectedBatch.grade}, ${selectedBatch.board}) does not match student profile (${targetGrade}, ${targetBoard}). Please select an eligible batch.`,
       });
       return;
     }
 
     setIsSubmitting(true);
 
-    const fallbackWhatsappText = `Hello Focus Academy! I want to complete admission for student: ${studentName.trim()} (${studentFlow.grade || selectedBatch.grade}, ${board}). School: ${schoolName.trim()}. Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Contact: ${validation.sanitizedPhone}.`;
+    const fallbackWhatsappText = `Hello Focus Academy! I want to complete admission for student: ${studentName.trim()} (${targetGrade}, ${targetBoard}). School: ${schoolName.trim()}. Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Contact: ${validation.sanitizedPhone}.`;
     const fallbackWhatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(fallbackWhatsappText)}`;
 
     let session = { stepToken: null };
     try {
-      session = await ensureVerifiedSession(4);
+      session = await ensureVerifiedSession(4, {
+        studentName: studentName.trim(),
+        phone: validation.sanitizedPhone,
+        grade: targetGrade,
+        board: targetBoard,
+      });
     } catch {
       session = { stepToken: null };
+    }
+
+    if (!session?.stepToken) {
+      try {
+        session = await SessionAuthService.syncUpTo(4, {
+          studentName: studentName.trim(),
+          phone: validation.sanitizedPhone,
+          grade: targetGrade,
+          board: targetBoard,
+        });
+      } catch (directErr) {
+        console.warn('Direct session sync fallback error:', directErr?.message || directErr);
+      }
     }
 
     let reservation = await BatchService.reserveSeatWithDetails(selectedBatch.id, {
       studentName: studentName.trim(),
       phone: validation.sanitizedPhone,
-      grade: studentFlow.grade || selectedBatch.grade,
-      board,
+      grade: targetGrade,
+      board: targetBoard,
       stepToken: session?.stepToken
     });
 
@@ -398,8 +423,8 @@ export default function EnrollPage() {
       addressLandmark: includesPrintedMaterials && addressLandmark.trim() ? addressLandmark.trim() : null,
       addressCityState: includesPrintedMaterials ? addressCityState.trim() : null,
       addressPincode: includesPrintedMaterials ? validation.sanitizedPincode : null,
-      board,
-      grade: studentFlow.grade || selectedBatch.grade,
+      board: targetBoard,
+      grade: targetGrade,
       selectedBatchId: selectedBatch.id,
       selectedBatchName: selectedBatch.name,
       timing: selectedBatch.timing,
@@ -476,6 +501,7 @@ export default function EnrollPage() {
     setIsSubmitting(false);
 
     if (!leadResult.success) {
+      const specificMsg = leadResult.message || leadResult.error || '';
       setSubmissionResult({
         success: false,
         partial: false,
@@ -483,7 +509,7 @@ export default function EnrollPage() {
         retryPayload: leadResult.offlineQueued ? { ...enrollmentRecord, stepToken: session?.stepToken, authToken } : null,
         error: leadResult.status === 'invalid'
           ? (leadResult.message || 'Please check your information and try again.')
-          : 'Your admission was NOT saved at the campus database. Nothing has been confirmed, and no student ID or fee record was created. Please retry, or send your details to the campus desk so they can complete the admission manually.',
+          : `Your admission was NOT saved at the campus database.${specificMsg ? ` Reason: ${specificMsg}.` : ''} Nothing has been confirmed, and no student ID or fee record was created. Please retry, or send your details to the campus desk so they can complete the admission manually.`,
         whatsappUrl,
       });
       return;
@@ -543,7 +569,14 @@ export default function EnrollPage() {
                   disabled={isRetryingLead}
                   onClick={async () => {
                     setIsRetryingLead(true);
-                    const retry = await LeadService.retryLastAttempt(submissionResult.retryPayload);
+                    let retryToken = submissionResult.retryPayload?.stepToken;
+                    if (!retryToken) {
+                      try {
+                        const freshSession = await SessionAuthService.syncUpTo(4, submissionResult.retryPayload);
+                        retryToken = freshSession?.stepToken;
+                      } catch {}
+                    }
+                    const retry = await LeadService.retryLastAttempt({ ...submissionResult.retryPayload, stepToken: retryToken });
                     setIsRetryingLead(false);
                     if (retry.success) {
                       const retryMeta = retry.meta || {};
@@ -563,6 +596,11 @@ export default function EnrollPage() {
                         waitlisted: retryStatus === 'waitlisted',
                         waitlistPosition: submissionResult.enrollmentRecord?.waitlistPosition,
                       });
+                    } else {
+                      setSubmissionResult((prev) => ({
+                        ...prev,
+                        error: `Your admission was NOT saved at the campus database.${retry.message ? ` Reason: ${retry.message}.` : ''} Please click "Send Details on WhatsApp Instead" below so our campus desk can complete your admission manually.`,
+                      }));
                     }
                   }}
                   className="text-xs font-bold px-3 py-1.5 bg-rose-100 text-rose-900 rounded-md hover:bg-rose-200 cursor-pointer disabled:opacity-60"
