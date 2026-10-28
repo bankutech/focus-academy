@@ -1,26 +1,41 @@
 const MAX_FUNNEL_STEP = 4;
+const SYNC_TIMEOUT_MS = 6000;
 
 export const SessionAuthService = {
   async syncStep(step, flow, applicationId) {
-    const response = await fetch('/api/session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        step,
-        applicationId,
-        studentName: flow.studentName,
-        phone: flow.phone,
-        grade: flow.grade,
-        board: flow.board,
-      }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.token) {
-      const error = new Error(data.error || 'We could not verify your admission progress. Please try again.');
-      error.status = response.status;
-      throw error;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SYNC_TIMEOUT_MS);
+    try {
+      const response = await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          step,
+          applicationId,
+          studentName: flow.studentName,
+          phone: flow.phone,
+          grade: flow.grade,
+          board: flow.board,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.token) {
+        const error = new Error(data.error || 'We could not verify your admission progress. Please try again.');
+        error.status = response.status;
+        throw error;
+      }
+      return { applicationId: data.applicationId, stepToken: data.token, step: data.step };
+    } catch (err) {
+      clearTimeout(timer);
+      if (err?.name === 'AbortError') {
+        const timeoutError = new Error('Session verification took too long to respond. Please try again.');
+        timeoutError.status = 504;
+        throw timeoutError;
+      }
+      throw err;
     }
-    return { applicationId: data.applicationId, stepToken: data.token, step: data.step };
   },
 
   async syncUpTo(targetStep, flow) {

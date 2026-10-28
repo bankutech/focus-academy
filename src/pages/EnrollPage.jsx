@@ -16,7 +16,8 @@ import {
   AlertCircle, 
   FileText, 
   ArrowRight, 
-  MessageSquare 
+  MessageSquare,
+  Loader2 
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
@@ -265,6 +266,7 @@ export default function EnrollPage() {
       }
       const firstErrorKey = Object.keys(errors)[0];
       const fieldIdMap = {
+        declaration: 'enroll-declaration-checkbox',
         studentName: 'enroll-student-name',
         phone: 'enroll-phone',
         schoolName: 'enroll-school-name',
@@ -320,6 +322,9 @@ export default function EnrollPage() {
 
     setIsSubmitting(true);
 
+    const fallbackWhatsappText = `Hello Focus Academy! I want to complete admission for student: ${studentName.trim()} (${studentFlow.grade || selectedBatch.grade}, ${board}). School: ${schoolName.trim()}. Selected Batch: ${selectedBatch.name} (${selectedBatch.timing}). Contact: ${validation.sanitizedPhone}.`;
+    const fallbackWhatsappUrl = `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent(fallbackWhatsappText)}`;
+
     let session = { stepToken: null };
     try {
       session = await ensureVerifiedSession(4);
@@ -359,7 +364,9 @@ export default function EnrollPage() {
         setSubmissionResult({
           success: false,
           partial: false,
+          retryable: true,
           error: reservation.error || 'We could not verify a seat for this batch. No admission was created. Please try again or call the campus desk on +91 98424 51220.',
+          whatsappUrl: fallbackWhatsappUrl,
         });
         return;
       }
@@ -1661,6 +1668,7 @@ export default function EnrollPage() {
                     <div>
                       <label className="flex items-start space-x-2.5 cursor-pointer">
                         <input
+                          id="enroll-declaration-checkbox"
                           type="checkbox"
                           checked={declarationChecked}
                           onChange={(e) => {
@@ -1713,12 +1721,22 @@ export default function EnrollPage() {
                     </button>
 
                     <button
+                      id="enroll-submit-button"
                       type="submit"
                       disabled={isSubmitting}
-                      className="inline-flex items-center space-x-2 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer disabled:opacity-50 active:scale-98"
+                      className="inline-flex items-center space-x-2 px-8 py-3.5 bg-brand hover:bg-brand-strong text-white text-sm font-bold rounded-md shadow-xs transition-all cursor-pointer disabled:opacity-60 active:scale-98 select-none"
                     >
-                      <span>{isSubmitting ? 'Verifying & Reserving...' : 'Complete Batch Enrollment'}</span>
-                      <Send className="w-4 h-4 text-orange-100" />
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 text-orange-100 animate-spin" />
+                          <span>Verifying & Reserving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Complete Batch Enrollment</span>
+                          <Send className="w-4 h-4 text-orange-100" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>

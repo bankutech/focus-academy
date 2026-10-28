@@ -1,7 +1,7 @@
 let memoryCache = null;
 let lastFetchedAt = 0;
 const CACHE_TTL_MS = 60000;
-const FETCH_TIMEOUT_MS = 8000;
+const FETCH_TIMEOUT_MS = 6000;
 
 const PARENT_FRIENDLY = (fallback) => ({
   network: 'We could not reach the campus server. Please check your connection and try again.',

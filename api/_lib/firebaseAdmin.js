@@ -112,15 +112,16 @@ const describeCredentialFailure = (credentials) => {
 
 const classifyInitializationError = (err) => {
   const code = String(err?.code || err?.name || 'unknown_error');
-  if (/ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|fetch failed/i.test(String(err?.message || ''))) {
+  const message = String(err?.message || '');
+  if (/ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|fetch failed/i.test(message)) {
     return { reason: 'network_unavailable', detail: 'Firebase Admin could not reach Google identity services.' };
   }
-  if (code === 'auth/invalid-credential' || /DECODER|PEM|error:0909006C|error:1E08010C/i.test(String(err?.message || ''))) {
+  if (code === 'auth/invalid-credential' || /DECODER|PEM|error:0909006C|error:1E08010C/i.test(message)) {
     return { reason: 'invalid_private_key', detail: 'Firebase Admin rejected the service-account private key.' };
   }
   return {
     reason: 'initialization_failed',
-    detail: `Firebase Admin failed to initialize (${code}). Check that the service account is valid and that the Node runtime matches the installed firebase-admin version.`,
+    detail: `Firebase Admin failed to initialize (${code}${message ? `: ${message.slice(0, 100)}` : ''}). Check that the service account is valid and that the Node runtime matches the installed firebase-admin version.`,
   };
 };
 
@@ -147,17 +148,26 @@ export const getServices = async () => {
   }
 
   try {
-    const [{ initializeApp, getApps, cert }, { getFirestore }, { getAuth }] = await Promise.all([
+    const [{ initializeApp, getApps, cert }, { getFirestore }] = await Promise.all([
       import('firebase-admin/app'),
       import('firebase-admin/firestore'),
-      import('firebase-admin/auth'),
     ]);
     const app = getApps()[0] || initializeApp({ credential: cert(credentials.value) });
-    cachedServices = { db: getFirestore(app), auth: getAuth(app) };
+    const db = getFirestore(app);
+
+    let auth = null;
+    try {
+      const authMod = await import('firebase-admin/auth');
+      auth = authMod.getAuth(app);
+    } catch (authErr) {
+      console.warn(`[firebase-admin] auth sub-module initialization warning (${authErr?.code || authErr?.message || authErr}), continuing with firestore`);
+    }
+
+    cachedServices = { db, auth };
     cachedProjectId = credentials.value.project_id;
     cachedCredentialFormat = credentials.format;
     cachedFailure = null;
-    console.info(`[firebase-admin] initialized project=${cachedProjectId} format=${cachedCredentialFormat}`);
+    console.info(`[firebase-admin] initialized project=${cachedProjectId} format=${cachedCredentialFormat} authReady=${Boolean(auth)}`);
     return cachedServices;
   } catch (err) {
     cachedFailure = classifyInitializationError(err);
