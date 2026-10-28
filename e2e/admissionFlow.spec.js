@@ -130,8 +130,13 @@ test.describe('Focus Academy Admission Funnel E2E', () => {
     await expect(page.getByText(/Admission Slip No:/i)).toBeVisible();
     await expect(page.getByText('FA-E2E-SLIP01')).toBeVisible();
     await expect(page.getByText(/FA-2026-001/)).toBeVisible();
-    await expect(page.getByText(/Roever Matriculation School/i)).toBeVisible();
+    const signInLink = page.getByRole('link', { name: /Sign In for the Student Portal →/i });
+    await expect(signInLink).toBeVisible();
     await expect(page.getByRole('link', { name: /Create Student Account →/i })).toBeVisible();
+
+    await signInLink.click();
+    await expect(page).toHaveURL(/.*login/);
+    await expect(page.getByRole('heading', { name: /Student Login/i })).toBeVisible();
   });
 
   test('reports that nothing was saved when the campus API is unavailable', async ({ page }) => {

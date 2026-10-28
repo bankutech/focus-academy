@@ -118,9 +118,14 @@ export default function App() {
                   <Route path="/student-details" element={<StudentDetailsPage />} />
                   <Route path="/login" element={<StudentLoginPage />} />
                   <Route path="/student/login" element={<StudentLoginPage />} />
+                  <Route path="/student-login" element={<StudentLoginPage />} />
+                  <Route path="/student-portal/login" element={<StudentLoginPage />} />
+                  <Route path="/portal/login" element={<Navigate to="/login" replace />} />
                   <Route path="/signup" element={<StudentRegisterPage />} />
                   <Route path="/register" element={<StudentRegisterPage />} />
                   <Route path="/student/register" element={<StudentRegisterPage />} />
+                  <Route path="/student-register" element={<StudentRegisterPage />} />
+                  <Route path="/student-portal/register" element={<StudentRegisterPage />} />
                   <Route
                     path="/student-dashboard"
                     element={
@@ -130,7 +135,31 @@ export default function App() {
                     }
                   />
                   <Route
+                    path="/student-portal"
+                    element={
+                      <StudentProtectedRoute>
+                        <StudentDashboardPage />
+                      </StudentProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/student/dashboard"
+                    element={<Navigate to="/student-dashboard" replace />}
+                  />
+                  <Route
+                    path="/student-portal/dashboard"
+                    element={<Navigate to="/student-dashboard" replace />}
+                  />
+                  <Route
+                    path="/student/portal"
+                    element={<Navigate to="/student-dashboard" replace />}
+                  />
+                  <Route
+                    path="/portal"
+                    element={<Navigate to="/student-dashboard" replace />}
+                  />
+                  <Route
+                    path="/portal/dashboard"
                     element={<Navigate to="/student-dashboard" replace />}
                   />
                   <Route path="/exam-prep" element={<ExamPrepPage />} />

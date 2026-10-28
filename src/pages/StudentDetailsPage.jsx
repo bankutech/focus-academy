@@ -152,6 +152,12 @@ export default function StudentDetailsPage() {
         batchTiming: gradeChanged ? '' : prev.batchTiming,
         examPrep: gradeChanged ? '' : prev.examPrep,
         examPrepId: gradeChanged ? '' : prev.examPrepId,
+        syncedStep: gradeChanged ? 1 : prev.syncedStep,
+        stepToken: gradeChanged ? undefined : prev.stepToken,
+        syncedIdentity: gradeChanged ? undefined : prev.syncedIdentity,
+        syncedGrade: gradeChanged ? undefined : prev.syncedGrade,
+        syncedBoard: gradeChanged ? undefined : prev.syncedBoard,
+        applicationId: gradeChanged ? undefined : prev.applicationId,
       };
     });
 

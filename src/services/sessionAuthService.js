@@ -42,8 +42,15 @@ export const SessionAuthService = {
     const target = Math.min(Number(targetStep) || 1, MAX_FUNNEL_STEP);
     const cleanPhone = String(flow.phone || '').replace(/\D/g, '').slice(-10);
     const cleanName = String(flow.studentName || '').toLowerCase().trim();
-    const currentIdentity = `${cleanPhone}::${cleanName}`;
-    const samePerson = flow.syncedIdentity ? flow.syncedIdentity === currentIdentity : (flow.syncedPhone === cleanPhone && flow.syncedName === cleanName);
+    const cleanGrade = String(flow.grade || '').trim();
+    const cleanBoard = String(flow.board || '').trim();
+    const currentIdentity = `${cleanPhone}::${cleanName}::${cleanGrade}::${cleanBoard}`;
+    const samePerson = flow.syncedIdentity ? flow.syncedIdentity === currentIdentity : (
+      flow.syncedPhone === cleanPhone &&
+      flow.syncedName === cleanName &&
+      (!flow.syncedGrade || flow.syncedGrade === cleanGrade) &&
+      (!flow.syncedBoard || flow.syncedBoard === cleanBoard)
+    );
     let applicationId = samePerson ? flow.applicationId : undefined;
     let current = samePerson ? Number(flow.syncedStep) || 1 : 1;
     let result = { applicationId, stepToken: samePerson ? flow.stepToken : undefined, step: current };
@@ -69,6 +76,8 @@ export const SessionAuthService = {
       syncedStep: current,
       syncedPhone: cleanPhone,
       syncedName: cleanName,
+      syncedGrade: cleanGrade,
+      syncedBoard: cleanBoard,
       syncedIdentity: currentIdentity,
     };
   },

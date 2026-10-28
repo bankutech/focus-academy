@@ -36,8 +36,9 @@ export default function StudentLoginPage() {
     setLocalError('');
     clearError();
 
-    if (!email.trim()) {
-      setLocalError('Please enter your email address.');
+    const rawInput = email.trim();
+    if (!rawInput) {
+      setLocalError('Please enter your email address or Student ID.');
       return;
     }
     if (!password) {
@@ -47,8 +48,26 @@ export default function StudentLoginPage() {
 
     setIsSubmitting(true);
     try {
-      await login(email.trim(), password);
-      // Navigation handled by useEffect above
+      let targetEmail = rawInput;
+      if (!rawInput.includes('@')) {
+        try {
+          const resp = await fetch('/api/student-portal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'resolve-id', identifier: rawInput }),
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (resp.ok && data.success && data.email) {
+            targetEmail = data.email;
+          } else {
+            throw new Error(data.error || 'No student account matches this ID. Please sign in with your email address.');
+          }
+        } catch (resolveErr) {
+          throw new Error(resolveErr.message || 'Could not verify Student ID. Please sign in with your registered email.');
+        }
+      }
+
+      await login(targetEmail, password);
     } catch (err) {
       setLocalError(err.message);
     } finally {
@@ -169,18 +188,18 @@ export default function StudentLoginPage() {
           <form onSubmit={handleLogin} className="bg-white rounded-xl border border-[#E2E8F0] shadow-editorial p-6 space-y-4">
             <div>
               <label htmlFor="login-email" className="block text-xs font-bold text-[#0F172A] mb-1.5">
-                Email Address
+                Email Address or Student ID
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   ref={emailRef}
                   id="login-email"
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setLocalError(''); }}
-                  placeholder="student@example.com"
-                  autoComplete="email"
+                  placeholder="student@example.com or Student ID"
+                  autoComplete="username"
                   className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand bg-white"
                 />
               </div>
@@ -243,7 +262,7 @@ export default function StudentLoginPage() {
 
             <p className="text-center text-xs text-slate-500 pt-2">
               Don&apos;t have an account?{' '}
-              <Link to="/signup" className="font-bold text-brand hover:underline">
+              <Link to="/student-register" className="font-bold text-brand hover:underline">
                 Create Account
               </Link>
             </p>

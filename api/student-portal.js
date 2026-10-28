@@ -1,8 +1,28 @@
 import { getServices } from './_lib/firebaseAdmin.js';
-import { prepare, fail, unavailable, crashed, clientIp, withinRate } from './_lib/http.js';
+import { prepare, fail, unavailable, crashed, clientIp, withinRate, clean, newId } from './_lib/http.js';
+import { checkRateLimit } from './_lib/rateLimiter.js';
 import { calculateNextPaymentDueDate } from '../src/types/schemas.js';
 
 const normalizeName = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+const nameTokens = (val) =>
+  String(val || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .sort()
+    .join('');
+
+const namesMatch = (nameA, nameB) => {
+  const normA = normalizeName(nameA);
+  const normB = normalizeName(nameB);
+  if (normA === normB && normA) return true;
+  const tokA = nameTokens(nameA);
+  const tokB = nameTokens(nameB);
+  if (tokA === tokB && tokA) return true;
+  return false;
+};
+
 const activePaymentsOnly = (payments) => payments.filter((p) => !p.isReversed && !p.reversed);
 
 const obligationStatus = (obligation, today) => {
@@ -34,7 +54,7 @@ const findStudentForAccount = async (db, { uid, email, profile }) => {
 
   const candidates = byPhone.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   const wanted = normalizeName(profile?.studentName);
-  const exact = candidates.filter((student) => normalizeName(student.studentName) === wanted && wanted);
+  const exact = candidates.filter((student) => namesMatch(student.studentName, profile?.studentName) && wanted);
   if (exact.length !== 1) {
     return {
       student: null,
@@ -89,12 +109,49 @@ const linkAccountToRecords = async (db, { uid, email, student }) => {
 };
 
 export default async function handler(req, res) {
-  prepare(res, ['GET']);
-  if (req.method !== 'GET') return fail(res, 405, 'Method not allowed');
+  prepare(res, ['GET', 'POST']);
+  if (req.method !== 'GET' && req.method !== 'POST') return fail(res, 405, 'Method not allowed');
+
+  const ip = clientIp(req);
+  const rate = checkRateLimit(ip, 120, 60000);
+  if (!rate.allowed) return fail(res, 429, 'Too many requests. Please wait a minute before refreshing the portal.');
 
   const services = await getServices();
   if (!services) return unavailable(res);
   const { db, auth } = services;
+
+  const postBody = req.method === 'POST' && req.body && typeof req.body === 'object' ? req.body : {};
+  if (req.method === 'POST' && postBody.action === 'resolve-id') {
+    const identifier = String(postBody.identifier || '').trim();
+    if (!identifier || identifier.length < 3) return fail(res, 400, 'Invalid student identifier.');
+    if (!(await withinRate(db, 'resolve_id', clientIp(req), 15, 60 * 1000))) {
+      return fail(res, 429, 'Too many lookup requests. Please wait a moment.');
+    }
+    const studentSnap = await db.collection('students').doc(identifier).get();
+    if (studentSnap.exists) {
+      const sData = studentSnap.data();
+      let targetEmail = sData.email;
+      if (!targetEmail && sData.studentUid) {
+        const profileSnap = await db.collection('student_profiles').doc(sData.studentUid).get();
+        if (profileSnap.exists) targetEmail = profileSnap.data().email;
+      }
+      if (!targetEmail && sData.enrollmentId) {
+        const enrSnap = await db.collection('enrollments').doc(sData.enrollmentId).get();
+        if (enrSnap.exists) targetEmail = enrSnap.data().email;
+      }
+      if (!targetEmail && sData.guardianPhone) {
+        const profileQuery = await db.collection('student_profiles').where('mobile', '==', sData.guardianPhone).get();
+        if (!profileQuery.empty) {
+          const matchProfile = profileQuery.docs.find(d => namesMatch(d.data().studentName, sData.studentName)) || profileQuery.docs[0];
+          targetEmail = matchProfile.data().email;
+        }
+      }
+      if (targetEmail) {
+        return res.status(200).json({ success: true, email: targetEmail });
+      }
+    }
+    return fail(res, 404, 'No account found matching this Student ID. Please sign in using your registered email.');
+  }
 
   const header = String(req.headers.authorization || '');
   const token = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
@@ -140,6 +197,36 @@ export default async function handler(req, res) {
     const student = match.student;
     await linkAccountToRecords(db, { uid, email, student });
 
+    if (req.method === 'POST') {
+      if (postBody.action === 'submit-doubt') {
+        const subject = clean(postBody.subject, 50) || 'General';
+        const topic = clean(postBody.topic, 100) || 'General Topic';
+        const question = clean(postBody.question, 1000);
+        if (!question || question.length < 5) {
+          return fail(res, 400, 'Please enter a valid doubt question of at least 5 characters.');
+        }
+        const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+        const doubtEntry = {
+          id: newId('DBT'),
+          date: todayStr,
+          subject,
+          topic,
+          question,
+          status: 'pending',
+          response: null,
+          faculty: null,
+          submittedAt: new Date().toISOString()
+        };
+        const currentDoubts = Array.isArray(student.doubts) ? student.doubts : [];
+        const updated = [doubtEntry, ...currentDoubts];
+        await db.collection('students').doc(student.id).set({ doubts: updated }, { merge: true });
+        const userDoubts = Array.isArray(profile?.doubts) ? profile.doubts : [];
+        await db.collection('student_profiles').doc(uid).set({ doubts: [doubtEntry, ...userDoubts] }, { merge: true });
+        return res.status(200).json({ success: true, doubt: doubtEntry });
+      }
+      return fail(res, 400, 'Invalid action.');
+    }
+
     const [obligationSnap, paymentSnap, enrollmentSnap] = await Promise.all([
       db.collection('fee_obligations').where('studentId', '==', student.id).get(),
       db.collection('payments').where('studentId', '==', student.id).get(),
@@ -162,7 +249,9 @@ export default async function handler(req, res) {
     const activePayments = activePaymentsOnly(payments);
 
     const totalCharged = obligations.reduce((sum, o) => sum + Number(o.amountDue || 0), 0);
-    const totalPaid = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const obligationPaid = obligations.reduce((sum, o) => sum + Number(o.amountPaid || 0), 0);
+    const paymentsPaid = activePayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const totalPaid = Math.max(obligationPaid, paymentsPaid);
     const totalWaived = obligations.reduce((sum, o) => sum + Number(o.waivedAmount || 0), 0);
     const outstanding = Math.max(0, totalCharged - totalPaid - totalWaived);
 
@@ -192,6 +281,9 @@ export default async function handler(req, res) {
         status: student.status,
         admissionStatus: student.admissionStatus || (student.status === 'active' ? 'confirmed' : student.status),
         enrollmentDate: student.enrollmentDate || null,
+        attendance: Array.isArray(student.attendance) ? student.attendance : [],
+        assessments: Array.isArray(student.assessments) ? student.assessments : [],
+        doubts: Array.isArray(student.doubts) ? student.doubts : [],
       },
       billing: {
         frequency: student.feeConfig?.billingFrequency || 'monthly',

@@ -19,16 +19,29 @@ import {
   RefreshCw,
   Award,
   Receipt,
-  Download
+  Download,
+  Bell,
+  Key,
+  Printer,
+  FileText,
+  BarChart3,
+  HelpCircle,
+  Send
 } from 'lucide-react';
 import { useStudentAuth } from '../context/StudentAuthContext';
 import { useStudentFlow } from '../context/useAppContext';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
-import { buildReceiptHtml, buildAdmissionSlipHtml, openPrintableDocument } from '../utils/printableDocuments';
+import { 
+  buildReceiptHtml, 
+  buildAdmissionSlipHtml, 
+  buildReportCardHtml, 
+  buildStudySheetHtml, 
+  openPrintableDocument 
+} from '../utils/printableDocuments';
 
 export default function StudentDashboardPage() {
   const navigate = useNavigate();
-  const { user, profile, logout, updateProfile, refreshProfile } = useStudentAuth();
+  const { user, profile, logout, updateProfile, refreshProfile, resetPassword } = useStudentAuth();
   const { studentFlow } = useStudentFlow();
 
   const [activeTab, setActiveTab] = useState('enrollments');
@@ -40,7 +53,6 @@ export default function StudentDashboardPage() {
   const [loadingFinancials, setLoadingFinancials] = useState(true);
   const [financialsError, setFinancialsError] = useState('');
 
-  // Profile Edit State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState('');
   const [editMobile, setEditMobile] = useState('');
@@ -51,12 +63,85 @@ export default function StudentDashboardPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
   const [profileErrorMsg, setProfileErrorMsg] = useState('');
+  const [passwordResetSent, setPasswordResetSent] = useState(false);
+  const [sendingPasswordReset, setSendingPasswordReset] = useState(false);
+
+  const [doubts, setDoubts] = useState(() => (Array.isArray(profile?.doubts) ? profile.doubts : []));
+  const [newDoubtSubject, setNewDoubtSubject] = useState('Physics');
+  const [newDoubtTopic, setNewDoubtTopic] = useState('');
+  const [newDoubtQuestion, setNewDoubtQuestion] = useState('');
+  const [doubtSubmitted, setDoubtSubmitted] = useState(false);
+
+  const academicRecords = Array.isArray(financials?.student?.assessments) ? financials.student.assessments : [];
+  const attendanceRecords = Array.isArray(financials?.student?.attendance) ? financials.student.attendance : [];
+  const attendancePresentCount = attendanceRecords.filter((a) => a.status === 'present').length;
+  const attendanceRate = attendanceRecords.length > 0
+    ? `${Math.round((attendancePresentCount / attendanceRecords.length) * 100)}%`
+    : 'Not Recorded';
+
+  const cumulativeAvg = academicRecords.length > 0
+    ? `${Math.round(academicRecords.reduce((sum, a) => sum + Number(a.percentage || 0), 0) / academicRecords.length)}%`
+    : 'Not Evaluated';
+
+  const studySheets = [
+    {
+      id: 'mat-1',
+      title: 'Class 10 & 12 Mathematics — Tamil Nadu State Board (Samacheer) & CBSE Framework',
+      subject: 'Mathematics',
+      grade: 'Classes 10 & 12',
+      summary: 'Focus Academy curriculum structure covering Board exam problem units, formula memory chains, and step-wise marking schemes.',
+      points: [
+        'Relations, Functions & Matrices: Composition properties, inverse matrices, and row operations.',
+        'Differential & Integral Calculus: Limits, continuity, derivatives, and standard integrals.',
+        'Coordinate Geometry & Vectors: Straight lines, planes, dot product, and cross product applications.',
+        'Statistics & Probability: Variance, standard deviation, and conditional probability distributions.'
+      ]
+    },
+    {
+      id: 'mat-2',
+      title: 'Class 11 & 12 Physics — Core Concepts & Numerical Blueprint',
+      subject: 'Physics',
+      grade: 'Classes 11 & 12',
+      summary: 'Essential definitions, derivations, SI units, and circuit diagram techniques for evening coaching batches.',
+      points: [
+        'Electrostatics & Capacitance: Field equations, potential due to dipole, and capacitance combinations.',
+        'Current Electricity & Magnetism: Kirchhoff laws, potentiometer, and moving coil galvanometer principles.',
+        'Wave & Ray Optics: Reflection, refraction at spherical surfaces, and interference conditions.',
+        'Modern Physics: Photoelectric effect, de Broglie relation, and semiconductor diode characteristics.'
+      ]
+    },
+    {
+      id: 'mat-3',
+      title: 'Class 11 & 12 Chemistry — Reaction Mechanisms & Numerical Problem Guide',
+      subject: 'Chemistry',
+      grade: 'Classes 11 & 12',
+      summary: 'Inorganic reaction equations, physical chemistry numerical steps, and organic functional group conversions.',
+      points: [
+        'Physical Chemistry: Nernst equation, rate laws, order of reaction, and Raoult law calculations.',
+        'Inorganic Chemistry: d- and f-block transition metals, coordination compounds, and crystal field theory.',
+        'Organic Chemistry: Reaction pathways for alcohols, phenols, aldehydes, carboxylic acids, and amines.',
+        'Practical Examination Guidelines: Salt analysis scheme, volumetric titration calculations, and record verification.'
+      ]
+    },
+    {
+      id: 'mat-4',
+      title: 'Focus Academy Thoramangalam — Academic Session Code & Evening Batch Schedule',
+      subject: 'Institutional Guide',
+      grade: 'Classes 6 to 12',
+      summary: 'Campus timing standards, 1:12 faculty mentorship ratio, workbook issuance protocols, and monthly parent feedback cycles.',
+      points: [
+        'Classroom Mentorship: Maximum 12 students per batch to guarantee individual problem-solving supervision.',
+        'Session Timings: Evening blocks (4:00 PM – 9:00 PM) at Thiripura Complex, Main Road, Thoramangalam.',
+        'Daily Practice Worksheets: Completed worksheets filed in the student portfolio and checked daily.',
+        'Parent Consultation Desk: Monthly progress reviews and immediate absence alert notifications.'
+      ]
+    }
+  ];
 
   useEffect(() => {
     document.title = 'Student Dashboard | Focus Academy';
   }, []);
 
-  // Sync edit state with loaded profile
   useEffect(() => {
     if (profile) {
       setEditName(profile.studentName || user?.displayName || '');
@@ -137,8 +222,12 @@ export default function StudentDashboardPage() {
         scheduleExplanation: fee.explanation || null,
         obligations: payload.obligations || [],
         payments: payload.payments || [],
+        student: payload.student || null,
         syncedAt: payload.syncedAt
       });
+      if (Array.isArray(payload.student?.doubts)) {
+        setDoubts(payload.student.doubts);
+      }
     } catch (err) {
       const message = err?.message || 'Could not load your admission records from the campus database.';
       setEnrollmentError(message);
@@ -181,6 +270,19 @@ export default function StudentDashboardPage() {
     }
   };
 
+  const handleSendPasswordReset = async () => {
+    if (!user?.email) return;
+    setSendingPasswordReset(true);
+    try {
+      await resetPassword(user.email);
+      setPasswordResetSent(true);
+    } catch (err) {
+      setProfileErrorMsg(err?.message || 'Failed to send password reset email.');
+    } finally {
+      setSendingPasswordReset(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -195,14 +297,12 @@ export default function StudentDashboardPage() {
   const studentBoard = profile?.board || 'TN State Board (Samacheer)';
   const studentSlipId = financials?.studentId || 'Student ID pending';
 
-  // Incomplete enrollment detection
   const hasIncompleteFunnel = studentFlow && studentFlow.step >= 2 && studentFlow.step < 5 && studentFlow.selectedBatchId;
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen text-left py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
         
-        {/* Top Header Card */}
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
           <div className="bg-[#0F172A] p-6 sm:p-8 text-white relative">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -248,7 +348,6 @@ export default function StudentDashboardPage() {
               </div>
             </div>
 
-            {/* Quick Metrics Bar */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800 text-xs">
               <div>
                 <p className="text-slate-400">Campus</p>
@@ -269,8 +368,7 @@ export default function StudentDashboardPage() {
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="border-b border-slate-200 bg-slate-50/50 px-4 sm:px-8 flex overflow-x-auto">
+          <div className="border-b border-slate-200 bg-slate-50/50 px-4 sm:px-8 flex overflow-x-auto gap-1">
             <button
               type="button"
               onClick={() => setActiveTab('enrollments')}
@@ -281,12 +379,38 @@ export default function StudentDashboardPage() {
               }`}
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>My Batches & Admissions</span>
+              <span>My Courses & Batches</span>
               {enrollments.length > 0 && (
                 <span className="px-1.5 py-0.2 rounded-full bg-orange-100 text-brand text-[10px] font-bold">
                   {enrollments.length}
                 </span>
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('schedule')}
+              className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
+                activeTab === 'schedule'
+                  ? 'border-brand text-brand'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              <span>My Schedule</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('fees')}
+              className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
+                activeTab === 'fees'
+                  ? 'border-brand text-brand'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Fee Counter & Slips</span>
             </button>
 
             <button
@@ -304,6 +428,19 @@ export default function StudentDashboardPage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab('notifications')}
+              className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
+                activeTab === 'notifications'
+                  ? 'border-brand text-brand'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Bell className="w-4 h-4" />
+              <span>Notifications</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('guidelines')}
               className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
                 activeTab === 'guidelines'
@@ -317,20 +454,45 @@ export default function StudentDashboardPage() {
 
             <button
               type="button"
-              onClick={() => setActiveTab('fees')}
+              onClick={() => setActiveTab('academics')}
               className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
-                activeTab === 'fees'
+                activeTab === 'academics'
                   ? 'border-brand text-brand'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              <CreditCard className="w-4 h-4" />
-              <span>Fee Counter & Slips</span>
+              <BarChart3 className="w-4 h-4" />
+              <span>Test Marks & Progress</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('doubts')}
+              className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
+                activeTab === 'doubts'
+                  ? 'border-brand text-brand'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span>Ask Tutors & Doubts</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('materials')}
+              className={`py-3.5 px-4 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap flex items-center gap-2 cursor-pointer transition-colors ${
+                activeTab === 'materials'
+                  ? 'border-brand text-brand'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Study Materials & Question Vault</span>
             </button>
           </div>
         </div>
 
-        {/* Incomplete Admission Notice */}
         {hasIncompleteFunnel && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -356,7 +518,6 @@ export default function StudentDashboardPage() {
           </div>
         )}
 
-        {/* TAB 1: ENROLLMENTS */}
         {activeTab === 'enrollments' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -472,20 +633,39 @@ export default function StudentDashboardPage() {
                         </div>
                       </div>
 
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-2 pt-1">
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            openPrintableDocument(buildAdmissionSlipHtml({
+                              ...enr,
+                              admissionId: enr.id,
+                              studentName: profile?.studentName || studentFlow.studentName || 'Student',
+                              studentId: enr.studentId || profile?.studentId || 'Pending assignment',
+                              grade: enr.grade || profile?.grade,
+                              board: enr.board || profile?.board,
+                              batchName: enr.batchName || enr.subjects,
+                              timing: enr.timing,
+                              contact: profile?.mobile || profile?.parentPhone
+                            }));
+                          }}
+                          className="py-2 px-3 bg-brand hover:bg-brand-strong text-white rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Print Slip</span>
+                        </button>
                         <a
                           href={waUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                          className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
                           <span>WhatsApp Desk</span>
                         </a>
                         <Link
                           to={`/batch/${enr.batchId || ''}`}
-                          className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                          className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap"
                         >
                           <span>Batch Details</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -499,7 +679,6 @@ export default function StudentDashboardPage() {
           </div>
         )}
 
-        {/* TAB 2: STUDENT PROFILE */}
         {activeTab === 'profile' && (
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between">
@@ -686,10 +865,156 @@ export default function StudentDashboardPage() {
                 </div>
               </div>
             )}
+
+            <div className="pt-6 border-t border-slate-200 space-y-4">
+              <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+                <Key className="w-4 h-4 text-brand" />
+                <span>Account Security & Password Management</span>
+              </h3>
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                <div>
+                  <span className="font-semibold text-slate-800 block">Reset Account Password</span>
+                  <span className="text-slate-500 block mt-0.5">
+                    We will send a secure password reset link to your registered email: <strong>{user?.email}</strong>
+                  </span>
+                </div>
+                {passwordResetSent ? (
+                  <span className="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg font-bold flex items-center gap-1.5 whitespace-nowrap">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Reset Link Sent! Check Email</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSendPasswordReset}
+                    disabled={sendingPasswordReset}
+                    className="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white font-bold rounded-xl transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50"
+                  >
+                    {sendingPasswordReset ? 'Sending...' : 'Send Password Reset Link'}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* TAB 3: CAMPUS GUIDELINES */}
+        {activeTab === 'schedule' && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+            <div>
+              <h2 className="text-lg font-extrabold text-[#0F172A]">
+                Class Schedule & Classroom Timings
+              </h2>
+              <p className="text-xs text-slate-500">
+                Official evening session timetable for your enrolled courses at Thiripura Complex.
+              </p>
+            </div>
+
+            {enrollments.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <Calendar className="w-8 h-8 text-slate-400 mx-auto" />
+                <h3 className="text-sm font-bold text-[#0F172A]">No Active Class Schedule</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  Your personalized class schedule will appear here after you enroll in an evening tuition batch.
+                </p>
+                <Link
+                  to="/batches"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand text-white text-xs font-bold rounded-xl"
+                >
+                  Browse Available Batches →
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {enrollments.map((enr) => (
+                  <div key={enr.id} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/70 pb-3">
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-brand bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                          {enr.grade || studentGrade} • {enr.board || studentBoard}
+                        </span>
+                        <h3 className="text-base font-extrabold text-[#0F172A] mt-1">{enr.batchName}</h3>
+                      </div>
+                      <span className="px-2.5 py-1 text-xs font-bold bg-white text-slate-700 border border-slate-200 rounded-xl w-fit">
+                        {enr.timing || 'Evening Session (4:00 PM – 8:30 PM)'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                      <div className="p-3.5 bg-white rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block font-medium">Days & Frequency</span>
+                        <span className="font-bold text-slate-900 mt-1 block">Monday – Saturday</span>
+                        <span className="text-[11px] text-slate-500 mt-0.5 block">6 days / week coaching</span>
+                      </div>
+                      <div className="p-3.5 bg-white rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block font-medium">Classroom & Center</span>
+                        <span className="font-bold text-slate-900 mt-1 block">Thiripura Complex</span>
+                        <span className="text-[11px] text-slate-500 mt-0.5 block">Thoramangalam, Perambalur</span>
+                      </div>
+                      <div className="p-3.5 bg-white rounded-xl border border-slate-200">
+                        <span className="text-slate-400 block font-medium">Classroom Policy</span>
+                        <span className="font-bold text-slate-900 mt-1 block">1:12 Max Ratio</span>
+                        <span className="text-[11px] text-orange-600 font-semibold mt-0.5 block">Personalized attention</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'notifications' && (
+          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+            <div>
+              <h2 className="text-lg font-extrabold text-[#0F172A]">
+                Student Notifications & Academy Bulletins
+              </h2>
+              <p className="text-xs text-slate-500">
+                Official notices and admission updates for {studentDisplayName}.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 flex items-start gap-3 text-xs">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-emerald-950">Student Admission Confirmed</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-mono">
+                      {studentSlipId}
+                    </span>
+                  </div>
+                  <p className="text-emerald-900 leading-relaxed">
+                    Your student record is verified in the Focus Academy registry. Classroom materials and syllabus blueprints are prepared for your assigned evening batch.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-start gap-3 text-xs">
+                <Clock className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold text-slate-900">Attendance & Punctuality Reminder</span>
+                  <p className="text-slate-600 leading-relaxed">
+                    Evening batches commence promptly as scheduled. Students are requested to be present 10 minutes prior to session start at Thiripura Complex, Thoramangalam.
+                  </p>
+                </div>
+              </div>
+
+              {financials && Number(financials.balance || 0) > 0 && (
+                <div className="p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-start gap-3 text-xs">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <span className="font-bold text-amber-950">Fee Cycle Due Notice</span>
+                    <p className="text-amber-900 leading-relaxed">
+                      Upcoming tuition fee cycle: ₹{Number(financials.balance).toLocaleString('en-IN')}. Due date: {financials.nextDueDateFormatted || 'Upcoming'}.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'guidelines' && (
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
             <div>
@@ -743,7 +1068,6 @@ export default function StudentDashboardPage() {
               </div>
             </div>
 
-            {/* Campus Address Box */}
             <div className="p-4 rounded-xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <span className="text-xs text-orange-400 font-bold uppercase tracking-wider">Campus Location</span>
@@ -761,7 +1085,6 @@ export default function StudentDashboardPage() {
           </div>
         )}
 
-        {/* TAB 4: FEES & RECEIPTS */}
         {activeTab === 'fees' && (
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
@@ -825,7 +1148,6 @@ export default function StudentDashboardPage() {
               </div>
             ) : (
               <>
-                {/* Financial Summary Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                     <span className="text-slate-400 block font-medium">Monthly Tuition Fee</span>
@@ -882,7 +1204,6 @@ export default function StudentDashboardPage() {
               </div>
             </div>
 
-            {/* Next Due Date Banner */}
             <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
               financials?.isOverdue
                 ? 'bg-rose-50 border-rose-200 text-rose-900'
@@ -925,7 +1246,6 @@ export default function StudentDashboardPage() {
               )}
             </div>
 
-            {/* Verified Payment Receipts */}
             <div className="space-y-3 pt-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
@@ -998,7 +1318,6 @@ export default function StudentDashboardPage() {
               )}
             </div>
 
-            {/* Downloadable / Printable Official Admission Slip Section */}
             <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 p-4 rounded-xl border">
               <div>
                 <span className="font-bold text-xs text-[#0F172A] block">Official Admission Slip & Batch Pass</span>
@@ -1030,6 +1349,373 @@ export default function StudentDashboardPage() {
             </div>
           </>
         )}
+      </div>
+    )}
+
+    {activeTab === 'academics' && (
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-extrabold text-[#0F172A]">
+                Academic Marks & Attendance Performance
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                Active Term 2025–2026
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Weekly unit assessments, model board benchmarks, and attendance records verified by Thoramangalam faculty.
+            </p>
+          </div>
+
+          {academicRecords.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                openPrintableDocument(buildReportCardHtml({
+                  studentName: financials?.studentName || profile?.studentName || user?.displayName || 'Student',
+                  studentId: financials?.studentId || 'Pending assignment',
+                  grade: profile?.grade || studentGrade,
+                  board: profile?.board || studentBoard,
+                  tests: academicRecords,
+                  attendanceRate,
+                  cumulativeAvg
+                }));
+              }}
+              className="px-4 py-2 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer shadow-xs self-start sm:self-auto"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print Official Report Card</span>
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-4 rounded-xl bg-orange-50/60 border border-orange-100">
+            <span className="text-[11px] font-bold text-orange-900 uppercase tracking-wider block">Overall Attendance</span>
+            <div className="text-2xl font-black text-brand mt-1">{attendanceRate}</div>
+            <span className="text-[11px] text-orange-800 mt-0.5 block">
+              {attendanceRecords.length > 0
+                ? `${attendancePresentCount} / ${attendanceRecords.length} sessions attended`
+                : 'Roll-call begins with batch start'}
+            </span>
+          </div>
+
+          <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-100">
+            <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider block">Cumulative Score</span>
+            <div className="text-2xl font-black text-emerald-700 mt-1">{cumulativeAvg}</div>
+            <span className="text-[11px] text-emerald-800 mt-0.5 block">
+              {academicRecords.length > 0
+                ? `Based on ${academicRecords.length} verified assessments`
+                : 'Pending unit assessments'}
+            </span>
+          </div>
+
+          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">Faculty Evaluation</span>
+            <div className="text-xs font-semibold text-slate-800 mt-2 leading-relaxed">
+              {academicRecords.length > 0
+                ? 'Individual assessment history and tutor observations recorded below.'
+                : 'Personalized evaluation remarks will be recorded after the first batch test.'}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Unit Assessments & Model Test Ledger
+          </h3>
+          {academicRecords.length > 0 ? (
+            <div className="overflow-x-auto border border-slate-200 rounded-xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th className="py-3 px-4">Date</th>
+                    <th className="py-3 px-4">Assessment Title</th>
+                    <th className="py-3 px-4">Subject</th>
+                    <th className="py-3 px-4 text-right">Score</th>
+                    <th className="py-3 px-4 text-right">Percentage</th>
+                    <th className="py-3 px-4">Faculty Observations</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {academicRecords.map((t, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
+                      <td className="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">{t.date}</td>
+                      <td className="py-3 px-4 font-bold text-[#0F172A]">{t.title}</td>
+                      <td className="py-3 px-4 text-slate-700 font-medium whitespace-nowrap">{t.subject}</td>
+                      <td className="py-3 px-4 text-right font-bold text-slate-900 whitespace-nowrap">{t.score} / {t.max}</td>
+                      <td className="py-3 px-4 text-right font-black text-brand whitespace-nowrap">{t.percentage}%</td>
+                      <td className="py-3 px-4 text-slate-600">{t.remarks}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <p className="text-xs text-slate-600 font-bold">No unit assessment scores recorded yet</p>
+              <p className="text-[11px] text-slate-400 mt-1 max-w-md mx-auto">
+                Unit tests, chapter assessments, and model board marks evaluated by your batch faculty will be entered into your central record and will automatically appear here.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    {activeTab === 'doubts' && (
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-extrabold text-[#0F172A]">
+                Student Doubt Desk & Academic Inquiries
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-800 border border-orange-200">
+                Direct Faculty Support
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Submit problem-solving doubts to Focus Academy faculty. Verified responses appear in your portal.
+            </p>
+          </div>
+
+          <a
+            href={`https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent('Hello Focus Academy, I have an urgent academic doubt for my evening batch.')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer shadow-xs whitespace-nowrap self-start sm:self-auto"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>WhatsApp Tutor Desk</span>
+          </a>
+        </div>
+
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!newDoubtQuestion.trim()) return;
+            const newEntry = {
+              id: `d-${Date.now()}`,
+              subject: newDoubtSubject,
+              topic: newDoubtTopic ? newDoubtTopic.trim() : 'General Topic',
+              question: newDoubtQuestion.trim(),
+              status: 'pending',
+              date: new Date().toISOString().split('T')[0],
+              response: null,
+              faculty: null
+            };
+            setDoubts((prev) => [newEntry, ...prev]);
+            const submittedTopic = newDoubtTopic;
+            const submittedQuestion = newDoubtQuestion;
+            setNewDoubtQuestion('');
+            setNewDoubtTopic('');
+            setDoubtSubmitted(true);
+            setTimeout(() => setDoubtSubmitted(false), 4000);
+
+            try {
+              if (user) {
+                const token = await user.getIdToken();
+                await fetch('/api/student-portal', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                    action: 'submit-doubt',
+                    subject: newDoubtSubject,
+                    topic: submittedTopic.trim(),
+                    question: submittedQuestion.trim()
+                  })
+                });
+              }
+            } catch (err) {
+              console.warn('Doubt submission error:', err);
+            }
+          }}
+          className="p-5 bg-slate-50 border border-slate-200 rounded-xl space-y-4"
+        >
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+            <Send className="w-3.5 h-3.5 text-brand" />
+            <span>Post a New Academic Doubt</span>
+          </h3>
+
+          {doubtSubmitted && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Doubt recorded and sent to subject faculty. Tutor review will take place in class.</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Subject
+              </label>
+              <select
+                value={newDoubtSubject}
+                onChange={(e) => setNewDoubtSubject(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-brand"
+              >
+                <option value="Physics">Physics</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Chemistry">Chemistry</option>
+                <option value="Biology">Biology</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Chapter / Topic (Optional)
+              </label>
+              <input
+                type="text"
+                value={newDoubtTopic}
+                onChange={(e) => setNewDoubtTopic(e.target.value)}
+                placeholder="e.g. Wave Optics, Integration by Parts"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Question Description / Problem Statement
+            </label>
+            <textarea
+              required
+              rows={3}
+              value={newDoubtQuestion}
+              onChange={(e) => setNewDoubtQuestion(e.target.value)}
+              placeholder="Describe your question or difficulty with problem derivation..."
+              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-brand"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 cursor-pointer shadow-xs"
+          >
+            <Send className="w-3.5 h-3.5" />
+            <span>Submit to Faculty Desk</span>
+          </button>
+        </form>
+
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Submitted Doubts & Tutor Resolutions
+          </h3>
+
+          {doubts.length > 0 ? (
+            <div className="space-y-3">
+              {doubts.map((d) => (
+                <div key={d.id} className="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-800 uppercase">
+                        {d.subject}
+                      </span>
+                      <span className="text-xs font-bold text-[#0F172A]">{d.topic}</span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 font-mono">{d.date}</span>
+                  </div>
+
+                  <p className="text-xs text-slate-800 font-medium leading-relaxed">
+                    <strong>Q:</strong> {d.question}
+                  </p>
+
+                  {d.response ? (
+                    <div className="p-3 bg-orange-50/60 border border-orange-100 rounded-lg space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-brand uppercase tracking-wider">
+                          Faculty Resolution
+                        </span>
+                        <span className="text-[10px] text-orange-900 font-semibold">{d.faculty || 'Subject Faculty'}</span>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed">{d.response}</p>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <span className="text-slate-500 font-medium">Status: In Review</span>
+                      <span className="text-brand font-semibold">Tutor review scheduled for upcoming evening batch</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
+                <HelpCircle className="w-5 h-5" />
+              </div>
+              <p className="text-xs text-slate-600 font-bold">No academic doubts submitted yet</p>
+              <p className="text-[11px] text-slate-400 mt-1 max-w-md mx-auto">
+                Have a question or problem from your evening class? Submit your doubt using the form above to receive assistance from your subject tutor.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    {activeTab === 'materials' && (
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-extrabold text-[#0F172A]">
+                Study Materials & Question Paper Vault
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand/10 text-brand border border-brand/20">
+                Official Courseware
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Download and print official Focus Academy revision sheets, chapter blueprints, and Board exam model papers.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {studySheets.map((sheet) => (
+            <div key={sheet.id} className="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 flex flex-col justify-between space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-white border border-slate-200 text-slate-800 uppercase">
+                    {sheet.subject}
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">{sheet.grade}</span>
+                </div>
+
+                <h3 className="text-sm font-bold text-[#0F172A] leading-snug">
+                  {sheet.title}
+                </h3>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  {sheet.summary}
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400 font-mono">Focus Series 2026</span>
+                <button
+                  type="button"
+                  onClick={() => openPrintableDocument(buildStudySheetHtml(sheet))}
+                  className="px-3 py-1.5 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print / Save PDF</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )}
 

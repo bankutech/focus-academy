@@ -77,8 +77,15 @@ export default async function handler(req, res) {
       }
       const batch = batchSnap.data();
       const application = appSnap.data();
-      if (!isBatchCompatible(batch, application.grade, application.board)) {
-        return { status: 422, error: `Academic mismatch: ${batch.name} is not available for ${application.grade} (${application.board}).` };
+      const clientGrade = clean(body.grade, 50);
+      const clientBoard = clean(body.board, 60);
+      const effectiveGrade = clientGrade || application.grade;
+      const effectiveBoard = clientBoard || application.board;
+      if (!isBatchCompatible(batch, effectiveGrade, effectiveBoard)) {
+        return { status: 422, error: `Academic mismatch: ${batch.name} is not available for ${effectiveGrade} (${effectiveBoard}).` };
+      }
+      if (effectiveGrade !== application.grade || effectiveBoard !== application.board) {
+        tx.update(appRef, { grade: effectiveGrade, board: effectiveBoard, updatedAt: new Date().toISOString() });
       }
 
       const now = Date.now();

@@ -17,7 +17,8 @@ import {
   FileText, 
   ArrowRight, 
   MessageSquare,
-  Loader2 
+  Loader2,
+  LogIn 
 } from 'lucide-react';
 import { BATCHES_DATA } from '../data/batchesData';
 import StepProgress from '../components/common/StepProgress';
@@ -755,14 +756,33 @@ export default function EnrollPage() {
                   ? 'This admission is linked to your signed-in student account. Open your dashboard to see the verified student ID, fee ledger and due dates.'
                   : <>No password is printed here or sent by URL. Create your own student account with the guardian mobile number <span className="font-semibold text-slate-800">{submissionResult.enrollmentRecord?.phone}</span> and the student name used above; the dashboard will link your admission automatically.</>}
               </p>
-              <div className="pt-2">
-                <Link
-                  to={studentUser ? '/student-dashboard' : '/student-register'}
-                  className="w-full py-2.5 bg-brand hover:bg-brand-strong text-white font-bold text-xs rounded shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer"
-                >
-                  <GraduationCap className="w-4 h-4" />
-                  <span>{studentUser ? 'Go to Student Dashboard →' : 'Create Student Account →'}</span>
-                </Link>
+              <div className="pt-2 space-y-2">
+                {studentUser ? (
+                  <Link
+                    to="/student-dashboard"
+                    className="w-full py-2.5 bg-brand hover:bg-brand-strong text-white font-bold text-xs rounded shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                    <span>Go to Student Dashboard →</span>
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="w-full py-2.5 bg-brand hover:bg-brand-strong text-white font-bold text-xs rounded shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>Sign In for the Student Portal →</span>
+                    </Link>
+                    <Link
+                      to="/student-register"
+                      className="w-full py-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded border border-[#E2E8F0] shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                    >
+                      <GraduationCap className="w-4 h-4 text-brand" />
+                      <span>Create Student Account →</span>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 

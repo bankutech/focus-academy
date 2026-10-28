@@ -6,10 +6,10 @@ vi.mock('../api/_lib/firebaseAdmin.js', () => ({ getServices: () => holder.curre
 
 import portalHandler from '../api/student-portal.js';
 
-const call = async (token, { ip = '10.7.0.1', query = {} } = {}) => {
+const call = async (token, { ip = '10.7.0.1', query = {}, method = 'GET', body = {} } = {}) => {
   const res = mockResponse();
   await portalHandler(
-    { method: 'GET', query, headers: { 'x-forwarded-for': ip, ...(token ? { authorization: `Bearer ${token}` } : {}) }, socket: {} },
+    { method, body, query, headers: { 'x-forwarded-for': ip, ...(token ? { authorization: `Bearer ${token}` } : {}) }, socket: {} },
     res
   );
   return res;
@@ -172,5 +172,44 @@ describe('Student portal API', () => {
     expect(res.body.linked).toBe(false);
     expect(res.body.reason).toBe('no_student_record');
     expect(res.body.fee).toBeNull();
+  });
+
+  it('records and persists genuine student doubts without canned fake answers', async () => {
+    const res = await call('tok-kaviya', {
+      method: 'POST',
+      body: {
+        action: 'submit-doubt',
+        subject: 'Physics',
+        topic: 'Wave Optics',
+        question: 'How do you derive the fringe width formula beta = lambda * D / d?'
+      }
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.doubt.subject).toBe('Physics');
+    expect(res.body.doubt.status).toBe('pending');
+    expect(res.body.doubt.response).toBeNull();
+    expect(res.body.doubt.faculty).toBeNull();
+
+    const portalRes = await call('tok-kaviya');
+    expect(portalRes.body.student.doubts).toHaveLength(1);
+    expect(portalRes.body.student.doubts[0].question).toContain('fringe width');
+  });
+
+  it('rejects doubt submission with empty or short question', async () => {
+    const res = await call('tok-kaviya', {
+      method: 'POST',
+      body: { action: 'submit-doubt', question: 'hi' }
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('resolves student email by registered Student ID in rate-limited lookup', async () => {
+    const res = await call(null, {
+      method: 'POST',
+      body: { action: 'resolve-id', identifier: 'FA-2026-001' }
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.email).toBe('kaviya@example.com');
   });
 });

@@ -200,9 +200,14 @@ async function finalizeEnrollment(db, { record, waitlisted }) {
 
     let counterValue = Number(counterSnap.exists ? counterSnap.data().value : 0) || 0;
     let studentId = null;
+    const yearSuffix = String(year).slice(-2);
+    const words = String(record.studentName || '').trim().split(/[\s.]+/).filter((w) => w.length >= 3);
+    const primaryWord = words[0] || String(record.studentName || '').replace(/[^a-zA-Z]/g, '');
+    const cleanPrefix = primaryWord.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z]/g, '').toUpperCase();
+    const prefix = cleanPrefix.length >= 3 ? cleanPrefix.slice(0, 3) : (cleanPrefix + 'STU').slice(0, 3);
     for (let attempt = 0; attempt < 200; attempt += 1) {
       counterValue += 1;
-      const candidate = `FA-${year}-${String(counterValue).padStart(3, '0')}`;
+      const candidate = `FA${yearSuffix}-${prefix}-${String(counterValue).padStart(6, '0')}`;
       const candidateSnap = await tx.get(db.collection('students').doc(candidate));
       if (!candidateSnap.exists) {
         studentId = candidate;
@@ -253,6 +258,7 @@ async function finalizeEnrollment(db, { record, waitlisted }) {
       enrollmentId,
       leadId: record.id,
       studentUid: record.studentUid || null,
+      email: record.email || null,
       reservationId: record.reservationId || null,
       source: 'online_enrollment',
       createdAt: now,

@@ -18,7 +18,8 @@ import {
   ChevronRight,
   GraduationCap,
   Download,
-  Trash2
+  Trash2,
+  Calendar
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
@@ -78,6 +79,23 @@ export default function AdminStudentsPage() {
   const [csvContent, setCsvContent] = useState('');
   const [csvPreview, setCsvPreview] = useState(null);
   const [csvImportResult, setCsvImportResult] = useState(null);
+
+  const [attendanceModalStudent, setAttendanceModalStudent] = useState(null);
+  const [attendanceTab, setAttendanceTab] = useState('attendance');
+  const [studentAttendanceRecords, setStudentAttendanceRecords] = useState({
+    today: '',
+    history: []
+  });
+  const [studentTestRecords, setStudentTestRecords] = useState([]);
+  const [studentDoubtsRecords, setStudentDoubtsRecords] = useState([]);
+  const [replyDoubtText, setReplyDoubtText] = useState({});
+  const [newTestForm, setNewTestForm] = useState({
+    title: '',
+    subject: 'Physics',
+    score: '',
+    max: '50',
+    remarks: ''
+  });
 
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -359,6 +377,111 @@ export default function AdminStudentsPage() {
       setStudentLedger(ledger);
     } catch (err) {
       console.error('Failed to load ledger:', err);
+    }
+  };
+
+  const handleOpenAttendanceModal = (student) => {
+    setAttendanceModalStudent(student);
+    setAttendanceTab('attendance');
+    const hist = Array.isArray(student.attendance) ? student.attendance : [];
+    const todayRecord = hist.find((h) => h.date === getTodayStr());
+    setStudentAttendanceRecords({
+      today: todayRecord ? todayRecord.status : '',
+      history: hist
+    });
+    setStudentTestRecords(Array.isArray(student.assessments) ? student.assessments : []);
+    setStudentDoubtsRecords(Array.isArray(student.doubts) ? student.doubts : []);
+    setReplyDoubtText({});
+    setNewTestForm({ title: '', subject: 'Physics', score: '', max: '50', remarks: '' });
+  };
+
+  const handleMarkAttendanceStatus = async (st) => {
+    if (!attendanceModalStudent) return;
+    const today = getTodayStr();
+    const existingHist = Array.isArray(attendanceModalStudent.attendance) ? attendanceModalStudent.attendance : [];
+    const filtered = existingHist.filter((h) => h.date !== today);
+    const updatedHistory = [{ date: today, status: st, recordedAt: new Date().toISOString() }, ...filtered];
+    
+    setStudentAttendanceRecords({
+      today: st,
+      history: updatedHistory
+    });
+
+    try {
+      const currentAdmin = requireAdminEmail();
+      await AdminDataService.updateStudent(attendanceModalStudent.id, { attendance: updatedHistory }, currentAdmin);
+      setStudents((prev) =>
+        prev.map((s) => (s.id === attendanceModalStudent.id ? { ...s, attendance: updatedHistory } : s))
+      );
+      setAttendanceModalStudent((prev) => ({ ...prev, attendance: updatedHistory }));
+    } catch (err) {
+      console.warn('Attendance save error:', err);
+    }
+  };
+
+  const handleSaveAssessmentScore = async (e) => {
+    e.preventDefault();
+    if (!attendanceModalStudent || !newTestForm.title || !newTestForm.score) return;
+    const sc = Number(newTestForm.score);
+    const mx = Number(newTestForm.max || 50);
+    const pct = Math.round((sc / mx) * 100);
+    const entry = {
+      id: `test-${Date.now()}`,
+      date: getTodayStr(),
+      title: newTestForm.title.trim(),
+      subject: newTestForm.subject,
+      score: sc,
+      max: mx,
+      percentage: pct,
+      remarks: newTestForm.remarks ? newTestForm.remarks.trim() : 'Recorded by Faculty'
+    };
+    const updatedTests = [entry, ...(Array.isArray(attendanceModalStudent.assessments) ? attendanceModalStudent.assessments : [])];
+    setStudentTestRecords(updatedTests);
+    setNewTestForm({ title: '', subject: 'Physics', score: '', max: '50', remarks: '' });
+
+    try {
+      const currentAdmin = requireAdminEmail();
+      await AdminDataService.updateStudent(attendanceModalStudent.id, { assessments: updatedTests }, currentAdmin);
+      setStudents((prev) =>
+        prev.map((s) => (s.id === attendanceModalStudent.id ? { ...s, assessments: updatedTests } : s))
+      );
+      setAttendanceModalStudent((prev) => ({ ...prev, assessments: updatedTests }));
+    } catch (err) {
+      console.warn('Assessment save error:', err);
+    }
+  };
+
+  const handleResolveDoubt = async (doubtId) => {
+    if (!attendanceModalStudent || !replyDoubtText[doubtId]) return;
+    const answer = replyDoubtText[doubtId].trim();
+    if (!answer) return;
+    let adminName = 'Faculty Mentor';
+    try {
+      const email = requireAdminEmail();
+      adminName = email.split('@')[0];
+    } catch {}
+    const updated = (Array.isArray(attendanceModalStudent.doubts) ? attendanceModalStudent.doubts : []).map((d) =>
+      d.id === doubtId
+        ? {
+            ...d,
+            response: answer,
+            faculty: `Focus Academy Faculty (${adminName})`,
+            status: 'resolved',
+            resolvedAt: new Date().toISOString()
+          }
+        : d
+    );
+    setStudentDoubtsRecords(updated);
+    setReplyDoubtText((prev) => ({ ...prev, [doubtId]: '' }));
+    try {
+      const currentAdmin = requireAdminEmail();
+      await AdminDataService.updateStudent(attendanceModalStudent.id, { doubts: updated }, currentAdmin);
+      setStudents((prev) =>
+        prev.map((s) => (s.id === attendanceModalStudent.id ? { ...s, doubts: updated } : s))
+      );
+      setAttendanceModalStudent((prev) => ({ ...prev, doubts: updated }));
+    } catch (err) {
+      console.warn('Doubt resolve error:', err);
     }
   };
 
@@ -759,6 +882,16 @@ export default function AdminStudentsPage() {
                         >
                           <Receipt className="w-3 h-3 text-brand" />
                           <span>Ledger</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleOpenAttendanceModal(s)}
+                          className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-md font-bold text-[11px] flex items-center space-x-1 cursor-pointer"
+                          title="Daily Attendance & Marks Entry"
+                        >
+                          <Calendar className="w-3 h-3 text-emerald-600" />
+                          <span>Attendance & Marks</span>
                         </button>
 
                         <button
@@ -1827,6 +1960,327 @@ export default function AdminStudentsPage() {
                     <span>Delete Student</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {attendanceModalStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <div>
+                <h2 className="text-base font-extrabold text-[#0F172A]">
+                  Attendance & Academic Marks: {attendanceModalStudent.studentName}
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Class: <strong>{attendanceModalStudent.grade}</strong> • Batch: <strong>{attendanceModalStudent.batchName || attendanceModalStudent.batchId}</strong>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAttendanceModalStudent(null)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex space-x-2 border-b border-slate-200 mb-4">
+              <button
+                type="button"
+                onClick={() => setAttendanceTab('attendance')}
+                className={`py-2 px-3 text-xs font-bold border-b-2 cursor-pointer ${
+                  attendanceTab === 'attendance' ? 'border-brand text-brand' : 'border-transparent text-slate-500'
+                }`}
+              >
+                Daily Attendance Register
+              </button>
+              <button
+                type="button"
+                onClick={() => setAttendanceTab('marks')}
+                className={`py-2 px-3 text-xs font-bold border-b-2 cursor-pointer ${
+                  attendanceTab === 'marks' ? 'border-brand text-brand' : 'border-transparent text-slate-500'
+                }`}
+              >
+                Test Marks Entry & History
+              </button>
+              <button
+                type="button"
+                onClick={() => setAttendanceTab('doubts')}
+                className={`py-2 px-3 text-xs font-bold border-b-2 cursor-pointer ${
+                  attendanceTab === 'doubts' ? 'border-brand text-brand' : 'border-transparent text-slate-500'
+                }`}
+              >
+                Academic Doubts ({studentDoubtsRecords.length})
+              </button>
+            </div>
+
+            {attendanceTab === 'attendance' && (
+              <div className="space-y-4">
+                <div className="p-4 bg-orange-50/70 border border-orange-100 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] font-bold text-orange-950 uppercase">Session Attendance Rate</span>
+                    {studentAttendanceRecords.history.length > 0 ? (
+                      <>
+                        <div className="text-xl font-black text-brand mt-0.5">
+                          {Math.round((studentAttendanceRecords.history.filter((h) => h.status === 'present').length / studentAttendanceRecords.history.length) * 100)}%
+                        </div>
+                        <span className="text-[11px] text-orange-800">
+                          {studentAttendanceRecords.history.filter((h) => h.status === 'present').length} / {studentAttendanceRecords.history.length} sessions attended
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-sm font-bold text-slate-700 mt-0.5">No Sessions Logged</div>
+                        <span className="text-[11px] text-slate-500">Mark today status below to start roll-call</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-slate-700 block mb-1">Mark Today Status:</span>
+                    <div className="flex items-center space-x-1">
+                      {['present', 'late', 'absent', 'excused'].map((st) => (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => handleMarkAttendanceStatus(st)}
+                          className={`px-2 py-1 text-[10px] font-bold uppercase rounded cursor-pointer transition-colors ${
+                            studentAttendanceRecords.today === st
+                              ? 'bg-brand text-white shadow-xs'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                          }`}
+                        >
+                          {st}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Recent Session Roll-Call History
+                  </h3>
+                  {studentAttendanceRecords.history.length > 0 ? (
+                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px]">
+                          <tr>
+                            <th className="py-2.5 px-3">Date</th>
+                            <th className="py-2.5 px-3">Session Status</th>
+                            <th className="py-2.5 px-3">Center Desk Verification</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {studentAttendanceRecords.history.map((h, i) => (
+                            <tr key={i} className="hover:bg-slate-50">
+                              <td className="py-2 px-3 font-mono text-slate-600">{h.date}</td>
+                              <td className="py-2 px-3">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                  h.status === 'present'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : h.status === 'late'
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                }`}>
+                                  {h.status}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-slate-500 text-[11px]">Thoramangalam Campus Desk</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg text-center">
+                      <p className="text-xs text-slate-600 font-semibold">No attendance sessions recorded for this student yet.</p>
+                      <p className="text-[11px] text-slate-400 mt-1">Select present, late, or absent above to log today attendance.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {attendanceTab === 'marks' && (
+              <div className="space-y-4">
+                <form
+                  onSubmit={handleSaveAssessmentScore}
+                  className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3"
+                >
+                  <span className="text-xs font-bold text-[#0F172A] block uppercase">Record New Test Score</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Assessment Title (e.g. Unit 3 Test)"
+                      value={newTestForm.title}
+                      onChange={(e) => setNewTestForm({ ...newTestForm, title: e.target.value })}
+                      className="px-2.5 py-1.5 text-xs rounded border border-slate-300 bg-white"
+                    />
+                    <select
+                      value={newTestForm.subject}
+                      onChange={(e) => setNewTestForm({ ...newTestForm, subject: e.target.value })}
+                      className="px-2.5 py-1.5 text-xs rounded border border-slate-300 bg-white"
+                    >
+                      <option value="Physics">Physics</option>
+                      <option value="Mathematics">Mathematics</option>
+                      <option value="Chemistry">Chemistry</option>
+                      <option value="Biology">Biology</option>
+                    </select>
+                    <div className="flex items-center space-x-1">
+                      <input
+                        type="number"
+                        required
+                        placeholder="Marks"
+                        value={newTestForm.score}
+                        onChange={(e) => setNewTestForm({ ...newTestForm, score: e.target.value })}
+                        className="w-1/2 px-2.5 py-1.5 text-xs rounded border border-slate-300 bg-white"
+                      />
+                      <span className="text-xs text-slate-400">/</span>
+                      <input
+                        type="number"
+                        required
+                        placeholder="Max"
+                        value={newTestForm.max}
+                        onChange={(e) => setNewTestForm({ ...newTestForm, max: e.target.value })}
+                        className="w-1/2 px-2.5 py-1.5 text-xs rounded border border-slate-300 bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      placeholder="Faculty Remarks (e.g. Good derivation, needs speed practice)"
+                      value={newTestForm.remarks}
+                      onChange={(e) => setNewTestForm({ ...newTestForm, remarks: e.target.value })}
+                      className="flex-1 px-2.5 py-1.5 text-xs rounded border border-slate-300 bg-white"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3 py-1.5 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded cursor-pointer whitespace-nowrap"
+                    >
+                      Save Score
+                    </button>
+                  </div>
+                </form>
+
+                <div>
+                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Recorded Assessment Ledger
+                  </h3>
+                  {studentTestRecords.length > 0 ? (
+                    <div className="border border-slate-200 rounded-lg overflow-hidden">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase text-[10px]">
+                          <tr>
+                            <th className="py-2 px-3">Date</th>
+                            <th className="py-2 px-3">Title</th>
+                            <th className="py-2 px-3">Subject</th>
+                            <th className="py-2 px-3 text-right">Score</th>
+                            <th className="py-2 px-3 text-right">%</th>
+                            <th className="py-2 px-3">Remarks</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {studentTestRecords.map((t) => (
+                            <tr key={t.id} className="hover:bg-slate-50">
+                              <td className="py-2 px-3 font-mono text-slate-500 whitespace-nowrap">{t.date}</td>
+                              <td className="py-2 px-3 font-bold text-slate-900">{t.title}</td>
+                              <td className="py-2 px-3 text-slate-700">{t.subject}</td>
+                              <td className="py-2 px-3 text-right font-bold">{t.score} / {t.max}</td>
+                              <td className="py-2 px-3 text-right font-bold text-brand">{t.percentage}%</td>
+                              <td className="py-2 px-3 text-slate-600 text-[11px]">{t.remarks}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg text-center">
+                      <p className="text-xs text-slate-600 font-semibold">No assessment scores recorded for this student yet.</p>
+                      <p className="text-[11px] text-slate-400 mt-1">Use the form above to record unit tests and model examination results.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {attendanceTab === 'doubts' && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Student Academic Doubts & Inquiries
+                  </h3>
+                  {studentDoubtsRecords.length > 0 ? (
+                    <div className="space-y-3">
+                      {studentDoubtsRecords.map((d) => (
+                        <div key={d.id} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-slate-200 pb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white border border-slate-200 text-slate-800 uppercase">
+                                {d.subject}
+                              </span>
+                              <span className="text-xs font-bold text-[#0F172A]">{d.topic}</span>
+                            </div>
+                            <span className="text-[11px] font-mono text-slate-500">{d.date}</span>
+                          </div>
+
+                          <p className="text-xs text-slate-800 leading-relaxed">
+                            <strong>Question:</strong> {d.question}
+                          </p>
+
+                          {d.response ? (
+                            <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-emerald-800 uppercase">Faculty Resolution</span>
+                                <span className="text-[10px] text-emerald-700 font-semibold">{d.faculty}</span>
+                              </div>
+                              <p className="text-xs text-emerald-950">{d.response}</p>
+                            </div>
+                          ) : (
+                            <div className="pt-2 border-t border-slate-200 space-y-2">
+                              <span className="text-[11px] font-bold text-amber-700 block">Awaiting Faculty Resolution:</span>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  placeholder="Type tutor explanation or session note..."
+                                  value={replyDoubtText[d.id] || ''}
+                                  onChange={(e) => setReplyDoubtText({ ...replyDoubtText, [d.id]: e.target.value })}
+                                  className="flex-1 px-2.5 py-1.5 text-xs rounded border border-slate-300 bg-white"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleResolveDoubt(d.id)}
+                                  className="px-3 py-1.5 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded cursor-pointer whitespace-nowrap"
+                                >
+                                  Submit Resolution
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 bg-slate-50 border border-slate-200 rounded-lg text-center">
+                      <p className="text-xs text-slate-600 font-semibold">No academic doubts submitted by this student yet.</p>
+                      <p className="text-[11px] text-slate-400 mt-1">Doubts posted from the student portal will appear here for faculty review and resolution.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-5 pt-3 border-t border-slate-200 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setAttendanceModalStudent(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>

@@ -29,6 +29,8 @@ const PERSISTED_FLOW_FIELDS = [
   'syncedStep',
   'syncedPhone',
   'syncedName',
+  'syncedGrade',
+  'syncedBoard',
   'syncedIdentity',
 ];
 
@@ -144,8 +146,10 @@ export function AppProvider({ children }) {
     const hasIdentity = Boolean(flow.studentName?.trim() && flow.phone?.trim());
     const phoneKey = String(flow.phone || '').replace(/\D/g, '').slice(-10);
     const nameKey = String(flow.studentName || '').toLowerCase().trim();
-    const identityKey = `${phoneKey}::${nameKey}`;
-    const upToDate = (flow.syncedIdentity === identityKey || (flow.syncedPhone === phoneKey && flow.syncedName === nameKey)) && (Number(flow.syncedStep) || 1) >= Math.min(step, 4);
+    const gradeKey = String(flow.grade || '').trim();
+    const boardKey = String(flow.board || '').trim();
+    const identityKey = `${phoneKey}::${nameKey}::${gradeKey}::${boardKey}`;
+    const upToDate = (flow.syncedIdentity === identityKey || (flow.syncedPhone === phoneKey && flow.syncedName === nameKey && flow.syncedGrade === gradeKey && flow.syncedBoard === boardKey)) && (Number(flow.syncedStep) || 1) >= Math.min(step, 4);
     if (step < 2 || !hasIdentity || upToDate || syncInFlight.current) return;
     ensureVerifiedSession(step).catch(() => {});
   }, [studentFlow, ensureVerifiedSession]);
