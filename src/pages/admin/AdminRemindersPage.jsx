@@ -25,9 +25,9 @@ export default function AdminRemindersPage() {
   const initialTab = searchParams.get('tab') === 'history' ? 'history' : 'pending';
   const initialFilter = searchParams.get('tab') === 'overdue' ? 'overdue' : (searchParams.get('tab') === 'today' ? 'today' : (searchParams.get('filter') || 'all'));
 
-  const [activeTab, setActiveTab] = useState(initialTab); // 'pending' | 'history'
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [search, setSearch] = useState('');
-  const [filterType, setFilterType] = useState(initialFilter); // 'all' | 'overdue' | 'upcoming' | 'today'
+  const [filterType, setFilterType] = useState(initialFilter);
 
   const [previewModal, setPreviewModal] = useState(null);
   const [settings, setSettings] = useState(null);

@@ -49,7 +49,6 @@ export default function AdminDashboardPage() {
       }
     };
 
-    // Single-pass parallel retrieval to prevent redundant database roundtrips
     const [b, o, p, enr, st, ld, res, rem, rec, logs] = await Promise.all([
       safeGet('Batches', () => AdminDataService.getBatches()),
       safeGet('Fee Obligations', () => AdminDataService.getFeeObligations()),
@@ -63,7 +62,6 @@ export default function AdminDashboardPage() {
       canViewAudit ? safeGet('Audit Logs', () => AdminDataService.getAuditLogs()) : Promise.resolve([]),
     ]);
 
-    // Compute metrics from preloaded dataset to eliminate duplicate hydration queries
     const m = await safeGet('Metrics', () => AdminDataService.getDashboardMetrics({
       students: st || [],
       batches: b || [],
@@ -91,7 +89,6 @@ export default function AdminDashboardPage() {
     loadData(); 
   }, [loadData]);
 
-  // Compute active held reservations per batch for 1:12 capacity enforcement
   const activeHoldsByBatch = useMemo(() => {
     const nowMs = Date.now();
     return (reservations || []).reduce((acc, r) => {

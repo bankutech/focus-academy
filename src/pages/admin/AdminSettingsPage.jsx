@@ -20,7 +20,7 @@ import { getVerifiedAdminEmail } from '../../services/adminIdentity';
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('academy'); // 'academy' | 'billing' | 'reminders' | 'roles' | 'backup'
+  const [activeTab, setActiveTab] = useState('academy');
   const [feedback, setFeedback] = useState({ type: '', message: '' });
   const [saving, setSaving] = useState(false);
 
@@ -657,22 +657,28 @@ export default function AdminSettingsPage() {
               </button>
             </div>
 
-            <div className="p-5 border border-blue-200 rounded-xl space-y-3 bg-blue-50/40">
-              <div className="flex items-center space-x-2">
-                <Database className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-sm text-[#0F172A]">Cloud Firestore Live Synchronization</h3>
+            <div className="p-5 border border-emerald-200 rounded-xl space-y-3 bg-emerald-50/40">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Database className="w-5 h-5 text-emerald-600" />
+                  <h3 className="font-bold text-sm text-[#0F172A]">Cloud Firestore Live Auto-Sync</h3>
+                </div>
+                <span className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Active &amp; Real-time</span>
+                </span>
               </div>
-              <p className="text-xs text-slate-500">
-                All records, student profiles, fee transactions, and batch statuses are automatically synchronized to your live Firebase Cloud Firestore database in real-time. Use the button below to run an instant full-database integrity check and force-audit.
+              <p className="text-xs text-slate-600">
+                All records, student profiles, fee transactions, and batch statuses are automatically synchronized to your live Firebase Cloud Firestore database in real-time without requiring any manual export or synchronization.
               </p>
               <button
                 type="button"
                 disabled={syncingCloud}
                 onClick={handleSyncToCloud}
-                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
+                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
               >
                 <RefreshCw className={`w-4 h-4 ${syncingCloud ? 'animate-spin' : ''}`} />
-                <span>{syncingCloud ? 'Auditing Cloud Firestore...' : 'Run Full Cloud Integrity Check'}</span>
+                <span>{syncingCloud ? 'Auditing Cloud Firestore...' : 'Run Cloud Database Audit & Integrity Verification'}</span>
               </button>
             </div>
 

@@ -136,6 +136,11 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
+            <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-full select-none" title="Live Cloud Firestore database is connected and automatically synchronized in real-time">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Live Database Auto-Sync</span>
+            </div>
+
             <div className="hidden sm:flex flex-col text-right">
               <span className="text-xs font-bold text-white leading-tight truncate max-w-[180px]">
                 {displayName}
@@ -269,7 +274,11 @@ export default function AdminLayout() {
                 </nav>
               </div>
 
-              <div className="pt-4 border-t border-slate-200">
+              <div className="pt-4 border-t border-slate-200 space-y-3">
+                <div className="flex items-center space-x-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-none">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Live Database Auto-Sync</span>
+                </div>
                 <button
                   type="button"
                   onClick={handleLogout}
