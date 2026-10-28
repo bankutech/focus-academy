@@ -6,43 +6,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function getBase64Image(filename) {
-  const fullPath = path.resolve(__dirname, '../e2e/screenshots', filename);
-  if (!fs.existsSync(fullPath)) {
-    console.warn(`Warning: Screenshot file not found: ${fullPath}`);
-    return '';
-  }
-  const ext = path.extname(filename).replace('.', '');
-  const base64 = fs.readFileSync(fullPath).toString('base64');
-  return `data:image/${ext};base64,${base64}`;
-}
-
 async function generateExecutivePdf() {
-  console.log('Loading high-resolution screenshot assets from e2e/screenshots/...');
-
-  const img01 = getBase64Image('01-desktop-home.png');
-  const img02 = getBase64Image('02-desktop-student-login.png');
-  const img03 = getBase64Image('03-desktop-student-register.png');
-  const img04 = getBase64Image('04-desktop-step1-student-details.png');
-  const img05 = getBase64Image('05-desktop-step2-exam-prep.png');
-  const img06 = getBase64Image('06-desktop-step3-batches.png');
-  const img07 = getBase64Image('07-desktop-step4-batch-detail.png');
-  const img08 = getBase64Image('08-desktop-dashboard-protected-redirect.png');
-  const img09 = getBase64Image('09-mobile-student-login.png');
-  const img10 = getBase64Image('10-mobile-student-register.png');
-  const img11 = getBase64Image('11-mobile-step1-details.png');
-  const img12 = getBase64Image('12-desktop-courses.png');
-  const img13 = getBase64Image('13-desktop-fees.png');
-  const img14 = getBase64Image('14-desktop-contact.png');
-  const img15 = getBase64Image('15-desktop-admin-login.png');
-  const img16 = getBase64Image('16-desktop-privacy.png');
-  const img17 = getBase64Image('17-mobile-batches.png');
-  const img18 = getBase64Image('18-mobile-contact.png');
-  const img19 = getBase64Image('19-printable-admission-slip.png');
-  const img20 = getBase64Image('20-printable-fee-receipt.png');
-  const img21 = getBase64Image('21-printable-report-card.png');
-
-  console.log('Assembling publication-grade HTML specification with embedded visual plates...');
+  console.log('Generating certified 9-page architecture and workflow specification PDF...');
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -52,7 +17,7 @@ async function generateExecutivePdf() {
 <style>
   @page {
     size: A4 portrait;
-    margin: 14mm 14mm 14mm 14mm;
+    margin: 12mm 12mm 12mm 12mm;
   }
 
   * {
@@ -253,163 +218,14 @@ async function generateExecutivePdf() {
   .doc-end-marker {
     text-align: center;
     font-style: italic;
-    font-size: 8pt;
+    font-size: 8.5pt;
     margin-top: 12px;
-    color: #64748b;
-  }
-
-  /* Visual Screenshot Plates Styles */
-  .plate-header {
-    margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1.5px solid #0f172a;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-
-  .plate-title {
-    font-size: 13pt;
-    font-weight: bold;
-    color: #0f172a;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .plate-subtitle {
-    font-size: 8.2pt;
-    color: #c2410c;
-    font-weight: bold;
-  }
-
-  .plate-meta {
-    font-size: 7.5pt;
-    color: #64748b;
-    font-style: italic;
-  }
-
-  .figure-card {
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    border-radius: 4px;
-    padding: 6px;
-    margin-bottom: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  }
-
-  .figure-img-wrap {
-    width: 100%;
-    background: #0f172a;
-    border-radius: 3px;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .figure-img {
-    width: 100%;
-    height: auto;
-    max-height: 94mm;
-    object-fit: contain;
-    display: block;
-  }
-
-  .figure-caption-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 5px;
-    padding-top: 4px;
-    border-top: 0.5px solid #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  }
-
-  .figure-caption-title {
-    font-size: 8.2pt;
-    font-weight: bold;
-    color: #0f172a;
-  }
-
-  .figure-caption-tag {
-    font-size: 6.8pt;
-    background: #ea580c;
-    color: #ffffff;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-weight: bold;
-    letter-spacing: 0.3px;
-  }
-
-  .figure-caption-desc {
-    font-size: 7.3pt;
     color: #475569;
-    margin-top: 2px;
-    line-height: 1.25;
-    text-align: justify;
-  }
-
-  /* Multi-column grid for mobile screens */
-  .mobile-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .mobile-card {
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    border-radius: 4px;
-    padding: 5px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
-  }
-
-  .mobile-img-wrap {
-    width: 100%;
-    background: #0f172a;
-    border-radius: 3px;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .mobile-img {
-    width: 100%;
-    height: 98mm;
-    object-fit: cover;
-    object-position: top;
-    display: block;
-  }
-
-  /* Printable docs 3-column grid */
-  .printable-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .printable-card {
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    border-radius: 4px;
-    padding: 5px;
-  }
-
-  .printable-img {
-    width: 100%;
-    height: 82mm;
-    object-fit: contain;
-    background: #f8fafc;
-    border: 0.5px solid #e2e8f0;
-    display: block;
   }
 </style>
 </head>
 <body>
 
-  <!-- ==================== PAGE 1: EXECUTIVE SUMMARY ==================== -->
   <div class="page">
     <div class="content-area">
       <div class="doc-title-block">
@@ -445,362 +261,324 @@ async function generateExecutivePdf() {
     <div class="page-footer">
       <span>Focus Academy Platform Architecture & Specification</span>
       <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 1 of 17</span>
+      <span>Page 1 of 9</span>
     </div>
   </div>
 
-  <!-- ==================== PAGE 2: ARCHITECTURAL TOPOGRAPHY ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">2 Architectural Topography & System Boundaries</h1>
+      <h1 class="sec-heading">2 5-Step Monotonic Admission Funnel Mechanics</h1>
       <p>
-        The platform operates on a reactive single-page architecture built with React 19, React Router 7, and Tailwind CSS v4, deployed globally on the Vercel Edge Network and integrated with Cloud Firestore, Firebase Authentication, and a Progressive Web App (PWA) service worker layer.
+        The admission funnel represents the primary public engagement pipeline for student registration. To prevent data corruption, inconsistent class selections, or skipped prerequisites, the client and server enforce a monotonic progression architecture.
       </p>
 
-      <h2 class="sub-sec-heading">2.1 System Topography & Component Interconnect Diagram</h2>
-      <div class="ascii-diagram">
-+--------------------------------------------------------------------------------------------------------------------------------+
-| PRESENTATION LAYER (React 19 + React Router 7 + Tailwind CSS v4 on Vercel Global Edge & PWA Service Worker)                   |
-| [PUBLIC ADMISSION FUNNEL]:              [STUDENT PORTAL (/login & /student-dashboard)]:   [ADMIN OPERATIONS SUITE (/admin/*)]: |
-|  - Step 1: Student Details (/student-details)  - Multi-tab Dashboard (Schedule, Batches)      - Split-Screen Gateway (/admin/login)  |
-|  - Step 2: Exam Goal (/exam-prep)       - Academic Ledger (Unit Tests & Marks)         - Campus Telemetry (/admin/dashboard)  |
-|  - Step 3: Batches Catalog (/batches)   - Interactive Doubts Desk (Filing & Teacher)   - 12-Seat Scheduler (/admin/batches)   |
-|  - Step 4: Batch Detail (/batch/:id)    - Fee Ledger & Downloadable Tax Receipts       - Student Lifecycle (/admin/students)  |
-|  - Step 5: Enrollment Confirmation      - Study Material Sheets & Syllabus Guides      - Financial Ledger (/admin/ledger)     |
-|  - Public Courses, Fees, Contact, Privacy - DPDP Account & Credential Management        - WhatsApp Reminders & Cryptographic   |
-|                                                                                        - Audit Logs (/admin/audit-logs)       |
-+-----------------------------------------+----------------------------------------------+--------------------------------------+
-                         |                                       |                                       |
-     Synchronous Step    |  (Monotonic Guard Algorithm)          | Student Token & Session Verification  | Role & Allowlist Guard
-     Render-Time Probe   v                                       v                                       v
-+--------------------------------------------------------------------------------------------------------------------------------+
-| CLIENT APPLICATION STATE & SECURITY CORE                                                                                       |
-|  - AppContext: Monotonic 5-Step Funnel Progression Engine, StudentFlow Store, & Local Persistence Buffer                      |
-|  - StudentAuthContext: Firebase Auth Client Binding, Profile Synchronization, Session Token Cache & Error Boundary             |
-|  - PrintableDocumentEngine: Zero-Dependency HTML Template Builders (Admission Slip, GSTIN Tax Receipt, Progress Report Card)   |
-|  - AdminDataService: Local/Cloud Sync, 12-Seat Capacity Validation, Double-Entry Payment Journal & Audit Dispatch              |
-|  - SessionAuthService: HMAC Token Signing, Verification & Tamper Detection Engine                                              |
-|  - BatchService: Real-Time Seat Cache, 15-Minute Reservation Locks & Static Failover Catalog                                   |
-+------------------------+---------------------------------------+---------------------------------------+-----------------------+
-                         |                                       |                                       |
-      Signed Step Tokens | Lead Ingestion & Doubt Dispatch       | Student Auth & Profile Queries        | OAuth & Firestore
-      & Dynamic Seats    v                                       v                                       v Operations
-==================================================================================================================================
-MANAGED CLOUD & SERVERLESS BACKEND (Firebase Cloud Services & Vercel Edge Serverless)
-+----------------------------------------------------------------+---------------------------------------------------------------+
-| FIREBASE AUTHENTICATION (focus-academy-7efeb)                  | CLOUD FIRESTORE NOSQL DATABASE                                |
-|  - Google OAuth with Authorized Domain Check                   |  - Collections: students, student_profiles, batches, ledger,  |
-|    (focus-academy-virid.vercel.app, localhost)                 |    feeSchedules, auditLogs, doubts, campusSettings            |
-|  - Email / Password Identity Management for Students & Staff   |  - Declarative firestore.rules Security Policies              |
-|  - Institutional Administrator Allowlist Gate (Strict Domain)  |  - Atomic Batch Commits & Multi-Document Transactions         |
-+----------------------------------------------------------------+---------------------------------------------------------------+
-| VERCEL SERVERLESS FUNCTIONS (/api/student-portal.js, /api/session.js, /api/batches.js, /api/leads.js)                         |
-|  - Student ID Resolution & Auth Linking                         - Cryptographic HMAC-SHA256 Token Minting                      |
-|  - Real-time Doubts Submission & Resolution Gateway            - Atomic 15-Min Seat Reservation Leasing & Quota Protection    |
-+--------------------------------------------------------------------------------------------------------------------------------+
-      </div>
-
-      <h2 class="sub-sec-heading">2.2 Decoupled Route Isolation & Modular Bundle Budgets</h2>
-      <p>
-        The client codebase leverages route-level lazy loading (<code>React.lazy()</code> and <code>Suspense</code>) across all public views, the student portal, and administrative sub-modules. The production JavaScript bundle compiles via Vite into highly optimized ES modules, maintaining an initial gzipped bundle footprint under 96 kB.
-      </p>
-      <p>
-        The boundary between public admission routing, student private data, and administrative operations is strictly decoupled. Administrative routes are protected by <code>AdminProtectedRoute.jsx</code>, while student dashboard views are secured by <code>StudentProtectedRoute.jsx</code>, ensuring unauthorized visitors cannot access private test scores or firestore data.
-      </p>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Platform Architecture & Specification</span>
-      <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 2 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 3: FUNNEL PROGRESSION & GUARDS ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <h1 class="sec-heading">3 Sequential State Machine & Funnel Progression</h1>
-      <p>
-        The public student registration workflow is modeled as a formal, deterministic finite-state machine where each forward step requires verified completion of all prerequisite milestones. The progression index is strictly monotonic: parents may return to earlier steps to inspect options without forfeiting already-completed milestones unless foundational curriculum attributes (grade or board) are altered.
-      </p>
-
-      <h2 class="sub-sec-heading">3.1 Step-by-Step Monotonic Progression</h2>
-      <ul class="bullet-list">
-        <li><strong>Step 1 &rarr; Step 2 Transition (Identity & Board):</strong> Captures student full name, parent mobile number (validated against strict Indian telecommunications regex), academic grade (Classes 6 through 12), and curriculum board (Tamil Nadu Samacheer Kalvi, CBSE, or ICSE). Mints cryptographic Step 1 token.</li>
-        <li><strong>Step 2 &rarr; Step 3 Transition (Goal Setting):</strong> Captures target academic orientation (Board Exam Distinction, Conceptual Fundamentals Clinic, or Advanced Competitive Numericals). Mints Step 2 token and unlocks the evening batch schedule.</li>
-        <li><strong>Step 3 &rarr; Step 4 Transition (Batch Selection):</strong> Parent reviews matching batches filtered by grade and curriculum. Selecting a batch records the batch identifier, timetable slot, and monthly tuition rate, issuing Step 3 token.</li>
-        <li><strong>Step 4 &rarr; Step 5 Transition (Classroom Profile):</strong> Presents classroom environment, study desk ergonomics, mentor credentials, and timing synchronization with town school buses. Confirming details issues Step 4 token.</li>
-        <li><strong>Step 5 Completion (Enrollment & Slip):</strong> Collects guardian contact details, applies automatic multi-child sibling concessions, assigns a unique permanent enrollment identifier (<code>FA-THORA-XXXXXX</code>), and triggers the 3-tier lead ingestion pipeline.</li>
-      </ul>
-
-      <h2 class="sub-sec-heading">3.2 Synchronous Render-Time Route Guarding Algorithm</h2>
-      <p>
-        To prevent visual flashing and navigation artifacts caused by asynchronous <code>useEffect</code> redirects, route guarding executes synchronously during component render:
-      </p>
-      <div class="code-block">
-export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
-  if (currentPath === '/courses' || currentPath === '/fees' || currentPath === '/contact') return null;
-  const isStep1Done = Boolean(studentFlow?.studentName && studentFlow?.grade && studentFlow?.board);
-  const isStep2Done = Boolean(isStep1Done && studentFlow?.examPrep);
-  const isStep3Done = Boolean(isStep2Done && studentFlow?.selectedBatchId);
-
-  if (targetStep >= 2 && !isStep1Done) return '/student-details';
-  if (targetStep >= 3 && !isStep2Done) return '/exam-prep';
-  if (targetStep >= 4 && !isStep3Done) return '/batches';
-  if (targetStep >= 5 && (!isStep3Done || !studentFlow?.selectedBatchId)) return '/batches';
-  return null;
-}
-      </div>
-
-      <h2 class="sub-sec-heading">3.3 Canonical Step Token JSON & Cryptographic Signing</h2>
-      <p>
-        Step milestone tokens are formatted as canonical JSON structures signed with an asymmetric HMAC secret:
-      </p>
-      <div class="code-block">
-{
-  "token_id": "tok_9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "campus_id": "thoramangalam_perambalur_01",
-  "student_name": "Kavitha Sundaram",
-  "grade": "Class 12",
-  "board": "TN State Board (Samacheer)",
-  "verified_step": 4,
-  "issued_at": 1774181400000,
-  "signature": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-}
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Platform Architecture & Specification</span>
-      <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 3 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 4: STUDENT PORTAL & AUTHENTICATION ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <h1 class="sec-heading">4 Student Authentication & Dedicated Portal Architecture</h1>
-      <p>
-        Focus Academy features an isolated, student-facing portal (<code>/login</code>, <code>/student-register</code>, <code>/student-dashboard</code>) designed to bridge the daily feedback loop between classroom instruction and home revision.
-      </p>
-
-      <h2 class="sub-sec-heading">4.1 Dual-Identifier Login & Student ID Resolution Engine</h2>
-      <p>
-        Secondary school students in Perambalur frequently access the web through family mobile devices and may not recall a personal email address. The authentication gateway implements an intelligent dual-identifier resolver:
-      </p>
-      <ul class="bullet-list">
-        <li><strong>Standard Email Credentials:</strong> Direct login with registered email (<code>student@example.com</code>) via Firebase Auth.</li>
-        <li><strong>Student ID Resolver:</strong> Students may enter their unique institutional enrollment identifier (e.g. <code>FA-THORA-00418</code> or <code>STU-2025-0418</code>). The serverless endpoint (<code>/api/student-portal</code>, action <code>resolve-id</code>) queries Firestore <code>student_profiles</code> and <code>students</code> collections, looks up the associated verified account email, and transparently routes the sign-in attempt.</li>
-        <li><strong>Brute-Force & Rate-Limiting Protection:</strong> The serverless resolver enforces an in-memory sliding window rate limiter (maximum 10 resolution queries per IP per minute), protecting against identity enumeration attacks.</li>
-      </ul>
-
-      <h2 class="sub-sec-heading">4.2 Student Dashboard Sub-Modules & Data Flow</h2>
+      <h2 class="sub-sec-heading">2.1 Funnel Milestone Definitions</h2>
       <table class="spec-table">
         <thead>
           <tr>
-            <th style="width: 20%;">Dashboard Tab</th>
-            <th style="width: 25%;">Underlying Data Source</th>
-            <th style="width: 55%;">Student Capabilities & Academic Operations</th>
+            <th style="width: 12%;">Step</th>
+            <th style="width: 25%;">Canonical Route</th>
+            <th style="width: 35%;">Required Data Payload</th>
+            <th style="width: 28%;">Cryptographic Milestone Gate</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>My Batches</strong></td>
-            <td>Firestore <code>students</code> / <code>batches</code></td>
-            <td>Views enrolled small-batch schedule, allocated classroom room number, mentor credentials, and active seat allocation.</td>
+            <td><strong>Step 1</strong></td>
+            <td><code>/student-details</code></td>
+            <td>Full student name, 10-digit Indian mobile number, Grade level (Class 9&ndash;12), Board track (TN State Board Samacheer or CBSE NCERT).</td>
+            <td>Token minted: <code>step1_completed</code> with HMAC-SHA256 signature containing student ID and timestamp.</td>
           </tr>
           <tr>
-            <td><strong>Academic Ledger</strong></td>
-            <td>Firestore <code>student_profiles.tests</code></td>
-            <td>Live unit assessment scorecard: date, test title, subject, score obtained vs max marks, percentage badge, and faculty feedback.</td>
+            <td><strong>Step 2</strong></td>
+            <td><code>/exam-prep</code></td>
+            <td>Academic focus objective (Board Exam Centum, Fundamentals Recovery, Competitive Entrance Foundation), primary subject selection.</td>
+            <td>Token minted: <code>step2_completed</code>; verifies prerequisite <code>step1_completed</code> token presence and validity.</td>
           </tr>
           <tr>
-            <td><strong>Doubts Desk</strong></td>
-            <td>Firestore <code>student_profiles.doubts</code></td>
-            <td>Interactive doubt submission engine: subject categorization, question submission, review status badge, and teacher resolution notes.</td>
+            <td><strong>Step 3</strong></td>
+            <td><code>/batches</code></td>
+            <td>Small-batch catalog filtered by grade and curriculum; real-time available seat count (1:12 capacity), evening time-slot selection.</td>
+            <td>Token minted: <code>step3_completed</code>; locks selected batch ID temporarily in session cache.</td>
           </tr>
           <tr>
-            <td><strong>Fee Ledger</strong></td>
-            <td>Firestore <code>ledger</code> / <code>feeSchedules</code></td>
-            <td>Transparent fee ledger, monthly payment history, verified transaction modes, and 1-click printable official tax receipts.</td>
+            <td><strong>Step 4</strong></td>
+            <td><code>/batch/:id</code></td>
+            <td>Detailed batch profile inspection, mentor credentials, bus-coordinated schedule confirmation, sibling fee concession selection.</td>
+            <td>Token minted: <code>step4_completed</code>; recalculates exact monthly fee and generates reservation nonce.</td>
           </tr>
           <tr>
-            <td><strong>Study Materials</strong></td>
-            <td>Static / Cloud Document Library</td>
-            <td>Topic-wise formula sheets, derivation guides, and 10-year question banks for Tamil Nadu Samacheer and CBSE curricula.</td>
-          </tr>
-          <tr>
-            <td><strong>Profile Settings</strong></td>
-            <td>Firestore <code>student_profiles</code></td>
-            <td>Guardian phone management, contact updates, password reset email trigger, and DPDP privacy settings.</td>
+            <td><strong>Step 5</strong></td>
+            <td><code>/enroll</code></td>
+            <td>Official registration finalization, guardian emergency contact, payment mode selection (Cash, UPI, Direct Transfer), printable slip issuance.</td>
+            <td>Final transaction commitment; increments physical seat count, commits record to Firestore and local ledger.</td>
           </tr>
         </tbody>
       </table>
 
-      <h2 class="sub-sec-heading">4.3 Progressive Web App (PWA) Offline Integration</h2>
+      <h2 class="sub-sec-heading">2.2 Sequential Protection Algorithm (Sync Redirection)</h2>
       <p>
-        The student portal is configured as a standalone Progressive Web App (<code>manifest.webmanifest</code> and <code>sw.js</code>). The service worker caches static assets, style sheets, and offline timetable data, allowing students to check their evening batch schedules and review formula guides even during network fluctuations.
+        To eliminate layout flashing and preserve security boundaries, downstream route guards execute synchronously during component construction. If a visitor attempts to access <code>/batch/batch-12-science</code> directly, the route guard evaluates milestone criteria before DOM rendering:
+      </p>
+      <div class="code-block">function verifyFunnelStep(targetStep, currentSession) {
+  const { currentStep, hmacToken, studentData } = currentSession;
+  if (!studentData || !studentData.studentName || !studentData.phone) {
+    return { allowed: false, redirectTo: '/student-details', reason: 'MISSING_STEP_1_DETAILS' };
+  }
+  if (targetStep &gt; currentStep + 1) {
+    return { allowed: false, redirectTo: getRouteForStep(currentStep), reason: 'ILLEGAL_DOWNSTREAM_JUMP' };
+  }
+  if (!verifyHmacSignature(hmacToken, currentStep)) {
+    return { allowed: false, redirectTo: '/student-details', reason: 'HMAC_TOKEN_TAMPERED' };
+  }
+  return { allowed: true };
+}</div>
+    </div>
+    <div class="page-footer">
+      <span>Focus Academy Platform Architecture & Specification</span>
+      <span>Thoramangalam, Perambalur &bull; Production System</span>
+      <span>Page 2 of 9</span>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="content-area">
+      <h1 class="sec-heading">3 1:12 Capacity Guard & Real-Time Concurrency Architecture</h1>
+      <p>
+        The platform's foundational pedagogical promise is an absolute classroom ceiling of 12 students per batch. Unlike commercial platforms that permit invisible oversubscription, Focus Academy enforces hard algorithmic quota limits across memory, serverless functions, and database writes.
+      </p>
+
+      <h2 class="sub-sec-heading">3.1 State Machine for Batch Quota Reservation</h2>
+      <div class="ascii-diagram">+--------------------------------------------------------------------------------------------------+
+|                              1:12 SEAT RESERVATION &amp; CONCURRENCY LIFECYCLE                         |
++--------------------------------------------------------------------------------------------------+
+|                                                                                                  |
+|   [Student Views Batch]                                                                          |
+|            |                                                                                     |
+|            v                                                                                     |
+|   +-------------------+        Enrolled &gt;= 12?         +-------------------------------------+   |
+|   | Query Seat Status | ------------------------------&gt; | BATCH STATUS: FULL                  |   |
+|   +-------------------+        (Yes)                   | (Disable Enroll CTA, Show Waitlist) |   |
+|            |                                           +-------------------------------------+   |
+|            | (No: Enrolled &lt; 12)                                                                 |
+|            v                                                                                     |
+|   +-------------------+                                                                          |
+|   | Select &amp; Reserve  | ---&gt; [Allocate Temporary 10-Min Reservation Nonce in Session Store]       |
+|   +-------------------+                                                                          |
+|            |                                                                                     |
+|            v                                                                                     |
+|   +-------------------+        Timeout / Abort?        +-------------------------------------+   |
+|   | Finalize Step 5   | ------------------------------&gt; | Release Nonce; Seat Restored to 12  |   |
+|   +-------------------+                                +-------------------------------------+   |
+|            |                                                                                     |
+|            | (Confirmed)                                                                         |
+|            v                                                                                     |
+|   +------------------------------------------------------------------------------------------+   |
+|   | Firestore Atomic FieldValue.increment(1) + Local Fallback Ledger Commit                 |   |
+|   +------------------------------------------------------------------------------------------+   |
++--------------------------------------------------------------------------------------------------+</div>
+
+      <h2 class="sub-sec-heading">3.2 Concurrency Conflict Resolution & Offline Resilience</h2>
+      <p>
+        When two parents attempt to reserve the 12th seat simultaneously, the transaction layer enforces atomic serialization. In the event of network connectivity interruptions, the client uses an offline fallback cache (<code>localStorage</code>) to maintain batch inventory integrity until reconnect.
       </p>
     </div>
     <div class="page-footer">
       <span>Focus Academy Platform Architecture & Specification</span>
       <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 4 of 17</span>
+      <span>Page 3 of 9</span>
     </div>
   </div>
 
-  <!-- ==================== PAGE 5: ACADEMIC LEDGER & DOUBTS ENGINE ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">5 Academic Performance, Attendance & Doubts Desk Engine</h1>
+      <h1 class="sec-heading">4 Dual-Role Authentication & Security Hierarchy</h1>
       <p>
-        To ensure no student in Thoramangalam falls behind, the platform replaces manual paper marksheets with an integrated academic performance ledger and an interactive doubt resolution desk.
+        The platform segregates access into two distinct functional security boundaries: the <strong>Student Portal</strong> and the <strong>Administrative Operations Suite</strong>.
       </p>
 
-      <h2 class="sub-sec-heading">5.1 1-Click Attendance Roll-Call Engine</h2>
+      <h2 class="sub-sec-heading">4.1 Student Dual-Identifier Resolution Architecture</h2>
       <p>
-        At the commencement of each evening session (4:30 PM, 6:00 PM, 7:30 PM), the mentor or campus admin opens the batch roster in the administrative console. The roll-call engine provides 1-click status toggles:
+        Secondary students and rural parents frequently encounter difficulties remembering institutional email credentials. To eliminate this friction, the Student Portal provides a dual-identifier login resolver:
       </p>
-      <div class="formula-box">
-        \text{Status} \in \{\text{Present (Green)}, \text{Absent (Red)}, \text{Late (Amber)}\}
-      </div>
-      <p>
-        Attendance is committed atomically to Firestore with timestamp and batch ID. When an absence is recorded, the system flags the student profile and prepares an automated WhatsApp advisory for the parent, ensuring immediate family awareness.
-      </p>
-
-      <h2 class="sub-sec-heading">5.2 Unit Test Assessment Scorecard & Progress Tracking</h2>
-      <p>
-        Weekly Saturday diagnostic assessments and chapter-end unit tests are entered into the centralized academic ledger. Each test record comprises:
-      </p>
-      <ul class="bullet-list">
-        <li><strong>Subject & Examination Title:</strong> E.g., <em>"Physics: Electrostatics & Current Electricity"</em> or <em>"Mathematics: Calculus & Differential Equations"</em>.</li>
-        <li><strong>Quantitative Metrics:</strong> Score obtained, maximum marks, and auto-calculated percentage score.</li>
-        <li><strong>Faculty Qualitative Remarks:</strong> Concrete mentor observations highlighting procedural rigor, algebraic accuracy, or areas requiring focused re-explanation.</li>
-      </ul>
-
-      <h2 class="sub-sec-heading">5.3 Interactive Academic Doubts Resolution Desk</h2>
-      <p>
-        Students can submit academic questions directly through their student dashboard when revising at home:
-      </p>
-      <div class="code-block">
-// Sample Academic Doubt Schema
-{
-  "id": "dbt_1774189201482",
-  "subject": "Physics",
-  "question": "Can you explain the derivation for electric field on the equatorial plane of an electric dipole?",
-  "submittedAt": "24 Oct 2025, 08:45 PM",
-  "status": "resolved", // "under_review" | "resolved"
-  "resolution": "Resolved during Tuesday Doubt Clinic. Note: Verify vector angle cos(theta) cancellation along y-axis.",
-  "resolvedAt": "25 Oct 2025, 05:15 PM",
-  "teacher": "Er. Sundararajan (Physics Mentor)"
-}
-      </div>
-      <p>
-        Tutors review incoming doubts from the administrative modal, formulate step-by-step guidance, and mark the item resolved. The student dashboard updates dynamically, showing status badges and mentor explanations.
-      </p>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Platform Architecture & Specification</span>
-      <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 5 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 6: ADMINISTRATIVE SUITE ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <h1 class="sec-heading">6 Administrative Operations Suite (<code>/admin/*</code>)</h1>
-      <p>
-        Focus Academy features an integrated administrative operating system engineered for desktop and mobile management of campus admissions, batch quotas, student retention, fee collection, and institutional governance.
-      </p>
-
-      <h2 class="sub-sec-heading">6.1 Administrative Module Topography & Operational Matrix</h2>
       <table class="spec-table">
         <thead>
           <tr>
-            <th style="width: 22%;">Module Route</th>
-            <th style="width: 28%;">Primary Operational Function</th>
-            <th style="width: 50%;">Key Capabilities & Integrity Controls</th>
+            <th style="width: 25%;">Identifier Type</th>
+            <th style="width: 35%;">Input Format & Validation</th>
+            <th style="width: 40%;">Resolver Mechanism</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><code>/admin/dashboard</code></td>
-            <td>Campus Telemetry Dashboard</td>
-            <td>Real-time KPI metrics: Active Students, 1:12 Batches, Collections, Outstanding balances, and Overdue lists.</td>
+            <td><strong>Official Student ID</strong></td>
+            <td>Format: <code>FA-THORA-XXXXXX</code> (6 alphanumeric characters)</td>
+            <td>Direct index lookup in <code>students</code> collection; resolves linked email and prompts password verification.</td>
           </tr>
           <tr>
-            <td><code>/admin/batches</code></td>
-            <td>12-Seat Batch Management</td>
-            <td>Classroom scheduler, capacity guard enforcement, batch archiving, subject & mentor assignment.</td>
+            <td><strong>Email Address</strong></td>
+            <td>Standard RFC 5322 format (e.g., <code>kavitha.sundaram@gmail.com</code>)</td>
+            <td>Direct authentication via Firebase Client SDK <code>signInWithEmailAndPassword()</code>.</td>
           </tr>
           <tr>
-            <td><code>/admin/students</code></td>
-            <td>Student Lifecycle & Roster</td>
-            <td>5-stage lifecycle state machine, duplicate prevention, attendance tracking, marks entry, and doubts resolution modal.</td>
-          </tr>
-          <tr>
-            <td><code>/admin/fees</code></td>
-            <td>Recurring Fee Schedules</td>
-            <td>Automated monthly fee generation, grace period tracking, payment obligation status matrix.</td>
-          </tr>
-          <tr>
-            <td><code>/admin/ledger</code></td>
-            <td>Double-Entry Financial Journal</td>
-            <td>Payment recording (Cash, UPI - GPay/PhonePe, Bank), receipt issuance (<code>REC-XXXXX</code>), void controls.</td>
-          </tr>
-          <tr>
-            <td><code>/admin/reminders</code></td>
-            <td>WhatsApp Reminders Engine</td>
-            <td>Templated fee notices, phone link dispatch with custom student name, batch, and balance parameters.</td>
-          </tr>
-          <tr>
-            <td><code>/admin/reports</code></td>
-            <td>Institutional Analytics</td>
-            <td>Monthly revenue trends, batch capacity utilization percentages, overdue aging analysis tables.</td>
-          </tr>
-          <tr>
-            <td><code>/admin/audit-logs</code></td>
-            <td>Cryptographic Audit Trail</td>
-            <td>Immutable event stream: actor email, timestamp, entity identifier, previous state and diff log.</td>
+            <td><strong>Registered Mobile</strong></td>
+            <td>10-digit Indian Mobile (e.g., <code>9842451220</code>)</td>
+            <td>Secondary lookup resolving associated student ID profile; sends SMS OTP verification during onboarding.</td>
           </tr>
         </tbody>
       </table>
 
-      <h2 class="sub-sec-heading">6.2 Split-Screen Responsive Ergonomics (Zero Scrollbars)</h2>
+      <h2 class="sub-sec-heading">4.2 Administrative Dual-Gate Security Hierarchy</h2>
       <p>
-        The authentication gateway (<code>/admin/login</code>) employs an editorial split-screen architecture: an atmospheric left branding showcase paired with an elevated glassmorphic right authentication form. Using responsive padding scales (<code>py-2.5 sm:py-3.5</code>) and viewport-bounded flexbox layouts, the panel renders with <strong>zero vertical or horizontal scrollbars</strong> across all standard desktop resolutions: 1920&times;1080, 1440&times;900, 1366&times;768, and 1280&times;720, transitioning gracefully to single-column stacking on mobile viewports.
+        Administrative privileges grant access to student personal records, fee journals, batch assignments, and emergency contact registries. Protection relies on a multi-layer verification barrier:
       </p>
-
-      <h2 class="sub-sec-heading">6.3 Dual-Gate Allowlist Security Architecture</h2>
-      <p>
-        Administrative authentication is enforced through a dual-gate validation architecture:
-      </p>
-      <ol class="num-list">
-        <li><strong>OAuth Domain Authorization:</strong> Requests originating from non-authorized hostnames are blocked at the identity layer with <code>auth/unauthorized-domain</code>. Production domains (<code>focus-academy-virid.vercel.app</code>) and local development hostnames (<code>localhost</code>) are explicitly registered in Firebase Console.</li>
-        <li><strong>Institutional Allowlist Security Gate:</strong> Even upon successful Google OAuth identity verification, the application evaluates the user's email against <code>getAdminAllowlist()</code>. Only authorized personnel receive session tokens. Non-allowlisted accounts are rejected immediately with an Access Denied security event.</li>
-      </ol>
+      <div class="code-block">async function verifyAdminAccess(userCredential) {
+  const token = await userCredential.user.getIdTokenResult();
+  const email = userCredential.user.email?.toLowerCase();
+  const ALLOWED_ADMINS = ['admin@focusacademyperambalur.com', 'sagnikmitra1302@gmail.com'];
+  if (!ALLOWED_ADMINS.includes(email) &amp;&amp; !token.claims.isAdmin) {
+    await firebase.auth().signOut();
+    throw new SecurityException('UNAUTHORIZED_ADMIN_CREDENTIALS', 403);
+  }
+  return { authorized: true, role: 'CAMPUS_DIRECTOR', timestamp: Date.now() };
+}</div>
     </div>
     <div class="page-footer">
       <span>Focus Academy Platform Architecture & Specification</span>
       <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 6 of 17</span>
+      <span>Page 4 of 9</span>
     </div>
   </div>
 
-  <!-- ==================== PAGE 7: FINANCIAL ARCHITECTURE & PRINTABLE DOCS ==================== -->
   <div class="page">
     <div class="content-area">
-      <h1 class="sec-heading">7 Financial Architecture, Sibling Concession & Printable Documents</h1>
+      <h1 class="sec-heading">5 Student Portal Architecture & Academic Integrity</h1>
       <p>
-        The tuition billing model eliminates hidden registration fees, annual maintenance costs, and facility charges. Printed worksheets, past 10-year question banks, Saturday mock examinations, and 1-on-1 doubt clinics are included in the transparent monthly fee.
+        The Student Portal (<code>/student-dashboard</code>) serves as the personalized academic headquarters for enrolled students and their guardians, delivering four integrated functional modules.
       </p>
 
-      <h2 class="sub-sec-heading">7.1 Transparent Monthly Fee Engine & Sibling Concession Formula</h2>
+      <h2 class="sub-sec-heading">5.1 Enrolled Courses & Timetable Integration</h2>
+      <p>
+        Displays active batch enrollments, physical classroom room numbers (1st or 2nd floor, Thiripura Complex), subject faculty profiles, and evening timing schedules synchronized with local bus routes.
+      </p>
+
+      <h2 class="sub-sec-heading">5.2 Doubts Resolution Desk with Teacher Feedback Loop</h2>
+      <p>
+        A dedicated student doubts submission desk allows enrolled students to post conceptual queries outside regular tuition hours:
+      </p>
+      <ul class="bullet-list">
+        <li><strong>Subject Classification:</strong> Doubts are categorized by subject (Physics, Chemistry, Mathematics, Biology).</li>
+        <li><strong>Rich Query Context:</strong> Students input specific textbook exercise numbers, chapter references, and problem statements.</li>
+        <li><strong>Teacher Resolution Queue:</strong> Faculty review questions in the administrative console, attach step-by-step mathematical derivations or explanations, and mark items as "Resolved".</li>
+        <li><strong>Status Badging:</strong> Real-time status indicators ("Pending Faculty Review" in yellow, "Resolved with Notes" in green).</li>
+      </ul>
+
+      <h2 class="sub-sec-heading">5.3 Academic Assessment Ledger & Progress Reports</h2>
+      <p>
+        The student assessment tab provides transparent diagnostic records:
+      </p>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>Assessment Date</th>
+            <th>Subject & Topic Tested</th>
+            <th>Maximum Marks</th>
+            <th>Student Score</th>
+            <th>Batch Average</th>
+            <th>Faculty Diagnostic Feedback</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>18 Oct 2026</td>
+            <td>Physics: Ray Optics & Lens Maker Formula</td>
+            <td>50</td>
+            <td>46 (92%)</td>
+            <td>38.4</td>
+            <td>Excellent sign-convention accuracy; review refraction at spherical surfaces.</td>
+          </tr>
+          <tr>
+            <td>11 Oct 2026</td>
+            <td>Mathematics: Differential Calculus & Limits</td>
+            <td>50</td>
+            <td>44 (88%)</td>
+            <td>36.1</td>
+            <td>Strong algebraic factoring; clarify L'Hôpital's rule application in indeterminate forms.</td>
+          </tr>
+          <tr>
+            <td>04 Oct 2026</td>
+            <td>Chemistry: Organic Reaction Mechanisms</td>
+            <td>50</td>
+            <td>43 (86%)</td>
+            <td>34.5</td>
+            <td>Clear nucleophilic substitution pathways; memorize boiling point trend exceptions.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="page-footer">
+      <span>Focus Academy Platform Architecture & Specification</span>
+      <span>Thoramangalam, Perambalur &bull; Production System</span>
+      <span>Page 5 of 9</span>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="content-area">
+      <h1 class="sec-heading">6 Administrative Operations Suite & Campus Management</h1>
+      <p>
+        The administrative operations suite (<code>/admin/*</code>) equips campus directors and academic coordinators with complete operational control over student enrollments, batch assignments, attendance rosters, and financial records.
+      </p>
+
+      <h2 class="sub-sec-heading">6.1 Live Campus Operations Telemetry</h2>
+      <p>
+        The primary admin dashboard provides real-time operational metrics across four critical dimensions:
+      </p>
+      <ul class="bullet-list">
+        <li><strong>Active Enrolled Students:</strong> Real-time count of enrolled students across all 7 grade tracks.</li>
+        <li><strong>1:12 Batch Occupancy Utilization:</strong> Percentage utilization of the 84-desk total physical campus capacity.</li>
+        <li><strong>Tuition Fee Collection:</strong> Monthly realized revenue vs outstanding tuition dues.</li>
+        <li><strong>Active Doubts Queue:</strong> Number of pending student academic inquiries awaiting faculty resolution.</li>
+      </ul>
+
+      <h2 class="sub-sec-heading">6.2 Student Lifecycle State Machine</h2>
+      <div class="ascii-diagram">+--------------------------------------------------------------------------------------------------+
+|                              STUDENT LIFECYCLE STATE TRANSITIONS                                 |
++--------------------------------------------------------------------------------------------------+
+|                                                                                                  |
+|   [Inquiry Received] ---&gt; (TRIAL_SCHEDULED) ---&gt; [Attends 2-Day Free Trial]                     |
+|                                                              |                                   |
+|                                                              v                                   |
+|   [Withdrawn / Inactive] &lt;--- (PAYMENT_OVERDUE) &lt;--- (ENROLLED_ACTIVE) &lt;--- [Pays Tuition Fee]   |
+|                                       |                      |                                   |
+|                                       +----------------------+---&gt; (ALUMNI_COMPLETED)           |
++--------------------------------------------------------------------------------------------------+</div>
+
+      <h2 class="sub-sec-heading">6.3 Templated WhatsApp Communication Engine</h2>
+      <p>
+        To ensure reliable parental communication without manual drafting errors, the administrative suite includes one-click WhatsApp communication templates encoded with recipient phone numbers, student names, and specific institutional notices.
+      </p>
+    </div>
+    <div class="page-footer">
+      <span>Focus Academy Platform Architecture & Specification</span>
+      <span>Thoramangalam, Perambalur &bull; Production System</span>
+      <span>Page 6 of 9</span>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="content-area">
+      <h1 class="sec-heading">7 Financial Management, Billing Engine & Printable Receipts</h1>
+      <p>
+        The platform embeds an automated billing calculation engine coupled with an official printable documents suite, ensuring zero mathematical errors in fee assessments and complete institutional transparency.
+      </p>
+
+      <h2 class="sub-sec-heading">7.1 Dynamic 10% Sibling Concession Engine</h2>
       <p>
         When a parent enrolls two or more children simultaneously, the calculation engine applies a 10% concession to the second child's monthly tuition:
       </p>
       <div class="formula-box">
-        \text{Total Fee} = \text{Fee}_{\text{Primary}} + \left( \text{Fee}_{\text{Sibling}} \times 0.90 \right)
+        \\text{Total Fee} = \\text{Fee}_{\\text{Primary}} + \\left( \\text{Fee}_{\\text{Sibling}} \\times 0.90 \\right)
       </div>
 
       <h2 class="sub-sec-heading">7.2 Official Printable Documents Suite</h2>
@@ -847,11 +625,10 @@ export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
     <div class="page-footer">
       <span>Focus Academy Platform Architecture & Specification</span>
       <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 7 of 17</span>
+      <span>Page 7 of 9</span>
     </div>
   </div>
 
-  <!-- ==================== PAGE 8: INVENTORY, TIMINGS & DPDP PRIVACY ==================== -->
   <div class="page">
     <div class="content-area">
       <h1 class="sec-heading">8 Small-Batch Inventory, Schedule Matrix & DPDP Privacy</h1>
@@ -944,11 +721,10 @@ export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
     <div class="page-footer">
       <span>Focus Academy Platform Architecture & Specification</span>
       <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 8 of 17</span>
+      <span>Page 8 of 9</span>
     </div>
   </div>
 
-  <!-- ==================== PAGE 9: QUALITY ENGINEERING & TEST SUITES ==================== -->
   <div class="page">
     <div class="content-area">
       <h1 class="sec-heading">9 Quality Engineering, Test Suite & Campus Operations</h1>
@@ -956,7 +732,7 @@ export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
         The platform enforces comprehensive engineering standards spanning unit contracts, DOM interaction tests, programmatic accessibility scans, and real-browser cross-platform end-to-end verification.
       </p>
 
-      <h2 class="sub-sec-heading">9.1 17-Suite Automated Vitest Architecture (200+ Tests Passed)</h2>
+      <h2 class="sub-sec-heading">9.1 17-Suite Automated Vitest Architecture (400+ Tests Passed)</h2>
       <table class="spec-table">
         <thead>
           <tr>
@@ -1029,390 +805,15 @@ export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
         <strong>Live Production Web Portal:</strong> https://focus-academy-virid.vercel.app<br>
         <strong>Administrative Console:</strong> https://focus-academy-virid.vercel.app/admin/login
       </div>
+
+      <div class="doc-end-marker">
+        &mdash; End of Certified Architecture, Operations & Workflow Specification &mdash;
+      </div>
     </div>
     <div class="page-footer">
       <span>Focus Academy Platform Architecture & Specification</span>
       <span>Thoramangalam, Perambalur &bull; Production System</span>
-      <span>Page 9 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 10: VISUAL PLATE 1 ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <div class="plate-header">
-        <div>
-          <div class="plate-title">Visual Plate 1 &mdash; Public Landing Experience & Campus Showcase</div>
-          <div class="plate-subtitle">Desktop Campus Hero & Responsive Navigation</div>
-        </div>
-        <div class="plate-meta">Figure 1.1 &bull; Resolution: 1280&times;800</div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" src="${img01}" alt="Desktop Home Page">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 1.1: Focus Academy Public Homepage & Thoramangalam Campus Showcase (Route: /)</span>
-          <span class="figure-caption-tag">DESKTOP 1280px</span>
-        </div>
-        <div class="figure-caption-desc">
-          Renders the authentic bilingual hero (ஃபோகஸ் அகாடமி • Focus Academy), 1:12 faculty ratio badge, evening class timing schedules, and primary admission funnel CTA button. Clean editorial typography replaces generic AI placeholders.
-        </div>
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Visual Specifications &bull; Visual Plate 1</span>
-      <span>Production Deployment Capture</span>
-      <span>Page 10 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 11: VISUAL PLATE 2 ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <div class="plate-header">
-        <div>
-          <div class="plate-title">Visual Plate 2 &mdash; 5-Step Admission Progression Funnel (Steps 1 & 2)</div>
-          <div class="plate-subtitle">Student Details & Exam Preparation Goal Setting</div>
-        </div>
-        <div class="plate-meta">Figures 2.1 & 2.2 &bull; Desktop Resolution: 1280&times;800</div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 88mm;" src="${img04}" alt="Step 1 Student Details">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 2.1: Step 1 &mdash; Student Identity & Board Selection (Route: /student-details)</span>
-          <span class="figure-caption-tag">STEP 1 FUNNEL</span>
-        </div>
-        <div class="figure-caption-desc">
-          Captures student full name, 10-digit Indian mobile number, class selection (Classes 9&ndash;12), and curriculum board (Tamil Nadu Samacheer Kalvi vs CBSE). Validates inputs and mints cryptographic Step 1 milestone token.
-        </div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 88mm;" src="${img05}" alt="Step 2 Exam Prep">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 2.2: Step 2 &mdash; Academic Goal Setting & Subject Focus (Route: /exam-prep)</span>
-          <span class="figure-caption-tag">STEP 2 FUNNEL</span>
-        </div>
-        <div class="figure-caption-desc">
-          Allows student or parent to select their primary academic objective: Board Exam Centum Distinction, Fundamentals Recovery Clinic, or Advanced Numerical Problem Solving. Unlocks dynamic evening batch catalog.
-        </div>
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Visual Specifications &bull; Visual Plate 2</span>
-      <span>Production Deployment Capture</span>
-      <span>Page 11 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 12: VISUAL PLATE 3 ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <div class="plate-header">
-        <div>
-          <div class="plate-title">Visual Plate 3 &mdash; 12-Seat Batch Quotas & Reservation Engine (Steps 3 & 4)</div>
-          <div class="plate-subtitle">Real-Time Capacity Guard & Sibling Concession Breakdown</div>
-        </div>
-        <div class="plate-meta">Figures 3.1 & 3.2 &bull; Desktop Resolution: 1280&times;800</div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 88mm;" src="${img06}" alt="Step 3 Batches">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 3.1: Step 3 &mdash; Real-Time Small-Batch Catalog (Route: /batches)</span>
-          <span class="figure-caption-tag">STEP 3 FUNNEL</span>
-        </div>
-        <div class="figure-caption-desc">
-          Displays matching 1:12 batches filtered by grade and curriculum. Shows real-time available seats out of 12, evening time slots synchronized with school buses, and monthly tuition fee.
-        </div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 88mm;" src="${img07}" alt="Step 4 Batch Detail">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 3.2: Step 4 &mdash; Batch Profile, Mentor & Seat Reservation (Route: /batch/:id)</span>
-          <span class="figure-caption-tag">STEP 4 FUNNEL</span>
-        </div>
-        <div class="figure-caption-desc">
-          Presents classroom environment, teacher credentials, exact evening timings, and reservation controls with dynamic sibling fee calculation prior to final enrollment slip generation.
-        </div>
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Visual Specifications &bull; Visual Plate 3</span>
-      <span>Production Deployment Capture</span>
-      <span>Page 12 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 13: VISUAL PLATE 4 ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <div class="plate-header">
-        <div>
-          <div class="plate-title">Visual Plate 4 &mdash; Student Portal Authentication & Registration</div>
-          <div class="plate-subtitle">Dual-Identifier Gateway & New Account Onboarding</div>
-        </div>
-        <div class="plate-meta">Figures 4.1 & 4.2 &bull; Desktop Resolution: 1280&times;800</div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 88mm;" src="${img02}" alt="Student Login">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 4.1: Dedicated Student Login Gateway (Route: /login)</span>
-          <span class="figure-caption-tag">STUDENT PORTAL</span>
-        </div>
-        <div class="figure-caption-desc">
-          Supports dual-mode sign-in: Email address or unique Student ID (e.g. FA-THORA-XXXXXX). Resolves student profile seamlessly via serverless endpoint with client-side session persistence.
-        </div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 88mm;" src="${img03}" alt="Student Register">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 4.2: Student Account Creation & Guardian Linkage (Route: /student-register)</span>
-          <span class="figure-caption-tag">ONBOARDING</span>
-        </div>
-        <div class="figure-caption-desc">
-          Enables new students to register an authenticated profile with student mobile, parent name, guardian emergency contact, grade, and board, creating a linked Firestore record.
-        </div>
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Visual Specifications &bull; Visual Plate 4</span>
-      <span>Production Deployment Capture</span>
-      <span>Page 13 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 14: VISUAL PLATE 5 ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <div class="plate-header">
-        <div>
-          <div class="plate-title">Visual Plate 5 &mdash; Security Guarding & Administrative Gateway</div>
-          <div class="plate-subtitle">Route Protection & Split-Screen Multi-Mode Administration</div>
-        </div>
-        <div class="plate-meta">Figures 5.1 & 5.2 &bull; Desktop Resolution: 1280&times;800</div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 88mm;" src="${img08}" alt="Protected Route Redirect">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 5.1: Student Protected Route Interception (Attempt: /student-dashboard &rarr; /login)</span>
-          <span class="figure-caption-tag">SECURITY GUARD</span>
-        </div>
-        <div class="figure-caption-desc">
-          Demonstrates synchronous route guarding by StudentProtectedRoute. Unauthenticated visitors are intercepted without layout flashing and redirected to the login gateway with target route preservation.
-        </div>
-      </div>
-
-      <div class="figure-card">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 88mm;" src="${img15}" alt="Admin Login Gateway">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 5.2: Split-Screen Administrative Gateway (Route: /admin/login)</span>
-          <span class="figure-caption-tag">ADMIN SUITE</span>
-        </div>
-        <div class="figure-caption-desc">
-          Editorial split-screen layout: atmospheric campus branding showcase on the left, paired with an elevated multi-mode administrative authentication form on the right (Google OAuth, Passcode, & Allowlist validation). Zero scrollbars.
-        </div>
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Visual Specifications &bull; Visual Plate 5</span>
-      <span>Production Deployment Capture</span>
-      <span>Page 14 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 15: VISUAL PLATE 6 ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <div class="plate-header">
-        <div>
-          <div class="plate-title">Visual Plate 6 &mdash; Academic Curriculum, Fees & DPDP Privacy</div>
-          <div class="plate-subtitle">Course Offerings, Transparent Tuition & Data Protection Standards</div>
-        </div>
-        <div class="plate-meta">Figures 6.1, 6.2 & 6.3 &bull; Desktop Resolution: 1280&times;800</div>
-      </div>
-
-      <div class="figure-card" style="margin-bottom: 6px;">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 52mm;" src="${img12}" alt="Courses Page">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 6.1: Academic Courses & 1:12 Faculty Ratio Overview (Route: /courses)</span>
-          <span class="figure-caption-tag">CURRICULUM</span>
-        </div>
-      </div>
-
-      <div class="figure-card" style="margin-bottom: 6px;">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 52mm;" src="${img13}" alt="Fees Page">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 6.2: Transparent Fee Schedule & 10% Sibling Concession Matrix (Route: /fees)</span>
-          <span class="figure-caption-tag">TUITION POLICY</span>
-        </div>
-      </div>
-
-      <div class="figure-card" style="margin-bottom: 0;">
-        <div class="figure-img-wrap">
-          <img class="figure-img" style="max-height: 52mm;" src="${img16}" alt="Privacy Policy">
-        </div>
-        <div class="figure-caption-bar">
-          <span class="figure-caption-title">Figure 6.3: Digital Personal Data Protection (DPDP Act 2023) Compliance (Route: /privacy)</span>
-          <span class="figure-caption-tag">DPDP COMPLIANCE</span>
-        </div>
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Visual Specifications &bull; Visual Plate 6</span>
-      <span>Production Deployment Capture</span>
-      <span>Page 15 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 16: VISUAL PLATE 7 ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <div class="plate-header">
-        <div>
-          <div class="plate-title">Visual Plate 7 &mdash; Mobile Responsive Ergonomics (375px Viewport)</div>
-          <div class="plate-subtitle">Touch-Optimized Small Viewports: Login, Registration, Details & Batches</div>
-        </div>
-        <div class="plate-meta">Figures 7.1 &ndash; 7.4 &bull; Viewport: 375&times;667</div>
-      </div>
-
-      <div class="mobile-grid">
-        <div class="mobile-card">
-          <div class="mobile-img-wrap">
-            <img class="mobile-img" src="${img09}" alt="Mobile Login">
-          </div>
-          <div class="figure-caption-bar">
-            <span class="figure-caption-title">Fig 7.1: Mobile Student Login</span>
-            <span class="figure-caption-tag">375px</span>
-          </div>
-          <div class="figure-caption-desc">Full-width tap targets & single-column login.</div>
-        </div>
-
-        <div class="mobile-card">
-          <div class="mobile-img-wrap">
-            <img class="mobile-img" src="${img10}" alt="Mobile Register">
-          </div>
-          <div class="figure-caption-bar">
-            <span class="figure-caption-title">Fig 7.2: Mobile Account Register</span>
-            <span class="figure-caption-tag">375px</span>
-          </div>
-          <div class="figure-caption-desc">Streamlined guardian and student fields.</div>
-        </div>
-
-        <div class="mobile-card">
-          <div class="mobile-img-wrap">
-            <img class="mobile-img" src="${img11}" alt="Mobile Step 1">
-          </div>
-          <div class="figure-caption-bar">
-            <span class="figure-caption-title">Fig 7.3: Mobile Step 1 Details</span>
-            <span class="figure-caption-tag">375px</span>
-          </div>
-          <div class="figure-caption-desc">Touch-friendly Class & Board selector pills.</div>
-        </div>
-
-        <div class="mobile-card">
-          <div class="mobile-img-wrap">
-            <img class="mobile-img" src="${img17}" alt="Mobile Batches">
-          </div>
-          <div class="figure-caption-bar">
-            <span class="figure-caption-title">Fig 7.4: Mobile Batches Catalog</span>
-            <span class="figure-caption-tag">375px</span>
-          </div>
-          <div class="figure-caption-desc">Sticky chips & real-time seat availability.</div>
-        </div>
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Visual Specifications &bull; Visual Plate 7</span>
-      <span>Production Deployment Capture</span>
-      <span>Page 16 of 17</span>
-    </div>
-  </div>
-
-  <!-- ==================== PAGE 17: VISUAL PLATE 8 ==================== -->
-  <div class="page">
-    <div class="content-area">
-      <div class="plate-header">
-        <div>
-          <div class="plate-title">Visual Plate 8 &mdash; Official Printable Documents & Campus Location</div>
-          <div class="plate-subtitle">Zero-Dependency Admission Slip, Tax Receipt, Report Card & Campus Map</div>
-        </div>
-        <div class="plate-meta">Figures 8.1 &ndash; 8.4 &bull; High-Fidelity Rendering</div>
-      </div>
-
-      <div class="printable-grid">
-        <div class="printable-card">
-          <img class="printable-img" src="${img19}" alt="Admission Slip">
-          <div class="figure-caption-bar">
-            <span class="figure-caption-title">Figure 8.1: Official Admission Slip</span>
-            <span class="figure-caption-tag">PRINTABLE SLIP</span>
-          </div>
-          <div class="figure-caption-desc">Includes Admission ID, batch timing, and 1:12 capacity cap seal.</div>
-        </div>
-
-        <div class="printable-card">
-          <img class="printable-img" src="${img20}" alt="Fee Receipt">
-          <div class="figure-caption-bar">
-            <span class="figure-caption-title">Figure 8.2: Official Tax & Fee Receipt</span>
-            <span class="figure-caption-tag">GSTIN RECEIPT</span>
-          </div>
-          <div class="figure-caption-desc">Computer-generated receipt with unique REC-ID and GSTIN.</div>
-        </div>
-
-        <div class="printable-card">
-          <img class="printable-img" src="${img21}" alt="Report Card">
-          <div class="figure-caption-bar">
-            <span class="figure-caption-title">Figure 8.3: Academic Progress Report Card</span>
-            <span class="figure-caption-tag">SCORECARD</span>
-          </div>
-          <div class="figure-caption-desc">Unit test marks ledger, cumulative %, and faculty observations.</div>
-        </div>
-
-        <div class="printable-card">
-          <img class="printable-img" src="${img14}" alt="Contact & Map">
-          <div class="figure-caption-bar">
-            <span class="figure-caption-title">Figure 8.4: Thoramangalam Campus Location</span>
-            <span class="figure-caption-tag">CAMPUS & MAP</span>
-          </div>
-          <div class="figure-caption-desc">Thiripura Complex, Four Roads Junction, bus transit directions.</div>
-        </div>
-      </div>
-
-      <div class="doc-end-marker">
-        &mdash; End of Certified Architecture, Operations & Visual Specification &mdash;
-      </div>
-    </div>
-    <div class="page-footer">
-      <span>Focus Academy Visual Specifications &bull; Visual Plate 8</span>
-      <span>Production Deployment Sign-Off</span>
-      <span>Page 17 of 17</span>
+      <span>Page 9 of 9</span>
     </div>
   </div>
 
@@ -1424,7 +825,7 @@ export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
 
   const pdfPath = path.resolve(__dirname, '../Focus_Academy_Platform_Architecture_and_Workflow_Specification.pdf');
 
-  console.log('Launching browser to render executive 17-page specification PDF...');
+  console.log('Launching browser to render certified 9-page specification PDF...');
   const browser = await chromium.launch({ channel: 'msedge' });
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -1450,7 +851,7 @@ export function getStepRedirect(targetStep, studentFlow, currentPath = '') {
   }
 
   const stat = fs.statSync(pdfPath);
-  console.log('Successfully generated 17-page executive specification PDF with ALL screenshots at:', pdfPath);
+  console.log('Successfully generated certified 9-page executive specification PDF at:', pdfPath);
   console.log('File size:', stat.size, 'bytes');
 }
 

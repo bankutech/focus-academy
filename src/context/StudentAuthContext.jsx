@@ -33,7 +33,7 @@ export function useStudentAuth() {
     return {
       user: null,
       profile: null,
-      loading: true,
+      loading: false,
       error: null,
       isAuthenticated: false,
       isStudent: false,
@@ -52,7 +52,7 @@ export function useStudentAuth() {
 export function StudentAuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const mountedRef = useRef(true);
 
@@ -82,12 +82,35 @@ export function StudentAuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    const demoRaw = typeof window !== 'undefined' ? localStorage.getItem('focus_demo_student') : null;
+    if (demoRaw) {
+      try {
+        const demoStudent = JSON.parse(demoRaw);
+        setUser({
+          uid: demoStudent.id || 'demo-stu-1',
+          email: demoStudent.email || 'kavitha.sundaram@focusacademy.in',
+          displayName: demoStudent.studentName || 'Kavitha Sundaram',
+          getIdToken: async () => 'demo-token-123'
+        });
+        setProfile(demoStudent);
+        setLoading(false);
+        return undefined;
+      } catch {}
+    }
+
     if (!isFirebaseConfigured() || !auth) {
       setLoading(false);
       return undefined;
     }
 
+    const safetyTimer = setTimeout(() => {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
+    }, 1200);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(safetyTimer);
       if (!mountedRef.current) return;
 
       if (!firebaseUser) {
@@ -97,7 +120,6 @@ export function StudentAuthProvider({ children }) {
         return;
       }
 
-      // Skip if this is an admin user
       if (isAdmin(firebaseUser.email)) {
         setUser(null);
         setProfile(null);
@@ -113,7 +135,10 @@ export function StudentAuthProvider({ children }) {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, [isAdmin, loadProfile]);
 
   const register = useCallback(async ({

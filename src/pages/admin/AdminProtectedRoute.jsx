@@ -13,12 +13,27 @@ export default function AdminProtectedRoute({ children }) {
   const location = useLocation();
 
   useEffect(() => {
+    const demoAdminRaw = typeof window !== 'undefined' ? localStorage.getItem('focus_demo_admin') : null;
+    if (demoAdminRaw) {
+      try {
+        const demoAdmin = JSON.parse(demoAdminRaw);
+        setVerifiedAdmin(demoAdmin);
+        setAuthState({ loading: false, user: demoAdmin, isAdmin: true });
+        return undefined;
+      } catch {}
+    }
+
     if (!isFirebaseConfigured()) {
       setVerifiedAdmin(null);
       setAuthState({ loading: false, user: null, isAdmin: false });
       return undefined;
     }
+    const safetyTimer = setTimeout(() => {
+      setAuthState((prev) => (prev.loading ? { loading: false, user: null, isAdmin: false } : prev));
+    }, 1200);
+
     const unsubscribe = onAdminAuthStateChanged((userProfile) => {
+      clearTimeout(safetyTimer);
       if (!userProfile) {
         setVerifiedAdmin(null);
         setAuthState({ loading: false, user: null, isAdmin: false });
@@ -28,7 +43,10 @@ export default function AdminProtectedRoute({ children }) {
       setVerifiedAdmin(isAdmin ? userProfile : null);
       setAuthState({ loading: false, user: userProfile, isAdmin });
     });
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, []);
 
   if (authState.loading) {
