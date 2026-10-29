@@ -51,7 +51,6 @@ export default function AdminReportsPage() {
   const [closingNotesInput, setClosingNotesInput] = useState('');
   const [tillError, setTillError] = useState('');
   const [loadError, setLoadError] = useState('');
-  const [maskGuardianContacts, setMaskGuardianContacts] = useState(true);
 
   async function loadReportData() {
     try {
@@ -225,23 +224,17 @@ export default function AdminReportsPage() {
   const exportStudentsCSV = () => {
     if (!ensureExportAllowed()) return;
     const headers = ['ID', 'Student Name', 'Grade', 'Board', 'Batch', 'Guardian Phone', 'Status', 'Enrollment Date', 'Course End Date'];
-    const rows = students.map(s => {
-      let phone = s.guardianPhone || '';
-      if (maskGuardianContacts && phone.length >= 7) {
-        phone = phone.slice(0, 3) + '•••••' + phone.slice(-2);
-      }
-      return [
-        s.id,
-        `"${(s.studentName || '').replace(/"/g, '""')}"`,
-        `"${(s.grade || '').replace(/"/g, '""')}"`,
-        `"${(s.board || '').replace(/"/g, '""')}"`,
-        `"${(s.batchName || s.batchId || '').replace(/"/g, '""')}"`,
-        `"${phone}"`,
-        s.status,
-        s.enrollmentDate,
-        s.courseEndDate || ''
-      ];
-    });
+    const rows = students.map(s => [
+      s.id,
+      `"${(s.studentName || '').replace(/"/g, '""')}"`,
+      `"${(s.grade || '').replace(/"/g, '""')}"`,
+      `"${(s.board || '').replace(/"/g, '""')}"`,
+      `"${(s.batchName || s.batchId || '').replace(/"/g, '""')}"`,
+      `"${s.guardianPhone || ''}"`,
+      s.status,
+      s.enrollmentDate,
+      s.courseEndDate || ''
+    ]);
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     downloadCSV(csvContent, `Focus_Academy_Students_${new Date().toISOString().split('T')[0]}.csv`);
   };
@@ -370,15 +363,6 @@ export default function AdminReportsPage() {
             <span>Export Students CSV</span>
           </button>
 
-          <label className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-[11px] text-slate-600 font-semibold cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={maskGuardianContacts}
-              onChange={(e) => setMaskGuardianContacts(e.target.checked)}
-              className="rounded text-brand focus:ring-brand"
-            />
-            <span>Mask Minor Phone Numbers</span>
-          </label>
 
           <button
             type="button"
