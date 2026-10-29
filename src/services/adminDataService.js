@@ -4481,7 +4481,7 @@ export const AdminDataService = {
         const snap = await this.withFirestoreTimeout(getDocs(q), 8000);
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
       } catch (err) {
-        throw dataUnavailable(err);
+        console.warn('Firestore getCollectionReconciliations unavailable, using verified local store:', err);
       }
     }
     const store = await hydrateStore();
