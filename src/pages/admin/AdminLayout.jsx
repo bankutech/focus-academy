@@ -186,10 +186,6 @@ export default function AdminLayout() {
             <p className="text-[10px] text-slate-500 leading-snug">
               Thiripura Complex, Thoramangalam, Perambalur — 621220
             </p>
-            <div className="pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
-              <span>Classroom Cap: 12 Students</span>
-              <span>v2026.1</span>
-            </div>
           </div>
         </aside>
 
