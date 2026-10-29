@@ -79,7 +79,7 @@ describe('Admin Portal Pages & Routing Integrity', () => {
     expect(screen.getByText('Ledger & Payments')).toBeDefined();
     expect(screen.getByText('WhatsApp Reminders')).toBeDefined();
     expect(screen.getByText('Reports & Analytics')).toBeDefined();
-    expect(screen.getByText('Audit Logs')).toBeDefined();
+    expect(screen.getByText('Events')).toBeDefined();
   });
 
   it('renders AdminDashboardPage with financial summary metrics', async () => {
@@ -133,8 +133,8 @@ describe('Admin Portal Pages & Routing Integrity', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Administrative Audit Trail')).toBeDefined();
-      expect(screen.getByText('All Actions')).toBeDefined();
+      expect(screen.getByText(/Campus Events & Activity Log/i)).toBeDefined();
+      expect(screen.getByText(/All Events/i)).toBeDefined();
     });
   });
 

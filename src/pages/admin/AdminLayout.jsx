@@ -13,7 +13,6 @@ import {
   LogOut, 
   Menu, 
   X,
-  ExternalLink,
   Settings as SettingsIcon,
   Keyboard,
   UserPlus
@@ -21,6 +20,7 @@ import {
 import { logOutAdmin } from '../../services/firebase';
 import { getVerifiedAdmin, setVerifiedAdmin } from '../../services/adminIdentity';
 import { AdminDataService } from '../../services/adminDataService';
+import AdminProfileMenu from '../../components/admin/AdminProfileMenu';
 
 export default function AdminLayout() {
   usePageMeta({
@@ -91,7 +91,7 @@ export default function AdminLayout() {
     { name: 'Ledger & Payments', path: '/admin-portal/ledger', icon: Receipt, permission: 'canRecordPayments' },
     { name: 'WhatsApp Reminders', path: '/admin-portal/reminders', icon: MessageSquare, permission: 'canTriggerReminders' },
     { name: 'Reports & Analytics', path: '/admin-portal/reports', icon: BarChart3, permission: 'canRecordPayments' },
-    { name: 'Audit Logs', path: '/admin-portal/audit-logs', icon: ShieldAlert, permission: 'canManageSettings' },
+    { name: 'Events', path: '/admin-portal/events', icon: ShieldAlert, permission: 'canManageSettings' },
     { name: 'Academy Settings', path: '/admin-portal/settings', icon: SettingsIcon, permission: 'canManageSettings' }
   ];
   const visibleNavItems = navItems.filter(
@@ -136,39 +136,8 @@ export default function AdminLayout() {
             </a>
           </div>
 
-          <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
-            <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-semibold rounded-full select-none" title="Live Cloud Firestore database is connected and automatically synchronized in real-time">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Live Database Auto-Sync</span>
-            </div>
-
-            <div className="hidden sm:flex flex-col text-right">
-              <span className="text-xs font-bold text-white leading-tight truncate max-w-[180px]">
-                {displayName}
-              </span>
-              <span className="text-[10px] text-slate-400 leading-none truncate max-w-[180px]">
-                {userEmail}
-              </span>
-            </div>
-
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:flex items-center space-x-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-none text-xs font-semibold border border-slate-700 transition-colors"
-            >
-              <span>View Public Site</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1.5 bg-red-600/90 hover:bg-red-600 text-white rounded-none text-xs font-bold shadow-xs transition-colors cursor-pointer shrink-0"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            <AdminProfileMenu />
           </div>
         </div>
       </header>
@@ -185,7 +154,9 @@ export default function AdminLayout() {
                   const Icon = item.icon;
                   const active = item.end 
                     ? location.pathname === item.path 
-                    : location.pathname.startsWith(item.path);
+                    : (item.path === '/admin-portal/events'
+                        ? location.pathname.startsWith('/admin-portal/events') || location.pathname.startsWith('/admin-portal/audit-logs')
+                        : location.pathname.startsWith(item.path));
 
                   return (
                     <NavLink
@@ -216,7 +187,7 @@ export default function AdminLayout() {
               Thiripura Complex, Thoramangalam, Perambalur — 621220
             </p>
             <div className="pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
-              <span>Ratio Guard: 1:12</span>
+              <span>Classroom Cap: 12 Students</span>
               <span>v2026.1</span>
             </div>
           </div>
@@ -253,7 +224,9 @@ export default function AdminLayout() {
                     const Icon = item.icon;
                     const active = item.end 
                       ? location.pathname === item.path 
-                      : location.pathname.startsWith(item.path);
+                      : (item.path === '/admin-portal/events'
+                          ? location.pathname.startsWith('/admin-portal/events') || location.pathname.startsWith('/admin-portal/audit-logs')
+                          : location.pathname.startsWith(item.path));
 
                     return (
                       <NavLink
@@ -276,10 +249,6 @@ export default function AdminLayout() {
               </div>
 
               <div className="pt-4 border-t border-slate-200 space-y-3">
-                <div className="flex items-center space-x-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-none">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>Live Database Auto-Sync</span>
-                </div>
                 <button
                   type="button"
                   onClick={handleLogout}

@@ -128,6 +128,13 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /events/{eventId} {
+      allow read: if isAdministrator();
+      allow create: if (isFeeManager() || isAdmissions())
+        && request.resource.data.actor == request.auth.token.email.lower();
+      allow update, delete: if false;
+    }
+
     match /leads/{leadId} {
       allow read, update, delete: if isAdmissions();
       allow create: if isAdmissions() || (
@@ -179,6 +186,13 @@ service cloud.firestore {
         && (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
         && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role || isAdministrator());
       allow delete: if isAdministrator();
+    }
+
+    match /admin_profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (request.auth.uid == userId || isAdministrator())
+        && (!('avatarBase64' in request.resource.data) || (request.resource.data.avatarBase64 is string && request.resource.data.avatarBase64.size() < 60000));
+      allow delete: if isOwner();
     }
 
     match /enrollments/{enrollmentId} {

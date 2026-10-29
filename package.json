@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "lint": "oxlint",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "admin:init": "node scripts/initializeAdmin.js"
   },
   "dependencies": {
     "clsx": "^2.1.1",

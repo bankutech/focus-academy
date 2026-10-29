@@ -24,6 +24,7 @@ import {
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
 import { validateIndianMobile, isBatchCompatible, formatTime12 } from '../../types/schemas';
+import { formatPhoneNumber } from '../../utils/phoneValidation';
 
 function getTodayStr() {
   return new Date().toISOString().split('T')[0];
@@ -794,7 +795,20 @@ export default function AdminStudentsPage() {
             <tbody className="divide-y divide-slate-100">
               {paginatedStudents.length > 0 ? (
                 paginatedStudents.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
+                  <tr 
+                    key={s.id} 
+                    onClick={() => handleViewLedger(s)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleViewLedger(s);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View ledger and profile for ${s.studentName}`}
+                    className="hover:bg-slate-50/80 transition-colors cursor-pointer focus:outline-none focus:bg-orange-50/50"
+                  >
                     <td className="py-3.5 px-4">
                       <div>
                         <span className="font-bold text-[#0F172A] text-sm">{s.studentName}</span>
@@ -850,11 +864,11 @@ export default function AdminStudentsPage() {
                     <td className="py-3.5 px-4">
                       <div className="flex items-center space-x-1 font-mono text-slate-700">
                         <Phone className="w-3 h-3 text-brand" />
-                        <span>+91 {s.guardianPhone}</span>
+                        <span>{formatPhoneNumber(s.guardianPhone)}</span>
                       </div>
                       <p className="text-[11px] text-slate-400 truncate">{s.guardianName}</p>
                       {s.secondaryPhone && (
-                        <p className="text-[10px] text-slate-500 font-mono">Alt: +91 {s.secondaryPhone}</p>
+                        <p className="text-[10px] text-slate-500 font-mono">Alt: {formatPhoneNumber(s.secondaryPhone)}</p>
                       )}
                     </td>
 
@@ -876,9 +890,12 @@ export default function AdminStudentsPage() {
                       <div className="flex items-center justify-end space-x-1">
                         <button
                           type="button"
-                          onClick={() => handleViewLedger(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewLedger(s);
+                          }}
                           className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-[#0F172A] rounded-md font-bold text-[11px] flex items-center space-x-1 cursor-pointer"
-                          title="View Ledger &amp; Profile"
+                          title="View Ledger & Profile"
                         >
                           <Receipt className="w-3 h-3 text-brand" />
                           <span>Ledger</span>
@@ -886,7 +903,10 @@ export default function AdminStudentsPage() {
 
                         <button
                           type="button"
-                          onClick={() => handleOpenAttendanceModal(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenAttendanceModal(s);
+                          }}
                           className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-md font-bold text-[11px] flex items-center space-x-1 cursor-pointer"
                           title="Daily Attendance & Marks Entry"
                         >
@@ -896,7 +916,10 @@ export default function AdminStudentsPage() {
 
                         <button
                           type="button"
-                          onClick={() => handleOpenDiscount(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDiscount(s);
+                          }}
                           className="p-1.5 text-purple-600 hover:bg-purple-50 rounded-md transition-colors cursor-pointer"
                           title="Apply Discount / Scholarship"
                         >
@@ -905,7 +928,10 @@ export default function AdminStudentsPage() {
 
                         <button
                           type="button"
-                          onClick={() => handleOpenLifecycle(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenLifecycle(s);
+                          }}
                           className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
                           title="Update Lifecycle Status"
                         >
@@ -914,7 +940,10 @@ export default function AdminStudentsPage() {
 
                         <button
                           type="button"
-                          onClick={() => handleOpenTransfer(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenTransfer(s);
+                          }}
                           className="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-brand rounded-md font-bold text-[11px] flex items-center space-x-1 cursor-pointer"
                           title="Move an already enrolled student to a different batch (audited batch transfer)"
                         >
@@ -924,7 +953,10 @@ export default function AdminStudentsPage() {
 
                         <button
                           type="button"
-                          onClick={() => handleOpenEdit(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenEdit(s);
+                          }}
                           className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
                           title="Edit Student"
                         >
@@ -933,7 +965,10 @@ export default function AdminStudentsPage() {
 
                         <button
                           type="button"
-                          onClick={() => handleArchiveToggle(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleArchiveToggle(s);
+                          }}
                           className={`p-1.5 rounded-md transition-colors cursor-pointer ${
                             s.status === 'archived'
                               ? 'text-emerald-600 hover:bg-emerald-50'
@@ -946,7 +981,10 @@ export default function AdminStudentsPage() {
 
                         <button
                           type="button"
-                          onClick={() => setDeleteModalStudent(s)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteModalStudent(s);
+                          }}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                           title="Delete Student Record"
                         >

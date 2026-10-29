@@ -11,9 +11,13 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
   signOut, 
-  onAuthStateChanged 
+  onAuthStateChanged,
+  linkWithCredential,
+  linkWithPopup,
+  EmailAuthProvider,
+  updatePassword
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || 'AIzaSyCHyFzVDHhXBzk9w9nDyzn_1Jj1krfknVM',
@@ -163,6 +167,69 @@ export const sendAdminPasswordReset = async (email) => {
   }
 };
 
+export const extractPendingGoogleCredential = (error) => {
+  if (!error) return null;
+  try {
+    return GoogleAuthProvider.credentialFromError(error);
+  } catch {
+    return null;
+  }
+};
+
+export const resolveGoogleAccountConflictWithPassword = async (email, password, pendingCredential, remember = false) => {
+  if (!auth) {
+    throw new Error('Firebase Authentication is not configured.');
+  }
+  await applyPersistence(remember);
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  if (!userCredential.user.emailVerified) {
+    await signOut(auth);
+    const err = new Error('This email address is not verified yet. Open the verification link we emailed you, then sign in again.');
+    err.code = 'auth/email-not-verified';
+    throw err;
+  }
+  if (pendingCredential) {
+    try {
+      await linkWithCredential(userCredential.user, pendingCredential);
+    } catch (linkErr) {
+      if (linkErr.code !== 'auth/credential-already-in-use' && linkErr.code !== 'auth/provider-already-linked') {
+        console.warn('Account linking warning:', linkErr);
+      }
+    }
+  }
+  return userCredential.user;
+};
+
+export const linkGoogleToCurrentUser = async () => {
+  if (!auth?.currentUser) {
+    throw new Error('You must be signed in to link your Google account.');
+  }
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const result = await linkWithPopup(auth.currentUser, provider);
+  return result.user;
+};
+
+export const linkEmailPasswordToCurrentUser = async (password) => {
+  if (!auth?.currentUser) {
+    throw new Error('You must be signed in to add password credentials.');
+  }
+  const email = auth.currentUser.email;
+  if (!email) {
+    throw new Error('Current user does not have an email address.');
+  }
+  const credential = EmailAuthProvider.credential(email, password);
+  const result = await linkWithCredential(auth.currentUser, credential);
+  return result.user;
+};
+
+export const updateAdminPassword = async (newPassword) => {
+  if (!auth?.currentUser) {
+    throw new Error('You must be signed in to update your password.');
+  }
+  await updatePassword(auth.currentUser, newPassword);
+};
+
 export const onAdminAuthStateChanged = (callback) => {
   if (!auth) {
     callback(null);
@@ -173,27 +240,42 @@ export const onAdminAuthStateChanged = (callback) => {
       callback(null);
       return;
     }
+    let claims = {};
+    let isAdmin = false;
     try {
       const tokenResult = await user.getIdTokenResult();
-      const isAdmin = isUserAdmin(user, tokenResult.claims);
-      callback({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || user.email.split('@')[0],
-        photoURL: user.photoURL,
-        isAdmin,
-        claims: tokenResult.claims
-      });
+      claims = tokenResult.claims || {};
+      isAdmin = isUserAdmin(user, claims);
     } catch {
-      const isAdmin = isUserAdmin(user);
-      callback({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName || user.email.split('@')[0],
-        photoURL: user.photoURL,
-        isAdmin,
-        claims: {}
-      });
+      isAdmin = isUserAdmin(user);
     }
+
+    let avatarBase64 = null;
+    let customDisplayName = null;
+    let contactPhone = null;
+    if (db) {
+      try {
+        const snap = await getDoc(doc(db, 'admin_profiles', user.uid));
+        if (snap && snap.exists()) {
+          const data = snap.data();
+          if (data.avatarBase64) avatarBase64 = data.avatarBase64;
+          if (data.displayName) customDisplayName = data.displayName;
+          if (data.phone) contactPhone = data.phone;
+        }
+      } catch {
+        // Fallback safely if offline or permission denied
+      }
+    }
+
+    callback({
+      uid: user.uid,
+      email: user.email,
+      displayName: customDisplayName || user.displayName || (user.email ? user.email.split('@')[0] : 'Administrator'),
+      photoURL: user.photoURL || null,
+      avatarBase64,
+      contactPhone,
+      isAdmin,
+      claims
+    });
   });
 };

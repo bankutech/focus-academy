@@ -23,6 +23,7 @@ import { AdminDataService, ENROLLMENT_STATUSES } from '../../services/adminDataS
 import { LeadService } from '../../services/leadService';
 import { requireAdminEmail } from '../../services/adminIdentity';
 import { formatTime12 } from '../../types/schemas';
+import { formatPhoneNumber } from '../../utils/phoneValidation';
 
 const ENROLLMENT_STATUS_META = {
   pending: { label: 'Pending Review', className: 'bg-amber-50 text-amber-800 border-amber-200' },
@@ -499,12 +500,25 @@ export default function AdminLeadsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {filteredEnrollments.map((enrollment) => (
-                  <tr key={enrollment.id} className="hover:bg-slate-50/80 transition-colors">
+                  <tr 
+                    key={enrollment.id} 
+                    onClick={() => openEnrollmentView(enrollment)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openEnrollmentView(enrollment);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View enrollment details for ${enrollment.studentName}`}
+                    className="hover:bg-slate-50/80 transition-colors cursor-pointer focus:outline-none focus:bg-orange-50/50"
+                  >
                     <td className="py-3 px-4 font-mono font-bold text-brand text-[11px]">{enrollment.id}</td>
                     <td className="py-3 px-4">
                       <div className="font-bold text-[#0F172A]">{enrollment.studentName}</div>
                       <div className="text-[11px] text-slate-500">
-                        {enrollment.parentName || 'Parent'} • +91 {enrollment.phone}
+                        {enrollment.parentName || 'Parent'} • {formatPhoneNumber(enrollment.phone)}
                       </div>
                       <div className="text-[11px] text-slate-500">{enrollment.grade} • {enrollment.board}</div>
                     </td>
@@ -568,16 +582,10 @@ export default function AdminLeadsPage() {
                       <div className="flex items-center justify-end space-x-1.5">
                         <button
                           type="button"
-                          onClick={() => openEnrollmentView(enrollment)}
-                          className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded text-[11px] inline-flex items-center space-x-1 cursor-pointer"
-                          title="View complete enrollment record"
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span>View</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEnrollmentEdit(enrollment)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEnrollmentEdit(enrollment);
+                          }}
                           className="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded text-[11px] inline-flex items-center space-x-1 cursor-pointer"
                           title="Edit enrollment details"
                         >
@@ -586,7 +594,8 @@ export default function AdminLeadsPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setStatusModal(enrollment);
                             setStatusNext(normalizeEnrollmentStatus(enrollment.status) === 'confirmed' ? 'pending' : 'confirmed');
                             setStatusReason('');
@@ -600,7 +609,8 @@ export default function AdminLeadsPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setArchiveModal(enrollment);
                             setArchiveReason('');
                             setFormError('');
@@ -613,7 +623,8 @@ export default function AdminLeadsPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setDeleteModalItem({ id: enrollment.id, name: enrollment.studentName, type: 'enrollment' });
                             setFormError('');
                           }}

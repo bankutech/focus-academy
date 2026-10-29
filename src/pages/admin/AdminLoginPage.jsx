@@ -11,7 +11,9 @@ import {
   sendAdminPasswordReset,
   onAdminAuthStateChanged,
   isFirebaseConfigured,
-  isUserAdmin
+  isUserAdmin,
+  extractPendingGoogleCredential,
+  resolveGoogleAccountConflictWithPassword
 } from '../../services/firebase';
 import { EmailField, PasswordField, TextField, SubmitButton, GoogleButton, Divider } from './AuthFields';
 import { friendlyAuthError, passwordStrength, readLock, recordFailure, clearFailures } from './authHelpers';
@@ -25,6 +27,7 @@ const TITLES = {
   login: ['Administrator sign in', 'Use your academy staff email and password.'],
   register: ['Create administrator account', 'Registration is limited to emails the academy owner has approved.'],
   forgot: ['Reset password', 'Enter your administrator email to receive reset instructions.'],
+  link_account: ['Link Google Account', 'Enter your administrator password to connect your Google account to your existing profile.'],
 };
 
 export default function AdminLoginPage() {
@@ -46,6 +49,7 @@ export default function AdminLoginPage() {
 
   const [resetEmail, setResetEmail] = useState('');
   const [resetUntil, setResetUntil] = useState(0);
+  const [pendingGoogleCred, setPendingGoogleCred] = useState(null);
 
   const [error, setError] = useState('');
   const [errorCode, setErrorCode] = useState('');
@@ -151,6 +155,33 @@ export default function AdminLoginPage() {
     begin();
     try {
       const user = await signInWithGoogle(rememberMe);
+      await finishSignIn(user);
+    } catch (err) {
+      if (err?.code === 'auth/account-exists-with-different-credential') {
+        const pendingCred = extractPendingGoogleCredential(err);
+        const conflictEmail = err.customData?.email || pendingCred?.email || email;
+        setPendingGoogleCred(pendingCred);
+        if (conflictEmail) setEmail(conflictEmail);
+        setMode('link_account');
+        setSuccessMsg(`An existing administrator account was found for ${conflictEmail}. Please enter your password to link your Google identity.`);
+        return;
+      }
+      failedAttempt(err);
+      fail(friendlyAuthError(err), err?.code);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLinkAccountSubmit = async (e) => {
+    e.preventDefault();
+    if (locked) return fail(`Too many attempts. Try again in ${lockSeconds}s.`);
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) return fail('Enter your administrator password to link your account.');
+    if (!hasFirebase) return fail('Sign-in is not configured on this deployment.');
+    begin();
+    try {
+      const user = await resolveGoogleAccountConflictWithPassword(cleanEmail, password, pendingGoogleCred, rememberMe);
       await finishSignIn(user);
     } catch (err) {
       failedAttempt(err);
@@ -330,6 +361,11 @@ export default function AdminLoginPage() {
                 <button type="button" onClick={() => switchMode('login')} className={linkBtn}>← Back to sign in</button>
               </p>
             )}
+            {mode === 'link_account' && (
+              <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
+                <button type="button" onClick={() => switchMode('login')} className={linkBtn}>← Cancel and return to sign in</button>
+              </p>
+            )}
           </div>
 
           {!online && (
@@ -442,6 +478,17 @@ export default function AdminLoginPage() {
               <SubmitButton loading={loading} loadingText="Sending instructions..." disabled={resetSeconds > 0}>
                 {resetSeconds > 0 ? `Send again in ${resetSeconds}s` : 'Send reset instructions'}
               </SubmitButton>
+            </form>
+          )}
+
+          {mode === 'link_account' && (
+            <form onSubmit={handleLinkAccountSubmit} className="space-y-3 sm:space-y-3.5" aria-label="Link Google account">
+              <div className="p-3 bg-blue-950/60 border border-blue-500/40 rounded-xl text-blue-200 text-xs sm:text-sm leading-relaxed">
+                An existing administrator account was found for <strong className="text-white">{email}</strong>. Enter your staff password to securely link Google authentication to your existing profile.
+              </div>
+              <EmailField id="link-email" label="Administrator Email" value={email} onChange={setEmail} disabled={true} />
+              <PasswordField id="link-password" label="Account Password" value={password} onChange={setPassword} autoComplete="current-password" disabled={loading} capsOn={capsOn} onCapsChange={setCapsOn} invalid={Boolean(error)} />
+              <SubmitButton loading={loading} loadingText="Verifying &amp; linking accounts...">Verify &amp; Link Google Account</SubmitButton>
             </form>
           )}
 

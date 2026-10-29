@@ -320,6 +320,47 @@ The portal uses environment variables to allow seamless deployment across stagin
 
 ---
 
+## 🔐 Administrator Portal Architecture & Operations
+
+### 1. Dual-Provider Authentication & Account Linking
+The administrator portal (`/admin-portal`) supports both Email/Password and Google OAuth sign-in. To prevent duplicate accounts when a user attempts to sign in via Google using an email that was registered with a password:
+- The system intercepts `auth/account-exists-with-different-credential`.
+- The user is directed to the authenticated Account Linking flow where they verify their existing password.
+- Firebase `linkWithCredential` associates the Google provider to the existing account, preserving the canonical Firebase UID, permissions, and Firestore records (`admin_profiles/{uid}`).
+
+### 2. First-Administrator Provisioning (CLI)
+Administrator privileges are never granted via client-side code. First-time setup and root administrator elevation must be executed using the server-side CLI tool powered by the Firebase Admin SDK:
+
+```bash
+# Set Firebase Admin credentials
+export FIREBASE_SERVICE_ACCOUNT='{"type":"service_account",...}'
+
+# Run initialization for the director account
+npm run admin:init -- --email=director@focusacademyperambalur.com --role=owner
+```
+
+The script performs the following atomic operations:
+1. Validates the existence of the Firebase Auth account.
+2. Sets Firebase Custom Claims: `{ role: 'owner', admin: true }`.
+3. Idempotently updates the authoritative list in Firestore `academy_settings/main_config` under `authorizedAdmins`.
+4. Initializes or updates `admin_profiles/{uid}` with institutional metadata.
+
+### 3. Profile Image Pipeline (Firestore Base64)
+Profile avatars are processed locally using an HTML5 Canvas pipeline (`src/utils/imageProcessor.js`) before persistence:
+- **Dimensions:** Resized and center-cropped to 128×128 square dimensions.
+- **Compression:** Multi-pass JPEG compression (quality 0.82 -> 0.65 -> 0.50).
+- **Budget Guard:** Hard ceiling of 45 KB (`MAX_AVATAR_BASE64_BYTES = 46,080`), well within Firestore's 1 MiB document limit, leaving >95% document headroom for operational data.
+- **Security:** Guarded in `firestore.rules` preventing uploads exceeding 60,000 characters and restricting writes strictly to the profile owner.
+
+### 4. Phone Number Validation & Normalization
+Contact numbers across admission, enquiry, and administrator profiles are validated via `src/utils/phoneValidation.js`:
+- Supports Indian domestic mobile numbers (10 digits starting with 6–9).
+- Supports international E.164 formats (+1, +44, +65, +971, etc.) and `00` international dialing prefixes.
+- Tolerates spaces, parentheses, hyphens, and leading zeros.
+- Strictly rejects alphabetic characters and malformed lengths without silent corruption.
+
+---
+
 ## 🚢 Deployment & CI/CD Pipeline
 
 The project is structured for zero-configuration, zero-downtime deployment on edge hosting networks:

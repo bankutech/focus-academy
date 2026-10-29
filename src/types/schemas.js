@@ -3,22 +3,24 @@ export const sanitizeText = (str, maxLength = 100) => {
   return str.replace(/[<>'"`;]/g, '').trim().slice(0, maxLength);
 };
 
+import { validatePhoneNumber, formatPhoneNumber, normalizePhoneNumber } from '../utils/phoneValidation';
+export { validatePhoneNumber, formatPhoneNumber, normalizePhoneNumber };
+
 export const validateIndianMobile = (phone) => {
-  if (!phone) {
-    const error = 'Phone number is required.';
-    return { valid: false, error, message: error };
-  }
-  const cleanPhone = String(phone).replace(/[\s\-()]/g, '');
-  const regex = /^(?:\+91|91|0)?[6-9]\d{9}$/;
-  if (!regex.test(cleanPhone)) {
-    const error = 'Please enter a valid 10-digit Indian mobile number (e.g. 98424 51220).';
-    return { 
-      valid: false, 
-      error,
-      message: error 
+  const result = validatePhoneNumber(phone, { required: true });
+  if (!result.valid) {
+    return {
+      valid: false,
+      error: result.error || 'Please enter a valid mobile number.',
+      message: result.error || 'Please enter a valid mobile number.'
     };
   }
-  return { valid: true, sanitized: cleanPhone.slice(-10) };
+  return {
+    valid: true,
+    sanitized: result.countryCode === '+91' ? result.nationalNumber : result.e164,
+    e164: result.e164,
+    formatted: result.formatted
+  };
 };
 
 export const validateIndianPincode = (pincode) => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Users, 
   Layers, 
@@ -21,8 +21,10 @@ import { getVerifiedAdminEmail } from '../../services/adminIdentity';
 import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
 import { feeStatusBreakdown, batchOccupancy, monthlyCollections, rupees } from '../../components/admin/chartData';
 import { buildActionItems, unmetActionCount } from '../../components/admin/actionItems';
+import { formatPhoneNumber } from '../../utils/phoneValidation';
 
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState(null);
   const [batches, setBatches] = useState([]);
   const [obligations, setObligations] = useState([]);
@@ -139,7 +141,7 @@ export default function AdminDashboardPage() {
       value: metrics?.totalActiveBatches ?? 0,
       sub: 'Capped at 12 students / classroom',
       icon: Layers,
-      badge: '1:12 Ratio Guard',
+      badge: 'Classroom Cap: 12',
       badgeClass: 'bg-slate-50 text-slate-700 border-slate-200',
       link: '/admin-portal/batches'
     },
@@ -417,7 +419,20 @@ export default function AdminDashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {enrollments.slice(0, 10).map((enrItem) => (
-                  <tr key={enrItem.id} className="hover:bg-slate-50/70 transition-colors">
+                  <tr 
+                    key={enrItem.id} 
+                    onClick={() => navigate('/admin-portal/leads?source=enrollment')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate('/admin-portal/leads?source=enrollment');
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View enrollment details for ${enrItem.studentName}`}
+                    className="hover:bg-slate-50/70 transition-colors cursor-pointer focus:outline-none focus:bg-orange-50/50"
+                  >
                     <td className="py-2.5 px-3 font-mono font-bold text-brand text-[11px]">
                       {enrItem.id}
                     </td>
@@ -440,7 +455,7 @@ export default function AdminDashboardPage() {
                       )}
                     </td>
                     <td className="py-2.5 px-3 font-mono text-[11px] text-slate-700">
-                      +91 {enrItem.phone}
+                      {formatPhoneNumber(enrItem.phone)}
                     </td>
                     <td className="py-2.5 px-3 text-slate-500 font-mono text-[11px]">
                       {enrItem.enrolledAt ? String(enrItem.enrolledAt).split('T')[0] : 'Today'}

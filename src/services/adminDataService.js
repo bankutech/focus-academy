@@ -1185,6 +1185,52 @@ export const AdminDataService = {
     return admins;
   },
 
+  async getAdminProfile(uidOrEmail) {
+    if (!uidOrEmail) return null;
+    const key = String(uidOrEmail).trim().toLowerCase();
+    if (isLive()) {
+      try {
+        const docRef = doc(db, 'admin_profiles', key);
+        const snap = await this.withFirestoreTimeout(getDoc(docRef), 5000);
+        if (snap && snap.exists()) {
+          return snap.data();
+        }
+      } catch (err) {
+        console.warn('Firestore getAdminProfile warning:', err);
+      }
+    }
+    const store = loadLocalStore();
+    const profiles = store.adminProfiles || {};
+    return profiles[key] || null;
+  },
+
+  async saveAdminProfile(profileData, actor = 'admin') {
+    if (!profileData || (!profileData.uid && !profileData.email)) {
+      throw new Error('Valid admin profile data with uid or email is required.');
+    }
+    const key = String(profileData.uid || profileData.email).trim().toLowerCase();
+    const updatedRecord = {
+      ...profileData,
+      email: (profileData.email || '').trim().toLowerCase(),
+      updatedAt: new Date().toISOString(),
+      updatedBy: normalizeActorEmail(actor)
+    };
+
+    if (isLive()) {
+      try {
+        const docRef = doc(db, 'admin_profiles', key);
+        await this.withFirestoreTimeout(setDoc(docRef, updatedRecord, { merge: true }), 8000);
+      } catch (err) {
+        console.warn('Firestore saveAdminProfile warning:', err);
+      }
+    }
+    const store = loadLocalStore();
+    if (!store.adminProfiles) store.adminProfiles = {};
+    store.adminProfiles[key] = { ...(store.adminProfiles[key] || {}), ...updatedRecord };
+    saveLocalStore(store);
+    return updatedRecord;
+  },
+
   async logAudit({ actor = 'admin', action, entityType, entityId, details }) {
     const entry = {
       id: uid('LOG'),

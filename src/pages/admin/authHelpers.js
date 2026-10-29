@@ -14,6 +14,10 @@ const MESSAGES = {
   'auth/email-not-verified': 'Verify your email first. Open the link we sent you, then sign in.',
   'auth/unauthorized-domain': 'This website address is not authorized for Google sign-in.',
   'auth/operation-not-allowed': 'This sign-in method is not enabled yet.',
+  'auth/account-exists-with-different-credential': 'An account already exists with this email address. Sign in with your password to link your Google account.',
+  'auth/credential-already-in-use': 'This credential is already linked to another account.',
+  'auth/requires-recent-login': 'For security, please sign in again before making this change.',
+  'auth/provider-already-linked': 'This sign-in method is already linked to your account.',
 };
 
 export const friendlyAuthError = (err) => {

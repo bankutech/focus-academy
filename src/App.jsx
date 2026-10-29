@@ -108,6 +108,7 @@ export default function App() {
                   <Route path="ledger" element={<AdminLedgerPage />} />
                   <Route path="reminders" element={<AdminRemindersPage />} />
                   <Route path="reports" element={<AdminReportsPage />} />
+                  <Route path="events" element={<AdminAuditLogsPage />} />
                   <Route path="audit-logs" element={<AdminAuditLogsPage />} />
                   <Route path="settings" element={<AdminSettingsPage />} />
                   <Route path="*" element={<Navigate to="/admin-portal" replace />} />
