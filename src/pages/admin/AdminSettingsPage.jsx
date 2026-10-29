@@ -359,16 +359,6 @@ export default function AdminSettingsPage() {
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
               />
             </div>
-
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Academy Logo Path</label>
-              <input
-                type="text"
-                value={settings.logoUrl || '/logo.png'}
-                onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono"
-              />
-            </div>
           </div>
 
           <div className="pt-4 border-t border-slate-100 flex justify-end">

@@ -6,8 +6,7 @@ import {
   AlertCircle, 
   CheckCircle2, 
   X, 
-  ShieldAlert,
-  ChevronLeft,
+  ChevronLeft, 
   ChevronRight
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
@@ -22,10 +21,6 @@ export default function AdminFeesPage() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
-
-  const [waiveModalObligation, setWaiveModalObligation] = useState(null);
-  const [waiveAmount, setWaiveAmount] = useState('');
-  const [waiveReason, setWaiveReason] = useState('');
 
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
@@ -51,39 +46,6 @@ export default function AdminFeesPage() {
     }
     loadData();
   }, [searchParams]);
-
-  const handleOpenWaive = (obl) => {
-    setWaiveModalObligation(obl);
-    setWaiveAmount(obl.balance);
-    setWaiveReason('');
-    setFormError('');
-  };
-
-  const handleExecuteWaive = async (e) => {
-    e.preventDefault();
-    setFormError('');
-
-    if (!waiveReason || waiveReason.trim().length < 5) {
-      setFormError('A valid reason of at least 5 characters is mandatory for audit compliance.');
-      return;
-    }
-
-    try {
-      const currentAdmin = requireAdminEmail();
-
-      await AdminDataService.waiveFeeObligation(
-        waiveModalObligation.id,
-        waiveAmount,
-        waiveReason,
-        currentAdmin
-      );
-      setFormSuccess(`Waived ₹${waiveAmount} for ${waiveModalObligation.studentName}.`);
-      setWaiveModalObligation(null);
-      await loadData();
-    } catch (err) {
-      setFormError(err.message || 'Waiver failed.');
-    }
-  };
 
   const handleGenerateNextCycle = async () => {
     setFormError('');
@@ -140,7 +102,7 @@ export default function AdminFeesPage() {
             Recurring Fee Schedules & Obligations
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Track student billing cycles, monthly dues, fee waivers, and due date schedules
+            Track student billing cycles, monthly dues, and due date schedules
           </p>
         </div>
 
@@ -274,16 +236,6 @@ export default function AdminFeesPage() {
 
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end space-x-1.5">
-                        {obl.balance > 0 && obl.status !== 'waived' && (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenWaive(obl)}
-                            className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-md font-bold text-[11px] cursor-pointer"
-                            title="Waive Fee"
-                          >
-                            Waive
-                          </button>
-                        )}
                         {obl.balance > 0 && obl.status !== 'paid' && obl.status !== 'waived' ? (
                           <Link
                             to={`/admin-portal/ledger?studentId=${obl.studentId}&obligationId=${obl.id}`}
@@ -338,85 +290,6 @@ export default function AdminFeesPage() {
           </div>
         )}
       </div>
-
-      {waiveModalObligation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-              <div className="flex items-center space-x-2">
-                <ShieldAlert className="w-5 h-5 text-purple-600" />
-                <h2 className="text-base font-extrabold text-[#0F172A]">
-                  Waive Fee Obligation
-                </h2>
-              </div>
-              <button onClick={() => setWaiveModalObligation(null)} className="text-slate-400 hover:text-slate-700">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleExecuteWaive} className="space-y-4 text-xs">
-              <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-purple-700">Student:</span>
-                  <span className="font-bold text-purple-900">{waiveModalObligation.studentName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-purple-700">Cycle:</span>
-                  <span className="font-bold text-purple-900">{waiveModalObligation.billingCycle}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-purple-700">Current Balance:</span>
-                  <span className="font-extrabold text-purple-900">₹{waiveModalObligation.balance}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Amount to Waive (₹) *
-                </label>
-                <input
-                  type="number"
-                  max={waiveModalObligation.balance}
-                  value={waiveAmount}
-                  onChange={(e) => setWaiveAmount(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Reason for Waiver (Audit Logged) *
-                </label>
-                <textarea
-                  rows="3"
-                  value={waiveReason}
-                  onChange={(e) => setWaiveReason(e.target.value)}
-                  placeholder="e.g. Merit scholarship approval by campus director, sibling concession"
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-slate-200 flex justify-end space-x-2">
-                <button
-                  type="button"
-                  onClick={() => setWaiveModalObligation(null)}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg cursor-pointer"
-                >
-                  Confirm Waiver
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

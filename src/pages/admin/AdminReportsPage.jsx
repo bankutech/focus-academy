@@ -384,28 +384,19 @@ export default function AdminReportsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 print:hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden">
         <ChartCard title="Payment Methods" subtitle="Share of verified collections">
           <DonutChart data={paymentMethodSplit(payments)} centerLabel="Collected" label="Collections by payment method" />
         </ChartCard>
         <ChartCard title="Students by Class" subtitle="Active roster">
-          <BarChart data={studentsByGrade(students)} label="Active students per class" />
+          <BarChart data={studentsByGrade(students)} height={240} label="Active students per class" />
         </ChartCard>
         <ChartCard title="Outstanding by Batch" subtitle="Unpaid balance per classroom">
-          <BarChart data={outstandingByBatch(obligations, batches)} format={rupees} label="Outstanding balance per batch" />
+          <BarChart data={outstandingByBatch(obligations, batches)} height={240} format={rupees} label="Outstanding balance per batch" />
         </ChartCard>
         <ChartCard title="Monthly Trend" subtitle="Collections across six months">
-          <BarChart data={monthlyCollections(payments)} format={rupees} label="Collections per month" />
+          <BarChart data={monthlyCollections(payments)} height={240} format={rupees} label="Collections per month" />
         </ChartCard>
-      </div>
-
-      <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-blue-900 text-xs flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
-          <span>
-            <strong>Data Protection Notice:</strong> Exported reports contain sensitive student and guardian contact information. Treat exported CSV files confidentially.
-          </span>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
