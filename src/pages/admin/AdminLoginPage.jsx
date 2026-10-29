@@ -142,6 +142,7 @@ export default function AdminLoginPage() {
       return;
     }
     clearFailures();
+    try { localStorage.removeItem('focus_demo_admin'); } catch {}
     navigate(from, { replace: true });
   };
 

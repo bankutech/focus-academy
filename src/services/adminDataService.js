@@ -846,7 +846,7 @@ export const summariseRecordedCollections = (payments = [], date) => {
   };
 };
 
-const isLive = () => isFirebaseConfigured() && Boolean(db) && !(typeof window !== 'undefined' && window.__E2E_SEED__);
+const isLive = () => isFirebaseConfigured() && Boolean(db) && !(typeof window !== 'undefined' && (window.__E2E_SEED__ || window.localStorage?.getItem('focus_demo_admin')));
 
 let sessionCache = null;
 
@@ -856,8 +856,12 @@ subscribeVerifiedAdmin((admin) => {
 
 export const dataUnavailable = (err) => {
   console.error('Firestore request failed:', err);
-  const error = new Error('The database could not be reached. Nothing was changed. Please check your connection and try again.');
-  error.code = 'data-unavailable';
+  const isPermission = err?.code === 'permission-denied' || String(err?.message || '').toLowerCase().includes('permission');
+  const message = isPermission
+    ? 'Access denied by Firestore security rules. Your account is not authorized as an administrator, or your session expired. Please sign in at /admin-portal/login with an authorized administrator email.'
+    : 'The database could not be reached. Nothing was changed. Please check your connection and try again.';
+  const error = new Error(message);
+  error.code = isPermission ? 'permission-denied' : 'data-unavailable';
   return error;
 };
 

@@ -43,6 +43,7 @@ export default function AdminLayout() {
     } catch {
       setVerifiedAdmin(null);
     }
+    localStorage.removeItem('focus_demo_admin');
     setVerifiedAdmin(null);
     navigate('/admin-portal/login', { replace: true });
   };
@@ -98,7 +99,7 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="admin-portal-root min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body w-full max-w-full overflow-x-clip">
+    <div className="admin-portal-root min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body w-full max-w-full">
       <header className="bg-[#0F172A] text-white border-b border-[#1E293B] sticky top-0 z-40 shadow-xs w-full max-w-full">
         <div className="w-full px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 max-w-full">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
@@ -173,7 +174,7 @@ export default function AdminLayout() {
       </header>
 
       <div className="flex-1 flex min-h-[calc(100vh-4rem)]">
-        <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 shrink-0 sticky top-16 self-start h-[calc(100vh-4rem)] justify-between select-none z-30">
+        <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200 fixed top-16 left-0 bottom-0 z-30 justify-between select-none overflow-y-auto">
           <div className="p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
             <div>
               <div className="text-[10px] uppercase tracking-wider font-extrabold text-slate-400 px-3 pb-2">
@@ -292,7 +293,7 @@ export default function AdminLayout() {
           </div>
         )}
 
-        <main className="flex-1 min-w-0 bg-[#F8FAFC] p-3 sm:p-6 lg:p-8 max-w-full overflow-x-clip">
+        <main className="flex-1 min-w-0 lg:pl-64 bg-[#F8FAFC] p-3 sm:p-6 lg:p-8 max-w-full overflow-x-clip">
           <div className="max-w-screen-2xl mx-auto space-y-6 min-w-0 max-w-full">
             <Outlet />
           </div>

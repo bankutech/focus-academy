@@ -15,6 +15,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 
+  await getServices();
   const status = getServiceStatus();
   const nodeMajor = Number(process.versions.node.split('.')[0]);
   const expected = expectedProjectId();
