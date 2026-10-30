@@ -91,7 +91,7 @@ export default function Navbar() {
               <span>Evening Batches</span>
             </span>
             <span className="text-slate-300 font-medium hidden sm:inline">
-              Mon – Sat: 4:00 PM – 9:00 PM
+              Mon – Sat: 4:30 PM – 9:00 PM
             </span>
             <span className="text-slate-400 hidden md:inline">
               Thiripura Complex, Thoramangalam, Perambalur

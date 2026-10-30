@@ -13,7 +13,6 @@ import {
   LogOut, 
   Menu, 
   X,
-  Settings as SettingsIcon,
   Keyboard,
   UserPlus,
   Lock
@@ -91,11 +90,10 @@ export default function AdminLayout() {
     { name: 'Batches', path: '/admin-portal/batches', icon: Layers },
     { name: 'Students', path: '/admin-portal/students', icon: Users },
     { name: 'Fee Schedules', path: '/admin-portal/fees', icon: CreditCard, permission: 'canWaiveFees' },
-    { name: 'Ledger & Payments', path: '/admin-portal/ledger', icon: Receipt, permission: 'canRecordPayments' },
+    { name: 'Payments & Receipts', path: '/admin-portal/ledger', icon: Receipt, permission: 'canRecordPayments' },
     { name: 'WhatsApp Reminders', path: '/admin-portal/reminders', icon: MessageSquare, permission: 'canTriggerReminders' },
-    { name: 'Reports & Analytics', path: '/admin-portal/reports', icon: BarChart3, permission: 'canRecordPayments' },
-    { name: 'Events', path: '/admin-portal/events', icon: ShieldAlert, permission: 'canManageSettings' },
-    { name: 'Academy Settings', path: '/admin-portal/settings', icon: SettingsIcon, permission: 'canManageSettings' }
+    { name: 'Analytics', path: '/admin-portal/reports', icon: BarChart3, permission: 'canRecordPayments' },
+    { name: 'Events', path: '/admin-portal/events', icon: ShieldAlert, permission: 'canManageSettings' }
   ];
   const visibleNavItems = navItems.filter(
     (item) => !item.permission || AdminDataService.hasPermission(userEmail, item.permission)
@@ -308,7 +306,7 @@ export default function AdminLayout() {
 
             <div className="space-y-2 mb-4">
               <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
-                <span className="text-slate-700 font-medium">Record Payment / Ledger</span>
+                <span className="text-slate-700 font-medium">Record Payment / Receipts</span>
                 <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">Alt + P</kbd>
               </div>
               <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
@@ -320,7 +318,7 @@ export default function AdminLayout() {
                 <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">Alt + B</kbd>
               </div>
               <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">
-                <span className="text-slate-700 font-medium">Reports &amp; Cash Till</span>
+                <span className="text-slate-700 font-medium">Analytics &amp; Cash Till</span>
                 <kbd className="px-2 py-1 bg-white border border-slate-300 rounded-none font-mono font-bold text-slate-800 shadow-2xs">Alt + R</kbd>
               </div>
               <div className="flex justify-between items-center p-2 rounded-none bg-slate-50 border border-slate-100">

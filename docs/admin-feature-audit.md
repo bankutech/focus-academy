@@ -98,7 +98,7 @@ Verification commands run:
 | Fee Schedules | Works | Cycle generation, waivers; load failures reported. |
 | Ledger & Payments | Works | Record/reverse/till/receipt printing + new status column, filters and totals. |
 | WhatsApp Reminders | Works, config-dependent | Needs `WHATSAPP_CLOUD_API_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID` for automated delivery; without them the API honestly reports `deliveryChannel: manual_click_to_chat_fallback` and the UI opens a click-to-chat message. |
-| Reports & Analytics | Works | Exports, reconciliation, collection reports; load failures now shown with Retry. |
+| Analytics | Works | Exports, reconciliation, collection reports; load failures now shown with Retry. |
 | Audit Logs | Works | JSON/CSV export; load failures now shown with Retry. |
 | Academy Settings | Works | Persists to `academy_settings/main_config`; role changes run in a transaction with read-back verification; `authorizedAdmins` only editable by owners (rules + service). |
 

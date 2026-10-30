@@ -70,13 +70,27 @@ const DEFAULT_ADMIN_ALLOWLIST = [
 
 export const getAdminAllowlist = () => {
   const envList = import.meta.env?.VITE_ADMIN_ALLOWLIST;
-  if (envList && typeof envList === 'string') {
-    const parsed = envList.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
-    if (parsed.length > 0) {
-      return Array.from(new Set([...DEFAULT_ADMIN_ALLOWLIST, ...parsed]));
-    }
+  const envAdmins = (envList && typeof envList === 'string')
+    ? envList.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
+    : [];
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('focus_academy_admin_data_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const dynamicAdmins = parsed?.settings?.authorizedAdmins;
+        if (Array.isArray(dynamicAdmins) && dynamicAdmins.length > 0) {
+          const activeEmails = dynamicAdmins
+            .filter((adm) => adm.active !== false && adm.email)
+            .map((adm) => String(adm.email).trim().toLowerCase());
+          return Array.from(new Set([...activeEmails, ...envAdmins]));
+        }
+      }
+    } catch {}
   }
-  return DEFAULT_ADMIN_ALLOWLIST;
+
+  return Array.from(new Set([...DEFAULT_ADMIN_ALLOWLIST, ...envAdmins]));
 };
 
 export const isUserAdmin = (user, customClaims = {}) => {

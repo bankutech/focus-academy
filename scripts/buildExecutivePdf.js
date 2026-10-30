@@ -800,7 +800,7 @@ async function generateExecutivePdf() {
         <strong>Thoramangalam Campus Address:</strong><br>
         Focus Academy (ஃபோகஸ் அகாடமி), 1st & 2nd Floors, Thiripura Complex, Rajanagar, Thoramangalam,<br>
         Perambalur, Tamil Nadu &ndash; 621220 (Landmarks: Opposite EB Office, near Malar Hospital, 2 mins from Four Roads).<br><br>
-        <strong>Academic Hours:</strong> Monday to Saturday: 4:00 PM &ndash; 9:00 PM | Sunday: By Appointment<br>
+        <strong>Academic Hours:</strong> Monday to Saturday: 4:30 PM &ndash; 9:00 PM | Sunday: By Appointment<br>
         <strong>Helpline / Direct Call:</strong> +91 98424 51220 | <strong>Campus Email:</strong> focusacademy.perambalur@gmail.com<br>
         <strong>Live Production Web Portal:</strong> https://focus-academy-virid.vercel.app<br>
         <strong>Administrative Console:</strong> https://focus-academy-virid.vercel.app/admin/login

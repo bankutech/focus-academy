@@ -34,7 +34,7 @@ describe('Focus Academy Campus Configuration & Client Profile', () => {
 
   it('specifies the 3 disciplined evening batch slots and strict 12-student limit', () => {
     expect(CAMPUS_CONFIG.timings.workingDays).toBe('Monday – Saturday');
-    expect(CAMPUS_CONFIG.timings.dailyHours).toBe('4:00 PM – 9:00 PM');
+    expect(CAMPUS_CONFIG.timings.dailyHours).toBe('4:30 PM – 9:00 PM');
     expect(CAMPUS_CONFIG.academicStats.batchSizeLimit).toBe('Max 12 Students');
     expect(CAMPUS_CONFIG.academicStats.studentTeacherRatio).toBe('1 : 12');
 

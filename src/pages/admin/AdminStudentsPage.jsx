@@ -820,7 +820,7 @@ export default function AdminStudentsPage() {
                     }}
                     tabIndex={0}
                     role="button"
-                    aria-label={`View ledger and profile for ${s.studentName}`}
+                    aria-label={`View fee history and profile for ${s.studentName}`}
                     className="hover:bg-slate-50/80 transition-colors cursor-pointer focus:outline-none focus:bg-orange-50/50"
                   >
                     <td className="py-3.5 px-4">
@@ -909,10 +909,10 @@ export default function AdminStudentsPage() {
                             handleViewLedger(s);
                           }}
                           className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-[#0F172A] rounded-md font-bold text-[11px] flex items-center space-x-1 cursor-pointer"
-                          title="View Ledger & Profile"
+                          title="View Fee History & Profile"
                         >
                           <Receipt className="w-3 h-3 text-brand" />
-                          <span>Ledger</span>
+                          <span>Fee History</span>
                         </button>
 
                         <button
@@ -2233,7 +2233,7 @@ export default function AdminStudentsPage() {
 
                 <div>
                   <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Recorded Assessment Ledger
+                    Recorded Assessment History
                   </h3>
                   {studentTestRecords.length > 0 ? (
                     <div className="border border-slate-200 rounded-lg overflow-hidden">

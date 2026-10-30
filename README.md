@@ -33,7 +33,7 @@ Educational coaching centers in tier-2 and tier-3 regional hubs often face a cri
 | **Local Landmarks** | Near Malar Hospital / Opp. EB Office (2 minutes from Four Roads junction) |
 | **Curriculum Boards** | Tamil Nadu State Board (Samacheer Kalvi), CBSE (NCERT), ICSE / ISC |
 | **Grades Catered** | Primary Foundations (Classes 1–5), Middle School (Classes 6–8), High School & Senior STEM (Classes 9–12) |
-| **Evening Schedule** | Monday – Saturday: 4:00 PM – 9:00 PM (Batch 1: 4:30–6:00, Batch 2: 6:00–7:30, Batch 3: 7:30–9:00) |
+| **Evening Schedule** | Monday – Saturday: 4:30 PM – 9:00 PM (Batch 1: 4:30–6:00, Batch 2: 6:00–7:30, Batch 3: 7:30–9:00) |
 | **Sunday Operations** | Closed for regular lectures • Special doubt clearance & mock test review by appointment |
 | **Primary Desk Phone** | `+91 98424 51220` |
 | **WhatsApp Direct Desk**| `+91 98424 51220` |

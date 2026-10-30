@@ -332,7 +332,7 @@ export default function CoursesPage() {
                     </div>
                     <div className="text-right">
                       <span className="block text-xs text-slate-500">Timings</span>
-                      <span className="text-xs font-bold text-brand">4:00 PM – 9:00 PM</span>
+                      <span className="text-xs font-bold text-brand">4:30 PM – 9:00 PM</span>
                     </div>
                   </div>
 

@@ -289,7 +289,7 @@ export default function HomePage() {
               Class Timetable & Daily Schedule
             </h2>
             <p className="text-base sm:text-lg text-slate-600 mt-2.5 leading-relaxed">
-              Operating Monday through Saturday from 4:00 PM to 9:00 PM at Thiripura Complex. Structured in three 90-minute evening slots synchronized with school dismissals and town bus arrivals at Four Roads and Trichy Main Road.
+              Operating Monday through Saturday from 4:30 PM to 9:00 PM at Thiripura Complex. Structured in three 90-minute evening slots synchronized with school dismissals and town bus arrivals at Four Roads and Trichy Main Road.
             </p>
           </div>
 

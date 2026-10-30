@@ -26,14 +26,14 @@ export default function ContactPage() {
                 Visit Our Campus & Classrooms
               </h1>
               <p className="mt-2 text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed">
-                Parents are warmly invited to visit our classrooms, inspect our study facilities, and discuss batch admissions between 4:00 PM and 9:00 PM.
+                Parents are warmly invited to visit our classrooms, inspect our study facilities, and discuss batch admissions between 4:30 PM and 9:00 PM.
               </p>
             </div>
 
             <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-xs flex items-center space-x-3 shrink-0">
               <Clock className="w-6 h-6 text-emerald-600" />
               <div className="text-xs">
-                <span className="font-bold text-[#0F172A] block">Mon – Sat: 4:00 PM – 9:00 PM</span>
+                <span className="font-bold text-[#0F172A] block">Mon – Sat: 4:30 PM – 9:00 PM</span>
                 <span className="text-slate-500">Sunday: By Appointment</span>
               </div>
             </div>

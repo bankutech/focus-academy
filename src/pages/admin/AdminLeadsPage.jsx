@@ -1107,7 +1107,7 @@ export default function AdminLeadsPage() {
                         <p className="text-slate-400">No fee obligation or payment has been generated for this enrollment yet.</p>
                       )}
                       <p className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded p-2">
-                        No payment gateway is connected to the enrollment form, so fees stay unpaid until an administrator records a verified transaction in Ledger &amp; Payments.
+                        No payment gateway is connected to the enrollment form, so fees stay unpaid until an administrator records a verified transaction in Payments &amp; Receipts.
                       </p>
                     </div>
                   </div>
@@ -1240,7 +1240,7 @@ export default function AdminLeadsPage() {
                   </div>
                   <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
                     <li>Officially register student in the active <strong>Students Roster</strong>.</li>
-                    <li>Generate initial monthly fee obligation (<strong>₹{statusModal.monthlyFee ? Number(statusModal.monthlyFee).toLocaleString('en-IN') : '1,800'}</strong>) in Ledger &amp; Invoices.</li>
+                    <li>Generate initial monthly fee obligation (<strong>₹{statusModal.monthlyFee ? Number(statusModal.monthlyFee).toLocaleString('en-IN') : '1,800'}</strong>) in Payments &amp; Receipts.</li>
                     <li>Update classroom batch seat occupancy.</li>
                   </ul>
                 </div>

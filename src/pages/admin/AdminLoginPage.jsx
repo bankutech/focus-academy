@@ -17,6 +17,7 @@ import {
 } from '../../services/firebase';
 import { EmailField, PasswordField, TextField, SubmitButton, GoogleButton, Divider } from './AuthFields';
 import { friendlyAuthError, passwordStrength, readLock, recordFailure, clearFailures } from './authHelpers';
+import { AdminDataService } from '../../services/adminDataService';
 
 const NO_ACCESS = 'This account is not set up for administrator access. Ask the academy owner to add you.';
 const INVITE_ONLY = 'Registration is limited to invited administrators. Ask the academy owner to add your email first.';
@@ -140,7 +141,17 @@ export default function AdminLoginPage() {
   };
 
   const finishSignIn = async (user) => {
-    if (!isUserAdmin(user)) {
+    let authorized = isUserAdmin(user);
+    if (!authorized) {
+      try {
+        const admins = await AdminDataService.getAuthorizedAdmins();
+        const userEmail = (user?.email || '').trim().toLowerCase();
+        if (Array.isArray(admins) && admins.some((a) => a.active !== false && String(a.email || '').trim().toLowerCase() === userEmail)) {
+          authorized = true;
+        }
+      } catch {}
+    }
+    if (!authorized) {
       await logOutAdmin();
       fail(NO_ACCESS);
       return;
@@ -230,7 +241,16 @@ export default function AdminLoginPage() {
     if (!cleanEmail) return fail('Enter your email address.');
     if (!passwordStrength(regPassword).acceptable) return fail('Choose a stronger password: at least 10 characters with a letter and a number.');
     if (!acceptTerms) return fail('Please accept the Terms and Privacy Policy to continue.');
-    if (!isUserAdmin({ email: cleanEmail })) return fail(INVITE_ONLY);
+    let authorized = isUserAdmin({ email: cleanEmail });
+    if (!authorized) {
+      try {
+        const admins = await AdminDataService.getAuthorizedAdmins();
+        if (Array.isArray(admins) && admins.some((a) => a.active !== false && String(a.email || '').trim().toLowerCase() === cleanEmail)) {
+          authorized = true;
+        }
+      } catch {}
+    }
+    if (!authorized) return fail(INVITE_ONLY);
     if (!hasFirebase) return fail('Sign-in is not configured on this deployment.');
     begin();
     try {
@@ -319,7 +339,7 @@ export default function AdminLoginPage() {
               Administrator access only.
             </h1>
             <p className="mt-2 lg:mt-3 text-sm sm:text-base xl:text-lg text-slate-300 leading-relaxed max-w-lg">
-              Sign in with your academy staff account to review admission enquiries, batch capacity, fee ledgers and audit records.
+              Sign in with your academy staff account to review admission enquiries, batch capacity, fee payments and audit records.
             </p>
           </div>
         </div>

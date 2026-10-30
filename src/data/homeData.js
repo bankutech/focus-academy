@@ -128,7 +128,7 @@ export const HOME_FEATURES = [
   },
   {
     title: 'Evening Batches Suited for School Hours',
-    desc: 'Convenient 4:00 PM – 9:00 PM evening timings synchronized with school & town buses via Four Roads and Trichy Main Road.',
+    desc: 'Convenient 4:30 PM – 9:00 PM evening timings synchronized with school & town buses via Four Roads and Trichy Main Road.',
     icon: Clock,
   },
 ];

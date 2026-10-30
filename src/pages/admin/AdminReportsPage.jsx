@@ -213,7 +213,7 @@ export default function AdminReportsPage() {
 
   const ensureExportAllowed = () => {
     try {
-      AdminDataService.verifyPermission(requireAdminEmail(), 'canExportData', 'exporting institutional reports');
+      AdminDataService.verifyPermission(requireAdminEmail(), 'canExportData', 'exporting institutional analytics');
       return true;
     } catch (err) {
       setLoadError(err.message || 'You are not authorized to export institutional data.');
@@ -241,7 +241,7 @@ export default function AdminReportsPage() {
 
   const exportFinancialsCSV = () => {
     if (!ensureExportAllowed()) return;
-    const headers = ['Receipt No', 'Date', 'Student ID', 'Student Name', 'Amount (INR)', 'Payment Mode', 'Reference / UTR', 'Recorded By', 'Ledger Status'];
+    const headers = ['Receipt No', 'Date', 'Student ID', 'Student Name', 'Amount (INR)', 'Payment Mode', 'Reference / UTR', 'Recorded By', 'Receipt Status'];
     const rows = payments.map(p => [
       p.receiptNumber,
       p.paymentDate,
@@ -324,7 +324,7 @@ export default function AdminReportsPage() {
     return (
       <div className="p-8 text-center bg-white rounded-xl border border-slate-200">
         <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-xs font-semibold text-slate-500">Compiling Institutional Analytics &amp; Reports...</p>
+        <p className="text-xs font-semibold text-slate-500">Compiling Analytics...</p>
       </div>
     );
   }
@@ -346,10 +346,10 @@ export default function AdminReportsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
-            Institutional Reports &amp; Analytics
+            Analytics
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Real-time enrollment quotas, administrator collection accountability, date-wise reports, and ledger reconciliation.
+            Real-time enrollment quotas, administrator collection accountability, date-wise summaries, and payment reconciliation.
           </p>
         </div>
 
@@ -467,7 +467,7 @@ export default function AdminReportsPage() {
             <div className="flex items-center space-x-2">
               <Scale className="w-5 h-5 text-brand" />
               <h2 className="text-sm font-black text-[#0F172A] uppercase tracking-wide">
-                Financial Ledger Reconciliation
+                Payment &amp; Fee Reconciliation
               </h2>
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
@@ -482,7 +482,7 @@ export default function AdminReportsPage() {
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#0F172A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${reconciling ? 'animate-spin' : ''}`} />
-            <span>{reconciling ? 'Auditing Ledger...' : 'Run Ledger Reconciliation Audit'}</span>
+            <span>{reconciling ? 'Auditing Payments...' : 'Run Payment Reconciliation Audit'}</span>
           </button>
         </div>
 
@@ -500,7 +500,7 @@ export default function AdminReportsPage() {
               )}
               <span>
                 {reconciliationResult.reconciled 
-                  ? 'All Ledger Transactions Fully Reconciled (0 Discrepancies)' 
+                  ? 'All Payment Transactions Fully Reconciled (0 Discrepancies)' 
                   : `Discrepancies Detected (${reconciliationResult.totalDiscrepancies})`}
               </span>
             </div>
@@ -512,7 +512,7 @@ export default function AdminReportsPage() {
             </div>
           </div>
         ) : (
-          <p className="text-xs text-slate-400">Click &quot;Run Ledger Reconciliation Audit&quot; to verify ledger totals against transaction receipts.</p>
+          <p className="text-xs text-slate-400">Click &quot;Run Payment Reconciliation Audit&quot; to verify fee totals against transaction receipts.</p>
         )}
       </div>
 
@@ -578,7 +578,7 @@ export default function AdminReportsPage() {
               </h2>
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Day-by-day verified collections ledger with payment method segregation.
+              Day-by-day verified collections summary with payment method segregation.
             </p>
           </div>
 
@@ -635,7 +635,7 @@ export default function AdminReportsPage() {
               </h2>
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Compare recorded ledger receipts with independently counted cash and verified UPI / bank settlements. Differences are flagged; ledger receipts are never altered.
+              Compare recorded payment receipts with independently counted cash and verified UPI / bank settlements. Differences are flagged; payment receipts are never altered.
             </p>
           </div>
         </div>
@@ -672,7 +672,7 @@ export default function AdminReportsPage() {
                 })}
                 className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200 cursor-pointer"
               >
-                Prefill from ledger
+                Prefill from receipts
               </button>
               <span className="text-[11px] text-slate-500 pb-1.5">
                 Recorded net: <strong className="font-mono text-slate-800">₹{recordedForReconDate.netTotal.toLocaleString('en-IN')}</strong>
@@ -1080,7 +1080,7 @@ export default function AdminReportsPage() {
         </div>
         <div className="text-right text-xs text-slate-300">
           <p className="font-mono">Academic Year 2025–2026</p>
-          <p className="text-[10px] text-slate-400">Tamper-evident administrative reporting ledger</p>
+          <p className="text-[10px] text-slate-400">Tamper-evident administrative reporting log</p>
         </div>
       </div>
       {openTillModal && (

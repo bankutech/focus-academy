@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { onAdminAuthStateChanged, isFirebaseConfigured, logOutAdmin, getAdminAllowlist } from '../../services/firebase';
 import { setVerifiedAdmin } from '../../services/adminIdentity';
+import { AdminDataService } from '../../services/adminDataService';
 import AdminAccessDeniedPage from './AdminAccessDeniedPage';
 
 export default function AdminProtectedRoute({ children }) {
@@ -45,14 +46,24 @@ export default function AdminProtectedRoute({ children }) {
       setAuthState((prev) => (prev.loading ? { loading: false, user: null, isAdmin: false } : prev));
     }, 1200);
 
-    const unsubscribe = onAdminAuthStateChanged((userProfile) => {
+    const unsubscribe = onAdminAuthStateChanged(async (userProfile) => {
       clearTimeout(safetyTimer);
       if (!userProfile) {
         setVerifiedAdmin(null);
         setAuthState({ loading: false, user: null, isAdmin: false });
         return;
       }
-      const isAdmin = Boolean(userProfile.isAdmin);
+      let isAdmin = Boolean(userProfile.isAdmin);
+      if (!isAdmin) {
+        try {
+          const admins = await AdminDataService.getAuthorizedAdmins();
+          const email = (userProfile.email || '').trim().toLowerCase();
+          if (Array.isArray(admins) && admins.some((a) => a.active !== false && String(a.email || '').trim().toLowerCase() === email)) {
+            isAdmin = true;
+            userProfile.isAdmin = true;
+          }
+        } catch {}
+      }
       setVerifiedAdmin(isAdmin ? userProfile : null);
       setAuthState({ loading: false, user: userProfile, isAdmin });
     });

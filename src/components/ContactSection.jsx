@@ -379,7 +379,7 @@ export default function ContactSection({ isPage = false }) {
 
                 <div className="p-3 bg-white rounded-md border border-[#E2E8F0] text-xs text-slate-600 flex items-center space-x-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Small batches guaranteed (Strictly Max 12 Students) • Mon–Sat Evening Schedule (4 PM – 9 PM)</span>
+                  <span>Small batches guaranteed (Strictly Max 12 Students) • Mon–Sat Evening Schedule (4:30 PM – 9 PM)</span>
                 </div>
 
                 <button

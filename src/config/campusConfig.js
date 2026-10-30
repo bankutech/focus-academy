@@ -40,7 +40,7 @@ export const CAMPUS_CONFIG = {
 
   timings: {
     workingDays: 'Monday – Saturday',
-    dailyHours: '4:00 PM – 9:00 PM',
+    dailyHours: '4:30 PM – 9:00 PM',
     sundayPolicy: 'Closed Sundays except mock test reviews & doubt sessions by appointment',
     slots: [
       {

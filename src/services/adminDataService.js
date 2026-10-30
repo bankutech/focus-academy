@@ -1221,6 +1221,196 @@ export const AdminDataService = {
     return admins;
   },
 
+  async addAuthorizedAdmin({ email, name, role = 'administrator' }, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageAdmins', 'adding administrator');
+    const validRoles = ADMIN_ROLES;
+    if (!validRoles.includes(role)) {
+      throw new Error(`Invalid role '${role}'. Allowed roles: ${validRoles.join(', ')}.`);
+    }
+
+    const cleanEmail = String(email || '').toLowerCase().trim();
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      throw new Error('A valid administrator email address is required.');
+    }
+
+    const cleanName = String(name || '').trim() || cleanEmail.split('@')[0];
+    const actorEmail = String(normalizeActorEmail(actor) || '').toLowerCase().trim();
+    const actorRole = this.getUserRole(actor);
+
+    if ((ROLE_RANK[role] || 0) > (ROLE_RANK[actorRole] || 0)) {
+      throw new Error(`Unauthorized: your role '${actorRole}' cannot grant the higher role '${role}'.`);
+    }
+
+    const applyAdd = (settings) => {
+      const admins = settings.authorizedAdmins ? [...settings.authorizedAdmins] : [...SEED_SETTINGS.authorizedAdmins];
+      const targetIdx = admins.findIndex((a) => String(a.email).toLowerCase() === cleanEmail);
+      if (targetIdx !== -1 && admins[targetIdx].active !== false) {
+        throw new Error(`Administrator '${cleanEmail}' is already authorized with role '${admins[targetIdx].role}'.`);
+      }
+      if (targetIdx !== -1) {
+        admins[targetIdx] = {
+          ...admins[targetIdx],
+          name: cleanName,
+          role,
+          active: true,
+          updatedAt: new Date().toISOString(),
+          updatedBy: actorEmail
+        };
+      } else {
+        admins.push({
+          email: cleanEmail,
+          name: cleanName,
+          role,
+          active: true,
+          addedAt: new Date().toISOString(),
+          addedBy: actorEmail
+        });
+      }
+      settings.authorizedAdmins = admins;
+      return admins;
+    };
+
+    const auditEntry = {
+      id: uid('LOG'),
+      timestamp: new Date().toISOString(),
+      actor: actorEmail,
+      action: 'ADMIN_ADDED',
+      entityType: 'admin_user',
+      entityId: cleanEmail,
+      details: `Authorized new administrator '${cleanEmail}' (${cleanName}) with role '${role}'.`
+    };
+
+    if (isLive()) {
+      const settingsRef = doc(db, 'academy_settings', 'main_config');
+      let persistedAdmins;
+      try {
+        await runTransaction(db, async (tx) => {
+          const snap = await tx.get(settingsRef);
+          const current = snap.exists()
+            ? snap.data()
+            : { ...SEED_SETTINGS, authorizedAdmins: [...SEED_SETTINGS.authorizedAdmins] };
+          persistedAdmins = applyAdd(current);
+          tx.set(settingsRef, { ...current, updatedAt: auditEntry.timestamp, updatedBy: actorEmail }, { merge: true });
+          tx.set(doc(db, 'audit_logs', auditEntry.id), auditEntry);
+        });
+      } catch (err) {
+        console.error('Firestore addAuthorizedAdmin error code:', err?.code || 'unknown');
+        throw new Error(err.message || 'Failed to save new administrator to the database. Please try again.');
+      }
+
+      const verify = await this.withFirestoreTimeout(getDocs(collection(db, 'academy_settings')), 8000);
+      const confirmed = verify && !verify.empty ? verify.docs[0].data().authorizedAdmins : null;
+      return persistedAdmins || confirmed;
+    }
+
+    const store = await hydrateStore();
+    const settings = store.settings || { ...SEED_SETTINGS };
+    const admins = applyAdd(settings);
+    store.settings = settings;
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'ADMIN_ADDED',
+      entityType: 'admin_user',
+      entityId: cleanEmail,
+      details: auditEntry.details
+    });
+
+    return admins;
+  },
+
+  async removeAuthorizedAdmin(email, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageAdmins', 'removing administrator');
+    const cleanEmail = String(email || '').toLowerCase().trim();
+    if (!cleanEmail.includes('@')) {
+      throw new Error('A valid administrator email address is required.');
+    }
+
+    const actorEmail = String(normalizeActorEmail(actor) || '').toLowerCase().trim();
+    const actorRole = this.getUserRole(actor);
+
+    if (cleanEmail === actorEmail) {
+      throw new Error('You cannot remove your own administrator account. Ask another owner to do this.');
+    }
+
+    const applyRemove = (settings) => {
+      const admins = settings.authorizedAdmins ? [...settings.authorizedAdmins] : [...SEED_SETTINGS.authorizedAdmins];
+      const targetIdx = admins.findIndex((a) => String(a.email).toLowerCase() === cleanEmail);
+      if (targetIdx === -1) {
+        throw new Error(`Administrator '${cleanEmail}' not found.`);
+      }
+
+      const targetRole = admins[targetIdx].role;
+      if ((ROLE_RANK[targetRole] || 0) > (ROLE_RANK[actorRole] || 0)) {
+        throw new Error(`Unauthorized: your role '${actorRole}' cannot remove a higher role '${targetRole}'.`);
+      }
+
+      const activeOwners = admins.filter((a) => a.active !== false && a.role === 'owner' && String(a.email).toLowerCase() !== cleanEmail);
+      if (targetRole === 'owner' && activeOwners.length === 0) {
+        throw new Error('Cannot remove the last remaining owner account. Promote another owner first.');
+      }
+
+      const updatedAdmins = admins.filter((a) => String(a.email).toLowerCase() !== cleanEmail);
+      settings.authorizedAdmins = updatedAdmins;
+      return { updatedAdmins, removedAdmin: admins[targetIdx] };
+    };
+
+    const auditEntry = {
+      id: uid('LOG'),
+      timestamp: new Date().toISOString(),
+      actor: actorEmail,
+      action: 'ADMIN_REMOVED',
+      entityType: 'admin_user',
+      entityId: cleanEmail,
+      details: `Revoked administrator access for '${cleanEmail}'.`
+    };
+
+    if (isLive()) {
+      const settingsRef = doc(db, 'academy_settings', 'main_config');
+      let persistedAdmins;
+      try {
+        await runTransaction(db, async (tx) => {
+          const snap = await tx.get(settingsRef);
+          const current = snap.exists()
+            ? snap.data()
+            : { ...SEED_SETTINGS, authorizedAdmins: [...SEED_SETTINGS.authorizedAdmins] };
+          const { updatedAdmins } = applyRemove(current);
+          tx.set(settingsRef, { ...current, updatedAt: auditEntry.timestamp, updatedBy: actorEmail }, { merge: true });
+          tx.set(doc(db, 'audit_logs', auditEntry.id), auditEntry);
+          persistedAdmins = updatedAdmins;
+        });
+      } catch (err) {
+        console.error('Firestore removeAuthorizedAdmin error code:', err?.code || 'unknown');
+        throw new Error(err.message || 'Failed to remove administrator from the database. Please try again.');
+      }
+
+      const verify = await this.withFirestoreTimeout(getDocs(collection(db, 'academy_settings')), 8000);
+      const confirmed = verify && !verify.empty ? verify.docs[0].data().authorizedAdmins : null;
+      return persistedAdmins || confirmed;
+    }
+
+    const store = await hydrateStore();
+    const settings = store.settings || { ...SEED_SETTINGS };
+    const { updatedAdmins } = applyRemove(settings);
+    store.settings = settings;
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'ADMIN_REMOVED',
+      entityType: 'admin_user',
+      entityId: cleanEmail,
+      details: auditEntry.details
+    });
+
+    return updatedAdmins;
+  },
+
+  deleteAuthorizedAdmin(email, actor) {
+    return this.removeAuthorizedAdmin(email, actor);
+  },
+
   async getAdminProfile(uidOrEmail) {
     if (!uidOrEmail) return null;
     const key = String(uidOrEmail).trim().toLowerCase();

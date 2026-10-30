@@ -310,7 +310,7 @@ export default function BatchesPage() {
                 </div>
                 <div className="flex items-center space-x-2 text-xs">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span className="font-semibold text-slate-700">Campus Hours: Mon – Sat (4:00 PM – 9:00 PM)</span>
+                  <span className="font-semibold text-slate-700">Campus Hours: Mon – Sat (4:30 PM – 9:00 PM)</span>
                 </div>
               </div>
 
@@ -319,7 +319,7 @@ export default function BatchesPage() {
                   Batch Timings & Schedule
                 </h1>
                 <p className="text-sm text-slate-600 mt-2 max-w-3xl leading-relaxed">
-                  All evening batches run Monday to Saturday between 4:00 PM and 9:00 PM at Thiripura Complex, Thoramangalam. Every batch has a strict 12-student cap, with timings synchronized with town and school bus arrivals from Four Roads and Trichy Main Road.
+                  All evening batches run Monday to Saturday between 4:30 PM and 9:00 PM at Thiripura Complex, Thoramangalam. Every batch has a strict 12-student cap, with timings synchronized with town and school bus arrivals from Four Roads and Trichy Main Road.
                 </p>
 
                 <div className="mt-6 grid sm:grid-cols-3 gap-4">
@@ -381,7 +381,7 @@ export default function BatchesPage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-md border border-emerald-200">
-                    Strict 1:12 Ratio Guarded
+                    Strict 1:12 Faculty Mentorship
                   </span>
                 </div>
               </div>
@@ -534,7 +534,7 @@ export default function BatchesPage() {
                 <p className="text-xs text-slate-500">
                   {studentFlow.studentName
                     ? 'Showing matching small-batches at Thiripura Complex, Thoramangalam.'
-                    : 'Browse available evening batches (4:00 PM – 9:00 PM) at Thiripura Complex, Thoramangalam.'}
+                    : 'Browse available evening batches (4:30 PM – 9:00 PM) at Thiripura Complex, Thoramangalam.'}
                 </p>
               </div>
 
@@ -573,7 +573,7 @@ export default function BatchesPage() {
                 Available Evening Batches
               </h1>
               <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
-                All batches run Monday to Saturday between 4:00 PM and 9:00 PM with a strict 12-student cap. Timings are synchronized with local school buses arriving via Four Roads and Trichy Main Road so students arrive refreshed.
+                All batches run Monday to Saturday between 4:30 PM and 9:00 PM with a strict 12-student cap. Timings are synchronized with local school buses arriving via Four Roads and Trichy Main Road so students arrive refreshed.
               </p>
               <div className="mt-3 p-3 bg-orange-50/80 rounded-md border border-orange-200 text-xs text-orange-950 inline-flex items-center space-x-2">
                 <span className="font-bold text-brand">Zero Registration Fee:</span>

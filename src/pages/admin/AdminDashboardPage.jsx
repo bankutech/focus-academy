@@ -260,7 +260,7 @@ export default function AdminDashboardPage() {
             <div>
               <h2 className="text-sm font-bold text-[#0F172A]">Action Required</h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Generated from saved admissions, ledgers, reconciliations, reminders and audit records.
+                Generated from saved admissions, payments, reconciliations, reminders and events.
               </p>
             </div>
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none text-[11px] font-bold border shrink-0 ${
@@ -521,7 +521,7 @@ export default function AdminDashboardPage() {
               to="/admin-portal/ledger"
               className="text-xs font-semibold text-brand hover:underline flex items-center space-x-1 shrink-0"
             >
-              <span>View Full Ledger</span>
+              <span>View All Payments</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>

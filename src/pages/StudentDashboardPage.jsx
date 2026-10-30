@@ -146,7 +146,7 @@ export default function StudentDashboardPage() {
       summary: 'Campus timing standards, 1:12 faculty mentorship ratio, workbook issuance protocols, and monthly parent feedback cycles.',
       points: [
         'Classroom Mentorship: Maximum 12 students per batch to guarantee individual problem-solving supervision.',
-        'Session Timings: Evening blocks (4:00 PM – 9:00 PM) at Thiripura Complex, Main Road, Thoramangalam.',
+        'Session Timings: Evening blocks (4:30 PM – 9:00 PM) at Thiripura Complex, Main Road, Thoramangalam.',
         'Daily Practice Worksheets: Completed worksheets filed in the student portfolio and checked daily.',
         'Parent Consultation Desk: Monthly progress reviews and immediate absence alert notifications.'
       ]
@@ -805,7 +805,7 @@ export default function StudentDashboardPage() {
                             <Clock className="w-3.5 h-3.5 text-brand" />
                             <span>Batch Timing:</span>
                           </span>
-                          <span className="font-bold text-[#0F172A]">{enr.timing || 'Evening Session (4:00 PM – 8:30 PM)'}</span>
+                          <span className="font-bold text-[#0F172A]">{enr.timing || 'Evening Session (4:30 PM – 9:00 PM)'}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500 flex items-center gap-1.5">
@@ -1129,7 +1129,7 @@ export default function StudentDashboardPage() {
                         <h3 className="text-base font-extrabold text-[#0F172A] mt-1">{enr.batchName}</h3>
                       </div>
                       <span className="px-2.5 py-1 text-xs font-bold bg-white text-slate-700 border border-slate-200 rounded-xl w-fit">
-                        {enr.timing || 'Evening Session (4:00 PM – 8:30 PM)'}
+                        {enr.timing || 'Evening Session (4:30 PM – 9:00 PM)'}
                       </span>
                     </div>
 
@@ -1529,7 +1529,7 @@ export default function StudentDashboardPage() {
                     grade: profile?.grade || studentGrade,
                     board: profile?.board || studentBoard,
                     batchName: financials?.batchName || enrollments[0]?.batchName || 'Focus Evening Batch',
-                    batchTiming: financials?.batchTiming || enrollments[0]?.timing || 'Evening Session (4:00 PM – 8:30 PM)',
+                    batchTiming: financials?.batchTiming || enrollments[0]?.timing || 'Evening Session (4:30 PM – 9:00 PM)',
                     parentName: profile?.parentName || 'Parent',
                     contact: profile?.mobile || user?.email ? `+91 ${profile?.mobile || user?.email}` : '',
                     admissionStatus: financials?.admissionStatus || enrollments[0]?.status || 'pending review'

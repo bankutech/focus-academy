@@ -107,7 +107,7 @@ export default function AdminLedgerPage() {
       }
     } catch (err) {
       console.error('Error loading ledger data:', err);
-      setFormError(err.message || 'Ledger data could not be loaded from the database. No payment history was changed.');
+      setFormError(err.message || 'Payment records could not be loaded from the database. No payment history was changed.');
     }
   }, [location.search]);
 
@@ -315,10 +315,10 @@ export default function AdminLedgerPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs min-w-0 max-w-full">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-[#0F172A] tracking-tight">
-            Financial Ledger & Payments
+            Payments & Receipts
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Verified financial transaction ledger, receipt generation, and payment balance audits
+            Verified payment transactions, instant receipt generation, and cash till balances
           </p>
         </div>
 

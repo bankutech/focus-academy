@@ -25,7 +25,7 @@
 | **Curriculum Boards** | Tamil Nadu State Board (Samacheer Kalvi), CBSE (NCERT), ICSE / ISC | Course discovery and batch enrollment enforces strict board alignment; no curriculum mismatch allowed. |
 | **Small Batch Policy** | Strictly capped 1:12 teacher-student ratio | UI communicates the 12-student capacity limit; live booking enforces atomic lease locks and prevents over-allocation. |
 | **Trial Guarantee** | 1-Day Free Trial (No Advance Deposit) | Parents can book an evening session trial without entering payment information or credit card numbers. |
-| **Evening Schedule** | Mon–Sat: 4:00 PM – 9:00 PM<br/>• Slot 1: 4:30 PM – 6:00 PM<br/>• Slot 2: 6:00 PM – 7:30 PM<br/>• Slot 3: 7:30 PM – 9:00 PM | Timetable schedules are consistent across homepage, timetable view, and admission booking. |
+| **Evening Schedule** | Mon–Sat: 4:30 PM – 9:00 PM<br/>• Slot 1: 4:30 PM – 6:00 PM<br/>• Slot 2: 6:00 PM – 7:30 PM<br/>• Slot 3: 7:30 PM – 9:00 PM | Timetable schedules are consistent across homepage, timetable view, and admission booking. |
 | **Sunday Operations** | Closed for regular lectures; mock review & doubt clearance by appointment | Sunday policy is prominently displayed on contact cards and footer notes. |
 
 ---

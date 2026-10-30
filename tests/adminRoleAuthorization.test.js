@@ -3,6 +3,7 @@ import fs from 'fs';
 import { resolve } from 'path';
 import { AdminDataService } from '../src/services/adminDataService';
 import { setVerifiedAdmin, getVerifiedAdmin } from '../src/services/adminIdentity';
+import { getAdminAllowlist } from '../src/services/firebase';
 
 const OWNER = 'director@focusacademyperambalur.com';
 const PRINCIPAL = 'principal@focusacademyperambalur.com';
@@ -130,6 +131,45 @@ describe('Admin role persistence and authorization', () => {
     const match = returned.find((a) => a.email === TARGET);
     expect(match).toBeDefined();
     expect(match.role).toBe('administrator');
+  });
+
+  it('adds a new administrator and dynamically includes them in authorizedAdmins and allowlist', async () => {
+    const newMember = 'fresh.faculty@focusacademyperambalur.com';
+    const admins = await AdminDataService.addAuthorizedAdmin(
+      { email: newMember, name: 'Fresh Faculty', role: 'admissions' },
+      OWNER
+    );
+    const added = admins.find((a) => a.email === newMember);
+    expect(added).toBeDefined();
+    expect(added.name).toBe('Fresh Faculty');
+    expect(added.role).toBe('admissions');
+
+    const allowlist = getAdminAllowlist();
+    expect(allowlist).toContain(newMember);
+
+    // Duplicate active addition is rejected
+    await expect(
+      AdminDataService.addAuthorizedAdmin({ email: newMember, name: 'Fresh Faculty', role: 'administrator' }, OWNER)
+    ).rejects.toThrow(/already authorized/i);
+  });
+
+  it('removes an administrator and prevents self-removal and last owner removal', async () => {
+    const toRemove = 'temporary.staff@focusacademyperambalur.com';
+    await AdminDataService.addAuthorizedAdmin(
+      { email: toRemove, name: 'Temporary Staff', role: 'teacher' },
+      OWNER
+    );
+    let admins = await AdminDataService.getAuthorizedAdmins();
+    expect(admins.some((a) => a.email === toRemove)).toBe(true);
+
+    // Successfully remove
+    const afterRemoval = await AdminDataService.removeAuthorizedAdmin(toRemove, OWNER);
+    expect(afterRemoval.some((a) => a.email === toRemove)).toBe(false);
+
+    // Self removal is blocked
+    await expect(
+      AdminDataService.removeAuthorizedAdmin(OWNER, OWNER)
+    ).rejects.toThrow(/cannot remove your own administrator account/i);
   });
 });
 

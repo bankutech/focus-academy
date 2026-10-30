@@ -135,7 +135,7 @@ export const buildAdmissionSlipHtml = (data = {}) => {
     ['Student ID', e(data.studentId || 'Pending central assignment')],
     ['Class & Board', e(`${data.grade || ''}${data.grade && data.board ? ' • ' : ''}${data.board || ''}`)],
     ['Enrolled Batch', `<strong>${e(data.batchName || data.subjects || 'Focus Evening Batch')}</strong>`],
-    ['Session Timing', e(data.batchTiming || data.timing || 'Evening Session (4:00 PM – 8:30 PM)')],
+    ['Session Timing', e(data.batchTiming || data.timing || 'Evening Session (4:30 PM – 9:00 PM)')],
     ['Classroom Ratio', '1:12 Strict Faculty Supervision Capped'],
     ['Parent / Contact', `${e(data.parentName || 'Parent')}${data.contact || data.phone ? ` (${e(data.contact || data.phone)})` : ''}`],
     ['Admission Status', e(String(data.admissionStatus || data.status || 'pending review').replace('_', ' ').toUpperCase())],

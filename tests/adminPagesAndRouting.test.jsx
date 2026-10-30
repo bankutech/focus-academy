@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import fs from 'fs';
 import path from 'path';
@@ -16,7 +16,9 @@ import AdminLedgerPage from '../src/pages/admin/AdminLedgerPage';
 import AdminRemindersPage from '../src/pages/admin/AdminRemindersPage';
 import AdminReportsPage from '../src/pages/admin/AdminReportsPage';
 import AdminAuditLogsPage from '../src/pages/admin/AdminAuditLogsPage';
+import AdminSettingsPage from '../src/pages/admin/AdminSettingsPage';
 import { AdminDataService } from '../src/services/adminDataService';
+import { setVerifiedAdmin } from '../src/services/adminIdentity';
 
 describe('Admin Portal Pages & Routing Integrity', () => {
   beforeEach(() => {
@@ -76,10 +78,11 @@ describe('Admin Portal Pages & Routing Integrity', () => {
     expect(screen.getByText('Batches')).toBeDefined();
     expect(screen.getByText('Students')).toBeDefined();
     expect(screen.getByText('Fee Schedules')).toBeDefined();
-    expect(screen.getByText('Ledger & Payments')).toBeDefined();
+    expect(screen.getByText('Payments & Receipts')).toBeDefined();
     expect(screen.getByText('WhatsApp Reminders')).toBeDefined();
-    expect(screen.getByText('Reports & Analytics')).toBeDefined();
+    expect(screen.getByText('Analytics')).toBeDefined();
     expect(screen.getByText('Events')).toBeDefined();
+    expect(screen.queryByText('Academy Settings')).toBeNull();
   });
 
   it('renders AdminDashboardPage with financial summary metrics', async () => {
@@ -119,7 +122,7 @@ describe('Admin Portal Pages & Routing Integrity', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Institutional Reports & Analytics')).toBeDefined();
+      expect(screen.getByText('Analytics')).toBeDefined();
       expect(screen.getByText('Export Students CSV')).toBeDefined();
       expect(screen.getByText('Export Financials CSV')).toBeDefined();
     });
@@ -189,7 +192,7 @@ describe('Admin Portal Pages & Routing Integrity', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Financial Ledger & Payments')).toBeDefined();
+      expect(screen.getByText('Payments & Receipts')).toBeDefined();
       expect(screen.getByText('Record New Payment')).toBeDefined();
       expect(screen.getByText('REC-2026-0001')).toBeDefined();
     });
@@ -262,5 +265,28 @@ describe('Admin Portal Pages & Routing Integrity', () => {
       expect(screen.getByText(/Timing Risk/i)).toBeDefined();
       expect(screen.getAllByText(/Local Device Store/i).length).toBeGreaterThan(0);
     });
+  });
+
+  it('renders AdminSettingsPage roles tab with Add Administrator action and delete controls', async () => {
+    setVerifiedAdmin({ email: 'director@focusacademyperambalur.com', displayName: 'Director' });
+    render(
+      <MemoryRouter>
+        <AdminSettingsPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Roles & Access/i)).toBeDefined();
+    });
+    fireEvent.click(screen.getByText(/Roles & Access/i));
+
+    await waitFor(() => {
+      expect(screen.getByText('Administrator Roles & Permissions')).toBeDefined();
+      expect(screen.getByText('Add Administrator')).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText('Add Administrator'));
+    expect(screen.getByText('Authorize New Administrator')).toBeDefined();
+    expect(screen.getByPlaceholderText(/staff@focusacademyperambalur.com/i)).toBeDefined();
   });
 });
