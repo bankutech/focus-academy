@@ -1784,13 +1784,13 @@ export default function AdminStudentsPage() {
                   )}
                   {profileStudent.dropoutReason && (
                     <span className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                      Churn Reason: {profileStudent.dropoutReason}
+                      Reason for Leaving: {profileStudent.dropoutReason}
                     </span>
                   )}
                 </div>
                 {profileStudent.medicalAlert && (
                   <div className="mt-1.5 p-1.5 bg-rose-50 border border-rose-200 rounded text-rose-800 text-[11px] font-semibold">
-                    🏥 Child Safeguard Alert: {profileStudent.medicalAlert}
+                    🏥 Medical Note / Emergency Alert: {profileStudent.medicalAlert}
                   </div>
                 )}
                 <p className="text-[10px] text-slate-400 mt-1">

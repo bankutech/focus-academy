@@ -350,7 +350,7 @@ export default function AdminLeadsPage() {
       case 'new':
         return (
           <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/10 text-orange-700 border border-orange-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-brand inline-block" />
             <span>New Admission</span>
           </span>
         );

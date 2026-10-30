@@ -233,10 +233,10 @@ export default function AdminSettingsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
-            Academy Settings &amp; Governance
+            Academy Settings
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Configure campus identity, billing cycles, reminder policies, role permissions, and disaster recovery.
+            Configure campus details, fee structure, WhatsApp message templates, and administrator accounts.
           </p>
         </div>
 
@@ -330,7 +330,7 @@ export default function AdminSettingsPage() {
           }`}
         >
           <Database className="w-4 h-4" />
-          <span>Backup &amp; Recovery</span>
+          <span>Backup &amp; Restore</span>
         </button>
       </div>
 
@@ -818,19 +818,19 @@ export default function AdminSettingsPage() {
       {activeTab === 'backup' && (
         <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-6">
           <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-[#0F172A]">Institutional Backup &amp; Disaster Recovery</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-[#0F172A]">Data Backup &amp; Restore</h2>
             <p className="text-xs text-slate-500 mt-1">
-              Maintain institutional continuity. Export checksum-verified JSON snapshots of student records, batches, and transactions. These files contain personal data and must be stored in an approved encrypted location — the download itself is not encrypted.
+              Download or restore a complete backup of student profiles, batches, and fee records for safekeeping.
             </p>
           </div>
 
           <div className="p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl text-xs text-amber-900 space-y-1">
-            <p className="font-bold">Recovery Time Objective (RTO) &amp; Recovery Point Objective (RPO) Policy</p>
+            <p className="font-bold">Recommended Academy Routine</p>
             <p className="text-[11px]">
-              • <strong>RTO (&lt; 1 hour)</strong>: Campus operations and student records must be restorable within 60 minutes in the event of hardware or system failure.
+              • Download a fresh backup every weekend to keep an offline copy of all admission and payment records.
             </p>
             <p className="text-[11px]">
-              • <strong>RPO (&lt; 24 hours)</strong>: Daily collection logs and transaction receipts must be backed up at the close of every business day.
+              • Store downloaded backups securely on your office computer or secure backup drive.
             </p>
           </div>
 
@@ -838,10 +838,10 @@ export default function AdminSettingsPage() {
             <div className="p-5 border border-slate-200 rounded-xl space-y-3 bg-slate-50">
               <div className="flex items-center space-x-2">
                 <Download className="w-5 h-5 text-brand" />
-                <h3 className="font-bold text-sm text-[#0F172A]">Export Complete System Snapshot</h3>
+                <h3 className="font-bold text-sm text-[#0F172A]">Download Backup File</h3>
               </div>
               <p className="text-xs text-slate-500">
-                Generates a verified, portable JSON snapshot encompassing all active and archived students, batches, fee obligations, receipts, audit logs, and settings.
+                Exports all active and archived students, batches, payment receipts, event logs, and settings into a JSON backup file.
               </p>
               <button
                 type="button"
@@ -849,17 +849,17 @@ export default function AdminSettingsPage() {
                 className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-[#0F172A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
               >
                 <Download className="w-4 h-4" />
-                <span>Download Full Database Snapshot</span>
+                <span>Download Backup (JSON)</span>
               </button>
             </div>
 
             <div className="p-5 border border-slate-200 rounded-xl space-y-3 bg-slate-50">
               <div className="flex items-center space-x-2">
                 <Upload className="w-5 h-5 text-emerald-600" />
-                <h3 className="font-bold text-sm text-[#0F172A]">Restore From Verified Snapshot</h3>
+                <h3 className="font-bold text-sm text-[#0F172A]">Restore from Backup File</h3>
               </div>
               <p className="text-xs text-slate-500">
-                Restores an authenticated backup snapshot into the institutional database with schema validation and pre-flight checks.
+                Upload a previous backup file to restore student and fee records. The file will be verified before applying any changes.
               </p>
               <button
                 type="button"
@@ -867,7 +867,7 @@ export default function AdminSettingsPage() {
                 className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
-                <span>Open Restoration Center</span>
+                <span>Open Restore Window</span>
               </button>
             </div>
 
@@ -878,7 +878,7 @@ export default function AdminSettingsPage() {
                   <h3 className="font-bold text-sm text-[#0F172A]">Cloud Firestore Live Auto-Sync</h3>
                 </div>
                 <span className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
                   <span>Active &amp; Real-time</span>
                 </span>
               </div>

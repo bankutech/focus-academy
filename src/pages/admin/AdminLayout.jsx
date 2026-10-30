@@ -150,8 +150,8 @@ export default function AdminLayout() {
               type="button"
               onClick={() => window.__lockAdminTerminal && window.__lockAdminTerminal()}
               className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
-              title="Lock Terminal Screen (Shared Reception Desk Security)"
-              aria-label="Lock Campus Terminal"
+              title="Lock Screen"
+              aria-label="Lock Screen"
             >
               <Lock className="w-3.5 h-3.5 text-brand" />
               <span className="hidden sm:inline">Lock Screen</span>

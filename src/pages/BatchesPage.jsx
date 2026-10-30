@@ -129,7 +129,7 @@ export default function BatchesPage() {
   const isTimingsView = location.pathname === '/timings';
   usePageMeta({
     title: isTimingsView
-      ? 'Batch Timings and Evening Schedule (4–9 PM) | Focus Academy Perambalur'
+      ? 'Batch Timings and Evening Schedule (4:30–9 PM) | Focus Academy Perambalur'
       : 'Choose a Batch for Admission | Focus Academy Perambalur',
     description: isTimingsView
       ? 'Evening batch timings for Classes 6–12 at Focus Academy, Thoramangalam: shift slots, days, classroom and strict 12-student batch caps.'
@@ -261,7 +261,7 @@ export default function BatchesPage() {
   ];
 
   const slots = [
-    { id: 'all', label: 'All Evening Slots (4–9 PM)' },
+    { id: 'all', label: 'All Evening Slots (4:30–9 PM)' },
     { id: 'slot-1', label: '4:30 PM – 6:00 PM' },
     { id: 'slot-2', label: '6:00 PM – 7:30 PM' },
     { id: 'slot-3', label: '7:30 PM – 9:00 PM' }

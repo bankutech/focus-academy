@@ -209,7 +209,7 @@ export default function AdminFeesPage() {
           <ShieldCheck className="w-3.5 h-3.5" />
           <span>Maker-Checker Waiver Requests</span>
           {pendingWaivers.length > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-black animate-pulse">
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-black">
               {pendingWaivers.length}
             </span>
           )}

@@ -1705,7 +1705,7 @@ export default function EnrollPage() {
                               required
                             />
                             <p className="text-[11px] text-slate-500 mt-1">
-                              Mandatory for institutional verification, test series hall tickets, and campus entry badge.
+                              Required for student ID card, hall tickets, and attendance record.
                             </p>
                             {formErrors.studentIdNumber && (
                               <p className="text-xs text-rose-600 mt-1">{formErrors.studentIdNumber}</p>

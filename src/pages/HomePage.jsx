@@ -65,11 +65,11 @@ export default function HomePage() {
 
                 <Link
                   to="/timings"
-                  aria-label="View Batch Timings (4–9 PM) — evening batch timetable and schedule"
+                  aria-label="View Batch Timings (4:30–9:00 PM) — evening batch timetable and schedule"
                   className="min-h-[52px] inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-white hover:bg-slate-50 text-[#0F172A] text-sm sm:text-base font-bold rounded-md border border-[#E2E8F0] shadow-xs transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   <Clock className="w-4 h-4 text-brand" />
-                  <span>View Batch Timings (4–9 PM)</span>
+                  <span>View Batch Timings (4:30–9:00 PM)</span>
                 </Link>
 
                 <a
@@ -186,7 +186,7 @@ export default function HomePage() {
                 <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Step-marked problem checking and personalized concept feedback every evening</span>
               </div>
               <div className="pt-4 sm:pt-0 sm:px-6 text-left">
-                <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">4 – 9 PM</span>
+                <span className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] block tracking-tight">4:30 – 9 PM</span>
                 <span className="text-xs sm:text-sm font-bold text-brand uppercase tracking-wider block mt-1.5">Evening Slots</span>
                 <span className="text-xs sm:text-sm text-slate-600 block mt-1 leading-relaxed">Three 90-min sessions synchronized with town bus arrivals at Four Roads</span>
               </div>
@@ -424,7 +424,7 @@ export default function HomePage() {
           <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-200 pb-8">
             <div>
               <h2 id="about-heading" className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0F172A] tracking-tight">
-                Academic Standards & Institutional Assurances
+                Focus Academy Teaching Standards
               </h2>
               <p className="text-base sm:text-lg text-slate-600 mt-2.5 max-w-3xl leading-relaxed">
                 Academic discipline, senior subject teachers, and parent transparency at Thiripura Complex, Thoramangalam.

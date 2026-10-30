@@ -31,14 +31,9 @@ export default function LoadingScreen({
       aria-live="polite" 
       className="min-h-screen w-full bg-[#F8FAFC] flex flex-col items-center justify-center p-6 text-center select-none"
     >
-      <div className="relative mb-6">
-        <div className="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-brand-bright/25 via-[#F97316]/15 to-transparent blur-xl animate-pulse" />
-        <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#0F172A] border-2 border-slate-700/60 shadow-2xl flex items-center justify-center">
-          <div className="absolute -inset-1.5 border-2 border-transparent border-t-brand border-r-[#F97316]/50 rounded-2xl animate-spin" />
-          <div className="relative flex items-center">
-            <span className="font-extrabold text-white text-3xl sm:text-4xl tracking-tight">FA</span>
-            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-brand ml-1 animate-ping" />
-          </div>
+      <div className="relative mb-5">
+        <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-[#0F172A] border border-slate-700 shadow-sm flex items-center justify-center">
+          <span className="font-extrabold text-white text-2xl sm:text-3xl tracking-tight">FA</span>
         </div>
       </div>
 

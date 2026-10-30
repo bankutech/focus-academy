@@ -87,7 +87,7 @@ export default function Navbar() {
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 flex items-center justify-between">
           <div className="flex items-center space-x-3 overflow-hidden text-ellipsis whitespace-nowrap">
             <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-100 text-xs uppercase font-bold border border-orange-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-brand inline-block"></span>
               <span>Evening Batches</span>
             </span>
             <span className="text-slate-300 font-medium hidden sm:inline">
@@ -205,7 +205,7 @@ export default function Navbar() {
 
               <Link
                 to="/student-details"
-                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-6 py-2.5 bg-brand hover:bg-brand-strong text-white text-sm sm:text-base font-bold rounded-md shadow-xs hover:bg-brand-strong transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
+                className="hidden sm:inline-flex items-center space-x-2 px-4 sm:px-6 py-2.5 bg-brand hover:bg-brand-strong text-white text-sm sm:text-base font-bold rounded-md shadow-xs transition-all duration-200 cursor-pointer active:scale-98 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <span>Click to Enroll</span>
                 <ArrowRight className="w-4 h-4 text-orange-100" />

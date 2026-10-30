@@ -843,7 +843,7 @@ export default function AdminReportsPage() {
           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-emerald-200 text-xs">
               <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
                 <span className="font-extrabold text-emerald-900 uppercase">Active Till Session: {activeTillSession.id}</span>
               </div>
               <span className="text-[11px] text-emerald-800">

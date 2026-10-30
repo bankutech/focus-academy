@@ -28,16 +28,16 @@ export default function AboutPage() {
 
   const facilities = [
     {
-      title: 'Ergonomic Individual Student Desks',
-      description: 'Spacious single-student seating designed for comfortable posture during 90-minute evening problem-solving sessions.'
+      title: 'Individual Desks for Every Student',
+      description: 'Comfortable single-student desks designed for focused problem solving and notebook work during evening coaching.'
     },
     {
-      title: 'High-Contrast Whiteboards & Clear Sightlines',
-      description: 'Unobstructed visual access from every seat. Every step of mathematical derivations and scientific diagrams is clearly visible.'
+      title: 'Clear Whiteboard View from Every Seat',
+      description: 'Unobstructed visual access so every derivation, diagram, and step is easy to see without straining.'
     },
     {
-      title: 'Well-Ventilated & Acoustic-Insulated Rooms',
-      description: 'Quiet, air-circulated classrooms situated on the first floor away from main road vehicle horns and distractions.'
+      title: 'Quiet, Well-Ventilated Classrooms',
+      description: 'Quiet, air-circulated classrooms on the first floor away from main road vehicle noise.'
     },
     {
       title: 'Curated Board Exam Reference Library',
@@ -158,8 +158,8 @@ export default function AboutPage() {
                     loading="eager"
                   />
                   <div className="absolute top-3 left-3 bg-[#0F172A]/85 text-white text-xs font-semibold px-2.5 py-1 rounded-md flex items-center space-x-1.5 shadow-xs">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Campus Premises</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                    <span>Thiripura Complex Campus</span>
                   </div>
                 </div>
 
