@@ -19,7 +19,7 @@ import {
 import { AdminDataService } from '../../services/adminDataService';
 import { getVerifiedAdminEmail } from '../../services/adminIdentity';
 import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
-import { feeStatusBreakdown, batchOccupancy, monthlyCollections, rupees } from '../../components/admin/chartData';
+import { feeStatusBreakdown, batchOccupancy, monthlyCollections, studentsByGrade, rupees } from '../../components/admin/chartData';
 import { buildActionItems, unmetActionCount } from '../../components/admin/actionItems';
 import { formatPhoneNumber } from '../../utils/phoneValidation';
 
@@ -27,6 +27,7 @@ export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const [metrics, setMetrics] = useState(null);
   const [batches, setBatches] = useState([]);
+  const [students, setStudents] = useState([]);
   const [obligations, setObligations] = useState([]);
   const [payments, setPayments] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
@@ -75,6 +76,7 @@ export default function AdminDashboardPage() {
 
     if (m) setMetrics(m);
     if (b) setBatches(b.filter(item => !item.isArchived));
+    if (st) setStudents(st);
     if (o) setObligations(o);
     if (p) setPayments(p);
     if (enr) setEnrollments(enr);
@@ -130,72 +132,72 @@ export default function AdminDashboardPage() {
     {
       title: 'Active Students',
       value: metrics?.totalActiveStudents ?? 0,
-      sub: 'Enrolled in 2025–2026 batches',
+      sub: 'Enrolled in current session',
       icon: Users,
-      badge: 'Academic Roster',
+      badge: 'Active',
       badgeClass: 'bg-slate-50 text-slate-700 border-slate-200',
       link: '/admin-portal/students'
     },
     {
       title: 'Active Batches',
       value: metrics?.totalActiveBatches ?? 0,
-      sub: 'Capped at 12 students / classroom',
+      sub: 'Small batches of 12 students',
       icon: Layers,
-      badge: 'Classroom Cap: 12',
+      badge: 'Batches',
       badgeClass: 'bg-slate-50 text-slate-700 border-slate-200',
       link: '/admin-portal/batches'
     },
     {
       title: 'Admissions & Enrollments',
       value: metrics?.totalEnrollments ?? 0,
-      sub: 'Confirmed batch registrations',
+      sub: 'Confirmed registrations',
       icon: ClipboardCheck,
-      badge: 'Enrollment Desk',
+      badge: 'Admissions',
       badgeClass: 'bg-orange-50 text-orange-800 border-orange-200',
       link: '/admin-portal/leads?source=enrollment'
     },
     {
       title: 'Collected This Month',
       value: `₹${(metrics?.feesCollectedThisMonth ?? 0).toLocaleString('en-IN')}`,
-      sub: 'Verified ledger receipts',
+      sub: 'Verified fee receipts',
       icon: TrendingUp,
-      badge: 'Verified Ledger',
+      badge: 'This Month',
       badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       link: '/admin-portal/ledger'
     },
     {
       title: 'Total Outstanding',
       value: `₹${(metrics?.totalOutstandingFees ?? 0).toLocaleString('en-IN')}`,
-      sub: 'Active pending balances',
+      sub: 'Unpaid fee balances',
       icon: Receipt,
-      badge: 'Pending Balance',
+      badge: 'Pending',
       badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
       link: '/admin-portal/fees?status=pending'
     },
     {
       title: 'Overdue Fees',
       value: `₹${(metrics?.totalOverdueFees ?? 0).toLocaleString('en-IN')}`,
-      sub: 'Payment due date lapsed',
+      sub: 'Past scheduled payment date',
       icon: AlertTriangle,
-      badge: 'Action Required',
+      badge: 'Needs Action',
       badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
       link: '/admin-portal/reminders?tab=overdue'
     },
     {
       title: 'Due Today',
       value: metrics?.paymentsDueTodayCount ?? 0,
-      sub: 'Requires reminder dispatch',
+      sub: 'Fee payments due today',
       icon: Clock,
-      badge: 'Daily Schedule',
+      badge: 'Due Today',
       badgeClass: 'bg-orange-50 text-orange-800 border-orange-200',
       link: '/admin-portal/reminders?tab=today'
     },
     {
       title: 'Counseling Inquiries',
       value: metrics?.totalInquiries ?? 0,
-      sub: 'Prospects requesting campus callback',
+      sub: 'Prospective student enquiries',
       icon: UserPlus,
-      badge: 'CRM Pipeline',
+      badge: 'Enquiries',
       badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
       link: '/admin-portal/leads?source=inquiry'
     }
@@ -340,7 +342,7 @@ export default function AdminDashboardPage() {
                   <div className="p-1.5 rounded-none bg-slate-100 text-slate-700 group-hover:bg-[#0F172A] group-hover:text-white transition-colors shrink-0">
                     <Icon className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider truncate">
+                  <span className="text-[11px] font-bold text-slate-700 tracking-tight leading-tight">
                     {card.title}
                   </span>
                 </div>
@@ -367,15 +369,34 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 min-w-0 max-w-full">
-        <ChartCard title="Fee Position" subtitle="Where every rupee billed this session stands" className="min-w-0">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-w-0 max-w-full">
+        <ChartCard
+          title="Fee Status Overview"
+          subtitle="Total fees billed: collected payments, pending dues, and overdue fees"
+          className="min-w-0"
+        >
           <DonutChart data={feeStatusBreakdown(obligations)} centerLabel="Billed" label="Fee position by status" />
         </ChartCard>
-        <ChartCard title="Collections, Last 6 Months" subtitle="Verified receipts, reversals excluded" className="min-w-0">
+        <ChartCard
+          title="Monthly Fee Collections"
+          subtitle="Actual verified fee payments received over the last 6 months"
+          className="min-w-0"
+        >
           <BarChart data={monthlyCollections(payments)} format={rupees} label="Monthly fee collections" />
         </ChartCard>
-        <ChartCard title="Batch Seat Fill" subtitle="Enrolled against the 12-seat classroom cap" className="min-w-0">
+        <ChartCard
+          title="Classroom Seat Occupancy"
+          subtitle="Enrolled students compared with 12-seat classroom capacity"
+          className="min-w-0"
+        >
           <BarChart data={batchOccupancy(batches)} label="Batch occupancy" showAxisMax={false} />
+        </ChartCard>
+        <ChartCard
+          title="Students by Class"
+          subtitle="Enrolled student distribution across Class 6 to Class 12"
+          className="min-w-0"
+        >
+          <BarChart data={studentsByGrade(students)} label="Active students per class" />
         </ChartCard>
       </div>
 
@@ -408,7 +429,7 @@ export default function AdminDashboardPage() {
             <table className="w-full min-w-[620px] text-left text-xs">
               <thead>
                 <tr className="bg-slate-50 border-y border-slate-200 text-slate-600 uppercase text-[10px] tracking-wider font-semibold">
-                  <th className="py-2 px-3 font-semibold">Slip No</th>
+                  <th className="py-2 px-3 font-semibold">Application No.</th>
                   <th className="py-2 px-3 font-semibold">Student Name</th>
                   <th className="py-2 px-3 font-semibold">Grade & Board</th>
                   <th className="py-2 px-3 font-semibold">Selected Batch</th>
@@ -510,7 +531,7 @@ export default function AdminDashboardPage() {
               <table className="w-full min-w-[500px] text-left text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-y border-slate-200 text-slate-600 uppercase text-[10px] tracking-wider font-semibold">
-                    <th className="py-2 px-3 font-semibold">Receipt #</th>
+                    <th className="py-2 px-3 font-semibold">Receipt No.</th>
                     <th className="py-2 px-3 font-semibold">Student</th>
                     <th className="py-2 px-3 font-semibold">Amount</th>
                     <th className="py-2 px-3 font-semibold">Method</th>
@@ -554,10 +575,10 @@ export default function AdminDashboardPage() {
             <div className="flex flex-wrap items-center justify-between mb-3 pb-3 border-b border-slate-200 gap-2">
               <div>
                 <h2 className="text-sm font-bold text-[#0F172A]">
-                  12-Seat Capacity Guard
+                  Batch Capacity Status
                 </h2>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Classroom density & reservation enforcement
+                  Classroom seat availability and reservation status
                 </p>
               </div>
               <Link to="/admin-portal/batches" className="text-xs text-brand font-semibold hover:underline shrink-0">
@@ -603,13 +624,13 @@ export default function AdminDashboardPage() {
           <div className="mt-5 pt-3 border-t border-slate-200 bg-slate-50 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 p-3.5 rounded-none flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
             <div className="flex items-center space-x-1.5 shrink-0">
               <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span className="font-medium text-[11px]">Strict 1:12 Faculty Ratio</span>
+              <span className="font-medium text-[11px]">12 Students Max per Class</span>
             </div>
             <Link
               to="/admin-portal/reports"
               className="text-xs font-semibold text-brand hover:underline shrink-0"
             >
-              Export Reports →
+              View Analytics →
             </Link>
           </div>
         </div>

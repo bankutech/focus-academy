@@ -30,6 +30,7 @@ export default function ContactSection({ isPage = false }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setValidationErrors({});
     setIsSubmitting(true);
 

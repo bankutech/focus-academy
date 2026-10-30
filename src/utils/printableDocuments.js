@@ -10,30 +10,52 @@ const e = escapeHtml;
 const amount = (value) => `₹${Number(value || 0).toLocaleString('en-IN')}`;
 
 const RECEIPT_STYLE = `
-  body { font-family: sans-serif; padding: 40px; color: #0F172A; }
-  .receipt { border: 2px solid #0F172A; padding: 30px; max-width: 600px; margin: 0 auto; }
-  h1 { margin: 0 0 5px 0; color: #C2410C; font-size: 24px; }
-  .meta { color: #64748B; font-size: 12px; margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-  th, td { border: 1px solid #E2E8F0; padding: 10px; font-size: 13px; text-align: left; }
-  th { background: #F8FAFC; }
-  .footer { margin-top: 30px; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #0F172A; background: #fff; }
+  .receipt { border: 2px solid #0F172A; padding: 30px; max-width: 620px; margin: 0 auto; background: #fff; }
+  h1 { margin: 0 0 5px 0; color: #C2410C; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+  .meta { color: #334155; font-size: 12px; margin-bottom: 20px; line-height: 1.5; font-weight: 500; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th, td { border: 1px solid #CBD5E1; padding: 9px 12px; font-size: 13px; text-align: left; }
+  th { background: #F8FAFC; color: #0F172A; font-weight: 700; }
+  .gst-table { width: 100%; border-collapse: collapse; margin: 16px 0 24px 0; }
+  .gst-table th { background: #F1F5F9; color: #0F172A; border: 1px solid #94A3B8; padding: 8px 10px; font-size: 12px; text-transform: uppercase; }
+  .gst-table td { border: 1px solid #CBD5E1; padding: 8px 10px; font-size: 12px; }
+  .footer { margin-top: 24px; font-size: 11px; color: #334155; border-top: 1px solid #CBD5E1; padding-top: 10px; line-height: 1.5; }
+  @media print {
+    body { padding: 0 !important; color: #000000 !important; background: #ffffff !important; }
+    .receipt { border: 2px solid #000000 !important; max-width: 100% !important; padding: 20px !important; color: #000000 !important; }
+    h1 { color: #000000 !important; }
+    .meta, .footer { color: #000000 !important; font-weight: 600 !important; border-color: #000000 !important; }
+    th, td { border-color: #000000 !important; color: #000000 !important; }
+    th { background: #e2e8f0 !important; }
+    button { display: none !important; }
+  }
 `;
 
 const SLIP_STYLE = `
-  body { font-family: sans-serif; padding: 40px; color: #0F172A; }
-  .slip { border: 2px solid #C2410C; padding: 30px; max-width: 650px; margin: 0 auto; }
-  h1 { margin: 0 0 5px 0; color: #C2410C; font-size: 26px; }
-  .badge { background: #EA580C; color: white; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; display: inline-block; margin-bottom: 15px; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; color: #0F172A; background: #fff; }
+  .slip { border: 2px solid #C2410C; padding: 30px; max-width: 650px; margin: 0 auto; background: #fff; }
+  h1 { margin: 0 0 5px 0; color: #C2410C; font-size: 26px; font-weight: 800; }
+  .badge { background: #C2410C; color: #ffffff; padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 4px; display: inline-block; margin-bottom: 15px; letter-spacing: 0.5px; }
   table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-  th, td { border: 1px solid #E2E8F0; padding: 10px; font-size: 13px; text-align: left; }
-  th { background: #F8FAFC; width: 40%; }
-  .footer { margin-top: 30px; font-size: 11px; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 10px; text-align: center; }
+  th, td { border: 1px solid #CBD5E1; padding: 10px; font-size: 13px; text-align: left; }
+  th { background: #F8FAFC; width: 40%; color: #0F172A; font-weight: 700; }
+  .footer { margin-top: 30px; font-size: 11px; color: #334155; border-top: 1px solid #CBD5E1; padding-top: 10px; text-align: center; font-weight: 500; }
+  @media print {
+    body { padding: 0 !important; color: #000000 !important; background: #ffffff !important; }
+    .slip { border: 2px solid #000000 !important; max-width: 100% !important; padding: 20px !important; color: #000000 !important; }
+    h1 { color: #000000 !important; }
+    .badge { background: #000000 !important; color: #ffffff !important; border: 1px solid #000000 !important; }
+    th, td { border-color: #000000 !important; color: #000000 !important; }
+    th { background: #e2e8f0 !important; }
+    .footer { color: #000000 !important; font-weight: 600 !important; border-color: #000000 !important; }
+    button { display: none !important; }
+  }
 `;
 
 const documentShell = (title, style, body) =>
-  `<html>
-    <head><title>${e(title)}</title><style>${style}</style></head>
+  `<!DOCTYPE html><html>
+    <head><meta charset="utf-8"><title>${e(title)}</title><style>${style}</style></head>
     <body>${body}<script>window.print();</script></body>
   </html>`;
 
@@ -41,28 +63,67 @@ export const buildReceiptHtml = (payment = {}, fallbacks = {}) => {
   const status = payment.isReversed || payment.reversed
     ? 'REVERSED — NOT COUNTED AS A COLLECTION'
     : 'VERIFIED &amp; CREDITED TO ACADEMY LEDGER';
+
+  const totalAmount = Number(payment.amount || 0);
+  const taxableBase = Math.round((totalAmount / 1.18) * 100) / 100;
+  const cgstAmount = Math.round((taxableBase * 0.09) * 100) / 100;
+  const sgstAmount = Math.round((totalAmount - taxableBase - cgstAmount) * 100) / 100;
+
   const rows = [
     ['Receipt No', `<strong>${e(payment.receiptNumber || '')}</strong>`],
     ['Student Name', e(payment.studentName || fallbacks.studentName || '')],
     ['Student ID', e(payment.studentId || fallbacks.studentId || 'Pending assignment')],
     ['Date of Payment', e(payment.paymentDate || '')],
-    ['Amount Paid', `<strong>${e(amount(payment.amount))}</strong>`],
     ['Payment Mode', `<span style="text-transform: capitalize;">${e(String(payment.paymentMethod || '').replace('_', ' '))}</span>`],
     ['Transaction Ref', e(payment.referenceNumber || payment.id || '')],
     ['Payment Status', status],
-    ['Center GSTIN', '33AAACB2234P1Z2']
+    ['Center GSTIN', '<strong>33AAACB2234P1Z2</strong>']
   ];
+
   const body = `
-    <div style="max-width: 600px; margin: 0 auto; text-align: right; margin-bottom: 12px;">
+    <div style="max-width: 620px; margin: 0 auto; text-align: right; margin-bottom: 12px;">
       <button onclick="window.print()" style="padding: 8px 18px; background: #C2410C; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">Print / Save as PDF</button>
     </div>
     <div class="receipt">
       <h1>FOCUS ACADEMY</h1>
-      <div class="meta">Thiripura Complex, Main Road (via Four Roads), Thoramangalam, Perambalur — 621220<br>Desk: +91 98424 51220 • GSTIN: 33AAACB2234P1Z2 • Official Fee Receipt</div>
+      <div class="meta">Thiripura Complex, Main Road (via Four Roads), Thoramangalam, Perambalur — 621220<br>Desk: +91 98424 51220 • GSTIN: 33AAACB2234P1Z2 • Official Tax Invoice &amp; Fee Receipt</div>
       <table>
         ${rows.map(([label, value]) => `<tr><th>${e(label)}</th><td>${value}</td></tr>`).join('')}
       </table>
-      <div class="footer">Computer generated official tax receipt issued by Focus Academy Finance Desk. Verified &amp; recorded in central database.</div>
+
+      <h3 style="font-size: 13px; font-weight: 800; color: #0F172A; margin: 16px 0 6px 0; text-transform: uppercase;">GST Tax Invoice Itemization</h3>
+      <table class="gst-table">
+        <thead>
+          <tr>
+            <th>Description of Services</th>
+            <th style="text-align: right;">Rate / HSN</th>
+            <th style="text-align: right;">Taxable Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Coaching &amp; Tuition Services (Classes 6–12)</td>
+            <td style="text-align: right;">SAC 999293</td>
+            <td style="text-align: right;"><strong>${amount(taxableBase)}</strong></td>
+          </tr>
+          <tr>
+            <td>Central GST (CGST)</td>
+            <td style="text-align: right;">9.0%</td>
+            <td style="text-align: right;">${amount(cgstAmount)}</td>
+          </tr>
+          <tr>
+            <td>State GST (SGST)</td>
+            <td style="text-align: right;">9.0%</td>
+            <td style="text-align: right;">${amount(sgstAmount)}</td>
+          </tr>
+          <tr style="background: #F8FAFC; font-weight: bold; font-size: 13px;">
+            <td colspan="2">Net Total Amount Collected (Inclusive of 18% GST)</td>
+            <td style="text-align: right; color: #0F172A; font-size: 14px;"><strong>${amount(totalAmount)}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="footer">Computer generated official tax receipt issued by Focus Academy Finance Desk. Verified &amp; recorded in central database under Tamil Nadu Coaching Regulation Norms.</div>
     </div>`;
   return documentShell(`Receipt ${payment.receiptNumber || ''} - Focus Academy`, RECEIPT_STYLE, body);
 };

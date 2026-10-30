@@ -8,6 +8,56 @@ export default async function handler(req, res) {
   if (!services) return unavailable(res);
   const { db } = services;
 
+  // 1. Meta Webhook Verification Challenge (GET)
+  const searchParams = req.url ? new URL(req.url, 'http://localhost').searchParams : new URLSearchParams();
+  const hubMode = searchParams.get('hub.mode') || req.query?.['hub.mode'];
+  const hubToken = searchParams.get('hub.verify_token') || req.query?.['hub.verify_token'];
+  const hubChallenge = searchParams.get('hub.challenge') || req.query?.['hub.challenge'];
+
+  if (req.method === 'GET' && hubMode === 'subscribe') {
+    const expectedToken = process.env.WHATSAPP_VERIFY_TOKEN || 'focus_academy_webhook_verify_2026';
+    if (hubToken === expectedToken) {
+      res.setHeader('Content-Type', 'text/plain');
+      return res.status(200).send(hubChallenge);
+    }
+    return fail(res, 403, 'WhatsApp verification token mismatch');
+  }
+
+  // 2. Meta WhatsApp Cloud API Delivery Status Webhook (POST)
+  if (req.method === 'POST' && (req.body?.object === 'whatsapp_business_account' || req.body?.entry)) {
+    try {
+      const entries = req.body?.entry || [];
+      let updatedCount = 0;
+      for (const entry of entries) {
+        const changes = entry.changes || [];
+        for (const change of changes) {
+          const statuses = change.value?.statuses || [];
+          for (const s of statuses) {
+            const messageId = s.id;
+            const deliveryStatus = s.status; // 'sent' | 'delivered' | 'read' | 'failed'
+            const timestamp = s.timestamp ? new Date(Number(s.timestamp) * 1000).toISOString() : new Date().toISOString();
+
+            if (messageId) {
+              const querySnap = await db.collection('reminders').where('providerMessageId', '==', messageId).get();
+              for (const docSnap of querySnap.docs) {
+                await docSnap.ref.update({
+                  deliveryStatus,
+                  deliveryStatusUpdatedAt: timestamp,
+                  status: deliveryStatus
+                });
+                updatedCount++;
+              }
+            }
+          }
+        }
+      }
+      return res.status(200).json({ success: true, processed: true, updatedCount });
+    } catch (whErr) {
+      console.warn('WhatsApp webhook status update warning:', whErr);
+      return res.status(200).json({ success: true, warning: whErr.message });
+    }
+  }
+
   try {
     const access = await authenticateAdmin(req, services, { permission: 'canTriggerReminders' });
     if (!access.ok) return fail(res, access.status, access.error);

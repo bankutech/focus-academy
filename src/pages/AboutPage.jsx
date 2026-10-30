@@ -85,6 +85,19 @@ export default function AboutPage() {
           <span className="text-[#0F172A] font-bold">About Focus Academy</span>
         </div>
 
+        <div className="mb-6 bg-orange-50/90 border border-orange-200/80 rounded-lg p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm text-slate-700 shadow-2xs">
+          <div className="flex items-center space-x-2.5">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-brand text-white font-bold text-xs shrink-0">FA</span>
+            <span>Looking for tuition batches, syllabus details, or student admission?</span>
+          </div>
+          <div className="flex items-center space-x-3 shrink-0">
+            <Link to="/" className="font-bold text-brand hover:text-brand-strong hover:underline inline-flex items-center space-x-1">
+              <span>Explore Homepage & Admissions</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+
         <section aria-labelledby="about-hero-heading" className="bg-white rounded-lg p-6 sm:p-10 lg:p-12 border border-[#E2E8F0] shadow-xs mb-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             <div className="lg:col-span-7">

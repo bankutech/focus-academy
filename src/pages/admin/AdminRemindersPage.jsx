@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
   MessageSquare, 
@@ -10,10 +10,13 @@ import {
   AlertCircle, 
   X, 
   RotateCw,
-  Eye
+  Eye,
+  CheckCheck,
+  Check
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export default function AdminRemindersPage() {
   const [searchParams] = useSearchParams();
@@ -30,6 +33,9 @@ export default function AdminRemindersPage() {
   const [filterType, setFilterType] = useState(initialFilter);
 
   const [previewModal, setPreviewModal] = useState(null);
+  const previewModalRef = useRef(null);
+  useFocusTrap(previewModalRef, Boolean(previewModal));
+
   const [settings, setSettings] = useState(null);
   const [statusMessage, setStatusMessage] = useState({ type: '', text: '' });
   const [sendingId, setSendingId] = useState(null);
@@ -457,6 +463,7 @@ export default function AdminRemindersPage() {
                   <th className="py-3 px-4 font-bold">Amount Due</th>
                   <th className="py-3 px-4 font-bold">Type</th>
                   <th className="py-3 px-4 font-bold">Channel</th>
+                  <th className="py-3 px-4 font-bold">Delivery Status</th>
                   <th className="py-3 px-4 font-bold">Message Content</th>
                   <th className="py-3 px-4 font-bold text-right">Actions</th>
                 </tr>
@@ -504,6 +511,50 @@ export default function AdminRemindersPage() {
                         {rem.channel}
                       </td>
 
+                      <td className="py-3.5 px-4">
+                        {(() => {
+                          const status = rem.deliveryStatus || rem.status || 'manual_opened';
+                          if (status === 'read') {
+                            return (
+                              <span className="inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                                <CheckCheck className="w-3 h-3 text-blue-600" />
+                                <span>Read</span>
+                              </span>
+                            );
+                          }
+                          if (status === 'delivered') {
+                            return (
+                              <span className="inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <CheckCheck className="w-3 h-3 text-emerald-600" />
+                                <span>Delivered</span>
+                              </span>
+                            );
+                          }
+                          if (status === 'sent' || status === 'accepted') {
+                            return (
+                              <span className="inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                                <Check className="w-3 h-3 text-slate-500" />
+                                <span>Sent</span>
+                              </span>
+                            );
+                          }
+                          if (status === 'failed') {
+                            return (
+                              <span className="inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
+                                <AlertCircle className="w-3 h-3 text-rose-600" />
+                                <span>Failed</span>
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="inline-flex items-center gap-1 font-medium text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                              <Clock className="w-3 h-3 text-amber-600" />
+                              <span>Dispatch Logged</span>
+                            </span>
+                          );
+                        })()}
+                      </td>
+
                       <td className="py-3.5 px-4 text-slate-600 max-w-xs truncate" title={rem.messagePreview}>
                         {rem.messagePreview}
                       </td>
@@ -523,7 +574,7 @@ export default function AdminRemindersPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="9" className="py-8 text-center text-slate-400 text-xs">
+                    <td colSpan="10" className="py-8 text-center text-slate-400 text-xs">
                       No reminder logs match the search query.
                     </td>
                   </tr>
@@ -536,15 +587,21 @@ export default function AdminRemindersPage() {
 
       {previewModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
+          <div
+            ref={previewModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="preview-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2">
                 <MessageSquare className="w-5 h-5 text-emerald-600" />
-                <h2 className="text-base font-extrabold text-[#0F172A]">
+                <h2 id="preview-modal-title" className="text-base font-extrabold text-[#0F172A]">
                   WhatsApp Message Preview
                 </h2>
               </div>
-              <button onClick={() => setPreviewModal(null)} className="text-slate-400 hover:text-slate-700">
+              <button onClick={() => setPreviewModal(null)} className="text-slate-400 hover:text-slate-700 cursor-pointer" aria-label="Close dialog">
                 <X className="w-5 h-5" />
               </button>
             </div>

@@ -109,9 +109,9 @@ test.describe('Focus Academy Admin Portal E2E', () => {
     await expect(page).toHaveURL(/.*admin-portal\/reminders/);
     await expect(page.getByText('WhatsApp Fee Reminders').first()).toBeVisible();
 
-    await page.getByRole('link', { name: 'Reports & Analytics' }).first().click();
+    await page.getByRole('link', { name: 'Analytics' }).first().click();
     await expect(page).toHaveURL(/.*admin-portal\/reports/);
-    await expect(page.getByText('Institutional Reports & Analytics').first()).toBeVisible();
+    await expect(page.getByText('Analytics').first()).toBeVisible();
 
     await page.getByRole('link', { name: 'Audit Logs' }).first().click();
     await expect(page).toHaveURL(/.*admin-portal\/audit-logs/);

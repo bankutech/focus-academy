@@ -301,6 +301,7 @@ export default function EnrollPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
     if (honeypot && honeypot.trim()) {
       setIsSubmitting(false);
       return;
@@ -1134,9 +1135,30 @@ export default function EnrollPage() {
                           </div>
 
                           <div>
-                            <label htmlFor="enroll-travel-duration" className="block text-xs uppercase font-bold text-slate-600 mb-1.5">
-                              Approximate travel time from school to the academy (Optional)
-                            </label>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <label htmlFor="enroll-travel-duration" className="block text-xs uppercase font-bold text-slate-600">
+                                Approximate travel time from school to the academy (Optional)
+                              </label>
+                              <div className="flex items-center space-x-1">
+                                {[15, 30, 45, 60].map((mins) => (
+                                  <button
+                                    key={mins}
+                                    type="button"
+                                    onClick={() => {
+                                      setTravelDurationMinutes(String(mins));
+                                      if (formErrors.travelDurationMinutes) setFormErrors((prev) => ({ ...prev, travelDurationMinutes: '' }));
+                                    }}
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-colors ${
+                                      travelDurationMinutes === String(mins)
+                                        ? 'bg-brand text-white'
+                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                    }`}
+                                  >
+                                    {mins}m
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                             <div className="relative">
                               <input
                                 id="enroll-travel-duration"
@@ -1156,7 +1178,7 @@ export default function EnrollPage() {
                                 minutes
                               </span>
                             </div>
-                            <p className="text-[11px] text-slate-500 mt-1">Estimated transit time via bus, van, bicycle, or walking.</p>
+                            <p className="text-[11px] text-slate-500 mt-1">Required buffer check between school dismissal and evening batch start.</p>
                             {formErrors.travelDurationMinutes && (
                               <p className="text-xs text-rose-600 mt-1">{formErrors.travelDurationMinutes}</p>
                             )}

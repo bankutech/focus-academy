@@ -8,6 +8,7 @@ import ScrollToTop from './components/common/ScrollToTop';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import MobileQuickBar from './components/common/MobileQuickBar';
+import OfflineReconnectionBanner from './components/common/OfflineReconnectionBanner';
 
 import HomePage from './pages/HomePage';
 
@@ -89,6 +90,7 @@ export default function App() {
       <BrowserRouter>
         <StudentAuthProvider>
           <AppProvider>
+            <OfflineReconnectionBanner />
             <Suspense fallback={<RouteLoadingFallback />}>
               <Routes>
                 <Route path="/admin-portal/login" element={<AdminLoginPage />} />

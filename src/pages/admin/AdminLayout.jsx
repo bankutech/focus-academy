@@ -15,12 +15,15 @@ import {
   X,
   Settings as SettingsIcon,
   Keyboard,
-  UserPlus
+  UserPlus,
+  Lock
 } from 'lucide-react';
 import { logOutAdmin } from '../../services/firebase';
 import { getVerifiedAdmin, setVerifiedAdmin } from '../../services/adminIdentity';
 import { AdminDataService } from '../../services/adminDataService';
 import AdminProfileMenu from '../../components/admin/AdminProfileMenu';
+import AdminTerminalLock from '../../components/admin/AdminTerminalLock';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export default function AdminLayout() {
   usePageMeta({
@@ -98,8 +101,16 @@ export default function AdminLayout() {
     (item) => !item.permission || AdminDataService.hasPermission(userEmail, item.permission)
   );
 
+  const shortcutsModalRef = React.useRef(null);
+  useFocusTrap(shortcutsModalRef, shortcutsModalOpen);
+
   return (
     <div className="admin-portal-root min-h-screen bg-[#F1F5F9] flex flex-col font-sans-body w-full max-w-full">
+      <AdminTerminalLock 
+        userEmail={userEmail} 
+        displayName={displayName} 
+        onLogout={handleLogout} 
+      />
       <header className="bg-[#0F172A] text-white border-b border-[#1E293B] sticky top-0 z-40 shadow-xs w-full max-w-full">
         <div className="w-full px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 max-w-full">
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
@@ -137,6 +148,16 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => window.__lockAdminTerminal && window.__lockAdminTerminal()}
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
+              title="Lock Terminal Screen (Shared Reception Desk Security)"
+              aria-label="Lock Campus Terminal"
+            >
+              <Lock className="w-3.5 h-3.5 text-brand" />
+              <span className="hidden sm:inline">Lock Screen</span>
+            </button>
             <AdminProfileMenu />
           </div>
         </div>
@@ -265,12 +286,20 @@ export default function AdminLayout() {
         </main>
       </div>
       {shortcutsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-none shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 text-xs">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="shortcuts-modal-title"
+        >
+          <div 
+            ref={shortcutsModalRef}
+            className="bg-white rounded-none shadow-2xl max-w-md w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 text-xs"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2 text-slate-900">
                 <Keyboard className="w-5 h-5 text-orange-600" />
-                <h3 className="font-extrabold text-sm uppercase">Front-Desk Keyboard Shortcuts</h3>
+                <h3 id="shortcuts-modal-title" className="font-extrabold text-sm uppercase">Front-Desk Keyboard Shortcuts</h3>
               </div>
               <button onClick={() => setShortcutsModalOpen(false)} className="text-slate-400 hover:text-slate-700 cursor-pointer">
                 <X className="w-5 h-5" />

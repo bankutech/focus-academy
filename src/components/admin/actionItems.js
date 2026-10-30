@@ -65,8 +65,8 @@ export const buildActionItems = ({
     items.push({
       id: 'overdue-fees',
       severity: 'critical',
-      title: `${overdue.length} overdue fee obligation${overdue.length === 1 ? '' : 's'}`,
-      detail: `₹${overdue.reduce((sum, row) => sum + balanceOf(row), 0).toLocaleString('en-IN')} is past its scheduled due date.`,
+      title: `${overdue.length} overdue fee payment${overdue.length === 1 ? '' : 's'}`,
+      detail: `₹${overdue.reduce((sum, row) => sum + balanceOf(row), 0).toLocaleString('en-IN')} is past its scheduled payment date.`,
       count: overdue.length,
       amount: overdue.reduce((sum, row) => sum + balanceOf(row), 0),
       to: '/admin-portal/reminders?tab=overdue',
@@ -197,13 +197,13 @@ export const buildActionItems = ({
       items.push({
         id: 'backup-overdue',
         severity: 'warning',
-        title: latestBackup ? 'Backup is more than 7 days old' : 'No institutional backup recorded',
+        title: latestBackup ? 'Data backup is more than 7 days old' : 'No data backup saved recently',
         detail: latestBackup
-          ? `Last snapshot recorded ${new Date(latestBackup).toISOString().slice(0, 10)}.`
-          : 'Create a checksum-verified snapshot and store it in an approved secure location.',
+          ? `Last backup saved on ${new Date(latestBackup).toISOString().slice(0, 10)}.`
+          : 'Download a student & fee records backup file for academy safe-keeping.',
         count: 1,
         to: '/admin-portal/settings',
-        linkLabel: 'Create backup',
+        linkLabel: 'Download backup',
       });
     }
   }

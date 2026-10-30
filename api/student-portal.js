@@ -194,7 +194,17 @@ export default async function handler(req, res) {
       });
     }
 
-    const student = match.student;
+    let student = match.student;
+    let siblingsList = [];
+    if (student.guardianPhone) {
+      const cleanGPhone = String(student.guardianPhone).replace(/\D/g, '').slice(-10);
+      const sibSnap = await db.collection('students').where('guardianPhone', '==', cleanGPhone).get();
+      siblingsList = sibSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    }
+    if (siblingsList.length === 0) {
+      siblingsList = [student];
+    }
+
     await linkAccountToRecords(db, { uid, email, student });
 
     if (req.method === 'POST') {
@@ -308,6 +318,14 @@ export default async function handler(req, res) {
       enrollments,
       obligations,
       payments,
+      siblings: siblingsList.map((s) => ({
+        id: s.id,
+        studentName: s.studentName,
+        grade: s.grade,
+        board: s.board,
+        batchName: s.batchName,
+        status: s.status,
+      })),
       syncedAt: new Date().toISOString(),
     });
   } catch (err) {

@@ -25,6 +25,20 @@ export const feeStatusBreakdown = (obligations = []) => {
   ];
 };
 
+const cleanBatchLabel = (name = '') => {
+  if (/Class\s*10\s*State/i.test(name)) return 'C10 State';
+  if (/Class\s*10\s*CBSE/i.test(name)) return 'C10 CBSE';
+  if (/Class\s*10\s*ICSE/i.test(name)) return 'C10 ICSE';
+  if (/Class\s*12.*NEET|JEE/i.test(name)) return 'C12 NEET';
+  if (/Class\s*12/i.test(name)) return 'C12 Sci';
+  if (/Class\s*11/i.test(name)) return 'C11 Sci';
+  if (/Class\s*9/i.test(name)) return 'C9 Pre';
+  if (/Middle|6.*8/i.test(name)) return 'Mid 6-8';
+  if (/Math\s*Intensive|Clinic|Special/i.test(name)) return 'Math Clinic';
+  if (/Early/i.test(name)) return 'C10 Early';
+  return String(name).replace(/\s*-\s*.*$/, '').replace(/^Class\s*/i, 'C').slice(0, 10);
+};
+
 export const batchOccupancy = (batches = []) =>
   batches
     .filter((b) => !b.isArchived)
@@ -33,7 +47,7 @@ export const batchOccupancy = (batches = []) =>
       const enrolled = Number(b.enrolledCount) || 0;
       const ratio = enrolled / capacity;
       return {
-        label: String(b.name || b.id).replace(/\s*-\s*.*$/, '').replace(/^Class\s/, 'C'),
+        label: cleanBatchLabel(b.name || b.id),
         fullLabel: b.name,
         value: enrolled,
         max: capacity,

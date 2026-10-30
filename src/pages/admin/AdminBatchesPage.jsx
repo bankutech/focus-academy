@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
   Search, 
@@ -11,9 +11,11 @@ import {
   AlertCircle, 
   CheckCircle2, 
   X,
-  IndianRupee
+  IndianRupee,
+  ArrowUpRight
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export default function AdminBatchesPage() {
   const [batches, setBatches] = useState([]);
@@ -27,6 +29,25 @@ export default function AdminBatchesPage() {
   const [editBatch, setEditBatch] = useState(null);
   const [viewStudentsBatch, setViewStudentsBatch] = useState(null);
   const [deleteConfirmBatch, setDeleteConfirmBatch] = useState(null);
+
+  const [rolloverModalOpen, setRolloverModalOpen] = useState(false);
+  const [rolloverSourceBatchId, setRolloverSourceBatchId] = useState('');
+  const [rolloverTargetBatchId, setRolloverTargetBatchId] = useState('');
+  const [rolloverSession, setRolloverSession] = useState('2026-2027');
+  const [archiveSourceBatch, setArchiveSourceBatch] = useState(true);
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [rolloverLoading, setRolloverLoading] = useState(false);
+  const [rolloverError, setRolloverError] = useState('');
+
+  const batchModalRef = useRef(null);
+  const viewStudentsModalRef = useRef(null);
+  const deleteModalRef = useRef(null);
+  const rolloverModalRef = useRef(null);
+
+  useFocusTrap(batchModalRef, createModalOpen || Boolean(editBatch));
+  useFocusTrap(viewStudentsModalRef, Boolean(viewStudentsBatch));
+  useFocusTrap(deleteModalRef, Boolean(deleteConfirmBatch));
+  useFocusTrap(rolloverModalRef, rolloverModalOpen);
 
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -151,6 +172,77 @@ export default function AdminBatchesPage() {
     }
   };
 
+  const handleOpenRollover = (initialSourceBatchId = '') => {
+    const srcId = initialSourceBatchId || (batches[0]?.id || '');
+    setRolloverSourceBatchId(srcId);
+    setRolloverTargetBatchId('');
+    setRolloverSession('2026-2027');
+    setArchiveSourceBatch(true);
+    setRolloverError('');
+    setRolloverModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (rolloverSourceBatchId) {
+      const candidates = students.filter(s => s.batchId === rolloverSourceBatchId && s.status !== 'archived');
+      setSelectedStudentIds(candidates.map(s => s.id));
+    } else {
+      setSelectedStudentIds([]);
+    }
+  }, [rolloverSourceBatchId, students]);
+
+  const toggleSelectStudent = (id) => {
+    setSelectedStudentIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllStudents = () => {
+    const candidates = students.filter(s => s.batchId === rolloverSourceBatchId && s.status !== 'archived');
+    if (selectedStudentIds.length === candidates.length) {
+      setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(candidates.map(s => s.id));
+    }
+  };
+
+  const handleExecuteRollover = async (e) => {
+    e.preventDefault();
+    if (!rolloverSourceBatchId || !rolloverTargetBatchId) {
+      setRolloverError('Please select both a source batch and a target destination batch.');
+      return;
+    }
+    if (rolloverSourceBatchId === rolloverTargetBatchId) {
+      setRolloverError('Destination batch cannot be the same as source batch.');
+      return;
+    }
+    if (selectedStudentIds.length === 0) {
+      setRolloverError('Select at least one student to promote into the new academic cohort.');
+      return;
+    }
+
+    setRolloverLoading(true);
+    setRolloverError('');
+    try {
+      const result = await AdminDataService.rolloverBatchCohort(
+        rolloverSourceBatchId,
+        rolloverTargetBatchId,
+        {
+          studentIds: selectedStudentIds,
+          newAcademicSession: rolloverSession,
+          archiveSourceBatch
+        }
+      );
+      setFormSuccess(`Cohort Migration Complete: Transferred ${result.transferredCount} student(s) to ${result.targetBatch.name} (Session ${result.session}).`);
+      setRolloverModalOpen(false);
+      await loadData();
+    } catch (err) {
+      setRolloverError(err.message || 'Cohort rollover failed.');
+    } finally {
+      setRolloverLoading(false);
+    }
+  };
+
   const filteredBatches = batches.filter((b) => {
     if (gradeFilter !== 'all' && !b.grade.toLowerCase().includes(gradeFilter.toLowerCase())) {
       return false;
@@ -186,14 +278,24 @@ export default function AdminBatchesPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Create New Batch</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleOpenRollover()}
+            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#0F172A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer border border-slate-700"
+          >
+            <ArrowUpRight className="w-4 h-4 text-emerald-400" />
+            <span>Cohort Rollover (Session Migration)</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-brand hover:bg-brand-strong text-white rounded-lg text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create New Batch</span>
+          </button>
+        </div>
       </div>
 
       {formSuccess && (
@@ -272,16 +374,13 @@ export default function AdminBatchesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         {filteredBatches.map((batch) => {
-          const batchCap = Number(batch.capacity) || 12;
-          const isFull = batch.enrolledCount >= batchCap;
           const assignedStudents = students.filter(s => s.batchId === batch.id && s.status !== 'archived');
-          const pct = Math.round((batch.enrolledCount / batchCap) * 100);
 
           return (
             <div
               key={batch.id}
               className={`bg-white rounded-xl border ${
-                batch.isArchived ? 'border-slate-300 opacity-70' : isFull ? 'border-red-200' : 'border-slate-200'
+                batch.isArchived ? 'border-slate-300 opacity-70' : 'border-slate-200'
               } p-5 shadow-xs flex flex-col justify-between`}
             >
               <div>
@@ -295,17 +394,11 @@ export default function AdminBatchesPage() {
                     </h2>
                   </div>
 
-                  <span
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex-shrink-0 ${
-                      batch.isArchived
-                        ? 'bg-slate-200 text-slate-700'
-                        : isFull
-                        ? 'bg-red-100 text-red-700 border border-red-200'
-                        : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                    }`}
-                  >
-                    {batch.isArchived ? 'Archived' : isFull ? 'Batch Full' : `${batchCap - batch.enrolledCount} Seats Left`}
-                  </span>
+                  {batch.isArchived && (
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex-shrink-0 bg-slate-200 text-slate-700">
+                      Archived
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 my-3">
@@ -322,26 +415,6 @@ export default function AdminBatchesPage() {
                     <span className="font-bold text-[#0F172A]">₹{Number(batch.monthlyFee).toLocaleString('en-IN')}/month</span>
                   </div>
                 </div>
-
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 my-3">
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="font-bold text-slate-700 flex items-center space-x-1">
-                      <Users className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Classroom Capacity</span>
-                    </span>
-                    <span className="font-mono font-bold text-slate-900">
-                      {batch.enrolledCount} / {batchCap} Seats ({pct}%)
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        isFull ? 'bg-red-500' : pct >= 75 ? 'bg-orange-500' : 'bg-emerald-500'
-                      }`}
-                      style={{ width: `${Math.min(100, pct)}%` }}
-                    />
-                  </div>
-                </div>
               </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
@@ -355,6 +428,15 @@ export default function AdminBatchesPage() {
                 </button>
 
                 <div className="flex items-center space-x-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenRollover(batch.id)}
+                    className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors cursor-pointer"
+                    title="Promote / Rollover this cohort to next grade session"
+                  >
+                    <ArrowUpRight className="w-4 h-4 text-emerald-600" />
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => handleOpenEdit(batch)}
@@ -392,14 +474,21 @@ export default function AdminBatchesPage() {
 
       {(createModalOpen || editBatch) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200">
+          <div
+            ref={batchModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="batch-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-              <h2 className="text-base font-extrabold text-[#0F172A]">
+              <h2 id="batch-modal-title" className="text-base font-extrabold text-[#0F172A]">
                 {editBatch ? `Edit Batch: ${editBatch.name}` : 'Create New Batch'}
               </h2>
               <button
                 onClick={() => { setCreateModalOpen(false); setEditBatch(null); }}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+                aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -407,8 +496,9 @@ export default function AdminBatchesPage() {
 
             <form onSubmit={handleSaveBatch} className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Batch Name *</label>
+                <label htmlFor="batch-name-input" className="block font-bold text-slate-700 mb-1">Batch Name *</label>
                 <input
+                  id="batch-name-input"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -420,8 +510,9 @@ export default function AdminBatchesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Grade / Class *</label>
+                  <label htmlFor="batch-grade-select" className="block font-bold text-slate-700 mb-1">Grade / Class *</label>
                   <select
+                    id="batch-grade-select"
                     value={formData.grade}
                     onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
@@ -435,8 +526,9 @@ export default function AdminBatchesPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Board *</label>
+                  <label htmlFor="batch-board-select" className="block font-bold text-slate-700 mb-1">Board *</label>
                   <select
+                    id="batch-board-select"
                     value={formData.board}
                     onChange={(e) => setFormData({ ...formData, board: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
@@ -451,8 +543,9 @@ export default function AdminBatchesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Timings *</label>
+                  <label htmlFor="batch-timing-input" className="block font-bold text-slate-700 mb-1">Timings *</label>
                   <input
+                    id="batch-timing-input"
                     type="text"
                     value={formData.timing}
                     onChange={(e) => setFormData({ ...formData, timing: e.target.value })}
@@ -463,8 +556,9 @@ export default function AdminBatchesPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Monthly Fee (₹) *</label>
+                  <label htmlFor="batch-fee-input" className="block font-bold text-slate-700 mb-1">Monthly Fee (₹) *</label>
                   <input
+                    id="batch-fee-input"
                     type="number"
                     value={formData.monthlyFee}
                     onChange={(e) => setFormData({ ...formData, monthlyFee: e.target.value })}
@@ -476,8 +570,9 @@ export default function AdminBatchesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Max Capacity (Seats)</label>
+                  <label htmlFor="batch-capacity-input" className="block font-bold text-slate-700 mb-1">Max Capacity (Seats)</label>
                   <input
+                    id="batch-capacity-input"
                     type="number"
                     min="6"
                     max="30"
@@ -489,8 +584,9 @@ export default function AdminBatchesPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Classroom Location</label>
+                  <label htmlFor="batch-classroom-input" className="block font-bold text-slate-700 mb-1">Classroom Location</label>
                   <input
+                    id="batch-classroom-input"
                     type="text"
                     value={formData.classroom}
                     onChange={(e) => setFormData({ ...formData, classroom: e.target.value })}
@@ -526,17 +622,23 @@ export default function AdminBatchesPage() {
 
       {viewStudentsBatch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in duration-200">
+          <div
+            ref={viewStudentsModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="view-students-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3">
               <div>
-                <h2 className="text-sm font-extrabold text-[#0F172A]">
+                <h2 id="view-students-modal-title" className="text-sm font-extrabold text-[#0F172A]">
                   Enrolled Students: {viewStudentsBatch.name}
                 </h2>
                 <p className="text-[11px] text-slate-400">
                   {students.filter(s => s.batchId === viewStudentsBatch.id && s.status !== 'archived').length} / {viewStudentsBatch.capacity || 12} Seats Occupied
                 </p>
               </div>
-              <button onClick={() => setViewStudentsBatch(null)} className="text-slate-400 hover:text-slate-700">
+              <button onClick={() => setViewStudentsBatch(null)} className="text-slate-400 hover:text-slate-700 cursor-pointer" aria-label="Close dialog">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -567,7 +669,7 @@ export default function AdminBatchesPage() {
               <button
                 type="button"
                 onClick={() => setViewStudentsBatch(null)}
-                className="px-4 py-1.5 bg-[#0F172A] text-white text-xs font-bold rounded-lg"
+                className="px-4 py-1.5 bg-[#0F172A] text-white text-xs font-bold rounded-lg cursor-pointer"
               >
                 Close
               </button>
@@ -578,12 +680,18 @@ export default function AdminBatchesPage() {
 
       {deleteConfirmBatch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
+          <div
+            ref={deleteModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-batch-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200"
+          >
             <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-6 h-6" />
             </div>
 
-            <h3 className="text-base font-extrabold text-[#0F172A] text-center mb-1">
+            <h3 id="delete-batch-modal-title" className="text-base font-extrabold text-[#0F172A] text-center mb-1">
               Delete Batch Confirmation
             </h3>
             <p className="text-xs text-slate-600 text-center mb-4">
@@ -613,6 +721,202 @@ export default function AdminBatchesPage() {
                 Delete Batch
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cohort Rollover Dialog Modal with Focus Trap (Item 15 & Item 16) */}
+      {rolloverModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
+          <div
+            ref={rolloverModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rollover-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto text-left"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <ArrowUpRight className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 id="rollover-modal-title" className="text-base font-extrabold text-[#0F172A]">
+                    Academic Batch Cohort Rollover
+                  </h2>
+                  <p className="text-[11px] text-slate-500">
+                    Automated progression of entire batches to the next academic year / grade
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setRolloverModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 cursor-pointer"
+                aria-label="Close rollover dialog"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleExecuteRollover} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="rollover-source-batch" className="block font-bold text-slate-700 mb-1">
+                    Source Cohort Batch *
+                  </label>
+                  <select
+                    id="rollover-source-batch"
+                    value={rolloverSourceBatchId}
+                    onChange={(e) => setRolloverSourceBatchId(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white font-medium"
+                    required
+                  >
+                    <option value="">Select source batch...</option>
+                    {batches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.grade})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="rollover-target-batch" className="block font-bold text-slate-700 mb-1">
+                    Destination Batch (Next Grade) *
+                  </label>
+                  <select
+                    id="rollover-target-batch"
+                    value={rolloverTargetBatchId}
+                    onChange={(e) => setRolloverTargetBatchId(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white font-medium"
+                    required
+                  >
+                    <option value="">Select destination batch...</option>
+                    {batches
+                      .filter((b) => b.id !== rolloverSourceBatchId)
+                      .map((b) => {
+                        const targetOccupied = students.filter(s => s.batchId === b.id && s.status !== 'archived').length;
+                        return (
+                          <option key={b.id} value={b.id}>
+                            {b.name} ({b.grade} • {targetOccupied}/{b.capacity || 12} Seats)
+                          </option>
+                        );
+                      })}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="rollover-session-input" className="block font-bold text-slate-700 mb-1">
+                  New Academic Session
+                </label>
+                <input
+                  id="rollover-session-input"
+                  type="text"
+                  value={rolloverSession}
+                  onChange={(e) => setRolloverSession(e.target.value)}
+                  placeholder="e.g. 2026-2027"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono font-bold"
+                  required
+                />
+              </div>
+
+              {/* Student Checkbox Selection Manifest */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-bold text-slate-700">
+                    Students in Source Cohort ({selectedStudentIds.length} of {students.filter(s => s.batchId === rolloverSourceBatchId && s.status !== 'archived').length} selected):
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSelectAllStudents}
+                    className="text-xs text-brand font-semibold hover:underline cursor-pointer"
+                  >
+                    {selectedStudentIds.length === students.filter(s => s.batchId === rolloverSourceBatchId && s.status !== 'archived').length
+                      ? 'Deselect All'
+                      : 'Select All'}
+                  </button>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-lg p-2 divide-y divide-slate-100 bg-slate-50/50">
+                  {students.filter(s => s.batchId === rolloverSourceBatchId && s.status !== 'archived').length > 0 ? (
+                    students
+                      .filter(s => s.batchId === rolloverSourceBatchId && s.status !== 'archived')
+                      .map((s) => {
+                        const isSelected = selectedStudentIds.includes(s.id);
+                        return (
+                          <label
+                            key={s.id}
+                            className="flex items-center justify-between py-2 px-1 hover:bg-white rounded cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleSelectStudent(s.id)}
+                                className="w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand cursor-pointer"
+                              />
+                              <div>
+                                <span className="font-bold text-slate-900">{s.studentName}</span>
+                                <span className="text-[11px] text-slate-500 ml-2">ID: {s.id}</span>
+                              </div>
+                            </div>
+                            <span className="text-[11px] font-mono text-slate-600 bg-slate-200/60 px-2 py-0.5 rounded">
+                              {s.grade}
+                            </span>
+                          </label>
+                        );
+                      })
+                  ) : (
+                    <p className="text-center py-4 text-slate-400">
+                      Select a source batch with active students to display cohort.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  id="archive-source-batch"
+                  type="checkbox"
+                  checked={archiveSourceBatch}
+                  onChange={(e) => setArchiveSourceBatch(e.target.checked)}
+                  className="w-4 h-4 text-brand rounded border-slate-300 focus:ring-brand cursor-pointer"
+                />
+                <label htmlFor="archive-source-batch" className="text-slate-700 cursor-pointer">
+                  Automatically mark source batch as <span className="font-bold">Archived Session</span> upon cohort transfer
+                </label>
+              </div>
+
+              {rolloverError && (
+                <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>{rolloverError}</span>
+                </div>
+              )}
+
+              <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 text-[11px] leading-snug">
+                <span className="font-bold">12-Seat Capacity Guard Enforced:</span> The migration engine verifies that promoting these students does not breach the strict 12-seat capacity of the destination batch.
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setRolloverModalOpen(false)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={rolloverLoading || selectedStudentIds.length === 0}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-lg cursor-pointer flex items-center gap-1.5"
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                  <span>{rolloverLoading ? 'Promoting Cohort...' : 'Execute Cohort Rollover'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

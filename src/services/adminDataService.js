@@ -865,6 +865,40 @@ export const dataUnavailable = (err) => {
   return error;
 };
 
+export const syncBroadcastChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
+  ? new BroadcastChannel('focus_academy_sync_bus_v1')
+  : null;
+
+export const broadcastSyncEvent = (type, payload = {}) => {
+  try {
+    if (syncBroadcastChannel) {
+      syncBroadcastChannel.postMessage({ type, payload, timestamp: Date.now() });
+    }
+    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new CustomEvent('focus-academy:sync', { detail: { type, payload } }));
+    }
+  } catch (err) {
+    console.warn('Broadcast sync notification error:', err);
+  }
+};
+
+if (syncBroadcastChannel) {
+  syncBroadcastChannel.onmessage = (event) => {
+    if (event?.data?.type === 'STORE_UPDATED' || event?.data?.type === 'STORAGE_SYNC') {
+      sessionCache = null;
+    }
+  };
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key?.startsWith('focus_academy_') || e.key === STORAGE_KEY) {
+      sessionCache = null;
+      broadcastSyncEvent('STORAGE_SYNC', { key: e.key });
+    }
+  });
+}
+
 function loadLocalStore() {
   if (isLive() && sessionCache && (sessionCache.batches?.length > 0 || sessionCache.students?.length > 0)) {
     return sessionCache;
@@ -889,7 +923,8 @@ function loadLocalStore() {
       auditLogs: parsed.auditLogs || seed.auditLogs,
       settings: parsed.settings || seed.settings,
       tillSessions: parsed.tillSessions || [],
-      reconciliations: parsed.reconciliations || []
+      reconciliations: parsed.reconciliations || [],
+      waiverRequests: parsed.waiverRequests || []
     };
     if (isLive()) sessionCache = loaded;
     return loaded;
@@ -905,6 +940,7 @@ function saveLocalStore(data) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    broadcastSyncEvent('STORE_UPDATED', { timestamp: Date.now() });
   } catch (err) {
     console.error('Failed to save admin store:', err);
   }
@@ -1498,6 +1534,133 @@ export const AdminDataService = {
     });
 
     return { success: true };
+  },
+
+  async rolloverBatchCohort(sourceBatchId, targetBatchId, options = {}, actor = 'admin') {
+    this.verifyPermission(actor, 'canManageBatches', 'rolling over batch cohort');
+    const actorEmail = normalizeActorEmail(actor);
+
+    const store = await hydrateStore();
+    const sourceBatch = store.batches.find(b => b.id === sourceBatchId);
+    if (!sourceBatch) {
+      throw new Error(`Source batch not found: ${sourceBatchId}`);
+    }
+
+    const targetBatch = store.batches.find(b => b.id === targetBatchId);
+    if (!targetBatch) {
+      throw new Error(`Target batch not found: ${targetBatchId}`);
+    }
+
+    const candidateStudents = store.students.filter(
+      s => s.batchId === sourceBatchId && s.status !== 'archived'
+    );
+    const selectedStudentIds = Array.isArray(options.studentIds) && options.studentIds.length > 0
+      ? new Set(options.studentIds)
+      : new Set(candidateStudents.map(s => s.id));
+
+    const studentsToMove = candidateStudents.filter(s => selectedStudentIds.has(s.id));
+    if (studentsToMove.length === 0) {
+      throw new Error('No active students selected from source batch for cohort rollover.');
+    }
+
+    const currentTargetCount = store.students.filter(s => s.batchId === targetBatchId && s.status !== 'archived').length;
+    const targetCapacity = targetBatch.capacity || 12;
+    if (currentTargetCount + studentsToMove.length > targetCapacity) {
+      throw new Error(
+        `Capacity guard exceeded: Target batch '${targetBatch.name}' has capacity for ${targetCapacity} students (${targetCapacity - currentTargetCount} seats remaining), but attempting to roll over ${studentsToMove.length} students.`
+      );
+    }
+
+    const nextSession = options.newAcademicSession || targetBatch.academicSession || '2026-2027';
+    const now = new Date().toISOString();
+
+    store.students = store.students.map(s => {
+      if (selectedStudentIds.has(s.id)) {
+        return {
+          ...s,
+          batchId: targetBatchId,
+          batchName: targetBatch.name,
+          grade: targetBatch.grade,
+          board: targetBatch.board,
+          academicSession: nextSession,
+          updatedAt: now,
+          rolloverHistory: [
+            ...(s.rolloverHistory || []),
+            {
+              fromBatchId: sourceBatchId,
+              fromBatchName: sourceBatch.name,
+              toBatchId: targetBatchId,
+              toBatchName: targetBatch.name,
+              session: nextSession,
+              timestamp: now,
+              actor: actorEmail
+            }
+          ]
+        };
+      }
+      return s;
+    });
+
+    const newTargetEnrolled = currentTargetCount + studentsToMove.length;
+    targetBatch.enrolledCount = newTargetEnrolled;
+    targetBatch.seatsRemaining = Math.max(0, targetCapacity - newTargetEnrolled);
+    targetBatch.status = newTargetEnrolled >= targetCapacity
+      ? 'Full (12 Seats)'
+      : `Admissions Open (${targetCapacity - newTargetEnrolled} Seats Left)`;
+    targetBatch.updatedAt = now;
+
+    const remainingInSource = store.students.filter(s => s.batchId === sourceBatchId && s.status !== 'archived').length;
+    sourceBatch.enrolledCount = remainingInSource;
+    sourceBatch.seatsRemaining = Math.max(0, (sourceBatch.capacity || 12) - remainingInSource);
+    if (options.archiveSourceBatch || remainingInSource === 0) {
+      sourceBatch.isArchived = true;
+      sourceBatch.status = 'Archived Session';
+    }
+    sourceBatch.updatedAt = now;
+
+    if (isLive()) {
+      try {
+        await updateDoc(doc(db, 'batches', targetBatchId), targetBatch);
+        await updateDoc(doc(db, 'batches', sourceBatchId), sourceBatch);
+        for (const s of studentsToMove) {
+          await updateDoc(doc(db, 'students', s.id), {
+            batchId: targetBatchId,
+            batchName: targetBatch.name,
+            grade: targetBatch.grade,
+            board: targetBatch.board,
+            academicSession: nextSession,
+            updatedAt: now
+          });
+        }
+      } catch (err) {
+        console.warn('Firestore cohort rollover write warning:', err);
+      }
+    }
+
+    saveLocalStore(store);
+
+    broadcastSyncEvent('STORE_UPDATED', {
+      type: 'BATCH_COHORT_ROLLOVER',
+      sourceBatchId,
+      targetBatchId,
+      transferredCount: studentsToMove.length
+    });
+
+    await this.logAudit({
+      actor: actorEmail,
+      action: 'BATCH_COHORT_ROLLOVER',
+      entityType: 'batch',
+      entityId: targetBatchId,
+      details: `Rolled over cohort of ${studentsToMove.length} student(s) from '${sourceBatch.name}' (${sourceBatch.grade}) into '${targetBatch.name}' (${targetBatch.grade}) for Session ${nextSession}.`
+    });
+
+    return {
+      success: true,
+      transferredCount: studentsToMove.length,
+      sourceBatch,
+      targetBatch,
+      session: nextSession
+    };
   },
 
   async getStudents(options = {}) {
@@ -3456,7 +3619,126 @@ export const AdminDataService = {
       details: `Waived ₹${amount} for '${obl.studentName}' on obligation ${obligationId}. Reason: ${reason}`
     });
 
+    broadcastSyncEvent('FEE_WAIVED', { obligationId, amount, reason });
     return obl;
+  },
+
+  async requestFeeWaiver(obligationId, waiveAmount, reason, maker = 'staff') {
+    if (!reason || reason.trim().length < 5) {
+      throw new Error('A detailed reason (at least 5 characters) is required to request a fee waiver.');
+    }
+    const store = await hydrateStore();
+    const obl = store.obligations.find(o => o.id === obligationId);
+    if (!obl) throw new Error(`Obligation not found: ${obligationId}`);
+
+    const parsedAmount = Number(waiveAmount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      throw new Error('Waiver amount must be greater than zero.');
+    }
+
+    const currentBalance = Math.max(0, obl.amountDue - (obl.amountPaid || 0) - (obl.waivedAmount || 0));
+    if (currentBalance <= 0) {
+      throw new Error('This fee obligation has no outstanding balance to waive.');
+    }
+
+    const amount = Math.min(parsedAmount, currentBalance);
+    const waiverRequest = {
+      id: uid('WVR'),
+      obligationId,
+      studentId: obl.studentId,
+      studentName: obl.studentName,
+      billingCycle: obl.billingCycle,
+      amountDue: obl.amountDue,
+      currentBalance,
+      requestedAmount: amount,
+      reason: reason.trim(),
+      requestedBy: normalizeActorEmail(maker),
+      requestedAt: new Date().toISOString(),
+      status: 'pending_approval'
+    };
+
+    if (!store.waiverRequests) store.waiverRequests = [];
+    store.waiverRequests.unshift(waiverRequest);
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: normalizeActorEmail(maker),
+      action: 'FEE_WAIVER_REQUESTED',
+      entityType: 'fee_obligation',
+      entityId: obligationId,
+      details: `Maker-Checker: Fee waiver of ₹${amount} requested for '${obl.studentName}' by ${waiverRequest.requestedBy}. Reason: ${reason}`
+    });
+
+    broadcastSyncEvent('FEE_WAIVER_REQUESTED', waiverRequest);
+    return waiverRequest;
+  },
+
+  async getPendingFeeWaivers() {
+    const store = await hydrateStore();
+    return (store.waiverRequests || []).filter(w => w.status === 'pending_approval');
+  },
+
+  async approveFeeWaiver(waiverId, checker = 'admin') {
+    this.verifyPermission(checker, 'canWaiveFees', 'approving fee waiver');
+    const store = await hydrateStore();
+    if (!store.waiverRequests) store.waiverRequests = [];
+    const waiver = store.waiverRequests.find(w => w.id === waiverId);
+    if (!waiver) throw new Error(`Waiver request not found: ${waiverId}`);
+    if (waiver.status !== 'pending_approval') {
+      throw new Error(`Waiver request is already ${waiver.status}.`);
+    }
+
+    const checkerEmail = normalizeActorEmail(checker);
+    if (checkerEmail.toLowerCase() === String(waiver.requestedBy).toLowerCase() && !checkerEmail.includes('owner')) {
+      throw new Error('Maker-Checker Governance Violation: A fee waiver cannot be approved by the same staff member who requested it. Owner or Director review is required.');
+    }
+
+    await this.waiveFeeObligation(waiver.obligationId, waiver.requestedAmount, `Approved by ${checkerEmail}: ${waiver.reason}`, checker);
+
+    waiver.status = 'approved';
+    waiver.approvedBy = checkerEmail;
+    waiver.approvedAt = new Date().toISOString();
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: checkerEmail,
+      action: 'FEE_WAIVER_APPROVED',
+      entityType: 'waiver_request',
+      entityId: waiverId,
+      details: `Maker-Checker Approved: Waiver of ₹${waiver.requestedAmount} approved by ${checkerEmail} (requested by ${waiver.requestedBy}).`
+    });
+
+    broadcastSyncEvent('FEE_WAIVER_APPROVED', waiver);
+    return waiver;
+  },
+
+  async rejectFeeWaiver(waiverId, rejectionReason, checker = 'admin') {
+    this.verifyPermission(checker, 'canWaiveFees', 'rejecting fee waiver');
+    const store = await hydrateStore();
+    if (!store.waiverRequests) store.waiverRequests = [];
+    const waiver = store.waiverRequests.find(w => w.id === waiverId);
+    if (!waiver) throw new Error(`Waiver request not found: ${waiverId}`);
+    if (waiver.status !== 'pending_approval') {
+      throw new Error(`Waiver request is already ${waiver.status}.`);
+    }
+
+    const checkerEmail = normalizeActorEmail(checker);
+    waiver.status = 'rejected';
+    waiver.rejectedBy = checkerEmail;
+    waiver.rejectedAt = new Date().toISOString();
+    waiver.rejectionReason = rejectionReason || 'Rejected by administrative authority';
+    saveLocalStore(store);
+
+    await this.logAudit({
+      actor: checkerEmail,
+      action: 'FEE_WAIVER_REJECTED',
+      entityType: 'waiver_request',
+      entityId: waiverId,
+      details: `Maker-Checker Rejected: Waiver request of ₹${waiver.requestedAmount} rejected by ${checkerEmail}. Reason: ${waiver.rejectionReason}`
+    });
+
+    broadcastSyncEvent('FEE_WAIVER_REJECTED', waiver);
+    return waiver;
   },
 
   async getPayments(studentId = null) {
@@ -5198,6 +5480,15 @@ export const AdminDataService = {
       batchAllocations.set(b.id, b.enrolledCount || 0);
     }
 
+    const sanitizeCsvCell = (val) => {
+      if (typeof val !== 'string') return val;
+      const trimmed = val.trim();
+      if (/^[=+\-@\t\r]/.test(trimmed)) {
+        return `'${trimmed}`;
+      }
+      return trimmed;
+    };
+
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i];
       const cells = [];
@@ -5213,13 +5504,13 @@ export const AdminDataService = {
             inQuotes = !inQuotes;
           }
         } else if (ch === ',' && !inQuotes) {
-          cells.push(cur.trim());
+          cells.push(sanitizeCsvCell(cur));
           cur = '';
         } else {
           cur += ch;
         }
       }
-      cells.push(cur.trim());
+      cells.push(sanitizeCsvCell(cur));
 
       const studentName = cells[nameIdx] || '';
       const guardianName = parentIdx !== -1 ? cells[parentIdx] : 'Parent / Guardian';

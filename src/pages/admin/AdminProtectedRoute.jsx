@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { onAdminAuthStateChanged, isFirebaseConfigured, logOutAdmin } from '../../services/firebase';
+import { onAdminAuthStateChanged, isFirebaseConfigured, logOutAdmin, getAdminAllowlist } from '../../services/firebase';
 import { setVerifiedAdmin } from '../../services/adminIdentity';
 import AdminAccessDeniedPage from './AdminAccessDeniedPage';
 
@@ -17,10 +17,23 @@ export default function AdminProtectedRoute({ children }) {
     if (demoAdminRaw) {
       try {
         const demoAdmin = JSON.parse(demoAdminRaw);
-        setVerifiedAdmin(demoAdmin);
-        setAuthState({ loading: false, user: demoAdmin, isAdmin: true });
-        return undefined;
-      } catch {}
+        const allowlist = getAdminAllowlist();
+        const cleanEmail = String(demoAdmin?.email || '').toLowerCase().trim();
+        // Strict RBAC: Fallback evaluation requires authoritative allowlist verification and active session integrity
+        const isValidAllowlistAdmin = cleanEmail && allowlist.includes(cleanEmail);
+        const isNotExpired = demoAdmin?.sessionExpiry ? Number(demoAdmin.sessionExpiry) > Date.now() : true;
+
+        if (isValidAllowlistAdmin && isNotExpired) {
+          setVerifiedAdmin(demoAdmin);
+          setAuthState({ loading: false, user: demoAdmin, isAdmin: true });
+          return undefined;
+        } else {
+          // Purge unauthorized or unverified token
+          localStorage.removeItem('focus_demo_admin');
+        }
+      } catch {
+        localStorage.removeItem('focus_demo_admin');
+      }
     }
 
     if (!isFirebaseConfigured()) {

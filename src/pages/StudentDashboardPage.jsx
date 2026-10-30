@@ -26,11 +26,15 @@ import {
   FileText,
   BarChart3,
   HelpCircle,
-  Send
+  Send,
+  Users,
+  Plus,
+  X
 } from 'lucide-react';
 import { useStudentAuth } from '../context/StudentAuthContext';
 import { useStudentFlow } from '../context/useAppContext';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { 
   buildReceiptHtml, 
   buildAdmissionSlipHtml, 
@@ -65,6 +69,17 @@ export default function StudentDashboardPage() {
   const [profileErrorMsg, setProfileErrorMsg] = useState('');
   const [passwordResetSent, setPasswordResetSent] = useState(false);
   const [sendingPasswordReset, setSendingPasswordReset] = useState(false);
+
+  const [siblings, setSiblings] = useState([]);
+  const [activeStudentId, setActiveStudentId] = useState(null);
+  const [lastSyncedTime, setLastSyncedTime] = useState(new Date());
+  const [showLinkSiblingModal, setShowLinkSiblingModal] = useState(false);
+  const [linkSiblingIdInput, setLinkSiblingIdInput] = useState('');
+  const [linkSiblingError, setLinkSiblingError] = useState('');
+  const [linkSiblingSuccess, setLinkSiblingSuccess] = useState('');
+
+  const linkSiblingModalRef = React.useRef(null);
+  useFocusTrap(linkSiblingModalRef, showLinkSiblingModal);
 
   const [doubts, setDoubts] = useState(() => (Array.isArray(profile?.doubts) ? profile.doubts : []));
   const [newDoubtSubject, setNewDoubtSubject] = useState('Physics');
@@ -153,7 +168,7 @@ export default function StudentDashboardPage() {
     }
   }, [profile, user]);
 
-  const fetchPortalData = useCallback(async () => {
+  const fetchPortalData = useCallback(async (targetStudentId = null) => {
     if (!user) return;
     setLoadingEnrollments(true);
     setLoadingFinancials(true);
@@ -162,13 +177,49 @@ export default function StudentDashboardPage() {
 
     try {
       const token = await user.getIdToken();
-      const response = await fetch('/api/student-portal', {
+      const effectiveStudentId = targetStudentId || activeStudentId;
+      const url = effectiveStudentId
+        ? `/api/student-portal?studentId=${encodeURIComponent(effectiveStudentId)}`
+        : '/api/student-portal';
+
+      const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store'
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || payload.success === false) {
         throw new Error(payload.error || 'The campus database could not be reached. No figures are shown until the authoritative ledger loads.');
+      }
+
+      if (Array.isArray(payload.siblings) && payload.siblings.length > 0) {
+        setSiblings(payload.siblings);
+        if (!effectiveStudentId && payload.student?.id) {
+          setActiveStudentId(payload.student.id);
+        }
+      } else if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('focus_academy_admin_data_v1');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const parentPhone = profile?.parentPhone || profile?.mobile || payload.student?.guardianPhone;
+            if (parentPhone && Array.isArray(parsed.students)) {
+              const cleanParent = String(parentPhone).replace(/\D/g, '').slice(-10);
+              const matched = parsed.students.filter(s =>
+                String(s.guardianPhone || '').replace(/\D/g, '').slice(-10) === cleanParent
+              );
+              if (matched.length > 0) {
+                setSiblings(matched.map(s => ({
+                  id: s.id,
+                  studentName: s.studentName,
+                  grade: s.grade,
+                  board: s.board,
+                  batchName: s.batchName,
+                  status: s.status
+                })));
+              }
+            }
+          }
+        } catch {}
       }
 
       const rows = (payload.enrollments || []).map((row) => ({
@@ -228,6 +279,7 @@ export default function StudentDashboardPage() {
       if (Array.isArray(payload.student?.doubts)) {
         setDoubts(payload.student.doubts);
       }
+      setLastSyncedTime(new Date());
     } catch (err) {
       const message = err?.message || 'Could not load your admission records from the campus database.';
       setEnrollmentError(message);
@@ -237,13 +289,90 @@ export default function StudentDashboardPage() {
       setLoadingEnrollments(false);
       setLoadingFinancials(false);
     }
-  }, [user, profile]);
+  }, [user, profile, activeStudentId]);
 
   const fetchFinancials = fetchPortalData;
 
   useEffect(() => {
     fetchPortalData();
   }, [fetchPortalData]);
+
+  useEffect(() => {
+    let bc;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        bc = new BroadcastChannel('focus_academy_sync_bus_v1');
+        bc.onmessage = (event) => {
+          if (['STORE_UPDATED', 'PAYMENT_RECORDED', 'DOUBT_UPDATED', 'STORAGE_SYNC', 'RECONCILIATION_COMPLETED'].includes(event?.data?.type)) {
+            fetchPortalData(activeStudentId);
+          }
+        };
+      }
+    } catch (e) {
+      console.warn('Real-time sync broadcast unavailable:', e);
+    }
+
+    const handleCustomSync = () => {
+      fetchPortalData(activeStudentId);
+    };
+
+    const handleStorageEvent = (e) => {
+      if (e.key?.startsWith('focus_academy_')) {
+        fetchPortalData(activeStudentId);
+      }
+    };
+
+    window.addEventListener('focus-academy:sync', handleCustomSync);
+    window.addEventListener('storage', handleStorageEvent);
+
+    return () => {
+      if (bc) bc.close();
+      window.removeEventListener('focus-academy:sync', handleCustomSync);
+      window.removeEventListener('storage', handleStorageEvent);
+    };
+  }, [fetchPortalData, activeStudentId]);
+
+  const handleSwitchSibling = (siblingId) => {
+    setActiveStudentId(siblingId);
+    fetchPortalData(siblingId);
+  };
+
+  const handleLinkSibling = (e) => {
+    e.preventDefault();
+    if (!linkSiblingIdInput.trim()) return;
+    setLinkSiblingError('');
+    setLinkSiblingSuccess('');
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem('focus_academy_admin_data_v1') : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const match = (parsed.students || []).find(s =>
+          String(s.id).toLowerCase() === linkSiblingIdInput.trim().toLowerCase() ||
+          String(s.studentName).toLowerCase() === linkSiblingIdInput.trim().toLowerCase()
+        );
+        if (match) {
+          setSiblings(prev => {
+            if (prev.some(s => s.id === match.id)) return prev;
+            return [...prev, {
+              id: match.id,
+              studentName: match.studentName,
+              grade: match.grade,
+              board: match.board,
+              batchName: match.batchName,
+              status: match.status
+            }];
+          });
+          setLinkSiblingSuccess(`Linked ${match.studentName} (${match.grade}) to household.`);
+          setLinkSiblingIdInput('');
+          setTimeout(() => setShowLinkSiblingModal(false), 1200);
+          return;
+        }
+      }
+      setLinkSiblingError('Student ID not found in campus directory. Please confirm with reception.');
+    } catch {
+      setLinkSiblingError('Could not process sibling link.');
+    }
+  };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -344,6 +473,71 @@ export default function StudentDashboardPage() {
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-slate-800 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-emerald-300 font-semibold tracking-wide">
+                  Live Real-Time Sync Active
+                </span>
+                <span className="text-slate-400 text-[11px] hidden sm:inline">
+                  • Connected to push event bus • Synchronized at {lastSyncedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => fetchPortalData(activeStudentId)}
+                className="px-2.5 py-1 text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Force refresh student ledger and doubts"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingFinancials ? 'animate-spin' : ''}`} />
+                <span>Sync Now</span>
+              </button>
+            </div>
+
+            <div className="mt-4 p-3 bg-slate-900/90 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-orange-400 shrink-0" />
+                <span className="font-bold text-slate-200">
+                  Household Sibling Switcher:
+                </span>
+                <span className="text-slate-400 text-[11px]">
+                  ({siblings.length > 1 ? `${siblings.length} Children Enrolled` : '1 Child Enrolled'})
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {siblings.map((sib) => {
+                  const isCurrent = (financials?.studentId || financials?.student?.id || activeStudentId) === sib.id;
+                  return (
+                    <button
+                      key={sib.id}
+                      type="button"
+                      onClick={() => handleSwitchSibling(sib.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isCurrent
+                          ? 'bg-brand text-white shadow-xs ring-2 ring-brand-light/30'
+                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700'
+                      }`}
+                    >
+                      <span>{sib.studentName}</span>
+                      <span className="text-[10px] opacity-80">({sib.grade})</span>
+                      {isCurrent && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setShowLinkSiblingModal(true)}
+                  className="px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-700 text-orange-300 hover:text-orange-200 text-xs font-semibold rounded-lg border border-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Link Sibling</span>
                 </button>
               </div>
             </div>
@@ -1718,6 +1912,92 @@ export default function StudentDashboardPage() {
         </div>
       </div>
     )}
+
+        {showLinkSiblingModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="link-sibling-modal-title"
+          >
+            <div
+              ref={linkSiblingModalRef}
+              className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-left relative"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-orange-100 text-brand flex items-center justify-center">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 id="link-sibling-modal-title" className="text-base font-bold text-slate-900">
+                      Link Sibling Account
+                    </h3>
+                    <p className="text-xs text-slate-500">Unify sibling records under this guardian portal</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowLinkSiblingModal(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+                  aria-label="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleLinkSibling} className="mt-4 space-y-4">
+                <div>
+                  <label htmlFor="sibling-student-id" className="block text-xs font-semibold text-slate-700 mb-1">
+                    Sibling Student ID or Full Name
+                  </label>
+                  <input
+                    id="sibling-student-id"
+                    type="text"
+                    value={linkSiblingIdInput}
+                    onChange={(e) => setLinkSiblingIdInput(e.target.value)}
+                    placeholder="e.g. FA-2026-004 or Bhavana Suresh"
+                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand outline-none"
+                    required
+                  />
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Both siblings share the guardian contact phone for admission slips and billing alerts.
+                  </p>
+                </div>
+
+                {linkSiblingError && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{linkSiblingError}</span>
+                  </div>
+                )}
+
+                {linkSiblingSuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>{linkSiblingSuccess}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowLinkSiblingModal(false)}
+                    className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-brand hover:bg-brand-strong text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                  >
+                    Link Sibling
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

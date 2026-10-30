@@ -55,12 +55,11 @@ export default function AdminReportsPage() {
   async function loadReportData() {
     try {
       setLoading(true);
-      const [b, s, o, p, m, ac, dc, bs, ts, ats, recs] = await Promise.all([
+      const [b, s, o, p, ac, dc, bs, ts, ats, recs] = await Promise.all([
         AdminDataService.getBatches(),
         AdminDataService.getStudents(),
         AdminDataService.getFeeObligations(),
         AdminDataService.getPayments(),
-        AdminDataService.getDashboardMetrics(),
         AdminDataService.getAdminCollectionReport(),
         AdminDataService.getDailyCollectionReport(),
         AdminDataService.getBatchCollectionSummary(),
@@ -68,6 +67,7 @@ export default function AdminReportsPage() {
         AdminDataService.getActiveTillSession(),
         AdminDataService.getCollectionReconciliations()
       ]);
+      const m = await AdminDataService.getDashboardMetrics({ batches: b, students: s, obligations: o, payments: p });
       setBatches(b);
       setStudents(s);
       setObligations(o);

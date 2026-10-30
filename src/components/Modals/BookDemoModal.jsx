@@ -11,8 +11,12 @@ import {
 import { LeadService } from '../../services/leadService';
 import { validateIndianMobile } from '../../types/schemas';
 import { CAMPUS_CONFIG } from '../../config/campusConfig';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
+  const modalRef = React.useRef(null);
+  useFocusTrap(modalRef, isOpen);
+
   const [step, setStep] = useState(1);
   const [sessionType, setSessionType] = useState(
     preselectedSubject && preselectedSubject.includes('Parent') ? 'alignment-call' : 'diagnostic-trial'
@@ -28,6 +32,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [leadDelivered, setLeadDelivered] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState('');
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -51,6 +56,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
       return;
     }
     if (step === 3) {
+      if (isSubmittingLead) return;
       setPhoneError('');
       setNameError('');
       if (!studentName.trim()) {
@@ -63,21 +69,26 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
         return;
       }
 
-      const leadResult = await LeadService.submitLead({
-        studentName: studentName.trim(),
-        phone: val.sanitized,
-        grade: subject.slice(0, 15),
-        board: 'Focus Academy Track',
-        subjects: subject,
-        notes: `${sessionType === 'alignment-call' ? '5-Min Alignment Call' : 'Academic Consultation'} | Timing: ${timing} | Challenge: ${childChallenge || 'None specified'}`
-      });
-      setLeadDelivered(Boolean(leadResult.success));
+      setIsSubmittingLead(true);
+      try {
+        const leadResult = await LeadService.submitLead({
+          studentName: studentName.trim(),
+          phone: val.sanitized,
+          grade: subject.slice(0, 15),
+          board: 'Focus Academy Track',
+          subjects: subject,
+          notes: `${sessionType === 'alignment-call' ? '5-Min Alignment Call' : 'Academic Consultation'} | Timing: ${timing} | Challenge: ${childChallenge || 'None specified'}`
+        });
+        setLeadDelivered(Boolean(leadResult.success));
 
-      const customWhatsAppText = encodeURIComponent(
-        `Hello Focus Academy Thoramangalam! 👋\n\nI want to confirm a ${sessionType === 'alignment-call' ? '5-Min Parent Alignment Call' : 'Academic Consultation'}:\n\n• Student: ${studentName.trim()}\n• Contact: +91 ${val.sanitized}\n• Subject: ${subject}\n• Format: ${mode === 'online' ? 'Online Interactive' : 'Classroom Batch (Thiripura Complex)'}\n• Preferred Slot: ${timing}\n• Challenge/Goal: ${childChallenge || 'General'}\n\nPlease confirm availability.`
-      );
-      setWhatsappUrl(`https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${customWhatsAppText}`);
-      setIsSubmitted(true);
+        const customWhatsAppText = encodeURIComponent(
+          `Hello Focus Academy Thoramangalam! 👋\n\nI want to confirm a ${sessionType === 'alignment-call' ? '5-Min Parent Alignment Call' : 'Academic Consultation'}:\n\n• Student: ${studentName.trim()}\n• Contact: +91 ${val.sanitized}\n• Subject: ${subject}\n• Format: ${mode === 'online' ? 'Online Interactive' : 'Classroom Batch (Thiripura Complex)'}\n• Preferred Slot: ${timing}\n• Challenge/Goal: ${childChallenge || 'General'}\n\nPlease confirm availability.`
+        );
+        setWhatsappUrl(`https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${customWhatsAppText}`);
+        setIsSubmitted(true);
+      } finally {
+        setIsSubmittingLead(false);
+      }
       return;
     }
     setStep(step + 1);
@@ -86,6 +97,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
   const handleReset = () => {
     setStep(1);
     setIsSubmitted(false);
+    setIsSubmittingLead(false);
     setLeadDelivered(false);
     setPhoneError('');
     setNameError('');
@@ -95,6 +107,7 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/80 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
       <div 
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="demo-modal-headline"
@@ -423,11 +436,12 @@ export default function BookDemoModal({ isOpen, onClose, preselectedSubject }) {
 
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-brand hover:bg-brand-strong text-white text-xs font-semibold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
+                  disabled={isSubmittingLead}
+                  className="px-5 py-2.5 bg-brand hover:bg-brand-strong disabled:opacity-50 text-white text-xs font-semibold rounded-md shadow-xs transition-all cursor-pointer active:scale-98"
                 >
                   <span>
                     {step === 3 
-                      ? (sessionType === 'alignment-call' ? 'Confirm 5-Min Alignment Call' : 'Confirm 45-Min Diagnostic') 
+                      ? (isSubmittingLead ? 'Submitting...' : (sessionType === 'alignment-call' ? 'Confirm 5-Min Alignment Call' : 'Confirm 45-Min Diagnostic')) 
                       : 'Next Step →'}
                   </span>
                 </button>

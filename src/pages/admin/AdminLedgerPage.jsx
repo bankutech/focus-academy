@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   CreditCard, 
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 export default function AdminLedgerPage() {
   const [payments, setPayments] = useState([]);
@@ -42,6 +43,16 @@ export default function AdminLedgerPage() {
   const [formSuccess, setFormSuccess] = useState('');
 
   const [tillModalOpen, setTillModalOpen] = useState(false);
+
+  const recordModalRef = useRef(null);
+  const receiptModalRef = useRef(null);
+  const reverseModalRef = useRef(null);
+  const tillModalRef = useRef(null);
+
+  useFocusTrap(recordModalRef, recordModalOpen);
+  useFocusTrap(receiptModalRef, Boolean(receiptModalPayment));
+  useFocusTrap(reverseModalRef, Boolean(reverseModalPayment));
+  useFocusTrap(tillModalRef, tillModalOpen);
   const [activeTill, setActiveTill] = useState(null);
   const [openingFloatInput, setOpeningFloatInput] = useState('1000');
   const [denominations, setDenominations] = useState({ d500: 0, d200: 0, d100: 0, d50: 0, d20: 0, d10: 0, coins: 0 });
@@ -49,6 +60,8 @@ export default function AdminLedgerPage() {
   const [tillError, setTillError] = useState('');
   const [tillSuccess, setTillSuccess] = useState('');
   const [isTillSubmitting, setIsTillSubmitting] = useState(false);
+  const [recordingPayment, setRecordingPayment] = useState(false);
+  const [reversingPayment, setReversingPayment] = useState(false);
 
   const [paymentForm, setPaymentForm] = useState({
     studentId: '',
@@ -62,14 +75,15 @@ export default function AdminLedgerPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [p, s, o, m, setts, till] = await Promise.all([
+      const [p, s, o, setts, till, b] = await Promise.all([
         AdminDataService.getPayments(),
         AdminDataService.getStudents(),
         AdminDataService.getFeeObligations(),
-        AdminDataService.getDashboardMetrics(),
         AdminDataService.getSettings(),
-        AdminDataService.getActiveTillSession().catch(() => null)
+        AdminDataService.getActiveTillSession().catch(() => null),
+        AdminDataService.getBatches().catch(() => [])
       ]);
+      const m = await AdminDataService.getDashboardMetrics({ payments: p, students: s, obligations: o, batches: b });
       setPayments(p);
       setStudents(s);
       setObligations(o);
@@ -123,6 +137,7 @@ export default function AdminLedgerPage() {
 
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
+    if (recordingPayment) return;
     setFormError('');
     setFormSuccess('');
 
@@ -146,6 +161,7 @@ export default function AdminLedgerPage() {
     }
 
     try {
+      setRecordingPayment(true);
       const currentAdmin = requireAdminEmail();
 
       const result = await AdminDataService.recordPayment({
@@ -162,17 +178,21 @@ export default function AdminLedgerPage() {
       await loadData();
     } catch (err) {
       setFormError(err.message || 'Payment recording failed.');
+    } finally {
+      setRecordingPayment(false);
     }
   };
 
   const handleExecuteReverse = async (e) => {
     e.preventDefault();
+    if (reversingPayment) return;
     setReverseError('');
     if (!reverseReason || reverseReason.trim().length < 5) {
       setReverseError('A valid reason of at least 5 characters is mandatory for audit compliance.');
       return;
     }
     try {
+      setReversingPayment(true);
       const currentAdmin = requireAdminEmail();
       await AdminDataService.reversePayment(reverseModalPayment.id, reverseReason, currentAdmin);
       setFormSuccess(`Reversed payment ₹${reverseModalPayment.amount} for ${reverseModalPayment.studentName}.`);
@@ -181,6 +201,8 @@ export default function AdminLedgerPage() {
       await loadData();
     } catch (err) {
       setReverseError(err.message || 'Payment reversal failed.');
+    } finally {
+      setReversingPayment(false);
     }
   };
 
@@ -596,11 +618,17 @@ export default function AdminLedgerPage() {
 
       {recordModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 sm:p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto">
+          <div
+            ref={recordModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="record-payment-title"
+            className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 sm:p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2">
                 <CreditCard className="w-5 h-5 text-brand" />
-                <h2 className="text-base font-extrabold text-[#0F172A]">
+                <h2 id="record-payment-title" className="text-base font-extrabold text-[#0F172A]">
                   Record Verified Payment
                 </h2>
               </div>
@@ -709,9 +737,10 @@ export default function AdminLedgerPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand hover:bg-brand-strong text-white font-bold rounded-lg cursor-pointer"
+                  disabled={recordingPayment}
+                  className="px-4 py-2 bg-brand hover:bg-brand-strong text-white font-bold rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Record & Generate Receipt
+                  {recordingPayment ? 'Recording...' : 'Record & Generate Receipt'}
                 </button>
               </div>
             </form>
@@ -721,10 +750,16 @@ export default function AdminLedgerPage() {
 
       {receiptModalPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
+          <div
+            ref={receiptModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="receipt-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-3 print:hidden">
               <div className="flex items-center space-x-3">
-                <span className="text-xs uppercase font-extrabold text-slate-500">Official Fee Receipt</span>
+                <span id="receipt-modal-title" className="text-xs uppercase font-extrabold text-slate-500">Official Fee Receipt</span>
                 <div className="flex items-center bg-slate-100 rounded-md p-0.5 border border-slate-200 text-xs">
                   <button
                     type="button"
@@ -800,6 +835,29 @@ export default function AdminLedgerPage() {
                   )}
                 </div>
 
+                {(() => {
+                  const amt = Number(receiptModalPayment.amount || 0);
+                  const base = Math.round((amt / 1.18) * 100) / 100;
+                  const cgst = Math.round((base * 0.09) * 100) / 100;
+                  const sgst = Math.round((amt - base - cgst) * 100) / 100;
+                  return (
+                    <div className="py-2 border-b border-dashed border-black text-[11px] text-black space-y-1">
+                      <div className="flex justify-between">
+                        <span>BASE TUITION (TAXABLE):</span>
+                        <span>₹{base.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>CGST (9%):</span>
+                        <span>₹{cgst.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>SGST (9%):</span>
+                        <span>₹{sgst.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="py-3 border-b-2 border-dashed border-black flex justify-between items-center text-xs text-black">
                   <span className="font-black text-sm uppercase">AMOUNT PAID:</span>
                   <span className="font-black text-lg">
@@ -859,6 +917,33 @@ export default function AdminLedgerPage() {
                     </div>
                   )}
                 </div>
+
+                {(() => {
+                  const amt = Number(receiptModalPayment.amount || 0);
+                  const base = Math.round((amt / 1.18) * 100) / 100;
+                  const cgst = Math.round((base * 0.09) * 100) / 100;
+                  const sgst = Math.round((amt - base - cgst) * 100) / 100;
+                  return (
+                    <div className="bg-white p-3 rounded-md border border-slate-200 mb-3 space-y-1.5 text-[11px]">
+                      <div className="flex justify-between text-slate-600 font-medium">
+                        <span>Course Tuition (SAC 999293):</span>
+                        <span className="font-mono text-slate-900 font-bold">₹{base.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600 font-medium">
+                        <span>Central GST (CGST @ 9%):</span>
+                        <span className="font-mono text-slate-900 font-bold">₹{cgst.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600 font-medium">
+                        <span>State GST (SGST @ 9%):</span>
+                        <span className="font-mono text-slate-900 font-bold">₹{sgst.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="pt-1 border-t border-slate-100 flex justify-between font-bold text-slate-800">
+                        <span>Center GSTIN:</span>
+                        <span className="font-mono text-brand">33AAACB2234P1Z2</span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-md flex justify-between items-center mb-3">
                   <span className="font-bold text-emerald-800 text-sm">AMOUNT RECEIVED:</span>
@@ -945,11 +1030,17 @@ export default function AdminLedgerPage() {
 
       {reverseModalPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 sm:p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto">
+          <div
+            ref={reverseModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reverse-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 sm:p-6 border border-slate-200 animate-in fade-in zoom-in duration-200 max-h-[92vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2 text-red-600">
                 <RotateCcw className="w-5 h-5" />
-                <h2 className="text-base font-extrabold text-[#0F172A]">
+                <h2 id="reverse-modal-title" className="text-base font-extrabold text-[#0F172A]">
                   Reverse Payment Transaction
                 </h2>
               </div>
@@ -1005,9 +1096,10 @@ export default function AdminLedgerPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer"
+                  disabled={reversingPayment}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirm Reversal
+                  {reversingPayment ? 'Reversing...' : 'Confirm Reversal'}
                 </button>
               </div>
             </form>
@@ -1017,14 +1109,20 @@ export default function AdminLedgerPage() {
 
       {tillModalOpen && (
         <div className="fixed inset-0 bg-[#0F172A]/70 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-6 text-left max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95">
+          <div
+            ref={tillModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="till-modal-title"
+            className="bg-white rounded-xl shadow-xl max-w-lg w-full p-4 sm:p-6 text-left max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg">
                   <Banknote className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#0F172A]">
+                  <h2 id="till-modal-title" className="text-base font-bold text-[#0F172A]">
                     {activeTill ? 'Till Drawer Settlement (Cash Closeout)' : 'Open Daily Cash Till Drawer'}
                   </h2>
                   <p className="text-xs text-slate-500">

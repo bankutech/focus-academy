@@ -197,9 +197,6 @@ export default function AdminSettingsPage() {
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          <span className="text-xs font-mono px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-bold border border-slate-200">
-            Role: {currentRole.toUpperCase()}
-          </span>
         </div>
       </div>
 
@@ -287,11 +284,16 @@ export default function AdminSettingsPage() {
 
       {activeTab === 'academy' && (
         <form onSubmit={handleSaveSettings} className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-[#0F172A]">Campus Profile &amp; Official Receipts</h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Details configured here appear dynamically on printed fee receipts, WhatsApp notifications, and student ledgers.
-            </p>
+          <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-[#0F172A]">Campus Profile &amp; Official Receipts</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Details configured here appear dynamically on printed fee receipts, WhatsApp notifications, and student ledgers.
+              </p>
+            </div>
+            <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold font-mono bg-slate-100 text-slate-700 border border-slate-200 shrink-0 self-start sm:self-auto">
+              Role: {currentRole.toUpperCase()}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
@@ -492,11 +494,16 @@ export default function AdminSettingsPage() {
 
       {activeTab === 'roles' && (
         <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-6">
-          <div className="border-b border-slate-100 pb-4">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-[#0F172A]">Administrator Roles &amp; Permissions</h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Enforce role-based access control (RBAC). Only owners can manage administrators and institute settings.
-            </p>
+          <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wide text-[#0F172A]">Administrator Roles &amp; Permissions</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Enforce role-based access control (RBAC). Only owners can manage administrators and institute settings.
+              </p>
+            </div>
+            <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold font-mono bg-purple-100 text-purple-800 border border-purple-200 shrink-0 self-start sm:self-auto">
+              Role: {currentRole.toUpperCase()}
+            </span>
           </div>
 
           <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   Plus, 
   Search, 
@@ -10,19 +10,20 @@ import {
   RotateCcw, 
   AlertCircle, 
   CheckCircle2, 
-  X,
-  Upload,
-  AlertTriangle,
-  Award,
-  ChevronLeft,
-  ChevronRight,
-  GraduationCap,
-  Download,
-  Trash2,
-  Calendar
+  X, 
+  Upload, 
+  AlertTriangle, 
+  Award, 
+  ChevronLeft, 
+  ChevronRight, 
+  GraduationCap, 
+  Download, 
+  Trash2, 
+  Calendar 
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { validateIndianMobile, isBatchCompatible, formatTime12 } from '../../types/schemas';
 import { formatPhoneNumber } from '../../utils/phoneValidation';
 
@@ -80,6 +81,11 @@ export default function AdminStudentsPage() {
   const [csvContent, setCsvContent] = useState('');
   const [csvPreview, setCsvPreview] = useState(null);
   const [csvImportResult, setCsvImportResult] = useState(null);
+
+  const studentFormModalRef = useRef(null);
+  const csvModalRef = useRef(null);
+  useFocusTrap(studentFormModalRef, createModalOpen);
+  useFocusTrap(csvModalRef, csvModalOpen);
 
   const [attendanceModalStudent, setAttendanceModalStudent] = useState(null);
   const [attendanceTab, setAttendanceTab] = useState('attendance');
@@ -162,6 +168,14 @@ export default function AdminStudentsPage() {
   };
 
   const exportStudentsCSV = () => {
+    const sanitizeExport = (val) => {
+      const str = String(val || '').replace(/"/g, '""');
+      if (/^[=+\-@\t\r]/.test(str)) {
+        return `"'${str}"`;
+      }
+      return `"${str}"`;
+    };
+
     const headers = ['ID', 'Student Name', 'Grade', 'Board', 'Batch', 'Guardian Phone', 'Status', 'Enrollment Date', 'Course End Date'];
     const rows = students.map(s => {
       let phone = s.guardianPhone || '';
@@ -170,11 +184,11 @@ export default function AdminStudentsPage() {
       }
       return [
         s.id,
-        `"${(s.studentName || '').replace(/"/g, '""')}"`,
-        `"${(s.grade || '').replace(/"/g, '""')}"`,
-        `"${(s.board || '').replace(/"/g, '""')}"`,
-        `"${(s.batchName || s.batchId || '').replace(/"/g, '""')}"`,
-        `"${phone}"`,
+        sanitizeExport(s.studentName),
+        sanitizeExport(s.grade),
+        sanitizeExport(s.board),
+        sanitizeExport(s.batchName || s.batchId),
+        sanitizeExport(phone),
         s.status,
         s.enrollmentDate,
         s.courseEndDate || ''
@@ -1035,9 +1049,15 @@ export default function AdminStudentsPage() {
 
       {createModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+          <div
+            ref={studentFormModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="student-form-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
-              <h2 className="text-base font-extrabold text-[#0F172A]">
+              <h2 id="student-form-modal-title" className="text-base font-extrabold text-[#0F172A]">
                 {editStudent ? `Edit Student: ${editStudent.studentName}` : 'Enroll New Student into Batch'}
               </h2>
               <button onClick={() => { setCreateModalOpen(false); setEditStudent(null); }} className="text-slate-400 hover:text-slate-700">
@@ -1601,11 +1621,17 @@ export default function AdminStudentsPage() {
 
       {csvModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/70 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in duration-200">
+          <div
+            ref={csvModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="csv-modal-title"
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
               <div className="flex items-center space-x-2">
                 <Upload className="w-5 h-5 text-brand" />
-                <h2 className="text-base font-extrabold text-[#0F172A]">
+                <h2 id="csv-modal-title" className="text-base font-extrabold text-[#0F172A]">
                   Import Students from CSV
                 </h2>
               </div>

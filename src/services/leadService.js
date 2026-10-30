@@ -144,6 +144,12 @@ export const LeadService = {
         .filter((item) => new Date(item.queuedAt || item.submittedAt).getTime() > cutoff)
         .slice(0, QUEUE_MAX_ENTRIES);
       localStorage.setItem(STORAGE_QUEUE_KEY, JSON.stringify(trimmed));
+
+      if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'SyncManager' in window) {
+        navigator.serviceWorker.ready
+          .then((reg) => reg.sync.register('sync-pending-leads'))
+          .catch((err) => console.warn('Background sync optional registration:', err));
+      }
     } catch {
     }
   },
@@ -254,4 +260,12 @@ if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     LeadService.syncOfflineQueue();
   });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data?.type === 'TRIGGER_SYNC_PENDING_LEADS') {
+        LeadService.syncOfflineQueue();
+      }
+    });
+  }
 }
