@@ -871,28 +871,28 @@ export default function AdminSettingsPage() {
               </button>
             </div>
 
-            <div className="p-5 border border-emerald-200 rounded-xl space-y-3 bg-emerald-50/40">
+            <div className="p-5 border border-slate-200 rounded-xl space-y-3 bg-slate-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Database className="w-5 h-5 text-emerald-600" />
-                  <h3 className="font-bold text-sm text-[#0F172A]">Cloud Firestore Live Auto-Sync</h3>
+                  <h3 className="font-bold text-sm text-[#0F172A]">Cloud Database Connection</h3>
                 </div>
                 <span className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-                  <span>Active &amp; Real-time</span>
+                  <span>Connected</span>
                 </span>
               </div>
               <p className="text-xs text-slate-600">
-                All records, student profiles, fee transactions, and batch statuses are automatically synchronized to your live Firebase Cloud Firestore database in real-time without requiring any manual export or synchronization.
+                All records, student profiles, fee transactions, and batch statuses are securely saved to your Firebase Cloud database.
               </p>
               <button
                 type="button"
                 disabled={syncingCloud}
                 onClick={handleSyncToCloud}
-                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
+                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 disabled:opacity-50 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
               >
                 <RefreshCw className={`w-4 h-4 ${syncingCloud ? 'animate-spin' : ''}`} />
-                <span>{syncingCloud ? 'Auditing Cloud Firestore...' : 'Run Cloud Database Audit & Integrity Verification'}</span>
+                <span>{syncingCloud ? 'Verifying connection...' : 'Verify Cloud Database Connection'}</span>
               </button>
             </div>
 
