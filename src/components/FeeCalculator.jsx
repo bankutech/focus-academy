@@ -28,7 +28,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
   const baseCalculatedFee = calculateFee(currentRate, hoursPerWeek);
 
   const modeMultiplier = mode === 'classroom' ? 1.0 : 0.9;
-  const centerAdjustment = center === 'Thoramangalam' ? 1.0 : 1.05;
+  const centerAdjustment = 1.0;
   const siblingMultiplier = hasSiblingDiscount ? 0.85 : 1.0;
 
   const estimatedMonthlyFee = Math.round(baseCalculatedFee * modeMultiplier * centerAdjustment * siblingMultiplier);
@@ -109,8 +109,7 @@ export default function FeeCalculator({ onSelectPackage, onOpenDemoModal }) {
               onChange={(e) => setCenter(e.target.value)}
               className="w-full min-h-[44px] bg-slate-50 border border-[#E2E8F0] rounded-md px-3 py-2 text-xs font-semibold text-[#0F172A] focus:outline-hidden focus:border-brand"
             >
-              <option value="Thoramangalam">Thiripura Complex, Thoramangalam (Main Center)</option>
-              <option value="Four Roads Access">Four Roads / Rajanagar Campus Desk</option>
+              <option value="Thoramangalam">Thiripura Complex, Thoramangalam (Opp. EB Office)</option>
             </select>
           </div>
         </div>

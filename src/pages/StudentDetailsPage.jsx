@@ -182,10 +182,7 @@ export default function StudentDetailsPage() {
           className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-50 w-[92%] sm:w-auto max-w-lg shadow-2xl rounded-full bg-[#0F172A] text-white py-2.5 px-4 sm:px-5 border border-slate-700 flex items-center justify-between gap-3 animate-in slide-in-from-top-4 fade-in duration-300"
         >
           <div className="flex items-center space-x-2.5 text-xs sm:text-sm font-medium">
-            <span className="relative flex h-2.5 w-2.5 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand"></span>
-            </span>
+            <span className="w-2 h-2 rounded-full bg-brand inline-block shrink-0" />
             <span className="text-slate-100">
               <strong className="text-white font-bold mr-1">Step 1 Required:</strong>
               Please provide basic student details first to unlock batches
