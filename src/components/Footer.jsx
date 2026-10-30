@@ -103,15 +103,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm text-slate-400 gap-3">
+        <div className="pt-8 text-center text-xs sm:text-sm text-slate-400">
           <p>© {CURRENT_YEAR} Focus Academy, Thoramangalam, Perambalur. All rights reserved.</p>
-          <button
-            type="button"
-            onClick={handleBackToTop}
-            className="text-orange-300 hover:underline cursor-pointer"
-          >
-            Back to Top ↑
-          </button>
         </div>
       </div>
     </footer>
