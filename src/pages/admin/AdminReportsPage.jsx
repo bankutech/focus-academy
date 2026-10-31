@@ -4,10 +4,19 @@ import {
   Printer, 
   Building2,
   Calendar,
-  Layers
+  Layers,
+  BarChart3
 } from 'lucide-react';
 import { AdminDataService } from '../../services/adminDataService';
 import { requireAdminEmail } from '../../services/adminIdentity';
+import { ChartCard, DonutChart, BarChart } from '../../components/admin/Charts';
+import { 
+  feeStatusBreakdown, 
+  batchOccupancy, 
+  monthlyCollections, 
+  paymentMethodSplit, 
+  rupees 
+} from '../../components/admin/chartData';
 
 export default function AdminReportsPage() {
   const [batches, setBatches] = useState([]);
@@ -204,7 +213,7 @@ export default function AdminReportsPage() {
             Analytics
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Real-time enrollment quotas, date-wise collection summaries, batch metrics, and enrollment distributions.
+            Real-time enrollment quotas, verified collection trends, batch capacity utilization, and financial distributions.
           </p>
         </div>
 
@@ -292,6 +301,54 @@ export default function AdminReportsPage() {
           <span className="text-[11px] text-red-600 font-semibold block mt-2">
             Pending tuition collection accounts
           </span>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-5">
+        <div className="flex items-center space-x-2 mb-4 pb-3 border-b border-slate-100">
+          <BarChart3 className="w-5 h-5 text-brand" />
+          <div>
+            <h2 className="text-sm font-black text-[#0F172A] uppercase tracking-wide">
+              Visual Analytics &amp; Institutional Trends
+            </h2>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Interactive visual distributions of fee collections, capacity utilization, and revenue channels.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <ChartCard
+            title="Monthly Fee Collections"
+            subtitle="Verified payment collections over the trailing 6 months"
+            className="rounded-xl border border-slate-200 shadow-xs"
+          >
+            <BarChart data={monthlyCollections(payments)} format={rupees} label="Monthly fee collections" />
+          </ChartCard>
+
+          <ChartCard
+            title="Fee Status &amp; Realization"
+            subtitle="Collected payments compared with pending and overdue dues"
+            className="rounded-xl border border-slate-200 shadow-xs"
+          >
+            <DonutChart data={feeStatusBreakdown(obligations)} centerLabel="Billed" label="Fee position by status" />
+          </ChartCard>
+
+          <ChartCard
+            title="Batch 1:12 Classroom Capacity"
+            subtitle="Current batch admissions evaluated against the strict 12-seat capacity"
+            className="rounded-xl border border-slate-200 shadow-xs"
+          >
+            <BarChart data={batchOccupancy(batches)} label="Batch capacity" showAxisMax={false} />
+          </ChartCard>
+
+          <ChartCard
+            title="Payment Channel Distribution"
+            subtitle="Realized receipts proportion across Cash, UPI and Bank Transfer"
+            className="rounded-xl border border-slate-200 shadow-xs"
+          >
+            <DonutChart data={paymentMethodSplit(payments)} centerLabel="Total Paid" label="Payment mode distribution" />
+          </ChartCard>
         </div>
       </div>
 
