@@ -14,14 +14,9 @@ export default function FeesPage() {
   const { openDemoModal } = useModals();
 
   return (
-    <div className="pt-8 pb-12 sm:pt-10 sm:pb-14 bg-[#F8FAFC] min-h-screen text-left">
+    <div className="pt-6 pb-12 sm:pt-8 sm:pb-14 bg-[#F8FAFC] min-h-screen text-left">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <div className="flex items-center space-x-2 text-xs text-slate-500 mb-2.5">
-            <Link to="/" className="hover:text-brand">Home</Link>
-            <span>/</span>
-            <span className="text-[#0F172A] font-bold">Tuition Fees & Calculator</span>
-          </div>
+        <div className="mb-5">
 
           <div className="max-w-3xl">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] tracking-tight leading-tight">

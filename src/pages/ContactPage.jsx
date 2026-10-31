@@ -1,6 +1,5 @@
 import { usePageMeta } from '../hooks/usePageMeta';
 import React from 'react';
-import { Link } from 'react-router-dom';
 import ContactSection from '../components/ContactSection';
 import { Clock } from 'lucide-react';
 
@@ -11,14 +10,9 @@ export default function ContactPage() {
     path: '/contact',
   });
   return (
-    <div className="py-8 sm:py-12 bg-[#F8FAFC] min-h-screen text-left">
+    <div className="py-6 sm:py-10 bg-[#F8FAFC] min-h-screen text-left">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 text-xs text-slate-500 mb-2">
-            <Link to="/" className="hover:text-brand">Home</Link>
-            <span>/</span>
-            <span className="text-[#0F172A] font-bold">Campus Location & Contact</span>
-          </div>
+        <div className="mb-6">
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>

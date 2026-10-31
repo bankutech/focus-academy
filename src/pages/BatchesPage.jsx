@@ -270,21 +270,19 @@ export default function BatchesPage() {
     <div className="bg-[#F8FAFC] min-h-screen text-left">
       {!isTimingsView && <StepProgress currentStep={3} />}
 
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-14">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-8 sm:py-12">
         {isTimingsView ? (
           <div className="space-y-10">
             <div>
-              <div className="mb-6 flex flex-wrap items-center justify-end gap-3 text-xs text-slate-500">
-                <div className="flex items-center space-x-2 text-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                  <span className="font-semibold text-slate-700">Campus Hours: Mon – Sat (4:30 PM – 9:00 PM)</span>
-                </div>
-              </div>
-
-              <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
                   Batch Timings & Schedule
                 </h1>
+                <div className="inline-flex items-center space-x-2 text-xs bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full self-start sm:self-auto shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span className="font-semibold text-emerald-800">Campus Hours: Mon – Sat (4:30 PM – 9:00 PM)</span>
+                </div>
+              </div>
                 <p className="text-sm text-slate-600 mt-2 max-w-3xl leading-relaxed">
                   All evening batches run Monday to Saturday between 4:30 PM and 9:00 PM at Thiripura Complex, Thoramangalam. Every batch has a strict 12-student cap, with timings synchronized with town and school bus arrivals from Four Roads and Trichy Main Road.
                 </p>
@@ -333,7 +331,6 @@ export default function BatchesPage() {
                     <span>Reserve your seat in any scheduled evening slot with zero advance registration fee. Seats are opened from the admission link below.</span>
                   </div>
                 </div>
-              </div>
             </div>
 
             <div className="bg-white rounded-lg border border-[#E2E8F0] shadow-xs overflow-hidden">

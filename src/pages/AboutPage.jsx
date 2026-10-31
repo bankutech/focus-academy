@@ -77,13 +77,8 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="py-10 sm:py-14 bg-[#F8FAFC] min-h-screen text-left">
+    <div className="py-8 sm:py-12 bg-[#F8FAFC] min-h-screen text-left">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
-        <div className="flex items-center space-x-2 text-xs text-slate-500 mb-4">
-          <Link to="/" className="hover:text-brand">Home</Link>
-          <span>/</span>
-          <span className="text-[#0F172A] font-bold">About Focus Academy</span>
-        </div>
 
         <div className="mb-6 bg-orange-50/90 border border-orange-200/80 rounded-lg p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm text-slate-700 shadow-2xs">
           <div className="flex items-center space-x-2.5">

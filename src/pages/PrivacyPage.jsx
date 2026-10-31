@@ -46,13 +46,8 @@ export default function PrivacyPage() {
   ];
 
   return (
-    <div className="py-10 sm:py-14 bg-[#F8FAFC] min-h-screen text-left">
+    <div className="py-8 sm:py-12 bg-[#F8FAFC] min-h-screen text-left">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center space-x-2 text-xs text-slate-500 mb-4">
-          <Link to="/" className="hover:text-brand">Home</Link>
-          <span>/</span>
-          <span className="text-[#0F172A] font-bold">Privacy Notice</span>
-        </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
           Privacy notice for admissions

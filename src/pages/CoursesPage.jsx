@@ -137,14 +137,9 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="py-8 sm:py-12 bg-[#F8FAFC] min-h-screen text-left">
+    <div className="py-6 sm:py-10 bg-[#F8FAFC] min-h-screen text-left">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 text-xs text-slate-500 mb-2">
-            <Link to="/" className="hover:text-brand">Home</Link>
-            <span>/</span>
-            <span className="text-[#0F172A] font-bold">Class & Board Selection</span>
-          </div>
+        <div className="mb-6">
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0F172A] tracking-tight">
             Academic Programs & Preparation Tracks
