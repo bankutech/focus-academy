@@ -12,7 +12,6 @@ import {
   Bus, 
   ShieldCheck, 
   Calendar,
-  AlertTriangle 
 } from 'lucide-react';
 import { BATCHES_DATA, isBatchRecommendedForTrack } from '../data/batchesData';
 import { CAMPUS_CONFIG } from '../config/campusConfig';
@@ -272,42 +271,10 @@ export default function BatchesPage() {
       {!isTimingsView && <StepProgress currentStep={3} />}
 
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-10 sm:py-14">
-        {availability.status === 'unavailable' && (
-          <div
-            role="status"
-            className="mb-8 bg-amber-50 border border-amber-200 rounded-lg p-4 text-left flex items-start space-x-3"
-          >
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-bold text-amber-900">Live seat availability is unavailable right now</p>
-              <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                {availability.error} The timetable below shows our standard schedule and batch sizes — it is not a live seat count.
-              </p>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
-                <a href="tel:+919842451220" className="font-bold text-amber-900 underline underline-offset-2">
-                  Call the campus desk
-                </a>
-                <a
-                  href={CAMPUS_CONFIG.contact.whatsappNumber ? `https://wa.me/${CAMPUS_CONFIG.contact.whatsappNumber}?text=${encodeURIComponent('Hello Focus Academy! Please confirm which evening batches still have seats open.')}` : '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bold text-amber-900 underline underline-offset-2"
-                >
-                  Ask on WhatsApp
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
         {isTimingsView ? (
           <div className="space-y-10">
             <div>
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-                <div className="flex items-center space-x-2">
-                  <Link to="/" className="hover:text-[#0F172A] transition-colors">Home</Link>
-                  <span>/</span>
-                  <span className="text-[#0F172A] font-semibold">Campus Timetable & Batch Timings</span>
-                </div>
+              <div className="mb-6 flex flex-wrap items-center justify-end gap-3 text-xs text-slate-500">
                 <div className="flex items-center space-x-2 text-xs">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                   <span className="font-semibold text-slate-700">Campus Hours: Mon – Sat (4:30 PM – 9:00 PM)</span>
